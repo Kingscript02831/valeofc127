@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Search } from "lucide-react";
 
 type SiteConfig = Database['public']['Tables']['site_configuration']['Row'];
 type News = Database['public']['Tables']['news']['Row'];
@@ -43,7 +44,9 @@ const Admin = () => {
     date: new Date().toISOString(),
   });
 
+  const [editingNews, setEditingNews] = useState<News | null>(null);
   const [news, setNews] = useState<News[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     fetchConfiguration();
@@ -67,10 +70,16 @@ const Admin = () => {
   };
 
   const fetchNews = async () => {
-    const { data, error } = await supabase
+    let query = supabase
       .from("news")
       .select("*")
       .order("created_at", { ascending: false });
+
+    if (searchTerm) {
+      query = query.ilike("title", `%${searchTerm}%`);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       toast.error("Erro ao carregar notícias");
@@ -81,6 +90,10 @@ const Admin = () => {
       setNews(data);
     }
   };
+
+  useEffect(() => {
+    fetchNews();
+  }, [searchTerm]);
 
   const handleConfigUpdate = async () => {
     try {
@@ -124,6 +137,33 @@ const Admin = () => {
     }
   };
 
+  const handleNewsEdit = async () => {
+    try {
+      if (!editingNews || !editingNews.title || !editingNews.content) {
+        toast.error("Título e conteúdo são obrigatórios");
+        return;
+      }
+
+      const { error } = await supabase
+        .from("news")
+        .update({
+          title: editingNews.title,
+          content: editingNews.content,
+          image: editingNews.image,
+          video: editingNews.video,
+        })
+        .eq("id", editingNews.id);
+
+      if (error) throw error;
+
+      toast.success("Notícia atualizada com sucesso!");
+      setEditingNews(null);
+      fetchNews();
+    } catch (error: any) {
+      toast.error("Erro ao atualizar notícia");
+    }
+  };
+
   const handleNewsDelete = async (id: string) => {
     try {
       const { error } = await supabase
@@ -152,66 +192,143 @@ const Admin = () => {
           </TabsList>
 
           <TabsContent value="news" className="space-y-6">
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold mb-4">Adicionar Notícia</h2>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="title">Título</Label>
-                  <Input
-                    id="title"
-                    value={newNews.title}
-                    onChange={(e) => setNewNews({ ...newNews, title: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="content">Conteúdo</Label>
-                  <Textarea
-                    id="content"
-                    value={newNews.content}
-                    onChange={(e) => setNewNews({ ...newNews, content: e.target.value })}
-                    className="min-h-[200px]"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="image">Link da Imagem</Label>
-                  <Input
-                    id="image"
-                    value={newNews.image || ""}
-                    onChange={(e) => setNewNews({ ...newNews, image: e.target.value })}
-                    placeholder="https://exemplo.com/imagem.jpg"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="video">Link do Vídeo (YouTube)</Label>
-                  <Input
-                    id="video"
-                    value={newNews.video || ""}
-                    onChange={(e) => setNewNews({ ...newNews, video: e.target.value })}
-                    placeholder="https://youtube.com/embed/..."
-                  />
-                </div>
-                <Button onClick={handleNewsSubmit}>Adicionar Notícia</Button>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              {news.map((item) => (
-                <div key={item.id} className="bg-white rounded-lg shadow p-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-lg font-semibold">{item.title}</h3>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleNewsDelete(item.id)}
-                    >
-                      Excluir
-                    </Button>
+            {!editingNews ? (
+              <div className="bg-white rounded-lg shadow p-6">
+                <h2 className="text-xl font-semibold mb-4">Adicionar Notícia</h2>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="title">Título</Label>
+                    <Input
+                      id="title"
+                      value={newNews.title}
+                      onChange={(e) => setNewNews({ ...newNews, title: e.target.value })}
+                    />
                   </div>
-                  <p className="whitespace-pre-wrap mb-2">{item.content}</p>
-                  {item.image && <p className="text-sm text-gray-500">Imagem: {item.image}</p>}
-                  {item.video && <p className="text-sm text-gray-500">Vídeo: {item.video}</p>}
+                  <div>
+                    <Label htmlFor="content">Conteúdo</Label>
+                    <Textarea
+                      id="content"
+                      value={newNews.content}
+                      onChange={(e) => setNewNews({ ...newNews, content: e.target.value })}
+                      className="min-h-[200px]"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="image">Link da Imagem</Label>
+                    <Input
+                      id="image"
+                      value={newNews.image || ""}
+                      onChange={(e) => setNewNews({ ...newNews, image: e.target.value })}
+                      placeholder="https://exemplo.com/imagem.jpg"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="video">Link do Vídeo (YouTube)</Label>
+                    <Input
+                      id="video"
+                      value={newNews.video || ""}
+                      onChange={(e) => setNewNews({ ...newNews, video: e.target.value })}
+                      placeholder="https://youtube.com/embed/..."
+                    />
+                  </div>
+                  <Button onClick={handleNewsSubmit}>Adicionar Notícia</Button>
                 </div>
-              ))}
+              </div>
+            ) : (
+              <div className="bg-white rounded-lg shadow p-6">
+                <h2 className="text-xl font-semibold mb-4">Editar Notícia</h2>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="edit-title">Título</Label>
+                    <Input
+                      id="edit-title"
+                      value={editingNews.title}
+                      onChange={(e) => setEditingNews({ ...editingNews, title: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-content">Conteúdo</Label>
+                    <Textarea
+                      id="edit-content"
+                      value={editingNews.content}
+                      onChange={(e) => setEditingNews({ ...editingNews, content: e.target.value })}
+                      className="min-h-[200px]"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-image">Link da Imagem</Label>
+                    <Input
+                      id="edit-image"
+                      value={editingNews.image || ""}
+                      onChange={(e) => setEditingNews({ ...editingNews, image: e.target.value })}
+                      placeholder="https://exemplo.com/imagem.jpg"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-video">Link do Vídeo (YouTube)</Label>
+                    <Input
+                      id="edit-video"
+                      value={editingNews.video || ""}
+                      onChange={(e) => setEditingNews({ ...editingNews, video: e.target.value })}
+                      placeholder="https://youtube.com/embed/..."
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button onClick={handleNewsEdit}>Salvar Alterações</Button>
+                    <Button variant="outline" onClick={() => setEditingNews(null)}>Cancelar</Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="flex items-center gap-4 mb-6">
+                <h2 className="text-xl font-semibold">Lista de Notícias</h2>
+                <div className="relative flex-1 max-w-sm">
+                  <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 h-4 w-4" />
+                  <Input
+                    type="search"
+                    placeholder="Buscar notícias..."
+                    className="pl-8"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {news.map((item) => (
+                  <div key={item.id} className="bg-gray-50 rounded-lg p-6">
+                    <div className="flex justify-between items-start mb-4">
+                      <h3 className="text-lg font-semibold">{item.title}</h3>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setEditingNews(item)}
+                        >
+                          Editar
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleNewsDelete(item.id)}
+                        >
+                          Excluir
+                        </Button>
+                      </div>
+                    </div>
+                    <p className="whitespace-pre-wrap mb-2">{item.content}</p>
+                    {item.image && <p className="text-sm text-gray-500">Imagem: {item.image}</p>}
+                    {item.video && <p className="text-sm text-gray-500">Vídeo: {item.video}</p>}
+                  </div>
+                ))}
+                {news.length === 0 && (
+                  <p className="text-gray-500 text-center py-8">
+                    Nenhuma notícia encontrada.
+                  </p>
+                )}
+              </div>
             </div>
           </TabsContent>
 

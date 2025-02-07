@@ -1,44 +1,74 @@
+
+import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import NewsCard from "@/components/NewsCard";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+import { Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import type { Database } from "@/integrations/supabase/types";
+
+type News = Database['public']['Tables']['news']['Row'];
 
 const Index = () => {
-  // Sample news data - this would come from your backend once Supabase is connected
-  const news = [
-    {
-      id: 1,
-      title: "Nova praça será inaugurada no centro da cidade",
-      content: "A prefeitura anunciou hoje a inauguração de uma nova praça no centro da cidade. O espaço contará com área de lazer, playground e área verde para a população. A obra, que custou R$ 2 milhões, será entregue no próximo mês. A expectativa é que o novo espaço se torne um ponto de encontro para famílias e contribua para a revitalização do centro.",
-      date: "2024-02-20",
-      image: "/placeholder.svg",
-    },
-    {
-      id: 2,
-      title: "Festival de Música acontece neste fim de semana",
-      content: "O tradicional festival de música da cidade acontece neste fim de semana com diversas atrações locais e nacionais. O evento, que chega à sua 10ª edição, espera receber mais de 10 mil pessoas durante os dois dias de apresentações. Entre as atrações confirmadas estão bandas de rock, samba e MPB.",
-      date: "2024-02-19",
-      video: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-    },
-  ];
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const { data: news = [] } = useQuery<News[]>({
+    queryKey: ['news', searchTerm],
+    queryFn: async () => {
+      let query = supabase
+        .from('news')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (searchTerm) {
+        query = query.ilike('title', `%${searchTerm}%`);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data;
+    }
+  });
 
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
       
       <main className="flex-1 container mx-auto py-8 px-4">
-        <h1 className="text-3xl font-bold mb-8">Últimas Notícias</h1>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {news.map((item) => (
-            <NewsCard
-              key={item.id}
-              title={item.title}
-              content={item.content}
-              date={new Date(item.date).toLocaleDateString("pt-BR")}
-              image={item.image}
-              video={item.video}
-            />
-          ))}
+        <div className="flex flex-col gap-8">
+          <div className="flex items-center gap-4">
+            <h1 className="text-3xl font-bold">Últimas Notícias</h1>
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 h-4 w-4" />
+              <Input
+                type="search"
+                placeholder="Buscar notícias..."
+                className="pl-8"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {news.map((item) => (
+              <NewsCard
+                key={item.id}
+                title={item.title}
+                content={item.content}
+                date={new Date(item.date).toLocaleDateString("pt-BR")}
+                image={item.image || undefined}
+                video={item.video || undefined}
+              />
+            ))}
+            {news.length === 0 && (
+              <p className="text-gray-500 col-span-full text-center py-8">
+                Nenhuma notícia encontrada.
+              </p>
+            )}
+          </div>
         </div>
       </main>
       
