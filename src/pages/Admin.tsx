@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -59,6 +58,10 @@ const Admin = () => {
     location_city: null,
     location_state: null,
     location_country: null,
+    meta_title: 'vale-news-hub',
+    meta_description: 'Lovable Generated Project',
+    meta_author: 'Lovable',
+    meta_image: '/og-image.png',
   });
 
   const [newNews, setNewNews] = useState<NewsInsert>({
@@ -392,6 +395,7 @@ const Admin = () => {
             <TabsTrigger value="news">Notícias</TabsTrigger>
             <TabsTrigger value="config">Config Navbar</TabsTrigger>
             <TabsTrigger value="footer">Rodapé</TabsTrigger>
+            <TabsTrigger value="general">Geral</TabsTrigger>
           </TabsList>
 
           <TabsContent value="news" className="space-y-6">
@@ -870,6 +874,62 @@ const Admin = () => {
             <div className="flex justify-end">
               <Button onClick={handleConfigUpdate}>
                 Salvar Configurações 
+              </Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="general" className="bg-white rounded-lg shadow p-6 space-y-6">
+            <div>
+              <h2 className="text-xl font-semibold mb-4">Configurações Meta Tags</h2>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="meta_title">Título da Página</Label>
+                  <Input
+                    id="meta_title"
+                    value={config.meta_title || ""}
+                    onChange={(e) => setConfig({ ...config, meta_title: e.target.value })}
+                    placeholder="vale-news-hub"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="meta_description">Descrição da Página</Label>
+                  <Textarea
+                    id="meta_description"
+                    value={config.meta_description || ""}
+                    onChange={(e) => setConfig({ ...config, meta_description: e.target.value })}
+                    placeholder="Descrição do seu site"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="meta_author">Autor</Label>
+                  <Input
+                    id="meta_author"
+                    value={config.meta_author || ""}
+                    onChange={(e) => setConfig({ ...config, meta_author: e.target.value })}
+                    placeholder="Nome do autor"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="meta_image">Link da Imagem de Compartilhamento (OG Image)</Label>
+                  <Input
+                    id="meta_image"
+                    value={config.meta_image || ""}
+                    onChange={(e) => setConfig({ ...config, meta_image: e.target.value })}
+                    placeholder="https://exemplo.com/imagem.jpg"
+                  />
+                  <p className="text-sm text-gray-500 mt-1">
+                    Esta imagem será exibida quando o site for compartilhado em redes sociais
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <Button onClick={handleConfigUpdate}>
+                Salvar Configurações
               </Button>
             </div>
           </TabsContent>

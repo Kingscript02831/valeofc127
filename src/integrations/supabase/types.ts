@@ -118,6 +118,10 @@ export type Database = {
           location_lat: number | null
           location_lng: number | null
           location_state: string | null
+          meta_author: string | null
+          meta_description: string | null
+          meta_image: string | null
+          meta_title: string | null
           navbar_color: string
           navbar_logo_image: string | null
           navbar_logo_text: string | null
@@ -158,6 +162,10 @@ export type Database = {
           location_lat?: number | null
           location_lng?: number | null
           location_state?: string | null
+          meta_author?: string | null
+          meta_description?: string | null
+          meta_image?: string | null
+          meta_title?: string | null
           navbar_color?: string
           navbar_logo_image?: string | null
           navbar_logo_text?: string | null
@@ -198,6 +206,10 @@ export type Database = {
           location_lat?: number | null
           location_lng?: number | null
           location_state?: string | null
+          meta_author?: string | null
+          meta_description?: string | null
+          meta_image?: string | null
+          meta_title?: string | null
           navbar_color?: string
           navbar_logo_image?: string | null
           navbar_logo_text?: string | null
