@@ -281,8 +281,12 @@ const Admin = () => {
   };
 
   const renderInstagramMediaFields = (news: NewsInsert | News) => {
-    const currentMedia = Array.isArray(news.instagram_media) 
-      ? (news.instagram_media as unknown as InstagramMediaJson[])
+    const currentMedia: InstagramMediaJson[] = Array.isArray(news.instagram_media)
+      ? news.instagram_media.map(media => 
+          typeof media === 'object' && media !== null && 'url' in media && 'type' in media 
+            ? media as InstagramMediaJson 
+            : { url: '', type: 'post' }
+        )
       : [];
 
     return (
@@ -310,7 +314,7 @@ const Admin = () => {
             </Button>
           </div>
         </div>
-        {Array.isArray(news.instagram_media) && (news.instagram_media as unknown as InstagramMediaJson[]).map((media, index) => (
+        {currentMedia.map((media, index) => (
           <div key={index} className="flex gap-2 items-start">
             <div className="flex-1">
               <Label>
