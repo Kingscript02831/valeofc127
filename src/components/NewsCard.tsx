@@ -63,7 +63,7 @@ const NewsCard = ({
   image, 
   video, 
   instagramMedia = [], 
-  buttonColor = "#9b87f5",
+  buttonColor,
   buttonSecondaryColor,
   category 
 }: NewsCardProps) => {
@@ -118,7 +118,7 @@ const NewsCard = ({
         
         <h2 className="text-xl font-semibold mb-2">{title}</h2>
         
-        <div className={cn("prose prose-sm max-w-none", !isExpanded && "line-clamp-3")}>
+        <div className={`prose prose-sm max-w-none ${!isExpanded && "line-clamp-3"}`}>
           {formattedContent}
         </div>
 
@@ -142,8 +142,8 @@ const NewsCard = ({
         <Button
           variant="ghost"
           className={cn(
-            "mt-2 w-full flex items-center justify-center gap-2 transition-colors hover:opacity-90",
-            buttonColor && "text-white hover:text-white"
+            "mt-2 w-full flex items-center justify-center gap-2 transition-colors",
+            buttonColor && "text-white hover:text-white hover:opacity-90"
           )}
           onClick={() => setIsExpanded(!isExpanded)}
           style={buttonStyle}

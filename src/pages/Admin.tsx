@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -83,7 +84,6 @@ const Admin = () => {
   const [news, setNews] = useState<News[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [categories, setCategories] = useState<Array<{ id: string; name: string; slug: string }>>([]);
-  const [newCategoryName, setNewCategoryName] = useState("");
 
   useEffect(() => {
     fetchConfiguration();
@@ -431,27 +431,6 @@ const Admin = () => {
     );
   };
 
-  const handleCreateCategory = async () => {
-    if (!newCategoryName) {
-      toast.error("Nome da categoria é obrigatório");
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from("categories")
-        .insert([{ name: newCategoryName, slug: newCategoryName.toLowerCase().replace(/\s+/g, '-') }]);
-
-      if (error) throw error;
-
-      toast.success("Categoria criada com sucesso!");
-      setNewCategoryName("");
-      fetchCategories();
-    } catch (error: any) {
-      toast.error("Erro ao criar categoria: " + error.message);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4">
@@ -460,7 +439,6 @@ const Admin = () => {
         <Tabs defaultValue="news" className="space-y-6">
           <TabsList>
             <TabsTrigger value="news">Notícias</TabsTrigger>
-            <TabsTrigger value="categories">Categorias</TabsTrigger>
             <TabsTrigger value="config">Config Navbar</TabsTrigger>
             <TabsTrigger value="footer">Rodapé</TabsTrigger>
             <TabsTrigger value="general">Geral</TabsTrigger>
@@ -488,7 +466,7 @@ const Admin = () => {
                       className="min-h-[200px]"
                     />
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="category">Categoria</Label>
                       <select
@@ -504,6 +482,24 @@ const Admin = () => {
                           </option>
                         ))}
                       </select>
+                    </div>
+                    <div>
+                      <Label htmlFor="button_color">Cor do Botão</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="button_color"
+                          type="color"
+                          value={newNews.button_color || "#9b87f5"}
+                          onChange={(e) => setNewNews({ ...newNews, button_color: e.target.value })}
+                          className="w-20"
+                        />
+                        <Input
+                          type="text"
+                          value={newNews.button_color || "#9b87f5"}
+                          onChange={(e) => setNewNews({ ...newNews, button_color: e.target.value })}
+                          placeholder="#9b87f5"
+                        />
+                      </div>
                     </div>
                   </div>
                   <div>
@@ -549,7 +545,7 @@ const Admin = () => {
                       className="min-h-[200px]"
                     />
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="edit-category">Categoria</Label>
                       <select
@@ -565,6 +561,24 @@ const Admin = () => {
                           </option>
                         ))}
                       </select>
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-button_color">Cor do Botão</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="edit-button_color"
+                          type="color"
+                          value={editingNews.button_color || "#9b87f5"}
+                          onChange={(e) => setEditingNews({ ...editingNews, button_color: e.target.value })}
+                          className="w-20"
+                        />
+                        <Input
+                          type="text"
+                          value={editingNews.button_color || "#9b87f5"}
+                          onChange={(e) => setEditingNews({ ...editingNews, button_color: e.target.value })}
+                          placeholder="#9b87f5"
+                        />
+                      </div>
                     </div>
                   </div>
                   <div>
@@ -646,6 +660,11 @@ const Admin = () => {
                     <p className="whitespace-pre-wrap mb-2">{item.content}</p>
                     {item.image && <p className="text-sm text-gray-500">Imagem: {item.image}</p>}
                     {item.video && <p className="text-sm text-gray-500">Vídeo: {item.video}</p>}
+                    {item.button_color && (
+                      <p className="text-sm text-gray-500">
+                        Cor do botão: <span style={{ color: item.button_color }}>{item.button_color}</span>
+                      </p>
+                    )}
                     {Array.isArray(item.instagram_media) && item.instagram_media.length > 0 && (
                       <div className="mt-2">
                         <p className="text-sm font-medium text-gray-500">Mídia do Instagram:</p>
@@ -671,35 +690,48 @@ const Admin = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="categories" className="space-y-6">
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold mb-4">Gerenciar Categorias</h2>
-              <div className="space-y-4">
+          <TabsContent value="config" className="bg-white rounded-lg shadow p-6 space-y-6">
+            <div>
+              <h2 className="text-xl font-semibold mb-4">Cores dos Botões</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <Label htmlFor="new-category-name">Nome da Categoria</Label>
+                  <Label htmlFor="button_primary_color">Cor Primária do Botão</Label>
                   <div className="flex gap-2">
                     <Input
-                      id="new-category-name"
-                      value={newCategoryName}
-                      onChange={(e) => setNewCategoryName(e.target.value)}
-                      placeholder="Nova Categoria"
+                      id="button_primary_color"
+                      type="color"
+                      value={config.button_primary_color}
+                      onChange={(e) => setConfig({ ...config, button_primary_color: e.target.value })}
+                      className="w-20"
                     />
-                    <Button onClick={handleCreateCategory}>Criar Categoria</Button>
+                    <Input
+                      type="text"
+                      value={config.button_primary_color}
+                      onChange={(e) => setConfig({ ...config, button_primary_color: e.target.value })}
+                    />
                   </div>
                 </div>
+
                 <div>
-                  <h3 className="text-lg font-medium">Lista de Categorias</h3>
-                  <ul className="list-disc pl-5">
-                    {categories.map((category) => (
-                      <li key={category.id}>{category.name}</li>
-                    ))}
-                  </ul>
+                  <Label htmlFor="button_secondary_color">Cor Secundária do Botão</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="button_secondary_color"
+                      type="color"
+                      value={config.button_secondary_color}
+                      onChange={(e) => setConfig({ ...config, button_secondary_color: e.target.value })}
+                      className="w-20"
+                    />
+                    <Input
+                      type="text"
+                      value={config.button_secondary_color}
+                      onChange={(e) => setConfig({ ...config, button_secondary_color: e.target.value })}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
-          </TabsContent>
 
-          <TabsContent value="config" className="bg-white rounded-lg shadow p-6 space-y-6">
             <div>
               <h2 className="text-xl font-semibold mb-4">Logo da Navbar</h2>
               <div className="space-y-4">
@@ -947,10 +979,9 @@ const Admin = () => {
                 <Label htmlFor="footer_address">Endereço</Label>
                 <Input
                   id="footer_address"
-                  type="text"
                   value={config.footer_address || ""}
                   onChange={(e) => setConfig({ ...config, footer_address: e.target.value })}
-                  placeholder="Endereço completo"
+                  placeholder="Rua Exemplo, 123 - Bairro"
                 />
               </div>
 
@@ -958,32 +989,9 @@ const Admin = () => {
                 <Label htmlFor="footer_address_cep">CEP</Label>
                 <Input
                   id="footer_address_cep"
-                  type="text"
                   value={config.footer_address_cep || ""}
                   onChange={(e) => setConfig({ ...config, footer_address_cep: e.target.value })}
-                  placeholder="CEP"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="footer_social_facebook">Link do Facebook</Label>
-                <Input
-                  id="footer_social_facebook"
-                  type="url"
-                  value={config.footer_social_facebook || ""}
-                  onChange={(e) => setConfig({ ...config, footer_social_facebook: e.target.value })}
-                  placeholder="https://facebook.com/seu-perfil"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="footer_social_instagram">Link do Instagram</Label>
-                <Input
-                  id="footer_social_instagram"
-                  type="url"
-                  value={config.footer_social_instagram || ""}
-                  onChange={(e) => setConfig({ ...config, footer_social_instagram: e.target.value })}
-                  placeholder="https://instagram.com/seu-perfil"
+                  placeholder="00000-000"
                 />
               </div>
 
@@ -991,99 +999,114 @@ const Admin = () => {
                 <Label htmlFor="footer_schedule">Horário de Funcionamento</Label>
                 <Input
                   id="footer_schedule"
-                  type="text"
                   value={config.footer_schedule || ""}
                   onChange={(e) => setConfig({ ...config, footer_schedule: e.target.value })}
-                  placeholder="Horário de funcionamento"
+                  placeholder="Segunda a Sexta, 9h às 18h"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold mb-4">Redes Sociais</h2>
+              
+              <div>
+                <Label htmlFor="nav_social_facebook">Link do Facebook</Label>
+                <Input
+                  id="nav_social_facebook"
+                  type="url"
+                  value={config.footer_social_facebook || ""}
+                  onChange={(e) => setConfig({ ...config, footer_social_facebook: e.target.value })}
+                  placeholder="https://facebook.com/sua-pagina"
                 />
               </div>
 
               <div>
+                <Label htmlFor="nav_social_instagram">Link do Instagram</Label>
+                <Input
+                  id="nav_social_instagram"
+                  type="url"
+                  value={config.footer_social_instagram || ""}
+                  onChange={(e) => setConfig({ ...config, footer_social_instagram: e.target.value })}
+                  placeholder="https://instagram.com/seu-perfil"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold mb-4">Texto de Copyright</h2>
+              <div>
                 <Label htmlFor="footer_copyright_text">Texto de Copyright</Label>
                 <Input
                   id="footer_copyright_text"
-                  type="text"
                   value={config.footer_copyright_text || ""}
-                  onChange={(e) => setConfig({ ...config, footer_copyright_text: e.target.value })}
+                  onChange={(e) =>
+                    setConfig({ ...config, footer_copyright_text: e.target.value })
+                  }
                   placeholder="© 2025 VALEOFC. Todos os direitos reservados."
                 />
               </div>
+            </div>
+
+            <div className="flex justify-end">
+              <Button onClick={handleConfigUpdate}>
+                Salvar Configurações 
+              </Button>
             </div>
           </TabsContent>
 
           <TabsContent value="general" className="bg-white rounded-lg shadow p-6 space-y-6">
             <div>
-              <h2 className="text-xl font-semibold mb-4">Configurações Gerais</h2>
+              <h2 className="text-xl font-semibold mb-4">Configurações Meta Tags</h2>
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="meta_title">Título da Meta</Label>
+                  <Label htmlFor="meta_title">Título da Página</Label>
                   <Input
                     id="meta_title"
-                    type="text"
-                    value={config.meta_title}
+                    value={config.meta_title || ""}
                     onChange={(e) => setConfig({ ...config, meta_title: e.target.value })}
-                    placeholder="Título da Meta"
+                    placeholder="vale-news-hub"
                   />
                 </div>
+
                 <div>
-                  <Label htmlFor="meta_description">Descrição da Meta</Label>
-                  <Input
+                  <Label htmlFor="meta_description">Descrição da Página</Label>
+                  <Textarea
                     id="meta_description"
-                    type="text"
-                    value={config.meta_description}
+                    value={config.meta_description || ""}
                     onChange={(e) => setConfig({ ...config, meta_description: e.target.value })}
-                    placeholder="Descrição da Meta"
+                    placeholder="Descrição do seu site"
                   />
                 </div>
+
                 <div>
-                  <Label htmlFor="meta_author">Autor da Meta</Label>
+                  <Label htmlFor="meta_author">Autor</Label>
                   <Input
                     id="meta_author"
-                    type="text"
-                    value={config.meta_author}
+                    value={config.meta_author || ""}
                     onChange={(e) => setConfig({ ...config, meta_author: e.target.value })}
-                    placeholder="Autor da Meta"
+                    placeholder="Nome do autor"
                   />
                 </div>
+
                 <div>
-                  <Label htmlFor="meta_image">Imagem da Meta</Label>
+                  <Label htmlFor="meta_image">Link da Imagem de Compartilhamento (OG Image)</Label>
                   <Input
                     id="meta_image"
-                    type="text"
-                    value={config.meta_image}
+                    value={config.meta_image || ""}
                     onChange={(e) => setConfig({ ...config, meta_image: e.target.value })}
-                    placeholder="Imagem da Meta"
+                    placeholder="https://exemplo.com/imagem.jpg"
                   />
-                </div>
-                <div>
-                  <Label htmlFor="button_primary_color">Cor Primária do Botão</Label>
-                  <Input
-                    id="button_primary_color"
-                    type="color"
-                    value={config.button_primary_color}
-                    onChange={(e) => setConfig({ ...config, button_primary_color: e.target.value })}
-                  />
-                  <Input
-                    type="text"
-                    value={config.button_primary_color}
-                    onChange={(e) => setConfig({ ...config, button_primary_color: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="button_secondary_color">Cor Secundária do Botão</Label>
-                  <Input
-                    id="button_secondary_color"
-                    type="color"
-                    value={config.button_secondary_color}
-                    onChange={(e) => setConfig({ ...config, button_secondary_color: e.target.value })}
-                  />
-                  <Input
-                    type="text"
-                    value={config.button_secondary_color}
-                    onChange={(e) => setConfig({ ...config, button_secondary_color: e.target.value })}
-                  />
+                  <p className="text-sm text-gray-500 mt-1">
+                    Esta imagem será exibida quando o site for compartilhado em redes sociais
+                  </p>
                 </div>
               </div>
+            </div>
+
+            <div className="flex justify-end">
+              <Button onClick={handleConfigUpdate}>
+                Salvar Configurações
+              </Button>
             </div>
           </TabsContent>
         </Tabs>
