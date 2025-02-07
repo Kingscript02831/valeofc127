@@ -33,7 +33,14 @@ const Admin = () => {
     high_contrast: false,
     header_alerts: [],
     navigation_links: [],
-    font_size: "medium"
+    font_size: "medium",
+    enable_weather: false,
+    weather_api_key: null,
+    location_city: "São Paulo",
+    location_state: "SP",
+    location_country: "BR",
+    location_lat: -23.5505,
+    location_lng: -46.6333
   });
 
   const [newNews, setNewNews] = useState<NewsInsert>({
