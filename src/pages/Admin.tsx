@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -37,14 +36,19 @@ const Admin = () => {
       const { data, error } = await supabase
         .from("site_configuration")
         .select("*")
-        .single();
+        .maybeSingle();
 
       if (error) {
         toast.error("Erro ao carregar configurações");
         throw error;
       }
 
-      return data;
+      // Return default values if no configuration exists
+      return data || {
+        primary_color: "#1A1F2C",
+        accent_color: "#8B5CF6",
+        id: null
+      };
     },
   });
 
@@ -72,13 +76,25 @@ const Admin = () => {
 
   const handleColorUpdate = async (color: string, type: string) => {
     try {
-      const { error } = await supabase
-        .from("site_configuration")
-        .update({ [type]: color })
-        .eq("id", siteConfig?.id);
+      if (siteConfig?.id) {
+        // Update existing configuration
+        const { error } = await supabase
+          .from("site_configuration")
+          .update({ [type]: color })
+          .eq("id", siteConfig.id);
 
-      if (error) throw error;
+        if (error) throw error;
+      } else {
+        // Insert new configuration if none exists
+        const { error } = await supabase
+          .from("site_configuration")
+          .insert([{ [type]: color }]);
+
+        if (error) throw error;
+      }
+      
       toast.success("Cor atualizada com sucesso!");
+      queryClient.invalidateQueries({ queryKey: ["site-configuration"] });
     } catch (error) {
       toast.error("Erro ao atualizar cor");
     }
