@@ -281,20 +281,48 @@ const Admin = () => {
   };
 
   const renderInstagramMediaFields = (news: NewsInsert | News) => {
-    const currentMedia: InstagramMediaJson[] = Array.isArray(news.instagram_media)
-      ? news.instagram_media.map(media => {
-          if (typeof media === 'object' && media !== null) {
-            const mediaObj = media as { url?: string; type?: 'post' | 'video' };
-            if ('url' in media && 'type' in media) {
-              return {
-                url: mediaObj.url || '',
-                type: mediaObj.type || 'post'
-              } as InstagramMediaJson;
-            }
-          }
-          return { url: '', type: 'post' } as InstagramMediaJson;
-        })
-      : [];
+    if (!news.instagram_media || !Array.isArray(news.instagram_media)) {
+      return (
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-medium">Mídia do Instagram</h3>
+            <div className="space-x-2">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => addInstagramMedia(news, 'post')}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Adicionar Post
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => addInstagramMedia(news, 'video')}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Adicionar Vídeo
+              </Button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    const currentMedia: InstagramMediaJson[] = news.instagram_media.map(media => {
+      if (typeof media === 'object' && media !== null) {
+        const mediaObj = media as { url?: string; type?: 'post' | 'video' };
+        if ('url' in media && 'type' in media) {
+          return {
+            url: mediaObj.url || '',
+            type: mediaObj.type || 'post'
+          } as InstagramMediaJson;
+        }
+      }
+      return { url: '', type: 'post' } as InstagramMediaJson;
+    });
 
     return (
       <div className="space-y-4">
