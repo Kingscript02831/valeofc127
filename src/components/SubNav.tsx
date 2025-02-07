@@ -4,6 +4,12 @@ import { Link, useLocation } from "react-router-dom";
 import { Menu } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type SiteConfig = Database['public']['Tables']['site_configuration']['Row'];
 
@@ -35,6 +41,12 @@ const SubNav = () => {
     { path: "/lojas", label: "Lojas" },
   ];
 
+  const menuItems = [
+    { path: "/grupos", label: "Grupos" },
+    { path: "/doacao", label: "Doação" },
+    { path: "/outros", label: "Outros" },
+  ];
+
   return (
     <nav 
       className="shadow-md"
@@ -45,7 +57,36 @@ const SubNav = () => {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-12">
-          <div className="flex space-x-8">
+          <div className="flex items-center space-x-8">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button 
+                  className="p-2 rounded-md hover:bg-white/10 transition-colors duration-200"
+                  style={{ color: config.text_color }}
+                >
+                  <Menu size={24} />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                className="w-48"
+                style={{
+                  backgroundColor: config.navbar_color,
+                  border: `1px solid ${config.primary_color}40`
+                }}
+              >
+                {menuItems.map((item) => (
+                  <DropdownMenuItem key={item.path}>
+                    <Link
+                      to={item.path}
+                      className="w-full px-2 py-1.5 text-sm"
+                      style={{ color: config.text_color }}
+                    >
+                      {item.label}
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
             {links.map((link) => (
               <Link
                 key={link.path}
@@ -64,12 +105,6 @@ const SubNav = () => {
               </Link>
             ))}
           </div>
-          <button 
-            className="p-2 rounded-md hover:bg-white/10 transition-colors duration-200"
-            style={{ color: config.text_color }}
-          >
-            <Menu size={24} />
-          </button>
         </div>
       </div>
     </nav>
