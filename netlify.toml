@@ -1,0 +1,12 @@
+[build]
+  command = "npm run build" # Comando para build do projeto
+  publish = "dist"          # Diretório onde os arquivos de build estão
+  functions = "functions"   # Diretório das funções serverless (opcional)
+
+[dev]
+  framework = "vite"        # Define o framework usado para desenvolvimento
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
