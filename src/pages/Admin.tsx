@@ -1,10 +1,11 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import type { Database } from "@/integrations/supabase/types";
+import type { Database, Json } from "@/integrations/supabase/types";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, Plus, Trash2 } from "lucide-react";
@@ -220,19 +221,19 @@ const Admin = () => {
     };
     
     const currentMedia = Array.isArray(news.instagram_media) 
-      ? (news.instagram_media as InstagramMediaJson[])
+      ? (news.instagram_media as unknown as InstagramMediaJson[])
       : [];
     
     if ('id' in news) {
       setEditingNews({
         ...news,
-        instagram_media: [...currentMedia, media] as unknown as Json,
-      });
+        instagram_media: [...currentMedia, media] as unknown as Json[],
+      } as News);
     } else {
       setNewNews({
         ...news,
-        instagram_media: [...currentMedia, media] as unknown as Json,
-      });
+        instagram_media: [...currentMedia, media] as unknown as Json[],
+      } as NewsInsert);
     }
   };
 
@@ -242,7 +243,7 @@ const Admin = () => {
     url: string
   ) => {
     const currentMedia = Array.isArray(news.instagram_media) 
-      ? (news.instagram_media as InstagramMediaJson[])
+      ? (news.instagram_media as unknown as InstagramMediaJson[])
       : [];
     const updatedMedia = [...currentMedia];
     updatedMedia[index] = { ...updatedMedia[index], url };
@@ -250,19 +251,19 @@ const Admin = () => {
     if ('id' in news) {
       setEditingNews({
         ...news,
-        instagram_media: updatedMedia as unknown as Json,
-      });
+        instagram_media: updatedMedia as unknown as Json[],
+      } as News);
     } else {
       setNewNews({
         ...news,
-        instagram_media: updatedMedia as unknown as Json,
-      });
+        instagram_media: updatedMedia as unknown as Json[],
+      } as NewsInsert);
     }
   };
 
   const removeInstagramMedia = (news: NewsInsert | News, index: number) => {
     const currentMedia = Array.isArray(news.instagram_media)
-      ? (news.instagram_media as InstagramMediaJson[])
+      ? (news.instagram_media as unknown as InstagramMediaJson[])
       : [];
     const updatedMedia = [...currentMedia];
     updatedMedia.splice(index, 1);
@@ -270,19 +271,19 @@ const Admin = () => {
     if ('id' in news) {
       setEditingNews({
         ...news,
-        instagram_media: updatedMedia as unknown as Json,
-      });
+        instagram_media: updatedMedia as unknown as Json[],
+      } as News);
     } else {
       setNewNews({
         ...news,
-        instagram_media: updatedMedia as unknown as Json,
-      });
+        instagram_media: updatedMedia as unknown as Json[],
+      } as NewsInsert);
     }
   };
 
   const renderInstagramMediaFields = (news: NewsInsert | News) => {
     const currentMedia = Array.isArray(news.instagram_media) 
-      ? (news.instagram_media as InstagramMediaJson[])
+      ? (news.instagram_media as unknown as InstagramMediaJson[])
       : [];
 
     return (
