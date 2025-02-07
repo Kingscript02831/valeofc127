@@ -86,13 +86,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "fk_news_category"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "categories"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "news_category_id_fkey"
             columns: ["category_id"]
             isOneToOne: false

@@ -18,7 +18,6 @@ interface NewsCardProps {
   video?: string;
   instagramMedia?: InstagramMedia[];
   buttonColor?: string;
-  buttonSecondaryColor?: string;
   category?: {
     name: string;
     slug: string;
@@ -28,20 +27,29 @@ interface NewsCardProps {
 const getYouTubeEmbedUrl = (url: string) => {
   if (!url) return '';
   
+  // Handle youtube.com/watch?v= format
   const watchMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/);
   if (watchMatch) {
     return `https://www.youtube.com/embed/${watchMatch[1]}`;
   }
+
+  // If it's already an embed URL or other format, return as is
   return url;
 };
 
 const getInstagramEmbedUrl = (url: string) => {
   if (!url) return '';
+
+  // Remove query parameters and trailing slashes
   url = url.split('?')[0].replace(/\/$/, '');
+  
+  // Extract ID from reel or post URL
   const idMatch = url.match(/(?:\/reel\/|\/p\/)([^\/]+)/);
   if (!idMatch) return '';
+  
   const postId = idMatch[1];
   const isReel = url.includes('/reel/');
+  
   return isReel 
     ? `https://www.instagram.com/reel/${postId}/embed`
     : `https://www.instagram.com/p/${postId}/embed`;
@@ -55,22 +63,23 @@ const NewsCard = ({
   video, 
   instagramMedia = [], 
   buttonColor,
-  buttonSecondaryColor,
   category 
 }: NewsCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const youtubeEmbedUrl = getYouTubeEmbedUrl(video || '');
 
+  // Convert line breaks to paragraphs
   const formattedContent = content.split('\n').map((paragraph, index) => (
     paragraph.trim() ? <p key={index} className="mb-4">{paragraph}</p> : null
   ));
 
   const buttonStyle = buttonColor ? {
-    background: buttonSecondaryColor 
-      ? `linear-gradient(to right, ${buttonColor}, ${buttonSecondaryColor})`
-      : buttonColor,
+    backgroundColor: buttonColor,
     color: '#FFFFFF',
-    border: 'none'
+    '&:hover': {
+      backgroundColor: buttonColor,
+      opacity: 0.9
+    }
   } : undefined;
 
   return (
@@ -107,7 +116,7 @@ const NewsCard = ({
         
         <h2 className="text-xl font-semibold mb-2">{title}</h2>
         
-        <div className={cn("prose prose-sm max-w-none", !isExpanded && "line-clamp-3")}>
+        <div className={`prose prose-sm max-w-none ${!isExpanded && "line-clamp-3"}`}>
           {formattedContent}
         </div>
 
@@ -131,11 +140,11 @@ const NewsCard = ({
         <Button
           variant="ghost"
           className={cn(
-            "mt-2 w-full flex items-center justify-center gap-2 transition-colors",
-            buttonColor && "text-white hover:text-white hover:opacity-90"
+            "mt-2 w-full flex items-center justify-center gap-2",
+            buttonColor && "text-white hover:text-white"
           )}
           onClick={() => setIsExpanded(!isExpanded)}
-          style={buttonStyle}
+          style={buttonColor ? { backgroundColor: buttonColor, '&:hover': { backgroundColor: buttonColor, opacity: 0.9 } } : undefined}
         >
           {isExpanded ? (
             <>
