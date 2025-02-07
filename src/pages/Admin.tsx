@@ -48,6 +48,7 @@ const Admin = () => {
     footer_social_facebook: null,
     footer_social_instagram: null,
     footer_schedule: null,
+    footer_copyright_text: "© 2025 VALEOFC. Todos os direitos reservados.",
     enable_weather: false,
     weather_api_key: null,
     location_lat: null,
