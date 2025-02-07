@@ -1,7 +1,6 @@
 
+import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { Menu } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -9,7 +8,6 @@ type SiteConfig = Database['public']['Tables']['site_configuration']['Row'];
 
 const SubNav = () => {
   const [config, setConfig] = useState<SiteConfig | null>(null);
-  const location = useLocation();
 
   useEffect(() => {
     fetchConfiguration();
@@ -28,48 +26,34 @@ const SubNav = () => {
 
   if (!config) return null;
 
-  const links = [
-    { path: "/", label: "Notícias" },
-    { path: "/eventos", label: "Eventos" },
-    { path: "/lugares", label: "Lugares" },
-    { path: "/lojas", label: "Lojas" },
+  const navItems = [
+    { name: "Notícias", path: "/" },
+    { name: "Eventos", path: "/eventos" },
+    { name: "Lugares", path: "/lugares" },
+    { name: "Lojas", path: "/lojas" },
   ];
 
   return (
-    <nav 
-      className="shadow-md"
-      style={{ 
-        background: `linear-gradient(to right, ${config.navbar_color}, ${config.primary_color})`,
-        borderColor: `${config.primary_color}20`
-      }}
-    >
+    <nav className="border-b shadow-sm"
+         style={{ 
+           backgroundColor: `${config.primary_color}10`,
+           borderColor: `${config.primary_color}20`
+         }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-12">
-          <div className="flex space-x-8">
-            {links.map((link) => (
-              <Link
-                key={link.path}
-                to={link.path}
-                className={`inline-flex items-center px-1 pt-1 text-sm font-medium transition-colors duration-200 ${
-                  location.pathname === link.path 
-                    ? 'border-b-2'
-                    : 'hover:border-b-2 hover:border-opacity-50'
-                }`}
-                style={{ 
-                  color: config.text_color,
-                  borderColor: location.pathname === link.path ? config.text_color : 'transparent'
-                }}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </div>
-          <button 
-            className="p-2 rounded-md hover:bg-white/10 transition-colors duration-200"
-            style={{ color: config.text_color }}
-          >
-            <Menu size={24} />
-          </button>
+        <div className="flex justify-center space-x-8 h-12">
+          {navItems.map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              className="inline-flex items-center px-4 h-full border-b-2 transition-all duration-200 hover:border-current text-lg font-medium"
+              style={{ 
+                color: config.primary_color,
+                borderColor: 'transparent',
+              }}
+            >
+              {item.name}
+            </Link>
+          ))}
         </div>
       </div>
     </nav>

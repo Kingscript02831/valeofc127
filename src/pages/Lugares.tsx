@@ -1,5 +1,4 @@
 
-import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import SubNav from "@/components/SubNav";
 import Footer from "@/components/Footer";
@@ -11,7 +10,12 @@ const Lugares = () => {
       <SubNav />
       <main className="flex-1 container mx-auto py-8 px-4">
         <h1 className="text-3xl font-bold mb-6">Lugares</h1>
-        <p className="text-gray-600">Conteúdo da página de lugares em breve...</p>
+        <div className="grid gap-6">
+          {/* Content will be added later */}
+          <p className="text-gray-500 text-center py-8">
+            Conteúdo de lugares em breve...
+          </p>
+        </div>
       </main>
       <Footer />
     </div>
