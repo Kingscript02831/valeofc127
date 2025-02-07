@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -17,10 +18,12 @@ import {
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const Admin = () => {
+  const navigate = useNavigate();
   const [newNews, setNewNews] = useState({
     title: "",
     content: "",
@@ -30,9 +33,39 @@ const Admin = () => {
 
   const queryClient = useQueryClient();
 
+  // Check authentication on component mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Você precisa estar logado para acessar o painel administrativo");
+        navigate("/login");
+        return;
+      }
+
+      // Check if user is an admin
+      const { data: adminUser } = await supabase
+        .from("admin_users")
+        .select("*")
+        .eq("email", session.user.email)
+        .single();
+
+      if (!adminUser) {
+        toast.error("Você não tem permissão para acessar o painel administrativo");
+        navigate("/");
+        return;
+      }
+    };
+
+    checkAuth();
+  }, [navigate]);
+
   const { data: siteConfig } = useQuery({
     queryKey: ["site-configuration"],
     queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Não autorizado");
+
       const { data, error } = await supabase
         .from("site_configuration")
         .select("*")
