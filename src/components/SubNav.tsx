@@ -54,7 +54,7 @@ const SubNav = () => {
               </Link>
               
               {link.subLinks && (
-                <div className="absolute left-0 hidden group-hover:block mt-2 w-48 bg-white rounded-md shadow-lg py-1">
+                <div className="absolute left-full top-0 hidden group-hover:block ml-1 w-48 bg-white rounded-md shadow-lg py-1">
                   {link.subLinks.map((subLink) => (
                     <Link
                       key={subLink.path}
