@@ -14,47 +14,51 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-gradient-to-r from-blue-600 to-blue-800 py-4 px-6 shadow-lg">
-      <div className="container mx-auto flex flex-col md:flex-row items-center justify-between">
-        {/* Logotipo */}
-        <a
-          href="/"
-          className="text-2xl font-extrabold text-white tracking-wide mb-4 md:mb-0"
-        >
-          VALEOFC
-        </a>
-
-        {/* Ícones */}
-        <div className="flex items-center gap-6">
-          {/* Facebook */}
-          <a
-            href="https://facebook.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-white hover:text-blue-300 transition-transform transform hover:scale-110"
+    <nav className="bg-gradient-to-r from-primary to-primary-dark border-b border-primary/20 shadow-xl">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          {/* Logo com hover effect */}
+          <a 
+            href="/" 
+            className="flex items-center space-x-2 transform transition duration-300 hover:scale-105"
           >
-            <Facebook className="h-6 w-6" />
+            <span className="text-2xl font-bold text-white tracking-tighter bg-accent/20 px-4 py-1 rounded-lg">
+              VALEOFC
+            </span>
           </a>
 
-          {/* Instagram */}
-          <a
-            href="https://instagram.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-white hover:text-pink-300 transition-transform transform hover:scale-110"
-          >
-            <Instagram className="h-6 w-6" />
-          </a>
+          {/* Ícones de redes sociais e compartilhamento */}
+          <div className="flex items-center space-x-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleShare}
+              className="text-white/90 hover:text-white hover:bg-accent/20 rounded-full p-2 transition-all duration-300 ease-out hover:scale-110"
+              aria-label="Compartilhar"
+            >
+              <Share2 className="h-6 w-6" strokeWidth={2.5} />
+            </Button>
 
-          {/* Botão de Compartilhar */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleShare}
-            className="text-white hover:text-green-300 transition-transform transform hover:scale-110"
-          >
-            <Share2 className="h-6 w-6" />
-          </Button>
+            <a
+              href="https://facebook.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white/90 hover:text-white p-2 rounded-full hover:bg-accent/20 transition-all duration-300 ease-out hover:scale-110"
+              aria-label="Facebook"
+            >
+              <Facebook className="h-6 w-6" strokeWidth={2.5} />
+            </a>
+
+            <a
+              href="https://instagram.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white/90 hover:text-white p-2 rounded-full hover:bg-accent/20 transition-all duration-300 ease-out hover:scale-110"
+              aria-label="Instagram"
+            >
+              <Instagram className="h-6 w-6" strokeWidth={2.5} />
+            </a>
+          </div>
         </div>
       </div>
     </nav>
