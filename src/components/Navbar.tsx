@@ -74,13 +74,9 @@ const Navbar = () => {
               href="https://facebook.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="transition-all duration-300 ease-out hover:scale-110 p-2 rounded-full"
+              className="transition-all duration-300 ease-out hover:scale-110 p-2 rounded-full hover:bg-accent/20"
               style={{ 
                 color: `${config.text_color}90`,
-                ':hover': { 
-                  color: config.text_color,
-                  backgroundColor: `${config.accent_color}20`
-                }
               }}
               aria-label="Facebook"
             >
@@ -91,13 +87,9 @@ const Navbar = () => {
               href="https://instagram.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="transition-all duration-300 ease-out hover:scale-110 p-2 rounded-full"
+              className="transition-all duration-300 ease-out hover:scale-110 p-2 rounded-full hover:bg-accent/20"
               style={{ 
                 color: `${config.text_color}90`,
-                ':hover': { 
-                  color: config.text_color,
-                  backgroundColor: `${config.accent_color}20`
-                }
               }}
               aria-label="Instagram"
             >
@@ -108,13 +100,9 @@ const Navbar = () => {
               variant="ghost"
               size="icon"
               onClick={handleShare}
-              className="transition-all duration-300 ease-out hover:scale-110 rounded-full p-2"
+              className="transition-all duration-300 ease-out hover:scale-110 rounded-full p-2 hover:bg-accent/20"
               style={{ 
                 color: `${config.text_color}90`,
-                ':hover': { 
-                  color: config.text_color,
-                  backgroundColor: `${config.accent_color}20`
-                }
               }}
               aria-label="Compartilhar"
             >

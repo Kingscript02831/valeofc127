@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -96,9 +95,20 @@ const Admin = () => {
 
   const handleNewsSubmit = async () => {
     try {
+      if (!newNews.title || !newNews.content) {
+        toast.error("Título e conteúdo são obrigatórios");
+        return;
+      }
+
       const { error } = await supabase
         .from("news")
-        .insert([newNews]);
+        .insert({
+          title: newNews.title,
+          content: newNews.content,
+          image: newNews.image || null,
+          video: newNews.video || null,
+          date: newNews.date
+        });
 
       if (error) throw error;
 
