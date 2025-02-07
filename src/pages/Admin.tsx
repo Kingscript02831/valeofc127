@@ -1,6 +1,8 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import {
   Settings,
@@ -12,11 +14,23 @@ import {
   Image,
   Newspaper,
   Globe,
+  Plus,
 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const Admin = () => {
+  const [newNews, setNewNews] = useState({
+    title: "",
+    content: "",
+    image: "",
+    video: "",
+  });
+
+  const queryClient = useQueryClient();
+
   const { data: siteConfig } = useQuery({
     queryKey: ["site-configuration"],
     queryFn: async () => {
@@ -27,6 +41,23 @@ const Admin = () => {
 
       if (error) {
         toast.error("Erro ao carregar configurações");
+        throw error;
+      }
+
+      return data;
+    },
+  });
+
+  const { data: newsList } = useQuery({
+    queryKey: ["news"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("news")
+        .select("*")
+        .order("date", { ascending: false });
+
+      if (error) {
+        toast.error("Erro ao carregar notícias");
         throw error;
       }
 
@@ -50,6 +81,45 @@ const Admin = () => {
       toast.success("Cor atualizada com sucesso!");
     } catch (error) {
       toast.error("Erro ao atualizar cor");
+    }
+  };
+
+  const handleAddNews = async () => {
+    try {
+      const { error } = await supabase
+        .from("news")
+        .insert([
+          {
+            title: newNews.title,
+            content: newNews.content,
+            image: newNews.image || null,
+            video: newNews.video || null,
+          },
+        ]);
+
+      if (error) throw error;
+
+      toast.success("Notícia adicionada com sucesso!");
+      setNewNews({ title: "", content: "", image: "", video: "" });
+      queryClient.invalidateQueries({ queryKey: ["news"] });
+    } catch (error) {
+      toast.error("Erro ao adicionar notícia");
+    }
+  };
+
+  const handleDeleteNews = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("news")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast.success("Notícia removida com sucesso!");
+      queryClient.invalidateQueries({ queryKey: ["news"] });
+    } catch (error) {
+      toast.error("Erro ao remover notícia");
     }
   };
 
@@ -126,7 +196,7 @@ const Admin = () => {
           </Card>
 
           {/* Notícias */}
-          <Card className="p-6 hover:shadow-lg transition-shadow">
+          <Card className="col-span-1 md:col-span-2 lg:col-span-3 p-6 hover:shadow-lg transition-shadow">
             <div className="flex items-center space-x-3 mb-4">
               <Newspaper className="h-6 w-6 text-primary" />
               <h3 className="text-xl font-semibold">Notícias</h3>
@@ -134,9 +204,64 @@ const Admin = () => {
             <p className="text-gray-600 mb-4">
               Gerencie as notícias do site
             </p>
-            <Button variant="outline" className="w-full">
-              Gerenciar Notícias
-            </Button>
+            
+            <div className="grid gap-4">
+              <div className="grid gap-4">
+                <Input
+                  placeholder="Título da notícia"
+                  value={newNews.title}
+                  onChange={(e) => setNewNews({ ...newNews, title: e.target.value })}
+                />
+                <Textarea
+                  placeholder="Conteúdo da notícia"
+                  value={newNews.content}
+                  onChange={(e) => setNewNews({ ...newNews, content: e.target.value })}
+                />
+                <Input
+                  placeholder="Link da imagem (opcional)"
+                  value={newNews.image}
+                  onChange={(e) => setNewNews({ ...newNews, image: e.target.value })}
+                />
+                <Input
+                  placeholder="Link do vídeo do YouTube (opcional)"
+                  value={newNews.video}
+                  onChange={(e) => setNewNews({ ...newNews, video: e.target.value })}
+                />
+                <Button onClick={handleAddNews} className="w-full flex items-center justify-center gap-2">
+                  <Plus className="h-4 w-4" />
+                  Adicionar Notícia
+                </Button>
+              </div>
+
+              <div className="mt-4">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Título</TableHead>
+                      <TableHead>Data</TableHead>
+                      <TableHead>Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {newsList?.map((news) => (
+                      <TableRow key={news.id}>
+                        <TableCell>{news.title}</TableCell>
+                        <TableCell>{new Date(news.date).toLocaleDateString("pt-BR")}</TableCell>
+                        <TableCell>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDeleteNews(news.id)}
+                          >
+                            Excluir
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
           </Card>
 
           {/* SEO e Meta */}
@@ -215,4 +340,3 @@ const Admin = () => {
 };
 
 export default Admin;
-

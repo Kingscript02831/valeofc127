@@ -27,6 +27,39 @@ export type Database = {
         }
         Relationships: []
       }
+      news: {
+        Row: {
+          content: string
+          created_at: string
+          date: string
+          id: string
+          image: string | null
+          title: string
+          updated_at: string
+          video: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          date?: string
+          id?: string
+          image?: string | null
+          title: string
+          updated_at?: string
+          video?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          date?: string
+          id?: string
+          image?: string | null
+          title?: string
+          updated_at?: string
+          video?: string | null
+        }
+        Relationships: []
+      }
       site_configuration: {
         Row: {
           accent_color: string
