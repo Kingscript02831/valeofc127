@@ -14,6 +14,10 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 
 type SiteConfig = Database['public']['Tables']['site_configuration']['Row'];
+type NavigationLink = {
+  label: string;
+  url: string;
+};
 
 const Navbar = () => {
   const [config, setConfig] = useState<SiteConfig | null>(null);
@@ -46,6 +50,9 @@ const Navbar = () => {
   };
 
   if (!config) return null;
+
+  // Type assertion to convert Json to NavigationLink[]
+  const navigationLinks = (config.navigation_links || []) as NavigationLink[];
 
   return (
     <nav 
@@ -86,7 +93,7 @@ const Navbar = () => {
             <div className="hidden md:ml-6 md:flex">
               <NavigationMenu>
                 <NavigationMenuList>
-                  {config.navigation_links?.map((link: any) => (
+                  {navigationLinks.map((link) => (
                     <NavigationMenuItem key={link.url}>
                       <NavigationMenuLink
                         href={link.url}
@@ -158,7 +165,7 @@ const Navbar = () => {
         {/* Mobile Navigation Menu */}
         {isMobileMenuOpen && (
           <div className="md:hidden py-2 space-y-1">
-            {config.navigation_links?.map((link: any) => (
+            {navigationLinks.map((link) => (
               <a
                 key={link.url}
                 href={link.url}
