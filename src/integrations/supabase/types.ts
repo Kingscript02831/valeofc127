@@ -9,24 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      admin_users: {
-        Row: {
-          created_at: string
-          email: string
-          id: string
-        }
-        Insert: {
-          created_at?: string
-          email: string
-          id?: string
-        }
-        Update: {
-          created_at?: string
-          email?: string
-          id?: string
-        }
-        Relationships: []
-      }
       news: {
         Row: {
           content: string
@@ -68,6 +50,9 @@ export type Database = {
           footer_color: string
           id: string
           navbar_color: string
+          navbar_logo_image: string | null
+          navbar_logo_text: string | null
+          navbar_logo_type: string
           numbers_color: string
           primary_color: string
           secondary_color: string
@@ -83,6 +68,9 @@ export type Database = {
           footer_color?: string
           id?: string
           navbar_color?: string
+          navbar_logo_image?: string | null
+          navbar_logo_text?: string | null
+          navbar_logo_type?: string
           numbers_color?: string
           primary_color?: string
           secondary_color?: string
@@ -98,6 +86,9 @@ export type Database = {
           footer_color?: string
           id?: string
           navbar_color?: string
+          navbar_logo_image?: string | null
+          navbar_logo_text?: string | null
+          navbar_logo_type?: string
           numbers_color?: string
           primary_color?: string
           secondary_color?: string
