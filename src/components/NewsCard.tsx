@@ -31,12 +31,36 @@ const getYouTubeEmbedUrl = (url: string) => {
     return `https://www.youtube.com/embed/${watchMatch[1]}`;
   }
 
-  return url; // Return original if no match
+  return url;
 };
 
-const getInstagramEmbedUrl = (url: string) => {
+const getInstagramEmbedUrl = (url: string, type: 'post' | 'video') => {
   // Remove trailing slash if present
   url = url.replace(/\/$/, '');
+  
+  // Handle different Instagram URL formats
+  if (type === 'video') {
+    // For reels/videos
+    if (url.includes('/reel/')) {
+      return `${url}/embed`;
+    }
+    // Convert normal URLs to reel format if needed
+    const postId = url.split('/p/')[1]?.split('/')[0] || url.split('/').pop();
+    if (postId) {
+      return `https://www.instagram.com/reel/${postId}/embed`;
+    }
+  } else {
+    // For regular posts
+    if (url.includes('/p/')) {
+      return `${url}/embed`;
+    }
+    // Convert normal URLs to post format if needed
+    const postId = url.split('/').pop();
+    if (postId) {
+      return `https://www.instagram.com/p/${postId}/embed`;
+    }
+  }
+  
   return `${url}/embed`;
 };
 
@@ -81,7 +105,7 @@ const NewsCard = ({ title, content, date, image, video, instagramMedia = [] }: N
             {instagramMedia.map((media, index) => (
               <div key={index} className="instagram-embed">
                 <iframe
-                  src={getInstagramEmbedUrl(media.url)}
+                  src={getInstagramEmbedUrl(media.url, media.type)}
                   className="w-full aspect-square"
                   frameBorder="0"
                   scrolling="no"
@@ -116,3 +140,4 @@ const NewsCard = ({ title, content, date, image, video, instagramMedia = [] }: N
 };
 
 export default NewsCard;
+
