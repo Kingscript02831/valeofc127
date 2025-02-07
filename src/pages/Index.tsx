@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import SubNav from "@/components/SubNav";
@@ -77,6 +78,7 @@ const Index = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {news.map((item) => {
+                // Safely cast instagram_media to InstagramMedia[]
                 const instagramMedia = Array.isArray(item.instagram_media) 
                   ? (item.instagram_media as unknown as InstagramMedia[])
                   : [];
@@ -102,7 +104,6 @@ const Index = () => {
           )}
         </div>
       </main>
-      
       <Footer />
     </div>
   );
