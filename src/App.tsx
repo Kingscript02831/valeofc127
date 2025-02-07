@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Events from "./pages/Events";
 import Places from "./pages/Places";
 import Stores from "./pages/Stores";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,6 +24,7 @@ const App = () => (
           <Route path="/eventos" element={<Events />} />
           <Route path="/lugares" element={<Places />} />
           <Route path="/lojas" element={<Stores />} />
+          <Route path="/admin" element={<Admin />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
