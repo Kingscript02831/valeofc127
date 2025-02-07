@@ -63,6 +63,8 @@ const Admin = () => {
     meta_description: 'Lovable Generated Project',
     meta_author: 'Lovable',
     meta_image: '/og-image.png',
+    button_primary_color: "#9b87f5",
+    button_secondary_color: "#7E69AB",
   });
 
   const [newNews, setNewNews] = useState<NewsInsert>({
@@ -73,16 +75,35 @@ const Admin = () => {
     date: new Date().toISOString(),
     instagram_media: [],
     category_id: null,
+    button_color: null,
   });
 
   const [editingNews, setEditingNews] = useState<News | null>(null);
   const [news, setNews] = useState<News[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [categories, setCategories] = useState<Array<{ id: string; name: string; slug: string }>>([]);
 
   useEffect(() => {
     fetchConfiguration();
     fetchNews();
+    fetchCategories();
   }, []);
+
+  const fetchCategories = async () => {
+    const { data, error } = await supabase
+      .from("categories")
+      .select("*")
+      .order("name");
+
+    if (error) {
+      toast.error("Erro ao carregar categorias");
+      return;
+    }
+
+    if (data) {
+      setCategories(data);
+    }
+  };
 
   const fetchConfiguration = async () => {
     const { data, error } = await supabase
@@ -178,6 +199,7 @@ const Admin = () => {
           date: editingNews.date,
           instagram_media: editingNews.instagram_media,
           category_id: editingNews.category_id,
+          button_color: editingNews.button_color,
         })
         .eq("id", editingNews.id);
 
@@ -217,6 +239,7 @@ const Admin = () => {
         date: new Date().toISOString(),
         instagram_media: [],
         category_id: null,
+        button_color: null,
       });
       fetchNews();
     } catch (error: any) {
@@ -441,6 +464,42 @@ const Admin = () => {
                       className="min-h-[200px]"
                     />
                   </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="category">Categoria</Label>
+                      <select
+                        id="category"
+                        className="w-full border border-gray-300 rounded-md p-2"
+                        value={newNews.category_id || ""}
+                        onChange={(e) => setNewNews({ ...newNews, category_id: e.target.value || null })}
+                      >
+                        <option value="">Selecione uma categoria</option>
+                        {categories.map((category) => (
+                          <option key={category.id} value={category.id}>
+                            {category.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <Label htmlFor="button_color">Cor do Botão</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="button_color"
+                          type="color"
+                          value={newNews.button_color || "#9b87f5"}
+                          onChange={(e) => setNewNews({ ...newNews, button_color: e.target.value })}
+                          className="w-20"
+                        />
+                        <Input
+                          type="text"
+                          value={newNews.button_color || "#9b87f5"}
+                          onChange={(e) => setNewNews({ ...newNews, button_color: e.target.value })}
+                          placeholder="#9b87f5"
+                        />
+                      </div>
+                    </div>
+                  </div>
                   <div>
                     <Label htmlFor="image">Link da Imagem</Label>
                     <Input
@@ -483,6 +542,42 @@ const Admin = () => {
                       onChange={(e) => setEditingNews({ ...editingNews, content: e.target.value })}
                       className="min-h-[200px]"
                     />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="edit-category">Categoria</Label>
+                      <select
+                        id="edit-category"
+                        className="w-full border border-gray-300 rounded-md p-2"
+                        value={editingNews.category_id || ""}
+                        onChange={(e) => setEditingNews({ ...editingNews, category_id: e.target.value || null })}
+                      >
+                        <option value="">Selecione uma categoria</option>
+                        {categories.map((category) => (
+                          <option key={category.id} value={category.id}>
+                            {category.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-button_color">Cor do Botão</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="edit-button_color"
+                          type="color"
+                          value={editingNews.button_color || "#9b87f5"}
+                          onChange={(e) => setEditingNews({ ...editingNews, button_color: e.target.value })}
+                          className="w-20"
+                        />
+                        <Input
+                          type="text"
+                          value={editingNews.button_color || "#9b87f5"}
+                          onChange={(e) => setEditingNews({ ...editingNews, button_color: e.target.value })}
+                          placeholder="#9b87f5"
+                        />
+                      </div>
+                    </div>
                   </div>
                   <div>
                     <Label htmlFor="edit-image">Link da Imagem</Label>
@@ -530,7 +625,19 @@ const Admin = () => {
                 {news.map((item) => (
                   <div key={item.id} className="bg-gray-50 rounded-lg p-6">
                     <div className="flex justify-between items-start mb-4">
-                      <h3 className="text-lg font-semibold">{item.title}</h3>
+                      <div>
+                        <h3 className="text-lg font-semibold">{item.title}</h3>
+                        <div className="flex items-center gap-2 mt-1">
+                          {categories.find(c => c.id === item.category_id)?.name && (
+                            <Badge variant="secondary">
+                              {categories.find(c => c.id === item.category_id)?.name}
+                            </Badge>
+                          )}
+                          <span className="text-sm text-gray-500">
+                            {new Date(item.date).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
                       <div className="flex gap-2">
                         <Button
                           variant="outline"
@@ -551,6 +658,11 @@ const Admin = () => {
                     <p className="whitespace-pre-wrap mb-2">{item.content}</p>
                     {item.image && <p className="text-sm text-gray-500">Imagem: {item.image}</p>}
                     {item.video && <p className="text-sm text-gray-500">Vídeo: {item.video}</p>}
+                    {item.button_color && (
+                      <p className="text-sm text-gray-500">
+                        Cor do botão: <span style={{ color: item.button_color }}>{item.button_color}</span>
+                      </p>
+                    )}
                     {Array.isArray(item.instagram_media) && item.instagram_media.length > 0 && (
                       <div className="mt-2">
                         <p className="text-sm font-medium text-gray-500">Mídia do Instagram:</p>
@@ -577,6 +689,47 @@ const Admin = () => {
           </TabsContent>
 
           <TabsContent value="config" className="bg-white rounded-lg shadow p-6 space-y-6">
+            <div>
+              <h2 className="text-xl font-semibold mb-4">Cores dos Botões</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <Label htmlFor="button_primary_color">Cor Primária do Botão</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="button_primary_color"
+                      type="color"
+                      value={config.button_primary_color}
+                      onChange={(e) => setConfig({ ...config, button_primary_color: e.target.value })}
+                      className="w-20"
+                    />
+                    <Input
+                      type="text"
+                      value={config.button_primary_color}
+                      onChange={(e) => setConfig({ ...config, button_primary_color: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="button_secondary_color">Cor Secundária do Botão</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="button_secondary_color"
+                      type="color"
+                      value={config.button_secondary_color}
+                      onChange={(e) => setConfig({ ...config, button_secondary_color: e.target.value })}
+                      className="w-20"
+                    />
+                    <Input
+                      type="text"
+                      value={config.button_secondary_color}
+                      onChange={(e) => setConfig({ ...config, button_secondary_color: e.target.value })}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div>
               <h2 className="text-xl font-semibold mb-4">Logo da Navbar</h2>
               <div className="space-y-4">

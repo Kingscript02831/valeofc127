@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 interface InstagramMedia {
   url: string;
@@ -15,6 +16,11 @@ interface NewsCardProps {
   image?: string;
   video?: string;
   instagramMedia?: InstagramMedia[];
+  buttonColor?: string;
+  category?: {
+    name: string;
+    slug: string;
+  };
 }
 
 const getYouTubeEmbedUrl = (url: string) => {
@@ -48,7 +54,16 @@ const getInstagramEmbedUrl = (url: string) => {
     : `https://www.instagram.com/p/${postId}/embed`;
 };
 
-const NewsCard = ({ title, content, date, image, video, instagramMedia = [] }: NewsCardProps) => {
+const NewsCard = ({ 
+  title, 
+  content, 
+  date, 
+  image, 
+  video, 
+  instagramMedia = [], 
+  buttonColor,
+  category 
+}: NewsCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const youtubeEmbedUrl = getYouTubeEmbedUrl(video || '');
 
@@ -56,6 +71,15 @@ const NewsCard = ({ title, content, date, image, video, instagramMedia = [] }: N
   const formattedContent = content.split('\n').map((paragraph, index) => (
     paragraph.trim() ? <p key={index} className="mb-4">{paragraph}</p> : null
   ));
+
+  const buttonStyle = buttonColor ? {
+    backgroundColor: buttonColor,
+    color: '#FFFFFF',
+    ':hover': {
+      backgroundColor: buttonColor,
+      opacity: 0.9
+    }
+  } : undefined;
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
@@ -80,8 +104,16 @@ const NewsCard = ({ title, content, date, image, video, instagramMedia = [] }: N
       )}
       
       <div className="p-4">
+        <div className="flex items-center gap-2 mb-2">
+          {category && (
+            <Badge variant="secondary" className="text-xs">
+              {category.name}
+            </Badge>
+          )}
+          <p className="text-sm text-gray-500">{date}</p>
+        </div>
+        
         <h2 className="text-xl font-semibold mb-2">{title}</h2>
-        <p className="text-sm text-gray-500 mb-2">{date}</p>
         
         <div className={`prose prose-sm max-w-none ${!isExpanded && "line-clamp-3"}`}>
           {formattedContent}
@@ -108,6 +140,7 @@ const NewsCard = ({ title, content, date, image, video, instagramMedia = [] }: N
           variant="ghost"
           className="mt-2 w-full flex items-center justify-center gap-2"
           onClick={() => setIsExpanded(!isExpanded)}
+          style={buttonStyle}
         >
           {isExpanded ? (
             <>

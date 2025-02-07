@@ -46,6 +46,7 @@ export type Database = {
       }
       news: {
         Row: {
+          button_color: string | null
           category_id: string | null
           content: string
           created_at: string
@@ -58,6 +59,7 @@ export type Database = {
           video: string | null
         }
         Insert: {
+          button_color?: string | null
           category_id?: string | null
           content: string
           created_at?: string
@@ -70,6 +72,7 @@ export type Database = {
           video?: string | null
         }
         Update: {
+          button_color?: string | null
           category_id?: string | null
           content?: string
           created_at?: string
@@ -94,6 +97,8 @@ export type Database = {
       site_configuration: {
         Row: {
           background_color: string
+          button_primary_color: string
+          button_secondary_color: string
           created_at: string
           enable_dark_mode: boolean | null
           enable_weather: boolean | null
@@ -138,6 +143,8 @@ export type Database = {
         }
         Insert: {
           background_color?: string
+          button_primary_color?: string
+          button_secondary_color?: string
           created_at?: string
           enable_dark_mode?: boolean | null
           enable_weather?: boolean | null
@@ -182,6 +189,8 @@ export type Database = {
         }
         Update: {
           background_color?: string
+          button_primary_color?: string
+          button_secondary_color?: string
           created_at?: string
           enable_dark_mode?: boolean | null
           enable_weather?: boolean | null
