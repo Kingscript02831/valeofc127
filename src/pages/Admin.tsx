@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +9,7 @@ import type { Database, Json } from "@/integrations/supabase/types";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, Plus, Trash2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { updateMetaTags } from "@/utils/updateMetaTags";
 
 type SiteConfig = Database['public']['Tables']['site_configuration']['Row'];
