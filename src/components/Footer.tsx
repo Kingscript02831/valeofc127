@@ -59,7 +59,7 @@ const Footer = () => {
         </div>
         
         <div className="mt-8 pt-8 border-t border-white/10 text-center">
-          <p>&copy; 2025 VALE NOTÍCIAS. Todos os direitos reservados.</p>
+          <p>&copy; 2025 VALEOFC. Todos os direitos reservados.</p>
         </div>
       </div>
     </footer>
