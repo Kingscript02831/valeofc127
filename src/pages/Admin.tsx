@@ -5,6 +5,9 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import type { Database } from "@/integrations/supabase/types";
+
+type SiteConfig = Database['public']['Tables']['site_configuration']['Row'];
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -12,7 +15,8 @@ const Admin = () => {
   const [password, setPassword] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [config, setConfig] = useState({
+  const [config, setConfig] = useState<SiteConfig>({
+    id: "",
     theme_name: "light",
     primary_color: "#1A1F2C",
     secondary_color: "#D6BCFA",
@@ -23,6 +27,8 @@ const Admin = () => {
     accent_color: "#8B5CF6",
     title_color: "#1A1F2C",
     numbers_color: "#1A1F2C",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   });
 
   useEffect(() => {
