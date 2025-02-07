@@ -1,9 +1,9 @@
+
 import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/integrations/supabase/client";
 
 interface InstagramMedia {
   url: string;
@@ -63,8 +63,8 @@ const NewsCard = ({
   image, 
   video, 
   instagramMedia = [], 
-  buttonColor = "#9b87f5",
-  buttonSecondaryColor = "#7E69AB",
+  buttonColor,
+  buttonSecondaryColor,
   category 
 }: NewsCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -75,12 +75,14 @@ const NewsCard = ({
     paragraph.trim() ? <p key={index} className="mb-4">{paragraph}</p> : null
   ));
 
-  // Create button styles with gradient
-  const buttonStyle = {
-    background: `linear-gradient(to right, ${buttonColor}, ${buttonSecondaryColor})`,
+  // Create button styles with gradient if both colors are provided
+  const buttonStyle = buttonColor ? {
+    background: buttonSecondaryColor 
+      ? `linear-gradient(to right, ${buttonColor}, ${buttonSecondaryColor})`
+      : buttonColor,
     color: '#FFFFFF',
     border: 'none'
-  };
+  } : undefined;
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
@@ -140,7 +142,8 @@ const NewsCard = ({
         <Button
           variant="ghost"
           className={cn(
-            "mt-2 w-full flex items-center justify-center gap-2 transition-colors hover:opacity-90"
+            "mt-2 w-full flex items-center justify-center gap-2 transition-colors",
+            buttonColor && "text-white hover:text-white hover:opacity-90"
           )}
           onClick={() => setIsExpanded(!isExpanded)}
           style={buttonStyle}
