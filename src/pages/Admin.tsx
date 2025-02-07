@@ -803,9 +803,9 @@ const Admin = () => {
               <h2 className="text-xl font-semibold mb-4">Redes Sociais</h2>
               
               <div>
-                <Label htmlFor="footer_social_facebook">Link do Facebook</Label>
+                <Label htmlFor="nav_social_facebook">Link do Facebook</Label>
                 <Input
-                  id="footer_social_facebook"
+                  id="nav_social_facebook"
                   type="url"
                   value={config.footer_social_facebook || ""}
                   onChange={(e) => setConfig({ ...config, footer_social_facebook: e.target.value })}
@@ -814,9 +814,9 @@ const Admin = () => {
               </div>
 
               <div>
-                <Label htmlFor="footer_social_instagram">Link do Instagram</Label>
+                <Label htmlFor="nav_social_instagram">Link do Instagram</Label>
                 <Input
-                  id="footer_social_instagram"
+                  id="nav_social_instagram"
                   type="url"
                   value={config.footer_social_instagram || ""}
                   onChange={(e) => setConfig({ ...config, footer_social_instagram: e.target.value })}
