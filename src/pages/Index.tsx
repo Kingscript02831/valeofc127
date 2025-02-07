@@ -57,17 +57,24 @@ const Index = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {news.map((item) => (
-              <NewsCard
-                key={item.id}
-                title={item.title}
-                content={item.content}
-                date={new Date(item.date).toLocaleDateString("pt-BR")}
-                image={item.image || undefined}
-                video={item.video || undefined}
-                instagramMedia={(item.instagram_media as InstagramMedia[]) || []}
-              />
-            ))}
+            {news.map((item) => {
+              // Safely cast instagram_media to InstagramMedia[]
+              const instagramMedia = Array.isArray(item.instagram_media) 
+                ? (item.instagram_media as unknown as InstagramMedia[])
+                : [];
+                
+              return (
+                <NewsCard
+                  key={item.id}
+                  title={item.title}
+                  content={item.content}
+                  date={new Date(item.date).toLocaleDateString("pt-BR")}
+                  image={item.image || undefined}
+                  video={item.video || undefined}
+                  instagramMedia={instagramMedia}
+                />
+              );
+            })}
             {news.length === 0 && (
               <p className="text-gray-500 col-span-full text-center py-8">
                 Nenhuma notícia encontrada.
