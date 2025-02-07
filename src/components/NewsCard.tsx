@@ -9,6 +9,7 @@ interface NewsCardProps {
   date: string;
   image?: string;
   video?: string;
+  instagramMedia?: { url: string; type: 'post' | 'video' }[];
 }
 
 const getYouTubeEmbedUrl = (url: string) => {
@@ -28,9 +29,14 @@ const getYouTubeEmbedUrl = (url: string) => {
   return url; // Return original if no match
 };
 
-const NewsCard = ({ title, content, date, image, video }: NewsCardProps) => {
+const NewsCard = ({ title, content, date, image, video, instagramMedia = [] }: NewsCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const embedUrl = getYouTubeEmbedUrl(video || '');
+
+  // Convert line breaks to paragraphs
+  const formattedContent = content.split('\n').map((paragraph, index) => (
+    paragraph.trim() ? <p key={index} className="mb-4">{paragraph}</p> : null
+  ));
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
@@ -56,8 +62,25 @@ const NewsCard = ({ title, content, date, image, video }: NewsCardProps) => {
         <p className="text-sm text-gray-500 mb-2">{date}</p>
         
         <div className={`prose prose-sm max-w-none ${!isExpanded && "line-clamp-3"}`}>
-          {content}
+          {formattedContent}
         </div>
+
+        {instagramMedia && instagramMedia.length > 0 && (
+          <div className="mt-4 space-y-4">
+            {instagramMedia.map((media, index) => (
+              <div key={index} className="instagram-embed">
+                <iframe
+                  src={media.url}
+                  className="w-full aspect-square"
+                  frameBorder="0"
+                  scrolling="no"
+                  allowTransparency
+                  allowFullScreen
+                />
+              </div>
+            ))}
+          </div>
+        )}
         
         <Button
           variant="ghost"

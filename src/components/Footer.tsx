@@ -1,78 +1,117 @@
+
 import { Mail, MapPin, Phone, Clock, Facebook, Instagram } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const Footer = () => {
+  const { data: config } = useQuery({
+    queryKey: ['site_configuration'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('site_configuration')
+        .select('*')
+        .single();
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  if (!config) return null;
+
+  const footerStyle = {
+    background: `linear-gradient(to right, ${config.footer_primary_color}, ${config.footer_secondary_color})`,
+    color: config.footer_text_color,
+  };
+
   return (
-    <footer className="bg-gradient-to-r from-primary to-[#1a365d] text-white py-12">
+    <footer className="py-12" style={footerStyle}>
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
           {/* Contato */}
-          <div className="space-y-4">
-            <h3 className="text-xl font-bold uppercase tracking-wider mb-4 border-l-4 border-accent pl-3">
-              Contato
-            </h3>
-            <div className="space-y-3">
-              <div className="flex items-center gap-3 hover:text-accent transition-colors">
-                <Mail className="h-5 w-5 flex-shrink-0" />
-                <span>contato@valenoticias.com</span>
-              </div>
-              <div className="flex items-center gap-3 hover:text-accent transition-colors">
-                <Phone className="h-5 w-5 flex-shrink-0" />
-                <span>(11) 9999-9999</span>
+          {(config.footer_contact_email || config.footer_contact_phone) && (
+            <div className="space-y-4">
+              <h3 className="text-xl font-bold uppercase tracking-wider mb-4 border-l-4 border-accent pl-3">
+                Contato
+              </h3>
+              <div className="space-y-3">
+                {config.footer_contact_email && (
+                  <div className="flex items-center gap-3 hover:text-accent transition-colors">
+                    <Mail className="h-5 w-5 flex-shrink-0" />
+                    <span>{config.footer_contact_email}</span>
+                  </div>
+                )}
+                {config.footer_contact_phone && (
+                  <div className="flex items-center gap-3 hover:text-accent transition-colors">
+                    <Phone className="h-5 w-5 flex-shrink-0" />
+                    <span>{config.footer_contact_phone}</span>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
+          )}
 
           {/* Endereço */}
-          <div className="space-y-4">
-            <h3 className="text-xl font-bold uppercase tracking-wider mb-4 border-l-4 border-accent pl-3">
-              Endereço
-            </h3>
-            <div className="flex items-center gap-3 hover:text-accent transition-colors">
-              <MapPin className="h-5 w-5 flex-shrink-0" />
-              <span>Av. Principal, 1000 - Centro</span>
+          {config.footer_address && (
+            <div className="space-y-4">
+              <h3 className="text-xl font-bold uppercase tracking-wider mb-4 border-l-4 border-accent pl-3">
+                Endereço
+              </h3>
+              <div className="flex items-center gap-3 hover:text-accent transition-colors">
+                <MapPin className="h-5 w-5 flex-shrink-0" />
+                <span>{config.footer_address}</span>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Horário */}
-          <div className="space-y-4">
-            <h3 className="text-xl font-bold uppercase tracking-wider mb-4 border-l-4 border-accent pl-3">
-              Horário
-            </h3>
-            <div className="flex items-center gap-3 hover:text-accent transition-colors">
-              <Clock className="h-5 w-5 flex-shrink-0" />
-              <span>Seg-Sex: 9h às 18h</span>
+          {config.footer_schedule && (
+            <div className="space-y-4">
+              <h3 className="text-xl font-bold uppercase tracking-wider mb-4 border-l-4 border-accent pl-3">
+                Horário
+              </h3>
+              <div className="flex items-center gap-3 hover:text-accent transition-colors">
+                <Clock className="h-5 w-5 flex-shrink-0" />
+                <span>{config.footer_schedule}</span>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Redes Sociais */}
-          <div className="space-y-4">
-            <h3 className="text-xl font-bold uppercase tracking-wider mb-4 border-l-4 border-accent pl-3">
-              Redes Sociais
-            </h3>
-            <div className="flex gap-4">
-              <a
-                href="https://facebook.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2 rounded-full bg-white/10 hover:bg-accent transition-colors"
-              >
-                <Facebook className="h-6 w-6" />
-              </a>
-              <a
-                href="https://instagram.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2 rounded-full bg-white/10 hover:bg-accent transition-colors"
-              >
-                <Instagram className="h-6 w-6" />
-              </a>
+          {(config.footer_social_facebook || config.footer_social_instagram) && (
+            <div className="space-y-4">
+              <h3 className="text-xl font-bold uppercase tracking-wider mb-4 border-l-4 border-accent pl-3">
+                Redes Sociais
+              </h3>
+              <div className="flex gap-4">
+                {config.footer_social_facebook && (
+                  <a
+                    href={config.footer_social_facebook}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2 rounded-full bg-white/10 hover:bg-accent transition-colors"
+                  >
+                    <Facebook className="h-6 w-6" />
+                  </a>
+                )}
+                {config.footer_social_instagram && (
+                  <a
+                    href={config.footer_social_instagram}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2 rounded-full bg-white/10 hover:bg-accent transition-colors"
+                  >
+                    <Instagram className="h-6 w-6" />
+                  </a>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Copyright */}
         <div className="pt-8 mt-8 border-t border-white/20 text-center">
-          <p className="text-sm text-white/80">
+          <p className="text-sm" style={{ color: config.footer_text_color }}>
             &copy; 2025 VALEOFC. Todos os direitos reservados.
           </p>
         </div>

@@ -52,6 +52,7 @@ export type Database = {
           date: string
           id: string
           image: string | null
+          instagram_media: Json | null
           title: string
           updated_at: string
           video: string | null
@@ -63,6 +64,7 @@ export type Database = {
           date?: string
           id?: string
           image?: string | null
+          instagram_media?: Json | null
           title: string
           updated_at?: string
           video?: string | null
@@ -74,6 +76,7 @@ export type Database = {
           date?: string
           id?: string
           image?: string | null
+          instagram_media?: Json | null
           title?: string
           updated_at?: string
           video?: string | null
@@ -95,6 +98,15 @@ export type Database = {
           enable_dark_mode: boolean | null
           enable_weather: boolean | null
           font_size: string | null
+          footer_address: string | null
+          footer_contact_email: string | null
+          footer_contact_phone: string | null
+          footer_primary_color: string
+          footer_schedule: string | null
+          footer_secondary_color: string
+          footer_social_facebook: string | null
+          footer_social_instagram: string | null
+          footer_text_color: string
           header_alerts: Json | null
           high_contrast: boolean | null
           id: string
@@ -122,6 +134,15 @@ export type Database = {
           enable_dark_mode?: boolean | null
           enable_weather?: boolean | null
           font_size?: string | null
+          footer_address?: string | null
+          footer_contact_email?: string | null
+          footer_contact_phone?: string | null
+          footer_primary_color?: string
+          footer_schedule?: string | null
+          footer_secondary_color?: string
+          footer_social_facebook?: string | null
+          footer_social_instagram?: string | null
+          footer_text_color?: string
           header_alerts?: Json | null
           high_contrast?: boolean | null
           id?: string
@@ -149,6 +170,15 @@ export type Database = {
           enable_dark_mode?: boolean | null
           enable_weather?: boolean | null
           font_size?: string | null
+          footer_address?: string | null
+          footer_contact_email?: string | null
+          footer_contact_phone?: string | null
+          footer_primary_color?: string
+          footer_schedule?: string | null
+          footer_secondary_color?: string
+          footer_social_facebook?: string | null
+          footer_social_instagram?: string | null
+          footer_text_color?: string
           header_alerts?: Json | null
           high_contrast?: boolean | null
           id?: string
