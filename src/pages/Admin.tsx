@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +33,8 @@ const Admin = () => {
     navbar_logo_type: "text",
     navbar_logo_text: "VALEOFC",
     navbar_logo_image: null,
+    navbar_social_facebook: null,
+    navbar_social_instagram: null,
     language: "pt-BR",
     enable_dark_mode: false,
     high_contrast: false,
