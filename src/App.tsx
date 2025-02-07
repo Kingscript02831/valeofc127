@@ -1,10 +1,16 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
-import Admin from "./pages/Admin";
+import Eventos from "./pages/Eventos";
+import Lugares from "./pages/Lugares";
+import Lojas from "./pages/Lojas";
+import Grupos from "./pages/Grupos";
+import Doacoes from "./pages/Doacoes";
+import Outros from "./pages/Outros";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -17,7 +23,12 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/admin" element={<Admin />} />
+          <Route path="/eventos" element={<Eventos />} />
+          <Route path="/lugares" element={<Lugares />} />
+          <Route path="/lojas" element={<Lojas />} />
+          <Route path="/grupos" element={<Grupos />} />
+          <Route path="/doacoes" element={<Doacoes />} />
+          <Route path="/outros" element={<Outros />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
