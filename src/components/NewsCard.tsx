@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -74,11 +75,13 @@ const NewsCard = ({
     paragraph.trim() ? <p key={index} className="mb-4">{paragraph}</p> : null
   ));
 
+  // Create button styles with gradient if both colors are provided
   const buttonStyle = buttonColor ? {
     background: buttonSecondaryColor 
       ? `linear-gradient(to right, ${buttonColor}, ${buttonSecondaryColor})`
       : buttonColor,
-    color: '#FFFFFF'
+    color: '#FFFFFF',
+    border: 'none'
   } : undefined;
 
   return (
@@ -139,8 +142,8 @@ const NewsCard = ({
         <Button
           variant="ghost"
           className={cn(
-            "mt-2 w-full flex items-center justify-center gap-2 transition-opacity hover:opacity-90",
-            buttonColor && "text-white hover:text-white"
+            "mt-2 w-full flex items-center justify-center gap-2 transition-colors",
+            buttonColor && "text-white hover:text-white hover:opacity-90"
           )}
           onClick={() => setIsExpanded(!isExpanded)}
           style={buttonStyle}
