@@ -1,6 +1,7 @@
 
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { Menu } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -32,7 +33,6 @@ const SubNav = () => {
     { path: "/eventos", label: "Eventos" },
     { path: "/lugares", label: "Lugares" },
     { path: "/lojas", label: "Lojas" },
-    { path: "/outros", label: "Outros" },
   ];
 
   return (
@@ -44,24 +44,32 @@ const SubNav = () => {
       }}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex space-x-8 h-12">
-          {links.map((link) => (
-            <Link
-              key={link.path}
-              to={link.path}
-              className={`inline-flex items-center px-1 pt-1 text-sm font-medium transition-colors duration-200 ${
-                location.pathname === link.path 
-                  ? 'border-b-2'
-                  : 'hover:border-b-2 hover:border-opacity-50'
-              }`}
-              style={{ 
-                color: config.text_color,
-                borderColor: location.pathname === link.path ? config.text_color : 'transparent'
-              }}
-            >
-              {link.label}
-            </Link>
-          ))}
+        <div className="flex justify-between items-center h-12">
+          <div className="flex space-x-8">
+            {links.map((link) => (
+              <Link
+                key={link.path}
+                to={link.path}
+                className={`inline-flex items-center px-1 pt-1 text-sm font-medium transition-colors duration-200 ${
+                  location.pathname === link.path 
+                    ? 'border-b-2'
+                    : 'hover:border-b-2 hover:border-opacity-50'
+                }`}
+                style={{ 
+                  color: config.text_color,
+                  borderColor: location.pathname === link.path ? config.text_color : 'transparent'
+                }}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </div>
+          <button 
+            className="p-2 rounded-md hover:bg-white/10 transition-colors duration-200"
+            style={{ color: config.text_color }}
+          >
+            <Menu size={24} />
+          </button>
         </div>
       </div>
     </nav>
