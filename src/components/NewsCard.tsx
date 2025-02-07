@@ -3,6 +3,7 @@ import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 interface InstagramMedia {
   url: string;
@@ -75,7 +76,7 @@ const NewsCard = ({
   const buttonStyle = buttonColor ? {
     backgroundColor: buttonColor,
     color: '#FFFFFF',
-    ':hover': {
+    '&:hover': {
       backgroundColor: buttonColor,
       opacity: 0.9
     }
@@ -138,9 +139,12 @@ const NewsCard = ({
         
         <Button
           variant="ghost"
-          className="mt-2 w-full flex items-center justify-center gap-2"
+          className={cn(
+            "mt-2 w-full flex items-center justify-center gap-2",
+            buttonColor && "text-white hover:text-white"
+          )}
           onClick={() => setIsExpanded(!isExpanded)}
-          style={buttonStyle}
+          style={buttonColor ? { backgroundColor: buttonColor, '&:hover': { backgroundColor: buttonColor, opacity: 0.9 } } : undefined}
         >
           {isExpanded ? (
             <>
