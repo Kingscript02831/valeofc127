@@ -2,64 +2,79 @@ import { Mail, MapPin, Phone, Clock, Facebook, Instagram } from "lucide-react";
 
 const Footer = () => {
   return (
-    <footer className="bg-primary text-white py-8">
+    <footer className="bg-gradient-to-r from-primary to-[#1a365d] text-white py-12">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Contato</h3>
-            <div className="space-y-2">
-              <p className="flex items-center gap-2">
-                <Mail className="h-4 w-4" />
-                contato@valenoticias.com
-              </p>
-              <p className="flex items-center gap-2">
-                <Phone className="h-4 w-4" />
-                (11) 9999-9999
-              </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
+          {/* Contato */}
+          <div className="space-y-4">
+            <h3 className="text-xl font-bold uppercase tracking-wider mb-4 border-l-4 border-accent pl-3">
+              Contato
+            </h3>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 hover:text-accent transition-colors">
+                <Mail className="h-5 w-5 flex-shrink-0" />
+                <span>contato@valenoticias.com</span>
+              </div>
+              <div className="flex items-center gap-3 hover:text-accent transition-colors">
+                <Phone className="h-5 w-5 flex-shrink-0" />
+                <span>(11) 9999-9999</span>
+              </div>
             </div>
           </div>
-          
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Endereço</h3>
-            <p className="flex items-center gap-2">
-              <MapPin className="h-4 w-4" />
-              Av. Principal, 1000 - Centro
-            </p>
+
+          {/* Endereço */}
+          <div className="space-y-4">
+            <h3 className="text-xl font-bold uppercase tracking-wider mb-4 border-l-4 border-accent pl-3">
+              Endereço
+            </h3>
+            <div className="flex items-center gap-3 hover:text-accent transition-colors">
+              <MapPin className="h-5 w-5 flex-shrink-0" />
+              <span>Av. Principal, 1000 - Centro</span>
+            </div>
           </div>
-          
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Horário</h3>
-            <p className="flex items-center gap-2">
-              <Clock className="h-4 w-4" />
-              Seg-Sex: 9h às 18h
-            </p>
+
+          {/* Horário */}
+          <div className="space-y-4">
+            <h3 className="text-xl font-bold uppercase tracking-wider mb-4 border-l-4 border-accent pl-3">
+              Horário
+            </h3>
+            <div className="flex items-center gap-3 hover:text-accent transition-colors">
+              <Clock className="h-5 w-5 flex-shrink-0" />
+              <span>Seg-Sex: 9h às 18h</span>
+            </div>
           </div>
-          
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Redes Sociais</h3>
+
+          {/* Redes Sociais */}
+          <div className="space-y-4">
+            <h3 className="text-xl font-bold uppercase tracking-wider mb-4 border-l-4 border-accent pl-3">
+              Redes Sociais
+            </h3>
             <div className="flex gap-4">
               <a
                 href="https://facebook.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:text-accent"
+                className="p-2 rounded-full bg-white/10 hover:bg-accent transition-colors"
               >
-                <Facebook className="h-5 w-5" />
+                <Facebook className="h-6 w-6" />
               </a>
               <a
                 href="https://instagram.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:text-accent"
+                className="p-2 rounded-full bg-white/10 hover:bg-accent transition-colors"
               >
-                <Instagram className="h-5 w-5" />
+                <Instagram className="h-6 w-6" />
               </a>
             </div>
           </div>
         </div>
-        
-        <div className="mt-8 pt-8 border-t border-white/10 text-center">
-          <p>&copy; 2025 VALEOFC. Todos os direitos reservados.</p>
+
+        {/* Copyright */}
+        <div className="pt-8 mt-8 border-t border-white/20 text-center">
+          <p className="text-sm text-white/80">
+            &copy; 2025 VALEOFC. Todos os direitos reservados.
+          </p>
         </div>
       </div>
     </footer>
