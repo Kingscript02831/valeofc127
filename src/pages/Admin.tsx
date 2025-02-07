@@ -310,10 +310,7 @@ const Admin = () => {
             </Button>
           </div>
         </div>
-        {(typeof news.instagram_media === 'object' && Array.isArray(news.instagram_media) ? 
-          (news.instagram_media as InstagramMediaJson[]) : 
-          []
-        ).map((media, index) => (
+        {Array.isArray(news.instagram_media) && (news.instagram_media as unknown as InstagramMediaJson[]).map((media, index) => (
           <div key={index} className="flex gap-2 items-start">
             <div className="flex-1">
               <Label>
@@ -786,7 +783,7 @@ const Admin = () => {
 
             <div className="flex justify-end">
               <Button onClick={handleConfigUpdate}>
-                Salvar Configurações
+                Salvar Configura��ões
               </Button>
             </div>
           </TabsContent>
