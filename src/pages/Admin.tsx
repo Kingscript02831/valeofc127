@@ -8,6 +8,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
 type SiteConfig = Database['public']['Tables']['site_configuration']['Row'];
 type News = Database['public']['Tables']['news']['Row'];
@@ -194,6 +195,7 @@ const Admin = () => {
           <TabsList>
             <TabsTrigger value="news">Notícias</TabsTrigger>
             <TabsTrigger value="config">Configurações</TabsTrigger>
+            <TabsTrigger value="weather">Clima e Localização</TabsTrigger>
           </TabsList>
 
           <TabsContent value="news" className="space-y-6">
@@ -465,6 +467,87 @@ const Admin = () => {
                     onChange={(e) => setConfig({ ...config, navbar_color: e.target.value })}
                   />
                 </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <Button onClick={handleConfigUpdate}>
+                Salvar Configurações
+              </Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="weather" className="bg-white rounded-lg shadow p-6 space-y-6">
+            <div>
+              <h2 className="text-xl font-semibold mb-4">Configurações de Clima e Localização</h2>
+              
+              <div className="space-y-6">
+                <div className="flex items-center gap-4">
+                  <Label htmlFor="enable_weather">Habilitar Widget de Clima</Label>
+                  <Switch
+                    id="enable_weather"
+                    checked={config.enable_weather || false}
+                    onCheckedChange={(checked) => setConfig({ ...config, enable_weather: checked })}
+                  />
+                </div>
+
+                {config.enable_weather && (
+                  <>
+                    <div>
+                      <Label htmlFor="weather_api_key">Chave da API OpenWeather</Label>
+                      <Input
+                        id="weather_api_key"
+                        type="password"
+                        value={config.weather_api_key || ""}
+                        onChange={(e) => setConfig({ ...config, weather_api_key: e.target.value })}
+                        placeholder="Insira sua chave da API OpenWeather"
+                      />
+                      <p className="text-sm text-gray-500 mt-1">
+                        Obtenha sua chave em{" "}
+                        <a
+                          href="https://openweathermap.org/api"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-500 hover:underline"
+                        >
+                          OpenWeather API
+                        </a>
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="location_city">Cidade</Label>
+                        <Input
+                          id="location_city"
+                          value={config.location_city || ""}
+                          onChange={(e) => setConfig({ ...config, location_city: e.target.value })}
+                          placeholder="Ex: São Paulo"
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="location_state">Estado</Label>
+                        <Input
+                          id="location_state"
+                          value={config.location_state || ""}
+                          onChange={(e) => setConfig({ ...config, location_state: e.target.value })}
+                          placeholder="Ex: SP"
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="location_country">País</Label>
+                        <Input
+                          id="location_country"
+                          value={config.location_country || ""}
+                          onChange={(e) => setConfig({ ...config, location_country: e.target.value })}
+                          placeholder="Ex: BR"
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
