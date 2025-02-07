@@ -8,6 +8,7 @@ import type { Database, Json } from "@/integrations/supabase/types";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, Plus, Trash2 } from "lucide-react";
+import { updateMetaTags } from "@/utils/updateMetaTags";
 
 type SiteConfig = Database['public']['Tables']['site_configuration']['Row'];
 type News = Database['public']['Tables']['news']['Row'];
@@ -134,11 +135,31 @@ const Admin = () => {
 
       if (error) throw error;
 
+      // Update meta tags after successful database update
+      updateMetaTags(
+        config.meta_title,
+        config.meta_description,
+        config.meta_author,
+        config.meta_image
+      );
+
       toast.success("Configurações atualizadas com sucesso!");
     } catch (error: any) {
       toast.error("Erro ao atualizar configurações");
     }
   };
+
+  useEffect(() => {
+    if (config) {
+      // Update meta tags when configuration is initially loaded
+      updateMetaTags(
+        config.meta_title,
+        config.meta_description,
+        config.meta_author,
+        config.meta_image
+      );
+    }
+  }, [config]);
 
   const handleNewsEdit = async () => {
     try {
