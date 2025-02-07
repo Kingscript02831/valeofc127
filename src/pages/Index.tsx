@@ -1,13 +1,12 @@
-
 import { useState } from "react";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import NewsCard from "@/components/NewsCard";
-import { supabase } from "@/integrations/supabase/client";
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
+import NewsCard from "../components/NewsCard";
+import { supabase } from "../integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import type { Database } from "@/integrations/supabase/types";
+import { Input } from "../components/ui/input";
+import type { Database } from "../integrations/supabase/types";
 
 type News = Database['public']['Tables']['news']['Row'];
 
