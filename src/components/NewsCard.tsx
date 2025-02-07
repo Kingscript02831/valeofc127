@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,6 +17,7 @@ interface NewsCardProps {
   video?: string;
   instagramMedia?: InstagramMedia[];
   buttonColor?: string;
+  buttonSecondaryColor?: string;
   category?: {
     name: string;
     slug: string;
@@ -63,6 +63,7 @@ const NewsCard = ({
   video, 
   instagramMedia = [], 
   buttonColor,
+  buttonSecondaryColor,
   category 
 }: NewsCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -74,12 +75,10 @@ const NewsCard = ({
   ));
 
   const buttonStyle = buttonColor ? {
-    backgroundColor: buttonColor,
-    color: '#FFFFFF',
-    '&:hover': {
-      backgroundColor: buttonColor,
-      opacity: 0.9
-    }
+    background: buttonSecondaryColor 
+      ? `linear-gradient(to right, ${buttonColor}, ${buttonSecondaryColor})`
+      : buttonColor,
+    color: '#FFFFFF'
   } : undefined;
 
   return (
@@ -140,11 +139,11 @@ const NewsCard = ({
         <Button
           variant="ghost"
           className={cn(
-            "mt-2 w-full flex items-center justify-center gap-2",
+            "mt-2 w-full flex items-center justify-center gap-2 transition-opacity hover:opacity-90",
             buttonColor && "text-white hover:text-white"
           )}
           onClick={() => setIsExpanded(!isExpanded)}
-          style={buttonColor ? { backgroundColor: buttonColor, '&:hover': { backgroundColor: buttonColor, opacity: 0.9 } } : undefined}
+          style={buttonStyle}
         >
           {isExpanded ? (
             <>
