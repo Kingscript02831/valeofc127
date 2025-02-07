@@ -210,7 +210,7 @@ const Admin = () => {
         <Tabs defaultValue="news" className="space-y-6">
           <TabsList>
             <TabsTrigger value="news">Notícias</TabsTrigger>
-            <TabsTrigger value="config">Configurações</TabsTrigger>
+            <TabsTrigger value="config">Config Navbar</TabsTrigger>
             <TabsTrigger value="footer">Rodapé</TabsTrigger>
           </TabsList>
 
