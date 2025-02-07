@@ -99,6 +99,7 @@ export type Database = {
           enable_weather: boolean | null
           font_size: string | null
           footer_address: string | null
+          footer_address_cep: string | null
           footer_contact_email: string | null
           footer_contact_phone: string | null
           footer_primary_color: string
@@ -135,6 +136,7 @@ export type Database = {
           enable_weather?: boolean | null
           font_size?: string | null
           footer_address?: string | null
+          footer_address_cep?: string | null
           footer_contact_email?: string | null
           footer_contact_phone?: string | null
           footer_primary_color?: string
@@ -171,6 +173,7 @@ export type Database = {
           enable_weather?: boolean | null
           font_size?: string | null
           footer_address?: string | null
+          footer_address_cep?: string | null
           footer_contact_email?: string | null
           footer_contact_phone?: string | null
           footer_primary_color?: string

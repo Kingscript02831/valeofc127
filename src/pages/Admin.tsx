@@ -39,6 +39,7 @@ const Admin = () => {
     footer_contact_email: null,
     footer_contact_phone: null,
     footer_address: null,
+    footer_address_cep: null,
     footer_social_facebook: null,
     footer_social_instagram: null,
     footer_schedule: null,
@@ -580,7 +581,17 @@ const Admin = () => {
                   id="footer_address"
                   value={config.footer_address || ""}
                   onChange={(e) => setConfig({ ...config, footer_address: e.target.value })}
-                  placeholder="Rua Exemplo, 123 - Bairro - Cidade/UF"
+                  placeholder="Rua Exemplo, 123 - Bairro"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="footer_address_cep">CEP</Label>
+                <Input
+                  id="footer_address_cep"
+                  value={config.footer_address_cep || ""}
+                  onChange={(e) => setConfig({ ...config, footer_address_cep: e.target.value })}
+                  placeholder="00000-000"
                 />
               </div>
 

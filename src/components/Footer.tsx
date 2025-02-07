@@ -52,14 +52,23 @@ const Footer = () => {
           )}
 
           {/* Endereço */}
-          {config.footer_address && (
+          {(config.footer_address || config.footer_address_cep) && (
             <div className="space-y-4">
               <h3 className="text-xl font-bold uppercase tracking-wider mb-4 border-l-4 border-accent pl-3">
                 Endereço
               </h3>
-              <div className="flex items-center gap-3 hover:text-accent transition-colors">
-                <MapPin className="h-5 w-5 flex-shrink-0" />
-                <span>{config.footer_address}</span>
+              <div className="space-y-3">
+                {config.footer_address && (
+                  <div className="flex items-center gap-3 hover:text-accent transition-colors">
+                    <MapPin className="h-5 w-5 flex-shrink-0" />
+                    <span>{config.footer_address}</span>
+                  </div>
+                )}
+                {config.footer_address_cep && (
+                  <div className="flex items-center gap-3 hover:text-accent transition-colors ml-8">
+                    <span>CEP: {config.footer_address_cep}</span>
+                  </div>
+                )}
               </div>
             </div>
           )}
