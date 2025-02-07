@@ -946,4 +946,150 @@ const Admin = () => {
               <div>
                 <Label htmlFor="footer_address">Endereço</Label>
                 <Input
-                  id="footer_address
+                  id="footer_address"
+                  type="text"
+                  value={config.footer_address || ""}
+                  onChange={(e) => setConfig({ ...config, footer_address: e.target.value })}
+                  placeholder="Endereço completo"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="footer_address_cep">CEP</Label>
+                <Input
+                  id="footer_address_cep"
+                  type="text"
+                  value={config.footer_address_cep || ""}
+                  onChange={(e) => setConfig({ ...config, footer_address_cep: e.target.value })}
+                  placeholder="CEP"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="footer_social_facebook">Link do Facebook</Label>
+                <Input
+                  id="footer_social_facebook"
+                  type="url"
+                  value={config.footer_social_facebook || ""}
+                  onChange={(e) => setConfig({ ...config, footer_social_facebook: e.target.value })}
+                  placeholder="https://facebook.com/seu-perfil"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="footer_social_instagram">Link do Instagram</Label>
+                <Input
+                  id="footer_social_instagram"
+                  type="url"
+                  value={config.footer_social_instagram || ""}
+                  onChange={(e) => setConfig({ ...config, footer_social_instagram: e.target.value })}
+                  placeholder="https://instagram.com/seu-perfil"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="footer_schedule">Horário de Funcionamento</Label>
+                <Input
+                  id="footer_schedule"
+                  type="text"
+                  value={config.footer_schedule || ""}
+                  onChange={(e) => setConfig({ ...config, footer_schedule: e.target.value })}
+                  placeholder="Horário de funcionamento"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="footer_copyright_text">Texto de Copyright</Label>
+                <Input
+                  id="footer_copyright_text"
+                  type="text"
+                  value={config.footer_copyright_text || ""}
+                  onChange={(e) => setConfig({ ...config, footer_copyright_text: e.target.value })}
+                  placeholder="© 2025 VALEOFC. Todos os direitos reservados."
+                />
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="general" className="bg-white rounded-lg shadow p-6 space-y-6">
+            <div>
+              <h2 className="text-xl font-semibold mb-4">Configurações Gerais</h2>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="meta_title">Título da Meta</Label>
+                  <Input
+                    id="meta_title"
+                    type="text"
+                    value={config.meta_title}
+                    onChange={(e) => setConfig({ ...config, meta_title: e.target.value })}
+                    placeholder="Título da Meta"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="meta_description">Descrição da Meta</Label>
+                  <Input
+                    id="meta_description"
+                    type="text"
+                    value={config.meta_description}
+                    onChange={(e) => setConfig({ ...config, meta_description: e.target.value })}
+                    placeholder="Descrição da Meta"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="meta_author">Autor da Meta</Label>
+                  <Input
+                    id="meta_author"
+                    type="text"
+                    value={config.meta_author}
+                    onChange={(e) => setConfig({ ...config, meta_author: e.target.value })}
+                    placeholder="Autor da Meta"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="meta_image">Imagem da Meta</Label>
+                  <Input
+                    id="meta_image"
+                    type="text"
+                    value={config.meta_image}
+                    onChange={(e) => setConfig({ ...config, meta_image: e.target.value })}
+                    placeholder="Imagem da Meta"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="button_primary_color">Cor Primária do Botão</Label>
+                  <Input
+                    id="button_primary_color"
+                    type="color"
+                    value={config.button_primary_color}
+                    onChange={(e) => setConfig({ ...config, button_primary_color: e.target.value })}
+                  />
+                  <Input
+                    type="text"
+                    value={config.button_primary_color}
+                    onChange={(e) => setConfig({ ...config, button_primary_color: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="button_secondary_color">Cor Secundária do Botão</Label>
+                  <Input
+                    id="button_secondary_color"
+                    type="color"
+                    value={config.button_secondary_color}
+                    onChange={(e) => setConfig({ ...config, button_secondary_color: e.target.value })}
+                  />
+                  <Input
+                    type="text"
+                    value={config.button_secondary_color}
+                    onChange={(e) => setConfig({ ...config, button_secondary_color: e.target.value })}
+                  />
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+};
+
+export default Admin;
