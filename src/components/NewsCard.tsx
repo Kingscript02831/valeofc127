@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -33,30 +32,27 @@ const getYouTubeEmbedUrl = (url: string) => {
 const getInstagramEmbedUrl = (url: string, type: 'post' | 'video') => {
   if (!url) return '';
 
-  // Remove trailing slash if present
-  url = url.replace(/\/$/, '');
+  // Remove trailing slash and query parameters
+  url = url.replace(/\/?\?.*$/, '');
   
-  // Handle different Instagram URL formats
-  if (type === 'video') {
-    // For reels/videos
-    if (url.includes('/reel/')) {
-      return `${url}/embed`;
-    }
-    // Convert normal URLs to reel format if needed
-    const postId = url.split('/p/')[1]?.split('/')[0] || url.split('/').pop();
-    if (postId) {
-      return `https://www.instagram.com/reel/${postId}/embed`;
-    }
-  } else {
-    // For regular posts
-    if (url.includes('/p/')) {
-      return `${url}/embed`;
-    }
-    // Convert normal URLs to post format if needed
-    const postId = url.split('/').pop();
-    if (postId) {
-      return `https://www.instagram.com/p/${postId}/embed`;
-    }
+  // For reels/videos
+  if (url.includes('/reel/')) {
+    const postId = url.split('/reel/')[1];
+    return `https://www.instagram.com/reel/${postId}/embed`;
+  }
+  
+  // For regular posts
+  if (url.includes('/p/')) {
+    const postId = url.split('/p/')[1];
+    return `https://www.instagram.com/p/${postId}/embed`;
+  }
+  
+  // If URL is in a different format, try to extract the ID
+  const lastSegment = url.split('/').filter(Boolean).pop();
+  if (lastSegment) {
+    return type === 'video' 
+      ? `https://www.instagram.com/reel/${lastSegment}/embed`
+      : `https://www.instagram.com/p/${lastSegment}/embed`;
   }
   
   return url;
@@ -104,7 +100,7 @@ const NewsCard = ({ title, content, date, image, video, instagramMedia = [] }: N
         {instagramMedia && instagramMedia.length > 0 && (
           <div className="mt-4 space-y-4">
             {instagramMedia.map((media, index) => (
-              <div key={index} className="instagram-embed aspect-square">
+              <div key={index} className="instagram-embed aspect-[5/6]">
                 <iframe
                   src={getInstagramEmbedUrl(media.url, media.type)}
                   className="w-full h-full"
