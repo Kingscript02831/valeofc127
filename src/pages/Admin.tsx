@@ -526,7 +526,8 @@ const Admin = () => {
                       <div className="mt-2">
                         <p className="text-sm font-medium text-gray-500">Mídia do Instagram:</p>
                         {item.instagram_media.map((media, index) => {
-                          const instaMedia = media as InstagramMediaJson;
+                          const instaMedia = (media as unknown) as InstagramMediaJson;
+                          if (!instaMedia?.url || !instaMedia?.type) return null;
                           return (
                             <p key={index} className="text-sm text-gray-500">
                               {instaMedia.type === 'post' ? 'Post' : 'Vídeo'}: {instaMedia.url}
