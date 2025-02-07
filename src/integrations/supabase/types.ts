@@ -9,8 +9,44 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      categories: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          parent_id: string | null
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          parent_id?: string | null
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          parent_id?: string | null
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       news: {
         Row: {
+          category_id: string | null
           content: string
           created_at: string
           date: string
@@ -21,6 +57,7 @@ export type Database = {
           video: string | null
         }
         Insert: {
+          category_id?: string | null
           content: string
           created_at?: string
           date?: string
@@ -31,6 +68,7 @@ export type Database = {
           video?: string | null
         }
         Update: {
+          category_id?: string | null
           content?: string
           created_at?: string
           date?: string
@@ -40,61 +78,75 @@ export type Database = {
           updated_at?: string
           video?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "news_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       site_configuration: {
         Row: {
-          accent_color: string
           background_color: string
           created_at: string
-          footer_color: string
+          enable_dark_mode: boolean | null
+          font_size: string | null
+          header_alerts: Json | null
+          high_contrast: boolean | null
           id: string
+          language: string | null
           navbar_color: string
           navbar_logo_image: string | null
           navbar_logo_text: string | null
           navbar_logo_type: string
-          numbers_color: string
+          navigation_links: Json | null
           primary_color: string
           secondary_color: string
           text_color: string
           theme_name: string
-          title_color: string
           updated_at: string
         }
         Insert: {
-          accent_color?: string
           background_color?: string
           created_at?: string
-          footer_color?: string
+          enable_dark_mode?: boolean | null
+          font_size?: string | null
+          header_alerts?: Json | null
+          high_contrast?: boolean | null
           id?: string
+          language?: string | null
           navbar_color?: string
           navbar_logo_image?: string | null
           navbar_logo_text?: string | null
           navbar_logo_type?: string
-          numbers_color?: string
+          navigation_links?: Json | null
           primary_color?: string
           secondary_color?: string
           text_color?: string
           theme_name?: string
-          title_color?: string
           updated_at?: string
         }
         Update: {
-          accent_color?: string
           background_color?: string
           created_at?: string
-          footer_color?: string
+          enable_dark_mode?: boolean | null
+          font_size?: string | null
+          header_alerts?: Json | null
+          high_contrast?: boolean | null
           id?: string
+          language?: string | null
           navbar_color?: string
           navbar_logo_image?: string | null
           navbar_logo_text?: string | null
           navbar_logo_type?: string
-          numbers_color?: string
+          navigation_links?: Json | null
           primary_color?: string
           secondary_color?: string
           text_color?: string
           theme_name?: string
-          title_color?: string
           updated_at?: string
         }
         Relationships: []

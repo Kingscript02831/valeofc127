@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,15 +22,17 @@ const Admin = () => {
     background_color: "#FFFFFF",
     text_color: "#1A1F2C",
     navbar_color: "#D6BCFA",
-    footer_color: "#F1F0FB",
-    accent_color: "#8B5CF6",
-    title_color: "#1A1F2C",
-    numbers_color: "#1A1F2C",
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     navbar_logo_type: "text",
     navbar_logo_text: "VALEOFC",
     navbar_logo_image: null,
+    language: "pt-BR",
+    enable_dark_mode: false,
+    high_contrast: false,
+    header_alerts: [],
+    navigation_links: [],
+    font_size: "medium"
   });
 
   const [newNews, setNewNews] = useState<NewsInsert>({
@@ -338,74 +341,6 @@ const Admin = () => {
                     type="text"
                     value={config.navbar_color}
                     onChange={(e) => setConfig({ ...config, navbar_color: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="footer_color">Cor do Rodapé</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="footer_color"
-                    type="color"
-                    value={config.footer_color}
-                    onChange={(e) => setConfig({ ...config, footer_color: e.target.value })}
-                  />
-                  <Input
-                    type="text"
-                    value={config.footer_color}
-                    onChange={(e) => setConfig({ ...config, footer_color: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="accent_color">Cor de Destaque</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="accent_color"
-                    type="color"
-                    value={config.accent_color}
-                    onChange={(e) => setConfig({ ...config, accent_color: e.target.value })}
-                  />
-                  <Input
-                    type="text"
-                    value={config.accent_color}
-                    onChange={(e) => setConfig({ ...config, accent_color: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="title_color">Cor dos Títulos</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="title_color"
-                    type="color"
-                    value={config.title_color}
-                    onChange={(e) => setConfig({ ...config, title_color: e.target.value })}
-                  />
-                  <Input
-                    type="text"
-                    value={config.title_color}
-                    onChange={(e) => setConfig({ ...config, title_color: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="numbers_color">Cor dos Números</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="numbers_color"
-                    type="color"
-                    value={config.numbers_color}
-                    onChange={(e) => setConfig({ ...config, numbers_color: e.target.value })}
-                  />
-                  <Input
-                    type="text"
-                    value={config.numbers_color}
-                    onChange={(e) => setConfig({ ...config, numbers_color: e.target.value })}
                   />
                 </div>
               </div>
