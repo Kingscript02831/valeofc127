@@ -54,14 +54,11 @@ const Navbar = () => {
               <img 
                 src={config.navbar_logo_image} 
                 alt="Logo" 
-                className="h-12 w-12 rounded-full object-cover border-2 transition-transform duration-300 hover:scale-110"
-                style={{ 
-                  borderColor: config.text_color,
-                }}
+                className="h-8"
               />
             ) : (
               <span 
-                className="text-3xl font-bold tracking-tighter px-6 py-3 rounded-full"
+                className="text-2xl font-bold tracking-tighter px-4 py-1 rounded-lg"
                 style={{ 
                   color: config.text_color,
                   backgroundColor: `${config.primary_color}20`
