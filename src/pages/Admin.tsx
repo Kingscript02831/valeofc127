@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -311,7 +310,10 @@ const Admin = () => {
             </Button>
           </div>
         </div>
-        {Array.isArray(news.instagram_media) && (news.instagram_media as unknown as InstagramMediaJson[]).map((media, index) => (
+        {(news.instagram_media && Array.isArray(news.instagram_media) ? 
+          (news.instagram_media as unknown as InstagramMediaJson[]) : 
+          []
+        ).map((media, index) => (
           <div key={index} className="flex gap-2 items-start">
             <div className="flex-1">
               <Label>
