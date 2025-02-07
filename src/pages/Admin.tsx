@@ -32,7 +32,23 @@ const Admin = () => {
     high_contrast: false,
     header_alerts: [],
     navigation_links: [],
-    font_size: "medium"
+    font_size: "medium",
+    footer_primary_color: "#1A1F2C",
+    footer_secondary_color: "#D6BCFA",
+    footer_text_color: "#FFFFFF",
+    footer_contact_email: null,
+    footer_contact_phone: null,
+    footer_address: null,
+    footer_social_facebook: null,
+    footer_social_instagram: null,
+    footer_schedule: null,
+    enable_weather: false,
+    weather_api_key: null,
+    location_lat: null,
+    location_lng: null,
+    location_city: null,
+    location_state: null,
+    location_country: null,
   });
 
   const [newNews, setNewNews] = useState<NewsInsert>({
@@ -194,6 +210,7 @@ const Admin = () => {
           <TabsList>
             <TabsTrigger value="news">Notícias</TabsTrigger>
             <TabsTrigger value="config">Configurações</TabsTrigger>
+            <TabsTrigger value="footer">Rodapé</TabsTrigger>
           </TabsList>
 
           <TabsContent value="news" className="space-y-6">
@@ -342,7 +359,7 @@ const Admin = () => {
               <h2 className="text-xl font-semibold mb-4">Logo da Navbar</h2>
               <div className="space-y-4">
                 <div>
-                  <Label>Tipo de Logo</Label>
+                  <Label htmlFor="navbar_logo_type">Tipo de Logo</Label>
                   <div className="flex gap-4">
                     <Button
                       variant={config.navbar_logo_type === "text" ? "default" : "outline"}
@@ -465,6 +482,142 @@ const Admin = () => {
                     onChange={(e) => setConfig({ ...config, navbar_color: e.target.value })}
                   />
                 </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <Button onClick={handleConfigUpdate}>
+                Salvar Configurações
+              </Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="footer" className="bg-white rounded-lg shadow p-6 space-y-6">
+            <div>
+              <h2 className="text-xl font-semibold mb-4">Cores do Rodapé</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <Label htmlFor="footer_primary_color">Cor Primária do Rodapé</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="footer_primary_color"
+                      type="color"
+                      value={config.footer_primary_color}
+                      onChange={(e) => setConfig({ ...config, footer_primary_color: e.target.value })}
+                    />
+                    <Input
+                      type="text"
+                      value={config.footer_primary_color}
+                      onChange={(e) => setConfig({ ...config, footer_primary_color: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="footer_secondary_color">Cor Secundária do Rodapé</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="footer_secondary_color"
+                      type="color"
+                      value={config.footer_secondary_color}
+                      onChange={(e) => setConfig({ ...config, footer_secondary_color: e.target.value })}
+                    />
+                    <Input
+                      type="text"
+                      value={config.footer_secondary_color}
+                      onChange={(e) => setConfig({ ...config, footer_secondary_color: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="footer_text_color">Cor do Texto do Rodapé</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="footer_text_color"
+                      type="color"
+                      value={config.footer_text_color}
+                      onChange={(e) => setConfig({ ...config, footer_text_color: e.target.value })}
+                    />
+                    <Input
+                      type="text"
+                      value={config.footer_text_color}
+                      onChange={(e) => setConfig({ ...config, footer_text_color: e.target.value })}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold mb-4">Informações de Contato</h2>
+              
+              <div>
+                <Label htmlFor="footer_contact_email">Email de Contato</Label>
+                <Input
+                  id="footer_contact_email"
+                  type="email"
+                  value={config.footer_contact_email || ""}
+                  onChange={(e) => setConfig({ ...config, footer_contact_email: e.target.value })}
+                  placeholder="contato@exemplo.com"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="footer_contact_phone">Telefone de Contato</Label>
+                <Input
+                  id="footer_contact_phone"
+                  type="tel"
+                  value={config.footer_contact_phone || ""}
+                  onChange={(e) => setConfig({ ...config, footer_contact_phone: e.target.value })}
+                  placeholder="(11) 99999-9999"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="footer_address">Endereço</Label>
+                <Input
+                  id="footer_address"
+                  value={config.footer_address || ""}
+                  onChange={(e) => setConfig({ ...config, footer_address: e.target.value })}
+                  placeholder="Rua Exemplo, 123 - Bairro - Cidade/UF"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="footer_schedule">Horário de Funcionamento</Label>
+                <Input
+                  id="footer_schedule"
+                  value={config.footer_schedule || ""}
+                  onChange={(e) => setConfig({ ...config, footer_schedule: e.target.value })}
+                  placeholder="Segunda a Sexta, 9h às 18h"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold mb-4">Redes Sociais</h2>
+              
+              <div>
+                <Label htmlFor="footer_social_facebook">Link do Facebook</Label>
+                <Input
+                  id="footer_social_facebook"
+                  type="url"
+                  value={config.footer_social_facebook || ""}
+                  onChange={(e) => setConfig({ ...config, footer_social_facebook: e.target.value })}
+                  placeholder="https://facebook.com/sua-pagina"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="footer_social_instagram">Link do Instagram</Label>
+                <Input
+                  id="footer_social_instagram"
+                  type="url"
+                  value={config.footer_social_instagram || ""}
+                  onChange={(e) => setConfig({ ...config, footer_social_instagram: e.target.value })}
+                  placeholder="https://instagram.com/seu-perfil"
+                />
               </div>
             </div>
 
