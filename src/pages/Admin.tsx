@@ -56,6 +56,8 @@ const Admin = () => {
     location_city: null,
     location_state: null,
     location_country: null,
+    show_more_button_primary_color: "#1A1F2C",
+    show_more_button_secondary_color: "#D6BCFA",
   });
 
   const [newNews, setNewNews] = useState<NewsInsert>({
@@ -392,6 +394,49 @@ const Admin = () => {
           </TabsList>
 
           <TabsContent value="news" className="space-y-6">
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold mb-4">Configuração do Botão Ver Mais</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <Label htmlFor="show_more_button_primary_color">Cor Primária do Botão</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="show_more_button_primary_color"
+                      type="color"
+                      value={config.show_more_button_primary_color || "#1A1F2C"}
+                      onChange={(e) => setConfig({ ...config, show_more_button_primary_color: e.target.value })}
+                    />
+                    <Input
+                      type="text"
+                      value={config.show_more_button_primary_color || "#1A1F2C"}
+                      onChange={(e) => setConfig({ ...config, show_more_button_primary_color: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="show_more_button_secondary_color">Cor Secundária do Botão</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="show_more_button_secondary_color"
+                      type="color"
+                      value={config.show_more_button_secondary_color || "#D6BCFA"}
+                      onChange={(e) => setConfig({ ...config, show_more_button_secondary_color: e.target.value })}
+                    />
+                    <Input
+                      type="text"
+                      value={config.show_more_button_secondary_color || "#D6BCFA"}
+                      onChange={(e) => setConfig({ ...config, show_more_button_secondary_color: e.target.value })}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <Button onClick={handleConfigUpdate} className="mt-4">
+                Salvar Configurações do Botão
+              </Button>
+            </div>
+
             {!editingNews ? (
               <div className="bg-white rounded-lg shadow p-6">
                 <h2 className="text-xl font-semibold mb-4">Adicionar Notícia</h2>

@@ -2,6 +2,8 @@
 import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 
 interface InstagramMedia {
   url: string;
@@ -51,6 +53,20 @@ const getInstagramEmbedUrl = (url: string) => {
 const NewsCard = ({ title, content, date, image, video, instagramMedia = [] }: NewsCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const youtubeEmbedUrl = getYouTubeEmbedUrl(video || '');
+
+  // Fetch button colors from site configuration
+  const { data: config } = useQuery({
+    queryKey: ['site_configuration'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('site_configuration')
+        .select('show_more_button_primary_color, show_more_button_secondary_color')
+        .single();
+
+      if (error) throw error;
+      return data;
+    }
+  });
 
   // Convert line breaks to paragraphs
   const formattedContent = content.split('\n').map((paragraph, index) => (
@@ -108,6 +124,10 @@ const NewsCard = ({ title, content, date, image, video, instagramMedia = [] }: N
           variant="ghost"
           className="mt-2 w-full flex items-center justify-center gap-2"
           onClick={() => setIsExpanded(!isExpanded)}
+          style={{
+            backgroundColor: isExpanded ? config?.show_more_button_secondary_color : config?.show_more_button_primary_color,
+            color: '#FFFFFF',
+          }}
         >
           {isExpanded ? (
             <>
