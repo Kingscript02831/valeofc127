@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type SiteConfig = Database['public']['Tables']['site_configuration']['Row'];
 type News = Database['public']['Tables']['news']['Row'];
+type NewsInsert = Database['public']['Tables']['news']['Insert'];
 
 const Admin = () => {
   const [config, setConfig] = useState<SiteConfig>({
@@ -31,11 +32,11 @@ const Admin = () => {
     navbar_logo_image: null,
   });
 
-  const [newNews, setNewNews] = useState<Partial<News>>({
+  const [newNews, setNewNews] = useState<NewsInsert>({
     title: "",
     content: "",
-    image: "",
-    video: "",
+    image: null,
+    video: null,
     date: new Date().toISOString(),
   });
 
@@ -102,13 +103,7 @@ const Admin = () => {
 
       const { error } = await supabase
         .from("news")
-        .insert({
-          title: newNews.title,
-          content: newNews.content,
-          image: newNews.image || null,
-          video: newNews.video || null,
-          date: newNews.date
-        });
+        .insert(newNews);
 
       if (error) throw error;
 
@@ -116,8 +111,8 @@ const Admin = () => {
       setNewNews({
         title: "",
         content: "",
-        image: "",
-        video: "",
+        image: null,
+        video: null,
         date: new Date().toISOString(),
       });
       fetchNews();

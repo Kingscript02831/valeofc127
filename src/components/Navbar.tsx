@@ -74,7 +74,7 @@ const Navbar = () => {
               href="https://facebook.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="transition-all duration-300 ease-out hover:scale-110 p-2 rounded-full hover:bg-accent/20"
+              className="transition-all duration-300 ease-out hover:scale-110 p-2 rounded-full hover:bg-accent/20 hover:text-foreground"
               style={{ 
                 color: `${config.text_color}90`,
               }}
@@ -87,7 +87,7 @@ const Navbar = () => {
               href="https://instagram.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="transition-all duration-300 ease-out hover:scale-110 p-2 rounded-full hover:bg-accent/20"
+              className="transition-all duration-300 ease-out hover:scale-110 p-2 rounded-full hover:bg-accent/20 hover:text-foreground"
               style={{ 
                 color: `${config.text_color}90`,
               }}
@@ -100,7 +100,7 @@ const Navbar = () => {
               variant="ghost"
               size="icon"
               onClick={handleShare}
-              className="transition-all duration-300 ease-out hover:scale-110 rounded-full p-2 hover:bg-accent/20"
+              className="transition-all duration-300 ease-out hover:scale-110 rounded-full p-2 hover:bg-accent/20 hover:text-foreground"
               style={{ 
                 color: `${config.text_color}90`,
               }}
