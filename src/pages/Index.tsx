@@ -9,11 +9,9 @@ import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import type { Database } from "@/integrations/supabase/types";
 
-type News = Database['public']['Tables']['news']['Row'];
-interface InstagramMedia {
-  url: string;
-  type: 'post' | 'video';
-}
+type News = Database['public']['Tables']['news']['Row'] & {
+  categories?: Database['public']['Tables']['categories']['Row'];
+};
 
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -23,22 +21,20 @@ const Index = () => {
     queryFn: async () => {
       console.log('Fetching news with searchTerm:', searchTerm);
       try {
-        let query = supabase
+        const { data, error } = await supabase
           .from('news')
-          .select('*')
+          .select(`
+            *,
+            categories (*)
+          `)
+          .ilike('title', `%${searchTerm}%`)
           .order('created_at', { ascending: false });
 
-        if (searchTerm) {
-          query = query.ilike('title', `%${searchTerm}%`);
-        }
-
-        const { data, error } = await query;
-        
         if (error) {
           console.error('Supabase query error:', error);
           throw error;
         }
-        
+
         console.log('Fetched news data:', data);
         return data || [];
       } catch (err) {
@@ -77,7 +73,6 @@ const Index = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {news.map((item) => {
-                // Safely cast instagram_media to InstagramMedia[]
                 const instagramMedia = Array.isArray(item.instagram_media) 
                   ? (item.instagram_media as unknown as InstagramMedia[])
                   : [];
@@ -91,6 +86,11 @@ const Index = () => {
                     image={item.image || undefined}
                     video={item.video || undefined}
                     instagramMedia={instagramMedia}
+                    buttonColor={item.button_color || undefined}
+                    category={item.categories ? {
+                      name: item.categories.name,
+                      slug: item.categories.slug
+                    } : undefined}
                   />
                 );
               })}
