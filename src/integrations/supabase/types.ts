@@ -102,6 +102,7 @@ export type Database = {
           footer_address_cep: string | null
           footer_contact_email: string | null
           footer_contact_phone: string | null
+          footer_copyright_text: string | null
           footer_primary_color: string
           footer_schedule: string | null
           footer_secondary_color: string
@@ -139,6 +140,7 @@ export type Database = {
           footer_address_cep?: string | null
           footer_contact_email?: string | null
           footer_contact_phone?: string | null
+          footer_copyright_text?: string | null
           footer_primary_color?: string
           footer_schedule?: string | null
           footer_secondary_color?: string
@@ -176,6 +178,7 @@ export type Database = {
           footer_address_cep?: string | null
           footer_contact_email?: string | null
           footer_contact_phone?: string | null
+          footer_copyright_text?: string | null
           footer_primary_color?: string
           footer_schedule?: string | null
           footer_secondary_color?: string

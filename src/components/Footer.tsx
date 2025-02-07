@@ -121,7 +121,7 @@ const Footer = () => {
         {/* Copyright */}
         <div className="pt-8 mt-8 border-t border-white/20 text-center">
           <p className="text-sm" style={{ color: config.footer_text_color }}>
-            &copy; 2025 VALEOFC. Todos os direitos reservados.
+            {config.footer_copyright_text}
           </p>
         </div>
       </div>

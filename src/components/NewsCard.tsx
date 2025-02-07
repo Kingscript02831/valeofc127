@@ -20,21 +20,19 @@ interface NewsCardProps {
 const getYouTubeEmbedUrl = (url: string) => {
   if (!url) return '';
   
-  // If it's already an embed URL, return as is
-  if (url.includes('youtube.com/embed/')) {
-    return url;
-  }
-
   // Handle youtube.com/watch?v= format
-  const watchMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu.be\/)([^&\s]+)/);
+  const watchMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/);
   if (watchMatch) {
     return `https://www.youtube.com/embed/${watchMatch[1]}`;
   }
 
+  // If it's already an embed URL or other format, return as is
   return url;
 };
 
 const getInstagramEmbedUrl = (url: string, type: 'post' | 'video') => {
+  if (!url) return '';
+
   // Remove trailing slash if present
   url = url.replace(/\/$/, '');
   
@@ -61,7 +59,7 @@ const getInstagramEmbedUrl = (url: string, type: 'post' | 'video') => {
     }
   }
   
-  return `${url}/embed`;
+  return url;
 };
 
 const NewsCard = ({ title, content, date, image, video, instagramMedia = [] }: NewsCardProps) => {
@@ -75,22 +73,25 @@ const NewsCard = ({ title, content, date, image, video, instagramMedia = [] }: N
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
-      {video ? (
+      {video && (
         <div className="aspect-video">
           <iframe
             src={embedUrl}
             className="w-full h-full"
             allowFullScreen
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             title={title}
           />
         </div>
-      ) : image ? (
+      )}
+      
+      {!video && image && (
         <img
           src={image}
           alt={title}
           className="w-full h-48 object-cover"
         />
-      ) : null}
+      )}
       
       <div className="p-4">
         <h2 className="text-xl font-semibold mb-2">{title}</h2>
@@ -103,10 +104,10 @@ const NewsCard = ({ title, content, date, image, video, instagramMedia = [] }: N
         {instagramMedia && instagramMedia.length > 0 && (
           <div className="mt-4 space-y-4">
             {instagramMedia.map((media, index) => (
-              <div key={index} className="instagram-embed">
+              <div key={index} className="instagram-embed aspect-square">
                 <iframe
                   src={getInstagramEmbedUrl(media.url, media.type)}
-                  className="w-full aspect-square"
+                  className="w-full h-full"
                   frameBorder="0"
                   scrolling="no"
                   allowTransparency
@@ -140,4 +141,3 @@ const NewsCard = ({ title, content, date, image, video, instagramMedia = [] }: N
 };
 
 export default NewsCard;
-

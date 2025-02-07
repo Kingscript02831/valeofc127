@@ -824,6 +824,21 @@ const Admin = () => {
               </div>
             </div>
 
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold mb-4">Texto de Copyright</h2>
+              <div>
+                <Label htmlFor="footer_copyright_text">Texto de Copyright</Label>
+                <Input
+                  id="footer_copyright_text"
+                  value={config.footer_copyright_text || ""}
+                  onChange={(e) =>
+                    setConfig({ ...config, footer_copyright_text: e.target.value })
+                  }
+                  placeholder="© 2025 VALEOFC. Todos os direitos reservados."
+                />
+              </div>
+            </div>
+
             <div className="flex justify-end">
               <Button onClick={handleConfigUpdate}>
                 Salvar Configurações 
