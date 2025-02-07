@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -64,6 +65,7 @@ const Admin = () => {
     video: null,
     date: new Date().toISOString(),
     instagram_media: [],
+    category_id: null,
   });
 
   const [editingNews, setEditingNews] = useState<News | null>(null);
@@ -144,10 +146,11 @@ const Admin = () => {
         .update({
           title: editingNews.title,
           content: editingNews.content,
-          image: editingNews.image || null,
-          video: editingNews.video || null,
+          image: editingNews.image,
+          video: editingNews.video,
           date: editingNews.date,
           instagram_media: editingNews.instagram_media || [],
+          category_id: editingNews.category_id,
         })
         .eq("id", editingNews.id);
 
@@ -186,6 +189,7 @@ const Admin = () => {
         video: null,
         date: new Date().toISOString(),
         instagram_media: [],
+        category_id: null,
       });
       fetchNews();
     } catch (error: any) {
@@ -211,19 +215,20 @@ const Admin = () => {
   };
 
   const addInstagramMedia = (news: NewsInsert | News, type: 'post' | 'video') => {
-    const media = {
+    const media: InstagramMedia = {
       url: '',
       type,
     };
+    
     if ('id' in news) {
       setEditingNews({
         ...news,
-        instagram_media: [...(news.instagram_media || []), media],
+        instagram_media: [...(Array.isArray(news.instagram_media) ? news.instagram_media : []), media],
       });
     } else {
       setNewNews({
         ...news,
-        instagram_media: [...(news.instagram_media || []), media],
+        instagram_media: [...(Array.isArray(news.instagram_media) ? news.instagram_media : []), media],
       });
     }
   };
@@ -233,7 +238,9 @@ const Admin = () => {
     index: number,
     url: string
   ) => {
-    const updatedMedia = [...(news.instagram_media || [])];
+    const updatedMedia = Array.isArray(news.instagram_media) 
+      ? [...news.instagram_media]
+      : [];
     updatedMedia[index] = { ...updatedMedia[index], url };
     
     if ('id' in news) {
@@ -250,7 +257,9 @@ const Admin = () => {
   };
 
   const removeInstagramMedia = (news: NewsInsert | News, index: number) => {
-    const updatedMedia = [...(news.instagram_media || [])];
+    const updatedMedia = Array.isArray(news.instagram_media)
+      ? [...news.instagram_media]
+      : [];
     updatedMedia.splice(index, 1);
     
     if ('id' in news) {
@@ -291,7 +300,7 @@ const Admin = () => {
           </Button>
         </div>
       </div>
-      {news.instagram_media && news.instagram_media.map((media, index) => (
+      {Array.isArray(news.instagram_media) && news.instagram_media.map((media, index) => (
         <div key={index} className="flex gap-2 items-start">
           <div className="flex-1">
             <Label>
