@@ -1,387 +1,340 @@
-
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { toast } from "sonner";
-import {
-  Settings,
-  Share2,
-  Bell,
-  Users,
-  Palette,
-  FileText,
-  Image,
-  Newspaper,
-  Globe,
-  Plus,
-} from "lucide-react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import type { Database } from "@/integrations/supabase/types";
+
+type SiteConfig = Database['public']['Tables']['site_configuration']['Row'];
 
 const Admin = () => {
   const navigate = useNavigate();
-  const [newNews, setNewNews] = useState({
-    title: "",
-    content: "",
-    image: "",
-    video: "",
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [config, setConfig] = useState<SiteConfig>({
+    id: "",
+    theme_name: "light",
+    primary_color: "#1A1F2C",
+    secondary_color: "#D6BCFA",
+    background_color: "#FFFFFF",
+    text_color: "#1A1F2C",
+    navbar_color: "#D6BCFA",
+    footer_color: "#F1F0FB",
+    accent_color: "#8B5CF6",
+    title_color: "#1A1F2C",
+    numbers_color: "#1A1F2C",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   });
 
-  const queryClient = useQueryClient();
-
-  // Check authentication on component mount
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast.error("Você precisa estar logado para acessar o painel administrativo");
-        navigate("/login");
-        return;
-      }
+    checkSession();
+    if (isAuthenticated) {
+      fetchConfiguration();
+    }
+  }, [isAuthenticated]);
 
-      // Check if user is an admin
-      const { data: adminUser } = await supabase
+  const checkSession = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      setIsAuthenticated(true);
+    }
+    setIsLoading(false);
+  };
+
+  const fetchConfiguration = async () => {
+    const { data, error } = await supabase
+      .from("site_configuration")
+      .select("*")
+      .single();
+
+    if (error) {
+      toast.error("Erro ao carregar configurações");
+      return;
+    }
+
+    if (data) {
+      setConfig(data);
+    }
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      const { data: adminCheck, error: adminError } = await supabase
         .from("admin_users")
         .select("*")
-        .eq("email", session.user.email)
+        .eq("email", email)
         .single();
 
-      if (!adminUser) {
-        toast.error("Você não tem permissão para acessar o painel administrativo");
-        navigate("/");
-        return;
+      if (adminError || !adminCheck) {
+        await supabase.auth.signOut();
+        throw new Error("Usuário não autorizado");
       }
-    };
 
-    checkAuth();
-  }, [navigate]);
+      setIsAuthenticated(true);
+      toast.success("Login realizado com sucesso!");
+    } catch (error: any) {
+      toast.error(error.message || "Erro ao fazer login");
+    }
+  };
 
-  const { data: siteConfig } = useQuery({
-    queryKey: ["site-configuration"],
-    queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("Não autorizado");
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setIsAuthenticated(false);
+    navigate("/admin");
+  };
 
-      const { data, error } = await supabase
+  const handleConfigUpdate = async () => {
+    try {
+      const { error } = await supabase
         .from("site_configuration")
-        .select("*")
-        .maybeSingle();
-
-      if (error) {
-        toast.error("Erro ao carregar configurações");
-        throw error;
-      }
-
-      // Return default values if no configuration exists
-      return data || {
-        primary_color: "#1A1F2C",
-        accent_color: "#8B5CF6",
-        id: null
-      };
-    },
-  });
-
-  const { data: newsList } = useQuery({
-    queryKey: ["news"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("news")
-        .select("*")
-        .order("date", { ascending: false });
-
-      if (error) {
-        toast.error("Erro ao carregar notícias");
-        throw error;
-      }
-
-      return data;
-    },
-  });
-
-  const handleClearCache = () => {
-    localStorage.clear();
-    toast.success("Cache limpo com sucesso!");
-  };
-
-  const handleColorUpdate = async (color: string, type: string) => {
-    try {
-      if (siteConfig?.id) {
-        // Update existing configuration
-        const { error } = await supabase
-          .from("site_configuration")
-          .update({ [type]: color })
-          .eq("id", siteConfig.id);
-
-        if (error) throw error;
-      } else {
-        // Insert new configuration if none exists
-        const { error } = await supabase
-          .from("site_configuration")
-          .insert([{ [type]: color }]);
-
-        if (error) throw error;
-      }
-      
-      toast.success("Cor atualizada com sucesso!");
-      queryClient.invalidateQueries({ queryKey: ["site-configuration"] });
-    } catch (error) {
-      toast.error("Erro ao atualizar cor");
-    }
-  };
-
-  const handleAddNews = async () => {
-    try {
-      const { error } = await supabase
-        .from("news")
-        .insert([
-          {
-            title: newNews.title,
-            content: newNews.content,
-            image: newNews.image || null,
-            video: newNews.video || null,
-          },
-        ]);
+        .update(config)
+        .eq("id", config.id);
 
       if (error) throw error;
 
-      toast.success("Notícia adicionada com sucesso!");
-      setNewNews({ title: "", content: "", image: "", video: "" });
-      queryClient.invalidateQueries({ queryKey: ["news"] });
-    } catch (error) {
-      toast.error("Erro ao adicionar notícia");
+      toast.success("Configurações atualizadas com sucesso!");
+    } catch (error: any) {
+      toast.error("Erro ao atualizar configurações");
     }
   };
 
-  const handleDeleteNews = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from("news")
-        .delete()
-        .eq("id", id);
+  if (isLoading) {
+    return <div className="flex items-center justify-center min-h-screen">
+      <p>Carregando...</p>
+    </div>;
+  }
 
-      if (error) throw error;
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow">
+          <div>
+            <h2 className="text-center text-3xl font-bold text-gray-900">
+              Painel Administrativo
+            </h2>
+          </div>
+          
+          <form className="mt-8 space-y-6" onSubmit={handleLogin}>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="password">Senha</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+            </div>
 
-      toast.success("Notícia removida com sucesso!");
-      queryClient.invalidateQueries({ queryKey: ["news"] });
-    } catch (error) {
-      toast.error("Erro ao remover notícia");
-    }
-  };
+            <Button type="submit" className="w-full">
+              Entrar
+            </Button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold text-gray-900">
-            Painel Administrativo
-          </h2>
-          <p className="mt-2 text-gray-600">
-            Gerencie as configurações do sistema
-          </p>
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-4xl mx-auto px-4">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Configurações do Site</h1>
+          <Button onClick={handleLogout} variant="outline">
+            Sair
+          </Button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Cores e Tema */}
-          <Card className="p-6 hover:shadow-lg transition-shadow">
-            <div className="flex items-center space-x-3 mb-4">
-              <Palette className="h-6 w-6 text-primary" />
-              <h3 className="text-xl font-semibold">Cores e Tema</h3>
-            </div>
-            <p className="text-gray-600 mb-4">
-              Personalize as cores e o tema do site
-            </p>
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <input
+        <div className="bg-white rounded-lg shadow p-6 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <Label htmlFor="primary_color">Cor Primária</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="primary_color"
                   type="color"
-                  value={siteConfig?.primary_color || "#1A1F2C"}
-                  onChange={(e) => handleColorUpdate(e.target.value, "primary_color")}
-                  className="w-8 h-8 rounded cursor-pointer"
+                  value={config.primary_color}
+                  onChange={(e) => setConfig({ ...config, primary_color: e.target.value })}
                 />
-                <span className="text-sm text-gray-600">Cor Primária</span>
+                <Input
+                  type="text"
+                  value={config.primary_color}
+                  onChange={(e) => setConfig({ ...config, primary_color: e.target.value })}
+                />
               </div>
-              <div className="flex items-center gap-2">
-                <input
+            </div>
+
+            <div>
+              <Label htmlFor="secondary_color">Cor Secundária</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="secondary_color"
                   type="color"
-                  value={siteConfig?.accent_color || "#8B5CF6"}
-                  onChange={(e) => handleColorUpdate(e.target.value, "accent_color")}
-                  className="w-8 h-8 rounded cursor-pointer"
-                />
-                <span className="text-sm text-gray-600">Cor de Destaque</span>
-              </div>
-            </div>
-          </Card>
-
-          {/* Páginas */}
-          <Card className="p-6 hover:shadow-lg transition-shadow">
-            <div className="flex items-center space-x-3 mb-4">
-              <FileText className="h-6 w-6 text-primary" />
-              <h3 className="text-xl font-semibold">Páginas</h3>
-            </div>
-            <p className="text-gray-600 mb-4">
-              Gerencie as páginas do site
-            </p>
-            <Button variant="outline" className="w-full">
-              Gerenciar Páginas
-            </Button>
-          </Card>
-
-          {/* Logo */}
-          <Card className="p-6 hover:shadow-lg transition-shadow">
-            <div className="flex items-center space-x-3 mb-4">
-              <Image className="h-6 w-6 text-primary" />
-              <h3 className="text-xl font-semibold">Logo</h3>
-            </div>
-            <p className="text-gray-600 mb-4">
-              Atualize o logo do site
-            </p>
-            <Button variant="outline" className="w-full">
-              Alterar Logo
-            </Button>
-          </Card>
-
-          {/* Notícias */}
-          <Card className="col-span-1 md:col-span-2 lg:col-span-3 p-6 hover:shadow-lg transition-shadow">
-            <div className="flex items-center space-x-3 mb-4">
-              <Newspaper className="h-6 w-6 text-primary" />
-              <h3 className="text-xl font-semibold">Notícias</h3>
-            </div>
-            <p className="text-gray-600 mb-4">
-              Gerencie as notícias do site
-            </p>
-            
-            <div className="grid gap-4">
-              <div className="grid gap-4">
-                <Input
-                  placeholder="Título da notícia"
-                  value={newNews.title}
-                  onChange={(e) => setNewNews({ ...newNews, title: e.target.value })}
-                />
-                <Textarea
-                  placeholder="Conteúdo da notícia"
-                  value={newNews.content}
-                  onChange={(e) => setNewNews({ ...newNews, content: e.target.value })}
+                  value={config.secondary_color}
+                  onChange={(e) => setConfig({ ...config, secondary_color: e.target.value })}
                 />
                 <Input
-                  placeholder="Link da imagem (opcional)"
-                  value={newNews.image}
-                  onChange={(e) => setNewNews({ ...newNews, image: e.target.value })}
+                  type="text"
+                  value={config.secondary_color}
+                  onChange={(e) => setConfig({ ...config, secondary_color: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="background_color">Cor de Fundo</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="background_color"
+                  type="color"
+                  value={config.background_color}
+                  onChange={(e) => setConfig({ ...config, background_color: e.target.value })}
                 />
                 <Input
-                  placeholder="Link do vídeo do YouTube (opcional)"
-                  value={newNews.video}
-                  onChange={(e) => setNewNews({ ...newNews, video: e.target.value })}
+                  type="text"
+                  value={config.background_color}
+                  onChange={(e) => setConfig({ ...config, background_color: e.target.value })}
                 />
-                <Button onClick={handleAddNews} className="w-full flex items-center justify-center gap-2">
-                  <Plus className="h-4 w-4" />
-                  Adicionar Notícia
-                </Button>
-              </div>
-
-              <div className="mt-4">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Título</TableHead>
-                      <TableHead>Data</TableHead>
-                      <TableHead>Ações</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {newsList?.map((news) => (
-                      <TableRow key={news.id}>
-                        <TableCell>{news.title}</TableCell>
-                        <TableCell>{new Date(news.date).toLocaleDateString("pt-BR")}</TableCell>
-                        <TableCell>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => handleDeleteNews(news.id)}
-                          >
-                            Excluir
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
               </div>
             </div>
-          </Card>
 
-          {/* SEO e Meta */}
-          <Card className="p-6 hover:shadow-lg transition-shadow">
-            <div className="flex items-center space-x-3 mb-4">
-              <Globe className="h-6 w-6 text-primary" />
-              <h3 className="text-xl font-semibold">SEO e Meta</h3>
+            <div>
+              <Label htmlFor="text_color">Cor do Texto</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="text_color"
+                  type="color"
+                  value={config.text_color}
+                  onChange={(e) => setConfig({ ...config, text_color: e.target.value })}
+                />
+                <Input
+                  type="text"
+                  value={config.text_color}
+                  onChange={(e) => setConfig({ ...config, text_color: e.target.value })}
+                />
+              </div>
             </div>
-            <p className="text-gray-600 mb-4">
-              Configure meta tags e SEO
-            </p>
-            <Button variant="outline" className="w-full">
-              Configurar SEO
-            </Button>
-          </Card>
 
-          {/* Cache */}
-          <Card className="p-6 hover:shadow-lg transition-shadow">
-            <div className="flex items-center space-x-3 mb-4">
-              <Settings className="h-6 w-6 text-primary" />
-              <h3 className="text-xl font-semibold">Cache</h3>
+            <div>
+              <Label htmlFor="navbar_color">Cor da Navbar</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="navbar_color"
+                  type="color"
+                  value={config.navbar_color}
+                  onChange={(e) => setConfig({ ...config, navbar_color: e.target.value })}
+                />
+                <Input
+                  type="text"
+                  value={config.navbar_color}
+                  onChange={(e) => setConfig({ ...config, navbar_color: e.target.value })}
+                />
+              </div>
             </div>
-            <p className="text-gray-600 mb-4">
-              Gerencie o cache do sistema
-            </p>
-            <Button onClick={handleClearCache} variant="outline" className="w-full">
-              Limpar Cache
-            </Button>
-          </Card>
 
-          {/* Redes Sociais */}
-          <Card className="p-6 hover:shadow-lg transition-shadow">
-            <div className="flex items-center space-x-3 mb-4">
-              <Share2 className="h-6 w-6 text-primary" />
-              <h3 className="text-xl font-semibold">Redes Sociais</h3>
+            <div>
+              <Label htmlFor="footer_color">Cor do Rodapé</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="footer_color"
+                  type="color"
+                  value={config.footer_color}
+                  onChange={(e) => setConfig({ ...config, footer_color: e.target.value })}
+                />
+                <Input
+                  type="text"
+                  value={config.footer_color}
+                  onChange={(e) => setConfig({ ...config, footer_color: e.target.value })}
+                />
+              </div>
             </div>
-            <p className="text-gray-600 mb-4">
-              Configure as redes sociais
-            </p>
-            <Button variant="outline" className="w-full">
-              Configurar Redes Sociais
-            </Button>
-          </Card>
 
-          {/* Notificações */}
-          <Card className="p-6 hover:shadow-lg transition-shadow">
-            <div className="flex items-center space-x-3 mb-4">
-              <Bell className="h-6 w-6 text-primary" />
-              <h3 className="text-xl font-semibold">Notificações</h3>
+            <div>
+              <Label htmlFor="accent_color">Cor de Destaque</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="accent_color"
+                  type="color"
+                  value={config.accent_color}
+                  onChange={(e) => setConfig({ ...config, accent_color: e.target.value })}
+                />
+                <Input
+                  type="text"
+                  value={config.accent_color}
+                  onChange={(e) => setConfig({ ...config, accent_color: e.target.value })}
+                />
+              </div>
             </div>
-            <p className="text-gray-600 mb-4">
-              Gerencie as notificações
-            </p>
-            <Button variant="outline" className="w-full">
-              Configurar Notificações
-            </Button>
-          </Card>
 
-          {/* Usuários */}
-          <Card className="p-6 hover:shadow-lg transition-shadow">
-            <div className="flex items-center space-x-3 mb-4">
-              <Users className="h-6 w-6 text-primary" />
-              <h3 className="text-xl font-semibold">Usuários</h3>
+            <div>
+              <Label htmlFor="title_color">Cor dos Títulos</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="title_color"
+                  type="color"
+                  value={config.title_color}
+                  onChange={(e) => setConfig({ ...config, title_color: e.target.value })}
+                />
+                <Input
+                  type="text"
+                  value={config.title_color}
+                  onChange={(e) => setConfig({ ...config, title_color: e.target.value })}
+                />
+              </div>
             </div>
-            <p className="text-gray-600 mb-4">
-              Gerencie os usuários do sistema
-            </p>
-            <Button variant="outline" className="w-full">
-              Gerenciar Usuários
+
+            <div>
+              <Label htmlFor="numbers_color">Cor dos Números</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="numbers_color"
+                  type="color"
+                  value={config.numbers_color}
+                  onChange={(e) => setConfig({ ...config, numbers_color: e.target.value })}
+                />
+                <Input
+                  type="text"
+                  value={config.numbers_color}
+                  onChange={(e) => setConfig({ ...config, numbers_color: e.target.value })}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end">
+            <Button onClick={handleConfigUpdate}>
+              Salvar Configurações
             </Button>
-          </Card>
+          </div>
         </div>
       </div>
     </div>
