@@ -18,23 +18,39 @@ interface InstagramMedia {
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
-  const { data: news = [] } = useQuery<News[]>({
+  const { data: news = [], error, isLoading } = useQuery<News[]>({
     queryKey: ['news', searchTerm],
     queryFn: async () => {
-      let query = supabase
-        .from('news')
-        .select('*')
-        .order('created_at', { ascending: false });
+      console.log('Fetching news with searchTerm:', searchTerm);
+      try {
+        let query = supabase
+          .from('news')
+          .select('*')
+          .order('created_at', { ascending: false });
 
-      if (searchTerm) {
-        query = query.ilike('title', `%${searchTerm}%`);
+        if (searchTerm) {
+          query = query.ilike('title', `%${searchTerm}%`);
+        }
+
+        const { data, error } = await query;
+        
+        if (error) {
+          console.error('Supabase query error:', error);
+          throw error;
+        }
+        
+        console.log('Fetched news data:', data);
+        return data || [];
+      } catch (err) {
+        console.error('Error fetching news:', err);
+        throw err;
       }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return data;
     }
   });
+
+  if (error) {
+    console.error('React Query error:', error);
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -56,31 +72,35 @@ const Index = () => {
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {news.map((item) => {
-              // Safely cast instagram_media to InstagramMedia[]
-              const instagramMedia = Array.isArray(item.instagram_media) 
-                ? (item.instagram_media as unknown as InstagramMedia[])
-                : [];
-                
-              return (
-                <NewsCard
-                  key={item.id}
-                  title={item.title}
-                  content={item.content}
-                  date={new Date(item.date).toLocaleDateString("pt-BR")}
-                  image={item.image || undefined}
-                  video={item.video || undefined}
-                  instagramMedia={instagramMedia}
-                />
-              );
-            })}
-            {news.length === 0 && (
-              <p className="text-gray-500 col-span-full text-center py-8">
-                Nenhuma notícia encontrada.
-              </p>
-            )}
-          </div>
+          {isLoading ? (
+            <p className="text-center py-8">Carregando notícias...</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {news.map((item) => {
+                // Safely cast instagram_media to InstagramMedia[]
+                const instagramMedia = Array.isArray(item.instagram_media) 
+                  ? (item.instagram_media as unknown as InstagramMedia[])
+                  : [];
+                  
+                return (
+                  <NewsCard
+                    key={item.id}
+                    title={item.title}
+                    content={item.content}
+                    date={new Date(item.date).toLocaleDateString("pt-BR")}
+                    image={item.image || undefined}
+                    video={item.video || undefined}
+                    instagramMedia={instagramMedia}
+                  />
+                );
+              })}
+              {!isLoading && news.length === 0 && (
+                <p className="text-gray-500 col-span-full text-center py-8">
+                  Nenhuma notícia encontrada.
+                </p>
+              )}
+            </div>
+          )}
         </div>
       </main>
       
