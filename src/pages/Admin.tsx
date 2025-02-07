@@ -522,14 +522,17 @@ const Admin = () => {
                     <p className="whitespace-pre-wrap mb-2">{item.content}</p>
                     {item.image && <p className="text-sm text-gray-500">Imagem: {item.image}</p>}
                     {item.video && <p className="text-sm text-gray-500">Vídeo: {item.video}</p>}
-                    {item.instagram_media && item.instagram_media.length > 0 && (
+                    {Array.isArray(item.instagram_media) && item.instagram_media.length > 0 && (
                       <div className="mt-2">
                         <p className="text-sm font-medium text-gray-500">Mídia do Instagram:</p>
-                        {item.instagram_media.map((media, index) => (
-                          <p key={index} className="text-sm text-gray-500">
-                            {media.type === 'post' ? 'Post' : 'Vídeo'}: {media.url}
-                          </p>
-                        ))}
+                        {item.instagram_media.map((media, index) => {
+                          const instaMedia = media as InstagramMediaJson;
+                          return (
+                            <p key={index} className="text-sm text-gray-500">
+                              {instaMedia.type === 'post' ? 'Post' : 'Vídeo'}: {instaMedia.url}
+                            </p>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
