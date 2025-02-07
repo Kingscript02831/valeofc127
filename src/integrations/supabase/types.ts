@@ -93,11 +93,17 @@ export type Database = {
           background_color: string
           created_at: string
           enable_dark_mode: boolean | null
+          enable_weather: boolean | null
           font_size: string | null
           header_alerts: Json | null
           high_contrast: boolean | null
           id: string
           language: string | null
+          location_city: string | null
+          location_country: string | null
+          location_lat: number | null
+          location_lng: number | null
+          location_state: string | null
           navbar_color: string
           navbar_logo_image: string | null
           navbar_logo_text: string | null
@@ -108,16 +114,23 @@ export type Database = {
           text_color: string
           theme_name: string
           updated_at: string
+          weather_api_key: string | null
         }
         Insert: {
           background_color?: string
           created_at?: string
           enable_dark_mode?: boolean | null
+          enable_weather?: boolean | null
           font_size?: string | null
           header_alerts?: Json | null
           high_contrast?: boolean | null
           id?: string
           language?: string | null
+          location_city?: string | null
+          location_country?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
+          location_state?: string | null
           navbar_color?: string
           navbar_logo_image?: string | null
           navbar_logo_text?: string | null
@@ -128,16 +141,23 @@ export type Database = {
           text_color?: string
           theme_name?: string
           updated_at?: string
+          weather_api_key?: string | null
         }
         Update: {
           background_color?: string
           created_at?: string
           enable_dark_mode?: boolean | null
+          enable_weather?: boolean | null
           font_size?: string | null
           header_alerts?: Json | null
           high_contrast?: boolean | null
           id?: string
           language?: string | null
+          location_city?: string | null
+          location_country?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
+          location_state?: string | null
           navbar_color?: string
           navbar_logo_image?: string | null
           navbar_logo_text?: string | null
@@ -148,6 +168,7 @@ export type Database = {
           text_color?: string
           theme_name?: string
           updated_at?: string
+          weather_api_key?: string | null
         }
         Relationships: []
       }
