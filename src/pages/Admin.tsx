@@ -7,11 +7,16 @@ import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search } from "lucide-react";
+import { Search, Plus, Trash2 } from "lucide-react";
 
 type SiteConfig = Database['public']['Tables']['site_configuration']['Row'];
 type News = Database['public']['Tables']['news']['Row'];
 type NewsInsert = Database['public']['Tables']['news']['Insert'];
+
+interface InstagramMedia {
+  url: string;
+  type: 'post' | 'video';
+}
 
 const Admin = () => {
   const [config, setConfig] = useState<SiteConfig>({
@@ -58,6 +63,7 @@ const Admin = () => {
     image: null,
     video: null,
     date: new Date().toISOString(),
+    instagram_media: [],
   });
 
   const [editingNews, setEditingNews] = useState<News | null>(null);
@@ -141,6 +147,7 @@ const Admin = () => {
           image: editingNews.image || null,
           video: editingNews.video || null,
           date: editingNews.date,
+          instagram_media: editingNews.instagram_media || [],
         })
         .eq("id", editingNews.id);
 
@@ -178,6 +185,7 @@ const Admin = () => {
         image: null,
         video: null,
         date: new Date().toISOString(),
+        instagram_media: [],
       });
       fetchNews();
     } catch (error: any) {
@@ -201,6 +209,115 @@ const Admin = () => {
       toast.error("Erro ao remover notícia");
     }
   };
+
+  const addInstagramMedia = (news: NewsInsert | News, type: 'post' | 'video') => {
+    const media = {
+      url: '',
+      type,
+    };
+    if ('id' in news) {
+      setEditingNews({
+        ...news,
+        instagram_media: [...(news.instagram_media || []), media],
+      });
+    } else {
+      setNewNews({
+        ...news,
+        instagram_media: [...(news.instagram_media || []), media],
+      });
+    }
+  };
+
+  const updateInstagramMedia = (
+    news: NewsInsert | News,
+    index: number,
+    url: string
+  ) => {
+    const updatedMedia = [...(news.instagram_media || [])];
+    updatedMedia[index] = { ...updatedMedia[index], url };
+    
+    if ('id' in news) {
+      setEditingNews({
+        ...news,
+        instagram_media: updatedMedia,
+      });
+    } else {
+      setNewNews({
+        ...news,
+        instagram_media: updatedMedia,
+      });
+    }
+  };
+
+  const removeInstagramMedia = (news: NewsInsert | News, index: number) => {
+    const updatedMedia = [...(news.instagram_media || [])];
+    updatedMedia.splice(index, 1);
+    
+    if ('id' in news) {
+      setEditingNews({
+        ...news,
+        instagram_media: updatedMedia,
+      });
+    } else {
+      setNewNews({
+        ...news,
+        instagram_media: updatedMedia,
+      });
+    }
+  };
+
+  const renderInstagramMediaFields = (news: NewsInsert | News) => (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-medium">Mídia do Instagram</h3>
+        <div className="space-x-2">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => addInstagramMedia(news, 'post')}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Adicionar Post
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => addInstagramMedia(news, 'video')}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Adicionar Vídeo
+          </Button>
+        </div>
+      </div>
+      {news.instagram_media && news.instagram_media.map((media, index) => (
+        <div key={index} className="flex gap-2 items-start">
+          <div className="flex-1">
+            <Label>
+              Link do {media.type === 'post' ? 'Post' : 'Vídeo'} do Instagram
+            </Label>
+            <Input
+              value={media.url}
+              onChange={(e) =>
+                updateInstagramMedia(news, index, e.target.value)
+              }
+              placeholder={`https://www.instagram.com/${media.type === 'post' ? 'p' : 'reel'}/...`}
+            />
+          </div>
+          <Button
+            type="button"
+            variant="destructive"
+            size="icon"
+            className="mt-6"
+            onClick={() => removeInstagramMedia(news, index)}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      ))}
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -254,6 +371,7 @@ const Admin = () => {
                       placeholder="https://youtube.com/embed/..."
                     />
                   </div>
+                  {renderInstagramMediaFields(newNews)}
                   <Button onClick={handleNewsSubmit}>Adicionar Notícia</Button>
                 </div>
               </div>
@@ -296,6 +414,7 @@ const Admin = () => {
                       placeholder="https://youtube.com/embed/..."
                     />
                   </div>
+                  {renderInstagramMediaFields(editingNews)}
                   <div className="flex gap-2">
                     <Button onClick={handleNewsEdit}>Salvar Alterações</Button>
                     <Button variant="outline" onClick={() => setEditingNews(null)}>Cancelar</Button>
@@ -344,6 +463,16 @@ const Admin = () => {
                     <p className="whitespace-pre-wrap mb-2">{item.content}</p>
                     {item.image && <p className="text-sm text-gray-500">Imagem: {item.image}</p>}
                     {item.video && <p className="text-sm text-gray-500">Vídeo: {item.video}</p>}
+                    {item.instagram_media && item.instagram_media.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-sm font-medium text-gray-500">Mídia do Instagram:</p>
+                        {item.instagram_media.map((media, index) => (
+                          <p key={index} className="text-sm text-gray-500">
+                            {media.type === 'post' ? 'Post' : 'Vídeo'}: {media.url}
+                          </p>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ))}
                 {news.length === 0 && (

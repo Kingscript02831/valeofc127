@@ -3,13 +3,18 @@ import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+interface InstagramMedia {
+  url: string;
+  type: 'post' | 'video';
+}
+
 interface NewsCardProps {
   title: string;
   content: string;
   date: string;
   image?: string;
   video?: string;
-  instagramMedia?: { url: string; type: 'post' | 'video' }[];
+  instagramMedia?: InstagramMedia[];
 }
 
 const getYouTubeEmbedUrl = (url: string) => {
@@ -27,6 +32,12 @@ const getYouTubeEmbedUrl = (url: string) => {
   }
 
   return url; // Return original if no match
+};
+
+const getInstagramEmbedUrl = (url: string) => {
+  // Remove trailing slash if present
+  url = url.replace(/\/$/, '');
+  return `${url}/embed`;
 };
 
 const NewsCard = ({ title, content, date, image, video, instagramMedia = [] }: NewsCardProps) => {
@@ -70,7 +81,7 @@ const NewsCard = ({ title, content, date, image, video, instagramMedia = [] }: N
             {instagramMedia.map((media, index) => (
               <div key={index} className="instagram-embed">
                 <iframe
-                  src={media.url}
+                  src={getInstagramEmbedUrl(media.url)}
                   className="w-full aspect-square"
                   frameBorder="0"
                   scrolling="no"
