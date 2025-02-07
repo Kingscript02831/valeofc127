@@ -1,6 +1,7 @@
 
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
+import SubNav from "@/components/SubNav";
 import Footer from "@/components/Footer";
 import NewsCard from "@/components/NewsCard";
 import { supabase } from "@/integrations/supabase/client";
@@ -55,7 +56,7 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      
+      <SubNav />
       <main className="flex-1 container mx-auto py-8 px-4">
         <div className="flex flex-col gap-8">
           <div className="flex items-center gap-4">
@@ -103,7 +104,6 @@ const Index = () => {
           )}
         </div>
       </main>
-      
       <Footer />
     </div>
   );
