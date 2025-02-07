@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,15 +11,33 @@ interface NewsCardProps {
   video?: string;
 }
 
+const getYouTubeEmbedUrl = (url: string) => {
+  if (!url) return '';
+  
+  // If it's already an embed URL, return as is
+  if (url.includes('youtube.com/embed/')) {
+    return url;
+  }
+
+  // Handle youtube.com/watch?v= format
+  const watchMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu.be\/)([^&\s]+)/);
+  if (watchMatch) {
+    return `https://www.youtube.com/embed/${watchMatch[1]}`;
+  }
+
+  return url; // Return original if no match
+};
+
 const NewsCard = ({ title, content, date, image, video }: NewsCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const embedUrl = getYouTubeEmbedUrl(video || '');
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
       {video ? (
         <div className="aspect-video">
           <iframe
-            src={video}
+            src={embedUrl}
             className="w-full h-full"
             allowFullScreen
             title={title}

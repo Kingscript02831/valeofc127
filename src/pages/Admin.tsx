@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -110,6 +109,35 @@ const Admin = () => {
     }
   };
 
+  const handleNewsEdit = async () => {
+    try {
+      if (!editingNews || !editingNews.title || !editingNews.content) {
+        toast.error("Título e conteúdo são obrigatórios");
+        return;
+      }
+
+      const { error } = await supabase
+        .from("news")
+        .update({
+          title: editingNews.title,
+          content: editingNews.content,
+          image: editingNews.image || null,
+          video: editingNews.video || null,
+          date: editingNews.date,
+        })
+        .eq("id", editingNews.id);
+
+      if (error) throw error;
+
+      toast.success("Notícia atualizada com sucesso!");
+      setEditingNews(null);
+      fetchNews();
+    } catch (error: any) {
+      console.error("Error updating news:", error);
+      toast.error("Erro ao atualizar notícia: " + error.message);
+    }
+  };
+
   const handleNewsSubmit = async () => {
     try {
       if (!newNews.title || !newNews.content) {
@@ -119,7 +147,10 @@ const Admin = () => {
 
       const { error } = await supabase
         .from("news")
-        .insert(newNews);
+        .insert({
+          ...newNews,
+          date: new Date().toISOString(),
+        });
 
       if (error) throw error;
 
@@ -133,34 +164,8 @@ const Admin = () => {
       });
       fetchNews();
     } catch (error: any) {
-      toast.error("Erro ao adicionar notícia");
-    }
-  };
-
-  const handleNewsEdit = async () => {
-    try {
-      if (!editingNews || !editingNews.title || !editingNews.content) {
-        toast.error("Título e conteúdo são obrigatórios");
-        return;
-      }
-
-      const { error } = await supabase
-        .from("news")
-        .update({
-          title: editingNews.title,
-          content: editingNews.content,
-          image: editingNews.image,
-          video: editingNews.video,
-        })
-        .eq("id", editingNews.id);
-
-      if (error) throw error;
-
-      toast.success("Notícia atualizada com sucesso!");
-      setEditingNews(null);
-      fetchNews();
-    } catch (error: any) {
-      toast.error("Erro ao atualizar notícia");
+      console.error("Error adding news:", error);
+      toast.error("Erro ao adicionar notícia: " + error.message);
     }
   };
 
