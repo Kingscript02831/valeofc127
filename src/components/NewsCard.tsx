@@ -18,6 +18,7 @@ interface NewsCardProps {
   video?: string;
   instagramMedia?: InstagramMedia[];
   buttonColor?: string;
+  buttonSecondaryColor?: string;
   category?: {
     name: string;
     slug: string;
@@ -63,6 +64,7 @@ const NewsCard = ({
   video, 
   instagramMedia = [], 
   buttonColor,
+  buttonSecondaryColor,
   category 
 }: NewsCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -73,13 +75,13 @@ const NewsCard = ({
     paragraph.trim() ? <p key={index} className="mb-4">{paragraph}</p> : null
   ));
 
+  // Create button styles with gradient if both colors are provided
   const buttonStyle = buttonColor ? {
-    backgroundColor: buttonColor,
+    background: buttonSecondaryColor 
+      ? `linear-gradient(to right, ${buttonColor}, ${buttonSecondaryColor})`
+      : buttonColor,
     color: '#FFFFFF',
-    '&:hover': {
-      backgroundColor: buttonColor,
-      opacity: 0.9
-    }
+    border: 'none'
   } : undefined;
 
   return (
@@ -140,11 +142,11 @@ const NewsCard = ({
         <Button
           variant="ghost"
           className={cn(
-            "mt-2 w-full flex items-center justify-center gap-2",
-            buttonColor && "text-white hover:text-white"
+            "mt-2 w-full flex items-center justify-center gap-2 transition-colors",
+            buttonColor && "text-white hover:text-white hover:opacity-90"
           )}
           onClick={() => setIsExpanded(!isExpanded)}
-          style={buttonColor ? { backgroundColor: buttonColor, '&:hover': { backgroundColor: buttonColor, opacity: 0.9 } } : undefined}
+          style={buttonStyle}
         >
           {isExpanded ? (
             <>
