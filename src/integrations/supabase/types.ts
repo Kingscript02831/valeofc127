@@ -122,6 +122,8 @@ export type Database = {
           navbar_logo_image: string | null
           navbar_logo_text: string | null
           navbar_logo_type: string
+          navbar_social_facebook: string | null
+          navbar_social_instagram: string | null
           navigation_links: Json | null
           primary_color: string
           secondary_color: string
@@ -160,6 +162,8 @@ export type Database = {
           navbar_logo_image?: string | null
           navbar_logo_text?: string | null
           navbar_logo_type?: string
+          navbar_social_facebook?: string | null
+          navbar_social_instagram?: string | null
           navigation_links?: Json | null
           primary_color?: string
           secondary_color?: string
@@ -198,6 +202,8 @@ export type Database = {
           navbar_logo_image?: string | null
           navbar_logo_text?: string | null
           navbar_logo_type?: string
+          navbar_social_facebook?: string | null
+          navbar_social_instagram?: string | null
           navigation_links?: Json | null
           primary_color?: string
           secondary_color?: string

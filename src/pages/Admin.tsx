@@ -592,6 +592,30 @@ const Admin = () => {
               </div>
             </div>
 
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold mb-4">Redes Sociais da Navbar</h2>
+              <div>
+                <Label htmlFor="navbar_social_facebook">Link do Facebook</Label>
+                <Input
+                  id="navbar_social_facebook"
+                  type="url"
+                  value={config.navbar_social_facebook || ""}
+                  onChange={(e) => setConfig({ ...config, navbar_social_facebook: e.target.value })}
+                  placeholder="https://facebook.com/sua-pagina"
+                />
+              </div>
+              <div>
+                <Label htmlFor="navbar_social_instagram">Link do Instagram</Label>
+                <Input
+                  id="navbar_social_instagram"
+                  type="url"
+                  value={config.navbar_social_instagram || ""}
+                  onChange={(e) => setConfig({ ...config, navbar_social_instagram: e.target.value })}
+                  placeholder="https://instagram.com/seu-perfil"
+                />
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <Label htmlFor="primary_color">Cor Primária</Label>

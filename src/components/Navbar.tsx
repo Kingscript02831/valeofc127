@@ -73,31 +73,35 @@ const Navbar = () => {
           </a>
 
           <div className="flex items-center space-x-3">
-            <a
-              href="https://facebook.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="transition-all duration-300 ease-out hover:scale-110 p-2 rounded-full hover:bg-primary/20"
-              style={{ 
-                color: config.text_color,
-              }}
-              aria-label="Facebook"
-            >
-              <Facebook className="h-6 w-6" strokeWidth={2.5} />
-            </a>
+            {config.navbar_social_facebook && (
+              <a
+                href={config.navbar_social_facebook}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="transition-all duration-300 ease-out hover:scale-110 p-2 rounded-full hover:bg-primary/20"
+                style={{ 
+                  color: config.text_color,
+                }}
+                aria-label="Facebook"
+              >
+                <Facebook className="h-6 w-6" strokeWidth={2.5} />
+              </a>
+            )}
 
-            <a
-              href="https://instagram.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="transition-all duration-300 ease-out hover:scale-110 p-2 rounded-full hover:bg-primary/20"
-              style={{ 
-                color: config.text_color,
-              }}
-              aria-label="Instagram"
-            >
-              <Instagram className="h-6 w-6" strokeWidth={2.5} />
-            </a>
+            {config.navbar_social_instagram && (
+              <a
+                href={config.navbar_social_instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="transition-all duration-300 ease-out hover:scale-110 p-2 rounded-full hover:bg-primary/20"
+                style={{ 
+                  color: config.text_color,
+                }}
+                aria-label="Instagram"
+              >
+                <Instagram className="h-6 w-6" strokeWidth={2.5} />
+              </a>
+            )}
 
             <Button
               variant="ghost"
@@ -119,3 +123,4 @@ const Navbar = () => {
 };
 
 export default Navbar;
+
