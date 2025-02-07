@@ -826,7 +826,7 @@ const Admin = () => {
 
             <div className="flex justify-end">
               <Button onClick={handleConfigUpdate}>
-                Salvar Configura��ões
+                Salvar Configurações 
               </Button>
             </div>
           </TabsContent>
