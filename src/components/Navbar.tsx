@@ -39,7 +39,7 @@ const Navbar = () => {
   if (!config) return null;
 
   return (
-    <nav className="bg-gradient-to-r from-primary to-primary-dark border-b border-primary/20 shadow-xl"
+    <nav className="bg-gradient-to-r border-b shadow-xl"
          style={{ 
            background: `linear-gradient(to right, ${config.navbar_color}, ${config.primary_color})`,
            borderColor: `${config.primary_color}20`
@@ -61,7 +61,7 @@ const Navbar = () => {
                 className="text-2xl font-bold tracking-tighter px-4 py-1 rounded-lg"
                 style={{ 
                   color: config.text_color,
-                  backgroundColor: `${config.accent_color}20`
+                  backgroundColor: `${config.primary_color}20`
                 }}
               >
                 {config.navbar_logo_text || 'VALEOFC'}
@@ -74,7 +74,7 @@ const Navbar = () => {
               href="https://facebook.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="transition-all duration-300 ease-out hover:scale-110 p-2 rounded-full hover:bg-accent/20 hover:text-foreground"
+              className="transition-all duration-300 ease-out hover:scale-110 p-2 rounded-full hover:bg-primary/20"
               style={{ 
                 color: `${config.text_color}90`,
               }}
@@ -87,7 +87,7 @@ const Navbar = () => {
               href="https://instagram.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="transition-all duration-300 ease-out hover:scale-110 p-2 rounded-full hover:bg-accent/20 hover:text-foreground"
+              className="transition-all duration-300 ease-out hover:scale-110 p-2 rounded-full hover:bg-primary/20"
               style={{ 
                 color: `${config.text_color}90`,
               }}
@@ -100,7 +100,7 @@ const Navbar = () => {
               variant="ghost"
               size="icon"
               onClick={handleShare}
-              className="transition-all duration-300 ease-out hover:scale-110 rounded-full p-2 hover:bg-accent/20 hover:text-foreground"
+              className="transition-all duration-300 ease-out hover:scale-110 rounded-full p-2 hover:bg-primary/20"
               style={{ 
                 color: `${config.text_color}90`,
               }}

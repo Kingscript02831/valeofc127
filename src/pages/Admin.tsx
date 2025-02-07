@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,15 +22,17 @@ const Admin = () => {
     background_color: "#FFFFFF",
     text_color: "#1A1F2C",
     navbar_color: "#D6BCFA",
-    footer_color: "#F1F0FB",
-    accent_color: "#8B5CF6",
-    title_color: "#1A1F2C",
-    numbers_color: "#1A1F2C",
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     navbar_logo_type: "text",
     navbar_logo_text: "VALEOFC",
     navbar_logo_image: null,
+    enable_dark_mode: false,
+    font_size: "medium",
+    language: "pt-BR",
+    high_contrast: false,
+    navigation_links: [],
+    header_alerts: []
   });
 
   const [newNews, setNewNews] = useState<NewsInsert>({
@@ -341,74 +344,60 @@ const Admin = () => {
                   />
                 </div>
               </div>
+            </div>
 
-              <div>
-                <Label htmlFor="footer_color">Cor do Rodapé</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="footer_color"
-                    type="color"
-                    value={config.footer_color}
-                    onChange={(e) => setConfig({ ...config, footer_color: e.target.value })}
-                  />
-                  <Input
-                    type="text"
-                    value={config.footer_color}
-                    onChange={(e) => setConfig({ ...config, footer_color: e.target.value })}
-                  />
-                </div>
+            <div>
+              <Label>Modo Escuro</Label>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={config.enable_dark_mode}
+                  onChange={(e) => setConfig({ ...config, enable_dark_mode: e.target.checked })}
+                  className="rounded border-gray-300"
+                />
+                <span>Ativar modo escuro</span>
               </div>
+            </div>
 
-              <div>
-                <Label htmlFor="accent_color">Cor de Destaque</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="accent_color"
-                    type="color"
-                    value={config.accent_color}
-                    onChange={(e) => setConfig({ ...config, accent_color: e.target.value })}
-                  />
-                  <Input
-                    type="text"
-                    value={config.accent_color}
-                    onChange={(e) => setConfig({ ...config, accent_color: e.target.value })}
-                  />
-                </div>
+            <div>
+              <Label>Alto Contraste</Label>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={config.high_contrast}
+                  onChange={(e) => setConfig({ ...config, high_contrast: e.target.checked })}
+                  className="rounded border-gray-300"
+                />
+                <span>Ativar alto contraste</span>
               </div>
+            </div>
 
-              <div>
-                <Label htmlFor="title_color">Cor dos Títulos</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="title_color"
-                    type="color"
-                    value={config.title_color}
-                    onChange={(e) => setConfig({ ...config, title_color: e.target.value })}
-                  />
-                  <Input
-                    type="text"
-                    value={config.title_color}
-                    onChange={(e) => setConfig({ ...config, title_color: e.target.value })}
-                  />
-                </div>
-              </div>
+            <div>
+              <Label htmlFor="font_size">Tamanho da Fonte</Label>
+              <select
+                id="font_size"
+                value={config.font_size}
+                onChange={(e) => setConfig({ ...config, font_size: e.target.value })}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+              >
+                <option value="small">Pequena</option>
+                <option value="medium">Média</option>
+                <option value="large">Grande</option>
+              </select>
+            </div>
 
-              <div>
-                <Label htmlFor="numbers_color">Cor dos Números</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="numbers_color"
-                    type="color"
-                    value={config.numbers_color}
-                    onChange={(e) => setConfig({ ...config, numbers_color: e.target.value })}
-                  />
-                  <Input
-                    type="text"
-                    value={config.numbers_color}
-                    onChange={(e) => setConfig({ ...config, numbers_color: e.target.value })}
-                  />
-                </div>
-              </div>
+            <div>
+              <Label htmlFor="language">Idioma</Label>
+              <select
+                id="language"
+                value={config.language}
+                onChange={(e) => setConfig({ ...config, language: e.target.value })}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+              >
+                <option value="pt-BR">Português (Brasil)</option>
+                <option value="en">English</option>
+                <option value="es">Español</option>
+              </select>
             </div>
 
             <div className="flex justify-end">
