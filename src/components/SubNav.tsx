@@ -32,6 +32,7 @@ const SubNav = () => {
     { path: "/eventos", label: "Eventos" },
     { path: "/lugares", label: "Lugares" },
     { path: "/lojas", label: "Lojas" },
+    { path: "/outros", label: "Outros" },
   ];
 
   return (
