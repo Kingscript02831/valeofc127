@@ -9,7 +9,72 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      admin_users: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      site_configuration: {
+        Row: {
+          accent_color: string
+          background_color: string
+          created_at: string
+          footer_color: string
+          id: string
+          navbar_color: string
+          numbers_color: string
+          primary_color: string
+          secondary_color: string
+          text_color: string
+          theme_name: string
+          title_color: string
+          updated_at: string
+        }
+        Insert: {
+          accent_color?: string
+          background_color?: string
+          created_at?: string
+          footer_color?: string
+          id?: string
+          navbar_color?: string
+          numbers_color?: string
+          primary_color?: string
+          secondary_color?: string
+          text_color?: string
+          theme_name?: string
+          title_color?: string
+          updated_at?: string
+        }
+        Update: {
+          accent_color?: string
+          background_color?: string
+          created_at?: string
+          footer_color?: string
+          id?: string
+          navbar_color?: string
+          numbers_color?: string
+          primary_color?: string
+          secondary_color?: string
+          text_color?: string
+          theme_name?: string
+          title_color?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
