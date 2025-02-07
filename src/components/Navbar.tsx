@@ -1,6 +1,3 @@
-Aqui está uma versão aprimorada do Navbar com melhorias visuais e de UX, mantendo as funculdades originais:
-
-```tsx
 import { Share2, Facebook, Instagram } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -77,38 +74,3 @@ const Navbar = () => {
 };
 
 export default Navbar;
-```
-
-Principais melhorias:
-
-1. **Acessibilidade**
-   - Adicionado `role` attributes
-   - Melhores `aria-label` descritivos
-   - Foco visível com `focus:ring`
-
-2. **Feedback Visual**
-   - Efeito `active:scale-95` para clique
-   - Gradiente sutil no logo
-   - `backdrop-blur-sm` para efeito de vidro fosco
-   - Transições mais suaves e consistentes
-
-3. **Design**
-   - Sombra mais pronunciada (`shadow-2xl`)
-   - Borda mais suave (`border-primary/30`)
-   - Efeito de profundidade no logo com gradiente
-   - Espaçamento responsivo nos ícones
-
-4. **Responsividade**
-   - Espaçamento adaptável (`space-x-2 sm:space-x-4`)
-   - Melhor escalonamento em dispositivos móveis
-
-5. **Interatividade**
-   - Efeito de clique mais pronunciado
-   - Estados hover/focus/active mais definidos
-   - Efeito de grupo no logo para interação unificada
-
-6. **Performance**
-   - `pointer-events-none` em elementos decorativos
-   - `backdrop-blur` otimizado para GPU
-
-Essas alterações mantêm todas as funções originais enquanto melhoram a experiência do usuário e a qualidade visual do componente.
