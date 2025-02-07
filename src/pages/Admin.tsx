@@ -41,6 +41,7 @@ const Admin = () => {
     image: null,
     video: null,
     date: new Date().toISOString(),
+    category_id: null
   });
 
   const [news, setNews] = useState<News[]>([]);
@@ -117,6 +118,7 @@ const Admin = () => {
         image: null,
         video: null,
         date: new Date().toISOString(),
+        category_id: null
       });
       fetchNews();
     } catch (error: any) {
