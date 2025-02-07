@@ -310,8 +310,8 @@ const Admin = () => {
             </Button>
           </div>
         </div>
-        {(news.instagram_media && Array.isArray(news.instagram_media) ? 
-          (news.instagram_media as unknown as InstagramMediaJson[]) : 
+        {(typeof news.instagram_media === 'object' && Array.isArray(news.instagram_media) ? 
+          (news.instagram_media as InstagramMediaJson[]) : 
           []
         ).map((media, index) => (
           <div key={index} className="flex gap-2 items-start">
