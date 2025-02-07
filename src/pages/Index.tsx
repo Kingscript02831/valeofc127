@@ -61,6 +61,7 @@ const Index = () => {
                 date={new Date(item.date).toLocaleDateString("pt-BR")}
                 image={item.image || undefined}
                 video={item.video || undefined}
+                instagramMedia={item.instagram_media as InstagramMedia[] || []}
               />
             ))}
             {news.length === 0 && (

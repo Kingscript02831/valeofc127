@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -29,38 +30,27 @@ const getYouTubeEmbedUrl = (url: string) => {
   return url;
 };
 
-const getInstagramEmbedUrl = (url: string, type: 'post' | 'video') => {
+const getInstagramEmbedUrl = (url: string) => {
   if (!url) return '';
 
-  // Remove trailing slash and query parameters
-  url = url.replace(/\/?\?.*$/, '');
+  // Remove query parameters and trailing slashes
+  url = url.split('?')[0].replace(/\/$/, '');
   
-  // For reels/videos
-  if (url.includes('/reel/')) {
-    const postId = url.split('/reel/')[1];
-    return `https://www.instagram.com/reel/${postId}/embed`;
-  }
+  // Extract ID from reel or post URL
+  const idMatch = url.match(/(?:\/reel\/|\/p\/)([^\/]+)/);
+  if (!idMatch) return '';
   
-  // For regular posts
-  if (url.includes('/p/')) {
-    const postId = url.split('/p/')[1];
-    return `https://www.instagram.com/p/${postId}/embed`;
-  }
+  const postId = idMatch[1];
+  const isReel = url.includes('/reel/');
   
-  // If URL is in a different format, try to extract the ID
-  const lastSegment = url.split('/').filter(Boolean).pop();
-  if (lastSegment) {
-    return type === 'video' 
-      ? `https://www.instagram.com/reel/${lastSegment}/embed`
-      : `https://www.instagram.com/p/${lastSegment}/embed`;
-  }
-  
-  return url;
+  return isReel 
+    ? `https://www.instagram.com/reel/${postId}/embed`
+    : `https://www.instagram.com/p/${postId}/embed`;
 };
 
 const NewsCard = ({ title, content, date, image, video, instagramMedia = [] }: NewsCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const embedUrl = getYouTubeEmbedUrl(video || '');
+  const youtubeEmbedUrl = getYouTubeEmbedUrl(video || '');
 
   // Convert line breaks to paragraphs
   const formattedContent = content.split('\n').map((paragraph, index) => (
@@ -72,7 +62,7 @@ const NewsCard = ({ title, content, date, image, video, instagramMedia = [] }: N
       {video && (
         <div className="aspect-video">
           <iframe
-            src={embedUrl}
+            src={youtubeEmbedUrl}
             className="w-full h-full"
             allowFullScreen
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -102,7 +92,7 @@ const NewsCard = ({ title, content, date, image, video, instagramMedia = [] }: N
             {instagramMedia.map((media, index) => (
               <div key={index} className="instagram-embed aspect-[5/6]">
                 <iframe
-                  src={getInstagramEmbedUrl(media.url, media.type)}
+                  src={getInstagramEmbedUrl(media.url)}
                   className="w-full h-full"
                   frameBorder="0"
                   scrolling="no"
