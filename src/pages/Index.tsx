@@ -10,10 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Database } from "@/integrations/supabase/types";
 
-type News = Database['public']['Tables']['news']['Row'] & {
-  categories: Database['public']['Tables']['categories']['Row'] | null;
-};
-
+type News = Database['public']['Tables']['news']['Row'];
 interface InstagramMedia {
   url: string;
   type: 'post' | 'video';
