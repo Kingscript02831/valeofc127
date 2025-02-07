@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -149,7 +148,7 @@ const Admin = () => {
           image: editingNews.image,
           video: editingNews.video,
           date: editingNews.date,
-          instagram_media: editingNews.instagram_media || [],
+          instagram_media: editingNews.instagram_media,
           category_id: editingNews.category_id,
         })
         .eq("id", editingNews.id);
@@ -220,15 +219,19 @@ const Admin = () => {
       type,
     };
     
+    const currentMedia = Array.isArray(news.instagram_media) 
+      ? news.instagram_media as InstagramMedia[]
+      : [];
+    
     if ('id' in news) {
       setEditingNews({
         ...news,
-        instagram_media: [...(Array.isArray(news.instagram_media) ? news.instagram_media : []), media],
+        instagram_media: [...currentMedia, media],
       });
     } else {
       setNewNews({
         ...news,
-        instagram_media: [...(Array.isArray(news.instagram_media) ? news.instagram_media : []), media],
+        instagram_media: [...currentMedia, media],
       });
     }
   };
@@ -238,9 +241,10 @@ const Admin = () => {
     index: number,
     url: string
   ) => {
-    const updatedMedia = Array.isArray(news.instagram_media) 
-      ? [...news.instagram_media]
+    const currentMedia = Array.isArray(news.instagram_media) 
+      ? news.instagram_media as InstagramMedia[]
       : [];
+    const updatedMedia = [...currentMedia];
     updatedMedia[index] = { ...updatedMedia[index], url };
     
     if ('id' in news) {
@@ -257,9 +261,10 @@ const Admin = () => {
   };
 
   const removeInstagramMedia = (news: NewsInsert | News, index: number) => {
-    const updatedMedia = Array.isArray(news.instagram_media)
-      ? [...news.instagram_media]
+    const currentMedia = Array.isArray(news.instagram_media)
+      ? news.instagram_media as InstagramMedia[]
       : [];
+    const updatedMedia = [...currentMedia];
     updatedMedia.splice(index, 1);
     
     if ('id' in news) {
@@ -275,58 +280,64 @@ const Admin = () => {
     }
   };
 
-  const renderInstagramMediaFields = (news: NewsInsert | News) => (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium">Mídia do Instagram</h3>
-        <div className="space-x-2">
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={() => addInstagramMedia(news, 'post')}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Adicionar Post
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={() => addInstagramMedia(news, 'video')}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Adicionar Vídeo
-          </Button>
-        </div>
-      </div>
-      {Array.isArray(news.instagram_media) && news.instagram_media.map((media, index) => (
-        <div key={index} className="flex gap-2 items-start">
-          <div className="flex-1">
-            <Label>
-              Link do {media.type === 'post' ? 'Post' : 'Vídeo'} do Instagram
-            </Label>
-            <Input
-              value={media.url}
-              onChange={(e) =>
-                updateInstagramMedia(news, index, e.target.value)
-              }
-              placeholder={`https://www.instagram.com/${media.type === 'post' ? 'p' : 'reel'}/...`}
-            />
+  const renderInstagramMediaFields = (news: NewsInsert | News) => {
+    const currentMedia = Array.isArray(news.instagram_media) 
+      ? news.instagram_media as InstagramMedia[]
+      : [];
+
+    return (
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <h3 className="text-lg font-medium">Mídia do Instagram</h3>
+          <div className="space-x-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => addInstagramMedia(news, 'post')}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Adicionar Post
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => addInstagramMedia(news, 'video')}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Adicionar Vídeo
+            </Button>
           </div>
-          <Button
-            type="button"
-            variant="destructive"
-            size="icon"
-            className="mt-6"
-            onClick={() => removeInstagramMedia(news, index)}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
         </div>
-      ))}
-    </div>
-  );
+        {currentMedia.map((media, index) => (
+          <div key={index} className="flex gap-2 items-start">
+            <div className="flex-1">
+              <Label>
+                Link do {media.type === 'post' ? 'Post' : 'Vídeo'} do Instagram
+              </Label>
+              <Input
+                value={media.url}
+                onChange={(e) =>
+                  updateInstagramMedia(news, index, e.target.value)
+                }
+                placeholder={`https://www.instagram.com/${media.type === 'post' ? 'p' : 'reel'}/...`}
+              />
+            </div>
+            <Button
+              type="button"
+              variant="destructive"
+              size="icon"
+              className="mt-6"
+              onClick={() => removeInstagramMedia(news, index)}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
