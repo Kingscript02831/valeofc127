@@ -282,11 +282,18 @@ const Admin = () => {
 
   const renderInstagramMediaFields = (news: NewsInsert | News) => {
     const currentMedia: InstagramMediaJson[] = Array.isArray(news.instagram_media)
-      ? news.instagram_media.map(media => 
-          typeof media === 'object' && media !== null && 'url' in media && 'type' in media 
-            ? media as InstagramMediaJson 
-            : { url: '', type: 'post' }
-        )
+      ? news.instagram_media.map(media => {
+          if (typeof media === 'object' && media !== null) {
+            const mediaObj = media as { url?: string; type?: 'post' | 'video' };
+            if ('url' in media && 'type' in media) {
+              return {
+                url: mediaObj.url || '',
+                type: mediaObj.type || 'post'
+              } as InstagramMediaJson;
+            }
+          }
+          return { url: '', type: 'post' } as InstagramMediaJson;
+        })
       : [];
 
     return (
