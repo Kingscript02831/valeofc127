@@ -59,7 +59,8 @@ const Index = () => {
           query = query.eq('category_id', selectedCategory);
         }
 
-        query = query.order('created_at', { ascending: false });
+        // Modificando a ordenação para mostrar as notícias mais recentes primeiro
+        query = query.order('date', { ascending: false });
 
         const { data, error } = await query;
         
