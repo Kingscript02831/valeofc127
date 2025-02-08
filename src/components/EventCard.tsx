@@ -136,55 +136,43 @@ const EventCard = ({
             )}
           </div>
 
-          {/* Contador regressivo mais compacto */}
+          {/* Contador regressivo mais compacto e sincronizado com as cores da Navbar */}
           <div className="mb-3">
             {countdown.isExpired ? (
-              <div className="text-red-500 text-sm font-medium">Evento já aconteceu</div>
+              <div className="text-red-500 text-xs font-medium">Evento já aconteceu</div>
             ) : (
               <div className="flex flex-col gap-1">
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 mb-1">
                   <Timer className="h-3 w-3" style={{ color: config.primary_color }} />
-                  <span className="text-xs font-medium" style={{ color: config.primary_color }}>
+                  <span className="text-[10px] font-medium" style={{ color: config.primary_color }}>
                     Tempo até o evento:
                   </span>
                 </div>
                 <div className="flex gap-1 justify-start">
-                  <div className="flex flex-col items-center">
-                    <div 
-                      className="text-white px-2 py-1 rounded-md font-bold text-sm min-w-[2.5rem]"
-                      style={{ backgroundColor: config.primary_color }}
-                    >
-                      {countdown.days}
-                    </div>
-                    <span className="text-[10px] mt-0.5 text-gray-600">Dias</span>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <div 
-                      className="text-white px-2 py-1 rounded-md font-bold text-sm min-w-[2.5rem]"
-                      style={{ backgroundColor: config.primary_color }}
-                    >
-                      {String(countdown.hours).padStart(2, '0')}
-                    </div>
-                    <span className="text-[10px] mt-0.5 text-gray-600">Horas</span>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <div 
-                      className="text-white px-2 py-1 rounded-md font-bold text-sm min-w-[2.5rem]"
-                      style={{ backgroundColor: config.primary_color }}
-                    >
-                      {String(countdown.minutes).padStart(2, '0')}
-                    </div>
-                    <span className="text-[10px] mt-0.5 text-gray-600">Min</span>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <div 
-                      className="text-white px-2 py-1 rounded-md font-bold text-sm min-w-[2.5rem]"
-                      style={{ backgroundColor: config.primary_color }}
-                    >
-                      {String(countdown.seconds).padStart(2, '0')}
-                    </div>
-                    <span className="text-[10px] mt-0.5 text-gray-600">Seg</span>
-                  </div>
+                  <span 
+                    className="text-white text-xs px-1.5 py-0.5 rounded"
+                    style={{ backgroundColor: config.primary_color }}
+                  >
+                    {countdown.days}d
+                  </span>
+                  <span 
+                    className="text-white text-xs px-1.5 py-0.5 rounded"
+                    style={{ backgroundColor: config.primary_color }}
+                  >
+                    {String(countdown.hours).padStart(2, '0')}h
+                  </span>
+                  <span 
+                    className="text-white text-xs px-1.5 py-0.5 rounded"
+                    style={{ backgroundColor: config.primary_color }}
+                  >
+                    {String(countdown.minutes).padStart(2, '0')}m
+                  </span>
+                  <span 
+                    className="text-white text-xs px-1.5 py-0.5 rounded"
+                    style={{ backgroundColor: config.primary_color }}
+                  >
+                    {String(countdown.seconds).padStart(2, '0')}s
+                  </span>
                 </div>
               </div>
             )}
@@ -273,4 +261,3 @@ const EventCard = ({
 };
 
 export default EventCard;
-
