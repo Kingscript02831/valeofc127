@@ -1,11 +1,11 @@
 
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import Navbar from "@/components/Navbar";
-import SubNav from "@/components/SubNav";
-import Footer from "@/components/Footer";
+import Navbar from "../components/Navbar";
+import SubNav from "../components/SubNav";
+import Footer from "../components/Footer";
 import EventCard from "@/components/EventCard";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "../integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface Event {
