@@ -11,8 +11,8 @@ import Stores from "./pages/Stores";
 import Admin from "./pages/Admin";
 import AdminPlaces from "./pages/AdminPlaces";
 import AdminEvents from "./pages/AdminEvents";
-import AdminEvents from "./pages/AdminNews";
-import AdminEvents from "./pages/AdminStores";
+import AdminNews from "./pages/AdminNews";
+import AdminStores from "./pages/AdminStores";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -41,3 +41,4 @@ const App = () => (
 );
 
 export default App;
+
