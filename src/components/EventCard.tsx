@@ -15,6 +15,7 @@ interface EventCardProps {
   image?: string;
   images?: string[];
   location?: string;
+  createdAt?: string;
 }
 
 const EventCard = ({
@@ -25,6 +26,7 @@ const EventCard = ({
   image,
   images = [],
   location,
+  createdAt,
 }: EventCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -33,6 +35,9 @@ const EventCard = ({
   
   const date = new Date(eventDate);
   const formattedDate = format(date, "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
+  const formattedCreatedAt = createdAt 
+    ? format(new Date(createdAt), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })
+    : null;
   
   // Combine single image with images array
   const allImages = image ? [image, ...images] : images;
@@ -62,7 +67,7 @@ const EventCard = ({
     };
 
     calculateTimeLeft();
-    const timer = setInterval(calculateTimeLeft, 60000); // Update every minute
+    const timer = setInterval(calculateTimeLeft, 60000);
 
     return () => clearInterval(timer);
   }, [eventDate, eventTime]);
@@ -118,6 +123,12 @@ const EventCard = ({
             <Timer className="h-4 w-4 text-blue-600" />
             <span className="text-blue-600">{countdown}</span>
           </div>
+
+          {formattedCreatedAt && (
+            <div className="mb-4 text-sm text-gray-500">
+              Publicado em {formattedCreatedAt}
+            </div>
+          )}
           
           <div className={cn("prose prose-sm max-w-none", !isExpanded && "line-clamp-3")}>
             {description.split('\n').map((paragraph, index) => (

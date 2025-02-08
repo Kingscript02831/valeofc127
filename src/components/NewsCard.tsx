@@ -1,9 +1,11 @@
 
 import { useState } from "react";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface InstagramMedia {
   url: string;
@@ -23,6 +25,7 @@ interface NewsCardProps {
     name: string;
     slug: string;
   };
+  createdAt?: string;
 }
 
 const getYouTubeEmbedUrl = (url: string) => {
@@ -65,10 +68,17 @@ const NewsCard = ({
   instagramMedia = [], 
   buttonColor,
   buttonSecondaryColor,
-  category 
+  category,
+  createdAt
 }: NewsCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const youtubeEmbedUrl = getYouTubeEmbedUrl(video || '');
+
+  // Format dates
+  const formattedDate = format(new Date(date), "dd/MM/yyyy", { locale: ptBR });
+  const formattedCreatedAt = createdAt 
+    ? format(new Date(createdAt), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })
+    : null;
 
   // Convert line breaks to paragraphs
   const formattedContent = content.split('\n').map((paragraph, index) => (
@@ -113,12 +123,21 @@ const NewsCard = ({
               {category.name}
             </Badge>
           )}
-          <p className="text-sm text-gray-500">{date}</p>
+          <div className="flex items-center gap-1 text-sm text-gray-500">
+            <Calendar className="h-4 w-4" />
+            <span>{formattedDate}</span>
+          </div>
         </div>
         
         <h2 className="text-xl font-semibold mb-2">{title}</h2>
+
+        {formattedCreatedAt && (
+          <div className="mb-4 text-sm text-gray-500">
+            Publicado em {formattedCreatedAt}
+          </div>
+        )}
         
-        <div className={`prose prose-sm max-w-none ${!isExpanded && "line-clamp-3"}`}>
+        <div className={cn("prose prose-sm max-w-none", !isExpanded && "line-clamp-3")}>
           {formattedContent}
         </div>
 

@@ -19,6 +19,7 @@ interface Event {
   image?: string;
   images?: string[];
   location?: string;
+  created_at: string;
 }
 
 const Events = () => {
@@ -34,7 +35,7 @@ const Events = () => {
       let query = supabase
         .from("events")
         .select("*")
-        .order("event_date", { ascending: false });
+        .order("created_at", { ascending: false });
 
       if (searchTerm) {
         query = query.ilike("title", `%${searchTerm}%`);
@@ -97,6 +98,7 @@ const Events = () => {
                 image={event.image}
                 images={event.images}
                 location={event.location}
+                createdAt={event.created_at}
               />
             ))}
           </div>
