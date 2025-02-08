@@ -64,21 +64,44 @@ const EventCard = ({
 
   useEffect(() => {
     const calculateTimeLeft = () => {
-      const eventDateTime = new Date(`${eventDate}T${eventTime}`);
-      const now = new Date();
-      const difference = eventDateTime.getTime() - now.getTime();
+      try {
+        // Ensure we have a valid date and time
+        if (!eventDate || !eventTime) {
+          setCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0, isExpired: true });
+          return;
+        }
 
-      if (difference <= 0) {
+        // Create a valid date object from the event date and time
+        const [year, month, day] = eventDate.split('-').map(Number);
+        const [hours, minutes] = eventTime.split(':').map(Number);
+        
+        const eventDateTime = new Date(year, month - 1, day, hours, minutes);
+        const now = new Date();
+
+        // Check if the date is valid
+        if (isNaN(eventDateTime.getTime())) {
+          console.error('Invalid date:', { eventDate, eventTime });
+          setCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0, isExpired: true });
+          return;
+        }
+
+        const difference = eventDateTime.getTime() - now.getTime();
+
+        if (difference <= 0) {
+          setCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0, isExpired: true });
+          return;
+        }
+
+        const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+        setCountdown({ days, hours, minutes, seconds, isExpired: false });
+      } catch (error) {
+        console.error('Error calculating countdown:', error);
         setCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0, isExpired: true });
-        return;
       }
-
-      const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((difference % (1000 * 60)) / 1000);
-
-      setCountdown({ days, hours, minutes, seconds, isExpired: false });
     };
 
     calculateTimeLeft();
