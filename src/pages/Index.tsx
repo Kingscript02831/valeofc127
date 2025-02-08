@@ -17,7 +17,9 @@ import {
 } from "@/components/ui/select";
 import type { Database } from "@/integrations/supabase/types";
 
-type News = Database['public']['Tables']['news']['Row'];
+type News = Database['public']['Tables']['news']['Row'] & {
+  categories: Database['public']['Tables']['categories']['Row'] | null;
+};
 type Category = Database['public']['Tables']['categories']['Row'];
 interface InstagramMedia {
   url: string;
@@ -47,7 +49,7 @@ const Index = () => {
       try {
         let query = supabase
           .from('news')
-          .select('*, categories(name)')
+          .select('*, categories(*)')
           .order('created_at', { ascending: false });
 
         if (searchTerm) {
@@ -87,7 +89,6 @@ const Index = () => {
           <h1 className="text-3xl font-bold">Últimas Notícias</h1>
           
           <div className="flex flex-col sm:flex-row gap-4">
-            {/* Lupa de pesquisa */}
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 h-4 w-4" />
               <Input
@@ -99,7 +100,6 @@ const Index = () => {
               />
             </div>
 
-            {/* Category filter */}
             <div className="w-full sm:w-48">
               <Select
                 value={selectedCategory}

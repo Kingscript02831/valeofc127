@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,9 +6,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 import { Textarea } from "@/components/ui/textarea";
-import { Search, Trash2 } from "lucide-react";
+import { Search } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type Event = Database['public']['Tables']['events']['Row'];
+type Category = Database['public']['Tables']['categories']['Row'];
 
 const AdminEvents = () => {
   const [newEvent, setNewEvent] = useState<Omit<Event, 'id' | 'created_at' | 'updated_at'>>({
@@ -25,17 +32,35 @@ const AdminEvents = () => {
     phone: null,
     social_media: null,
     website: null,
-    whatsapp: null
+    whatsapp: null,
+    category_id: null
   });
 
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
   const [searchEventTerm, setSearchEventTerm] = useState("");
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  const fetchCategories = async () => {
+    const { data, error } = await supabase
+      .from("categories")
+      .select("*")
+      .order("name");
+
+    if (error) {
+      toast.error("Erro ao carregar categorias");
+      return;
+    }
+
+    if (data) {
+      setCategories(data);
+    }
+  };
 
   const fetchEvents = async () => {
     let query = supabase
       .from("events")
-      .select("*")
+      .select("*, categories(*)")
       .order("event_date", { ascending: true });
 
     if (searchEventTerm) {
@@ -55,6 +80,7 @@ const AdminEvents = () => {
   };
 
   useEffect(() => {
+    fetchCategories();
     fetchEvents();
   }, [searchEventTerm]);
 
@@ -88,7 +114,8 @@ const AdminEvents = () => {
         phone: null,
         social_media: null,
         website: null,
-        whatsapp: null
+        whatsapp: null,
+        category_id: null
       });
       fetchEvents();
     } catch (error: any) {
@@ -114,6 +141,7 @@ const AdminEvents = () => {
           image: editingEvent.image,
           images: editingEvent.images || [],
           location: editingEvent.location,
+          category_id: editingEvent.category_id,
         })
         .eq("id", editingEvent.id);
 
@@ -159,6 +187,26 @@ const AdminEvents = () => {
               />
             </div>
             
+            <div>
+              <Label htmlFor="category">Categoria</Label>
+              <Select
+                value={newEvent.category_id || ""}
+                onValueChange={(value) => setNewEvent({ ...newEvent, category_id: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione uma categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Sem categoria</SelectItem>
+                  {categories.map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div>
               <Label htmlFor="description">Descrição</Label>
               <Textarea
