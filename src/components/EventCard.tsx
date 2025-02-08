@@ -1,3 +1,4 @@
+
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Calendar, ChevronDown, ChevronUp, Clock, MapPin, ChevronLeft, ChevronRight, X, Timer } from "lucide-react";
@@ -37,7 +38,8 @@ const EventCard = ({
   const [countdown, setCountdown] = useState({ days: 0, hrs: 0, mins: 0, secs: 0, isExpired: false });
   const [config, setConfig] = useState<SiteConfig | null>(null);
   
-  const date = new Date(eventDate);
+  // Ajuste para garantir que a data seja interpretada na timezone local
+  const date = new Date(eventDate + 'T00:00:00');
   const formattedDate = format(date, "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
   const formattedCreatedAt = createdAt 
     ? format(new Date(createdAt), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })
@@ -74,7 +76,6 @@ const EventCard = ({
         targetDate.setHours(timeHours, timeMinutes, 0, 0);
         
         const now = new Date();
-        // Removendo os milissegundos para uma comparação mais precisa
         now.setMilliseconds(0);
 
         if (isNaN(targetDate.getTime())) {
