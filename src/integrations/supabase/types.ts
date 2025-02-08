@@ -52,6 +52,7 @@ export type Database = {
           event_time: string
           id: string
           image: string | null
+          images: string[] | null
           location: string | null
           title: string
           updated_at: string
@@ -63,6 +64,7 @@ export type Database = {
           event_time: string
           id?: string
           image?: string | null
+          images?: string[] | null
           location?: string | null
           title: string
           updated_at?: string
@@ -74,6 +76,7 @@ export type Database = {
           event_time?: string
           id?: string
           image?: string | null
+          images?: string[] | null
           location?: string | null
           title?: string
           updated_at?: string
@@ -89,6 +92,7 @@ export type Database = {
           date: string
           id: string
           image: string | null
+          images: string[] | null
           instagram_media: Json | null
           title: string
           updated_at: string
@@ -102,6 +106,7 @@ export type Database = {
           date?: string
           id?: string
           image?: string | null
+          images?: string[] | null
           instagram_media?: Json | null
           title: string
           updated_at?: string
@@ -115,6 +120,7 @@ export type Database = {
           date?: string
           id?: string
           image?: string | null
+          images?: string[] | null
           instagram_media?: Json | null
           title?: string
           updated_at?: string

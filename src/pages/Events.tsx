@@ -16,6 +16,7 @@ interface Event {
   event_date: string;
   event_time: string;
   image?: string;
+  images?: string[];
   location?: string;
 }
 
@@ -74,6 +75,7 @@ const Events = () => {
                 eventDate={event.event_date}
                 eventTime={event.event_time}
                 image={event.image}
+                images={event.images}
                 location={event.location}
               />
             ))}
