@@ -49,7 +49,7 @@ const Index = () => {
       try {
         let query = supabase
           .from('news')
-          .select('*, categories(*)');
+          .select('*, categories!news_category_id_fkey(*)');
 
         if (searchTerm) {
           query = query.ilike('title', `%${searchTerm}%`);
@@ -69,7 +69,7 @@ const Index = () => {
         }
         
         console.log('Fetched news data:', data);
-        return (data as News[]) || [];
+        return data as News[];
       } catch (err) {
         console.error('Error fetching news:', err);
         throw err;
