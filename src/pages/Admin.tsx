@@ -1,4 +1,3 @@
-<lov-code>
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,18 +15,10 @@ type SiteConfig = Database['public']['Tables']['site_configuration']['Row'];
 type News = Database['public']['Tables']['news']['Row'];
 type NewsInsert = Database['public']['Tables']['news']['Insert'];
 type Event = Database['public']['Tables']['events']['Row'];
-type Place = Database['public']['Tables']['places']['Row'];
-type PlaceInsert = Database['public']['Tables']['places']['Insert'];
 
 interface InstagramMediaJson {
   url: string;
   type: 'post' | 'video';
-}
-
-interface SocialMediaJson {
-  facebook?: string;
-  instagram?: string;
-  twitter?: string;
 }
 
 const Admin = () => {
@@ -107,27 +98,6 @@ const Admin = () => {
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
   const [searchEventTerm, setSearchEventTerm] = useState("");
-
-  // Places state
-  const [newPlace, setNewPlace] = useState<PlaceInsert>({
-    name: "",
-    description: "",
-    image: "",
-    images: [],
-    address: "",
-    maps_url: null,
-    owner_name: null,
-    opening_hours: null,
-    entrance_fee: null,
-    phone: null,
-    whatsapp: null,
-    website: null,
-    social_media: {},
-  });
-
-  const [editingPlace, setEditingPlace] = useState<Place | null>(null);
-  const [places, setPlaces] = useState<Place[]>([]);
-  const [searchPlaceTerm, setSearchPlaceTerm] = useState("");
 
   useEffect(() => {
     fetchConfiguration();
@@ -581,121 +551,6 @@ const Admin = () => {
     }
   };
 
-  const fetchPlaces = async () => {
-    let query = supabase
-      .from("places")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (searchPlaceTerm) {
-      query = query.ilike("name", `%${searchPlaceTerm}%`);
-    }
-
-    const { data, error } = await query;
-
-    if (error) {
-      toast.error("Erro ao carregar lugares");
-      return;
-    }
-
-    if (data) {
-      setPlaces(data);
-    }
-  };
-
-  useEffect(() => {
-    fetchPlaces();
-  }, [searchPlaceTerm]);
-
-  const handlePlaceSubmit = async () => {
-    try {
-      if (!newPlace.name || !newPlace.address) {
-        toast.error("Nome e endereço são obrigatórios");
-        return;
-      }
-
-      const { error } = await supabase
-        .from("places")
-        .insert(newPlace);
-
-      if (error) throw error;
-
-      toast.success("Lugar adicionado com sucesso!");
-      setNewPlace({
-        name: "",
-        description: "",
-        image: "",
-        images: [],
-        address: "",
-        maps_url: null,
-        owner_name: null,
-        opening_hours: null,
-        entrance_fee: null,
-        phone: null,
-        whatsapp: null,
-        website: null,
-        social_media: {},
-      });
-      fetchPlaces();
-    } catch (error: any) {
-      console.error("Error adding place:", error);
-      toast.error("Erro ao adicionar lugar: " + error.message);
-    }
-  };
-
-  const handlePlaceEdit = async () => {
-    try {
-      if (!editingPlace || !editingPlace.name || !editingPlace.address) {
-        toast.error("Nome e endereço são obrigatórios");
-        return;
-      }
-
-      const { error } = await supabase
-        .from("places")
-        .update({
-          name: editingPlace.name,
-          description: editingPlace.description,
-          image: editingPlace.image,
-          images: editingPlace.images,
-          address: editingPlace.address,
-          maps_url: editingPlace.maps_url,
-          owner_name: editingPlace.owner_name,
-          opening_hours: editingPlace.opening_hours,
-          entrance_fee: editingPlace.entrance_fee,
-          phone: editingPlace.phone,
-          whatsapp: editingPlace.whatsapp,
-          website: editingPlace.website,
-          social_media: editingPlace.social_media,
-        })
-        .eq("id", editingPlace.id);
-
-      if (error) throw error;
-
-      toast.success("Lugar atualizado com sucesso!");
-      setEditingPlace(null);
-      fetchPlaces();
-    } catch (error: any) {
-      console.error("Error updating place:", error);
-      toast.error("Erro ao atualizar lugar: " + error.message);
-    }
-  };
-
-  const handlePlaceDelete = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from("places")
-        .delete()
-        .eq("id", id);
-
-      if (error) throw error;
-
-      toast.success("Lugar removido com sucesso!");
-      fetchPlaces();
-    } catch (error: any) {
-      toast.error("Erro ao remover lugar");
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4">
@@ -705,7 +560,6 @@ const Admin = () => {
           <TabsList>
             <TabsTrigger value="news">Notícias</TabsTrigger>
             <TabsTrigger value="events">Eventos</TabsTrigger>
-            <TabsTrigger value="places">Lugares</TabsTrigger>
             <TabsTrigger value="config">Config Navbar</TabsTrigger>
             <TabsTrigger value="footer">Rodapé</TabsTrigger>
             <TabsTrigger value="general">Geral</TabsTrigger>
@@ -985,4 +839,639 @@ const Admin = () => {
                     <div>
                       <Label htmlFor="event_date">Data do Evento</Label>
                       <Input
-                        id="
+                        id="event_date"
+                        type="date"
+                        value={newEvent.event_date}
+                        onChange={(e) => setNewEvent({ ...newEvent, event_date: e.target.value })}
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="event_time">Horário do Evento</Label>
+                      <Input
+                        id="event_time"
+                        type="time"
+                        value={newEvent.event_time}
+                        onChange={(e) => setNewEvent({ ...newEvent, event_time: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="location">Local</Label>
+                    <Input
+                      id="location"
+                      value={newEvent.location || ""}
+                      onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
+                      placeholder="Local do evento"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="image">Link da Imagem Principal</Label>
+                    <Input
+                      id="image"
+                      value={newEvent.image || ""}
+                      onChange={(e) => setNewEvent({ ...newEvent, image: e.target.value })}
+                      placeholder="https://exemplo.com/imagem.jpg"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="additional_images">Links de Imagens Adicionais (uma por linha)</Label>
+                    <Textarea
+                      id="additional_images"
+                      value={newEvent.images?.join('\n') || ""}
+                      onChange={(e) => setNewEvent({ 
+                        ...newEvent, 
+                        images: e.target.value.split('\n').filter(url => url.trim() !== '')
+                      })}
+                      placeholder="https://exemplo.com/imagem2.jpg&#10;https://exemplo.com/imagem3.jpg"
+                      className="min-h-[100px]"
+                    />
+                    <p className="text-sm text-gray-500 mt-1">
+                      Adicione uma URL por linha para incluir múltiplas imagens
+                    </p>
+                  </div>
+
+                  <Button onClick={handleEventSubmit}>Adicionar Evento</Button>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-white rounded-lg shadow p-6">
+                <h2 className="text-xl font-semibold mb-4">Editar Evento</h2>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="edit-title">Título</Label>
+                    <Input
+                      id="edit-title"
+                      value={editingEvent.title}
+                      onChange={(e) => setEditingEvent({ ...editingEvent, title: e.target.value })}
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="edit-description">Descrição</Label>
+                    <Textarea
+                      id="edit-description"
+                      value={editingEvent.description}
+                      onChange={(e) => setEditingEvent({ ...editingEvent, description: e.target.value })}
+                      className="min-h-[100px]"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="edit-event_date">Data do Evento</Label>
+                      <Input
+                        id="edit-event_date"
+                        type="date"
+                        value={editingEvent.event_date.split('T')[0]}
+                        onChange={(e) => setEditingEvent({ ...editingEvent, event_date: e.target.value })}
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="edit-event_time">Horário do Evento</Label>
+                      <Input
+                        id="edit-event_time"
+                        type="time"
+                        value={editingEvent.event_time}
+                        onChange={(e) => setEditingEvent({ ...editingEvent, event_time: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="edit-location">Local</Label>
+                    <Input
+                      id="edit-location"
+                      value={editingEvent.location || ""}
+                      onChange={(e) => setEditingEvent({ ...editingEvent, location: e.target.value })}
+                      placeholder="Local do evento"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="edit-image">Link da Imagem Principal</Label>
+                    <Input
+                      id="edit-image"
+                      value={editingEvent.image || ""}
+                      onChange={(e) => setEditingEvent({ ...editingEvent, image: e.target.value })}
+                      placeholder="https://exemplo.com/imagem.jpg"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="edit-additional-images">Links de Imagens Adicionais (uma por linha)</Label>
+                    <Textarea
+                      id="edit-additional-images"
+                      value={editingEvent.images?.join('\n') || ""}
+                      onChange={(e) => setEditingEvent({ 
+                        ...editingEvent, 
+                        images: e.target.value.split('\n').filter(url => url.trim() !== '')
+                      })}
+                      placeholder="https://exemplo.com/imagem2.jpg&#10;https://exemplo.com/imagem3.jpg"
+                      className="min-h-[100px]"
+                    />
+                    <p className="text-sm text-gray-500 mt-1">
+                      Adicione uma URL por linha para incluir múltiplas imagens
+                    </p>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button onClick={handleEventEdit}>Salvar Alterações</Button>
+                    <Button variant="outline" onClick={() => setEditingEvent(null)}>Cancelar</Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="flex items-center gap-4 mb-6">
+                <h2 className="text-xl font-semibold">Lista de Eventos</h2>
+                <div className="relative flex-1 max-w-sm">
+                  <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 h-4 w-4" />
+                  <Input
+                    type="search"
+                    placeholder="Buscar eventos..."
+                    className="pl-8"
+                    value={searchEventTerm}
+                    onChange={(e) => setSearchEventTerm(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {events.map((event) => (
+                  <div key={event.id} className="bg-gray-50 rounded-lg p-6">
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h3 className="text-lg font-semibold">{event.title}</h3>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-sm text-gray-500">
+                            {new Date(event.event_date).toLocaleDateString()} às {event.event_time}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setEditingEvent(event)}
+                        >
+                          Editar
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleEventDelete(event.id)}
+                        >
+                          Excluir
+                        </Button>
+                      </div>
+                    </div>
+                    <p className="text-gray-600 mb-2">{event.description}</p>
+                    {event.location && (
+                      <p className="text-sm text-gray-500">Local: {event.location}</p>
+                    )}
+                    {event.image && (
+                      <p className="text-sm text-gray-500">Imagem: {event.image}</p>
+                    )}
+                  </div>
+                ))}
+                {events.length === 0 && (
+                  <p className="text-gray-500 text-center py-8">
+                    Nenhum evento encontrado.
+                  </p>
+                )}
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="config" className="bg-white rounded-lg shadow p-6 space-y-6">
+            <div>
+              <h2 className="text-xl font-semibold mb-4">Cores dos Botões</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <Label htmlFor="button_primary_color">Cor Primária do Botão</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="button_primary_color"
+                      type="color"
+                      value={config.button_primary_color}
+                      onChange={(e) => setConfig({ ...config, button_primary_color: e.target.value })}
+                      className="w-20"
+                    />
+                    <Input
+                      type="text"
+                      value={config.button_primary_color}
+                      onChange={(e) => setConfig({ ...config, button_primary_color: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="button_secondary_color">Cor Secundária do Botão</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="button_secondary_color"
+                      type="color"
+                      value={config.button_secondary_color}
+                      onChange={(e) => setConfig({ ...config, button_secondary_color: e.target.value })}
+                      className="w-20"
+                    />
+                    <Input
+                      type="text"
+                      value={config.button_secondary_color}
+                      onChange={(e) => setConfig({ ...config, button_secondary_color: e.target.value })}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h2 className="text-xl font-semibold mb-4">Logo da Navbar</h2>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="navbar_logo_type">Tipo de Logo</Label>
+                  <div className="flex gap-4">
+                    <Button
+                      variant={config.navbar_logo_type === "text" ? "default" : "outline"}
+                      onClick={() => setConfig({ ...config, navbar_logo_type: "text" })}
+                    >
+                      Texto
+                    </Button>
+                    <Button
+                      variant={config.navbar_logo_type === "image" ? "default" : "outline"}
+                      onClick={() => setConfig({ ...config, navbar_logo_type: "image" })}
+                    >
+                      Imagem
+                    </Button>
+                  </div>
+                </div>
+
+                {config.navbar_logo_type === "text" ? (
+                  <div>
+                    <Label htmlFor="logo_text">Texto da Logo</Label>
+                    <Input
+                      id="logo_text"
+                      value={config.navbar_logo_text || ""}
+                      onChange={(e) => setConfig({ ...config, navbar_logo_text: e.target.value })}
+                    />
+                  </div>
+                ) : (
+                  <div>
+                    <Label htmlFor="logo_image">Link da Imagem da Logo</Label>
+                    <Input
+                      id="logo_image"
+                      value={config.navbar_logo_image || ""}
+                      onChange={(e) => setConfig({ ...config, navbar_logo_image: e.target.value })}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold mb-4">Redes Sociais da Navbar</h2>
+              <div>
+                <Label htmlFor="navbar_social_facebook">Link do Facebook</Label>
+                <Input
+                  id="navbar_social_facebook"
+                  type="url"
+                  value={config.navbar_social_facebook || ""}
+                  onChange={(e) => setConfig({ ...config, navbar_social_facebook: e.target.value })}
+                  placeholder="https://facebook.com/sua-pagina"
+                />
+              </div>
+              <div>
+                <Label htmlFor="navbar_social_instagram">Link do Instagram</Label>
+                <Input
+                  id="navbar_social_instagram"
+                  type="url"
+                  value={config.navbar_social_instagram || ""}
+                  onChange={(e) => setConfig({ ...config, navbar_social_instagram: e.target.value })}
+                  placeholder="https://instagram.com/seu-perfil"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <Label htmlFor="primary_color">Cor Primária</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="primary_color"
+                    type="color"
+                    value={config.primary_color}
+                    onChange={(e) => setConfig({ ...config, primary_color: e.target.value })}
+                  />
+                  <Input
+                    type="text"
+                    value={config.primary_color}
+                    onChange={(e) => setConfig({ ...config, primary_color: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="secondary_color">Cor Secundária</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="secondary_color"
+                    type="color"
+                    value={config.secondary_color}
+                    onChange={(e) => setConfig({ ...config, secondary_color: e.target.value })}
+                  />
+                  <Input
+                    type="text"
+                    value={config.secondary_color}
+                    onChange={(e) => setConfig({ ...config, secondary_color: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="background_color">Cor de Fundo</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="background_color"
+                    type="color"
+                    value={config.background_color}
+                    onChange={(e) => setConfig({ ...config, background_color: e.target.value })}
+                  />
+                  <Input
+                    type="text"
+                    value={config.background_color}
+                    onChange={(e) => setConfig({ ...config, background_color: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="text_color">Cor do Texto</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="text_color"
+                    type="color"
+                    value={config.text_color}
+                    onChange={(e) => setConfig({ ...config, text_color: e.target.value })}
+                  />
+                  <Input
+                    type="text"
+                    value={config.text_color}
+                    onChange={(e) => setConfig({ ...config, text_color: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="navbar_color">Cor da Navbar</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="navbar_color"
+                    type="color"
+                    value={config.navbar_color}
+                    onChange={(e) => setConfig({ ...config, navbar_color: e.target.value })}
+                  />
+                  <Input
+                    type="text"
+                    value={config.navbar_color}
+                    onChange={(e) => setConfig({ ...config, navbar_color: e.target.value })}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <Button onClick={handleConfigUpdate}>
+                Salvar Configurações
+              </Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="footer" className="bg-white rounded-lg shadow p-6 space-y-6">
+            <div>
+              <h2 className="text-xl font-semibold mb-4">Cores do Rodapé</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <Label htmlFor="footer_primary_color">Cor Primária do Rodapé</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="footer_primary_color"
+                      type="color"
+                      value={config.footer_primary_color}
+                      onChange={(e) => setConfig({ ...config, footer_primary_color: e.target.value })}
+                    />
+                    <Input
+                      type="text"
+                      value={config.footer_primary_color}
+                      onChange={(e) => setConfig({ ...config, footer_primary_color: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="footer_secondary_color">Cor Secundária do Rodapé</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="footer_secondary_color"
+                      type="color"
+                      value={config.footer_secondary_color}
+                      onChange={(e) => setConfig({ ...config, footer_secondary_color: e.target.value })}
+                    />
+                    <Input
+                      type="text"
+                      value={config.footer_secondary_color}
+                      onChange={(e) => setConfig({ ...config, footer_secondary_color: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="footer_text_color">Cor do Texto do Rodapé</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="footer_text_color"
+                      type="color"
+                      value={config.footer_text_color}
+                      onChange={(e) => setConfig({ ...config, footer_text_color: e.target.value })}
+                    />
+                    <Input
+                      type="text"
+                      value={config.footer_text_color}
+                      onChange={(e) => setConfig({ ...config, footer_text_color: e.target.value })}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold mb-4">Informações de Contato</h2>
+              
+              <div>
+                <Label htmlFor="footer_contact_email">Email de Contato</Label>
+                <Input
+                  id="footer_contact_email"
+                  type="email"
+                  value={config.footer_contact_email || ""}
+                  onChange={(e) => setConfig({ ...config, footer_contact_email: e.target.value })}
+                  placeholder="contato@exemplo.com"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="footer_contact_phone">Telefone de Contato</Label>
+                <Input
+                  id="footer_contact_phone"
+                  type="tel"
+                  value={config.footer_contact_phone || ""}
+                  onChange={(e) => setConfig({ ...config, footer_contact_phone: e.target.value })}
+                  placeholder="(11) 99999-9999"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="footer_address">Endereço</Label>
+                <Input
+                  id="footer_address"
+                  value={config.footer_address || ""}
+                  onChange={(e) => setConfig({ ...config, footer_address: e.target.value })}
+                  placeholder="Rua Exemplo, 123 - Bairro"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="footer_address_cep">CEP</Label>
+                <Input
+                  id="footer_address_cep"
+                  value={config.footer_address_cep || ""}
+                  onChange={(e) => setConfig({ ...config, footer_address_cep: e.target.value })}
+                  placeholder="00000-000"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="footer_schedule">Horário de Funcionamento</Label>
+                <Input
+                  id="footer_schedule"
+                  value={config.footer_schedule || ""}
+                  onChange={(e) => setConfig({ ...config, footer_schedule: e.target.value })}
+                  placeholder="Segunda a Sexta, 9h às 18h"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold mb-4">Redes Sociais</h2>
+              
+              <div>
+                <Label htmlFor="nav_social_facebook">Link do Facebook</Label>
+                <Input
+                  id="nav_social_facebook"
+                  type="url"
+                  value={config.footer_social_facebook || ""}
+                  onChange={(e) => setConfig({ ...config, footer_social_facebook: e.target.value })}
+                  placeholder="https://facebook.com/sua-pagina"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="nav_social_instagram">Link do Instagram</Label>
+                <Input
+                  id="nav_social_instagram"
+                  type="url"
+                  value={config.footer_social_instagram || ""}
+                  onChange={(e) => setConfig({ ...config, footer_social_instagram: e.target.value })}
+                  placeholder="https://instagram.com/seu-perfil"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold mb-4">Texto de Copyright</h2>
+              <div>
+                <Label htmlFor="footer_copyright_text">Texto de Copyright</Label>
+                <Input
+                  id="footer_copyright_text"
+                  value={config.footer_copyright_text || ""}
+                  onChange={(e) =>
+                    setConfig({ ...config, footer_copyright_text: e.target.value })
+                  }
+                  placeholder="© 2025 VALEOFC. Todos os direitos reservados."
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <Button onClick={handleConfigUpdate}>
+                Salvar Configurações 
+              </Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="general" className="bg-white rounded-lg shadow p-6 space-y-6">
+            <div>
+              <h2 className="text-xl font-semibold mb-4">Configurações Meta Tags</h2>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="meta_title">Título da Página</Label>
+                  <Input
+                    id="meta_title"
+                    value={config.meta_title || ""}
+                    onChange={(e) => setConfig({ ...config, meta_title: e.target.value })}
+                    placeholder="vale-news-hub"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="meta_description">Descrição da Página</Label>
+                  <Textarea
+                    id="meta_description"
+                    value={config.meta_description || ""}
+                    onChange={(e) => setConfig({ ...config, meta_description: e.target.value })}
+                    placeholder="Descrição do seu site"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="meta_author">Autor</Label>
+                  <Input
+                    id="meta_author"
+                    value={config.meta_author || ""}
+                    onChange={(e) => setConfig({ ...config, meta_author: e.target.value })}
+                    placeholder="Nome do autor"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="meta_image">Link da Imagem de Compartilhamento (OG Image)</Label>
+                  <Input
+                    id="meta_image"
+                    value={config.meta_image || ""}
+                    onChange={(e) => setConfig({ ...config, meta_image: e.target.value })}
+                    placeholder="https://exemplo.com/imagem.jpg"
+                  />
+                  <p className="text-sm text-gray-500 mt-1">
+                    Esta imagem será exibida quando o site for compartilhado em redes sociais
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <Button onClick={handleConfigUpdate}>
+                Salvar Configurações
+              </Button>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+};
+
+export default Admin;
