@@ -49,11 +49,11 @@ const EventCard = ({
   return (
     <Card className="overflow-hidden transition-transform hover:scale-[1.02]">
       {allImages.length > 0 && (
-        <div className="relative h-48 w-full overflow-hidden">
+        <div className="relative h-64 w-full overflow-hidden">
           <img
             src={allImages[currentImageIndex]}
             alt={`${title} - Imagem ${currentImageIndex + 1}`}
-            className="h-full w-full object-cover transition-opacity duration-300"
+            className="h-full w-full object-contain bg-gray-100"
           />
           {hasMultipleImages && (
             <>
