@@ -1,12 +1,12 @@
 
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Phone, Globe, MapPin, Clock, Ticket, User2, Facebook, Instagram, MessageCircle, Search } from "lucide-react";
-import type { Database } from "../integrations/supabase/types";
-import { supabase } from "../integrations/supabase/client";
-import Navbar from "../components/Navbar";
-import SubNav from "../components/SubNav";
-import Footer from "../components/Footer";
+import { Phone, Globe, MapPin, Clock, User2, Facebook, Instagram, MessageCircle, Search } from "lucide-react";
+import type { Database } from "@/integrations/supabase/types";
+import { supabase } from "@/integrations/supabase/client";
+import Navbar from "@/components/Navbar";
+import SubNav from "@/components/SubNav";
+import Footer from "@/components/Footer";
 import { Input } from "@/components/ui/input";
 
 type Place = Database["public"]["Tables"]["places"]["Row"];
@@ -103,13 +103,6 @@ const Places = () => {
                       <div className="flex items-center gap-2 text-sm">
                         <Clock className="w-4 h-4 text-gray-500" />
                         <span>{place.opening_hours}</span>
-                      </div>
-                    )}
-
-                    {place.entrance_fee && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Ticket className="w-4 h-4 text-gray-500" />
-                        <span>{place.entrance_fee}</span>
                       </div>
                     )}
                   </div>

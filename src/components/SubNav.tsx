@@ -1,59 +1,14 @@
 
-import { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import type { Database } from "@/integrations/supabase/types";
-
-type SiteConfig = Database['public']['Tables']['site_configuration']['Row'];
+import { Link } from "react-router-dom";
 
 const SubNav = () => {
-  const [config, setConfig] = useState<SiteConfig | null>(null);
-  const location = useLocation();
-
-  useEffect(() => {
-    fetchConfiguration();
-  }, []);
-
-  const fetchConfiguration = async () => {
-    const { data } = await supabase
-      .from("site_configuration")
-      .select("*")
-      .single();
-
-    if (data) {
-      setConfig(data);
-    }
-  };
-
-  if (!config) return null;
-
-  const links = [
-    { path: "/", label: "Notícias" },
-    { path: "/eventos", label: "Eventos" },
-    { path: "/lugares", label: "Lugares" },
-    { path: "/lojas", label: "Lojas" },
-  ];
-
   return (
-    <nav 
-      className="py-2 px-4 shadow-sm"
-      style={{ 
-        background: `linear-gradient(to right, ${config.navbar_color}, ${config.primary_color})`,
-        borderColor: `${config.primary_color}20`
-      }}
-    >
-      <div className="max-w-7xl mx-auto flex justify-center space-x-8">
-        {links.map((link) => (
-          <Link
-            key={link.path}
-            to={link.path}
-            className={`text-white hover:opacity-80 transition-opacity ${
-              location.pathname === link.path ? "border-b-2" : ""
-            }`}
-          >
-            {link.label}
-          </Link>
-        ))}
+    <nav className="bg-gray-100 p-2">
+      <div className="container mx-auto flex justify-center space-x-4">
+        <Link to="/" className="hover:text-primary">Notícias</Link>
+        <Link to="/eventos" className="hover:text-primary">Eventos</Link>
+        <Link to="/lugares" className="hover:text-primary">Lugares</Link>
+        <Link to="/lojas" className="hover:text-primary">Lojas</Link>
       </div>
     </nav>
   );
