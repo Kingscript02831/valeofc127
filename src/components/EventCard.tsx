@@ -31,7 +31,7 @@ const EventCard = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isImageFullscreen, setIsImageFullscreen] = useState(false);
-  const [countdown, setCountdown] = useState<string>("");
+  const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0, isExpired: false });
   
   const date = new Date(eventDate);
   const formattedDate = format(date, "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
@@ -50,24 +50,20 @@ const EventCard = ({
       const difference = eventDateTime.getTime() - now.getTime();
 
       if (difference <= 0) {
-        setCountdown("Evento já aconteceu");
+        setCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0, isExpired: true });
         return;
       }
 
       const days = Math.floor(difference / (1000 * 60 * 60 * 24));
       const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
       const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((difference % (1000 * 60)) / 1000);
 
-      let countdownText = "";
-      if (days > 0) countdownText += `${days} dia${days > 1 ? 's' : ''} `;
-      if (hours > 0) countdownText += `${hours} hora${hours > 1 ? 's' : ''} `;
-      if (minutes > 0) countdownText += `${minutes} minuto${minutes > 1 ? 's' : ''}`;
-
-      setCountdown(countdownText.trim() || "Menos de 1 minuto");
+      setCountdown({ days, hours, minutes, seconds, isExpired: false });
     };
 
     calculateTimeLeft();
-    const timer = setInterval(calculateTimeLeft, 60000);
+    const timer = setInterval(calculateTimeLeft, 1000); // Update every second for smoother countdown
 
     return () => clearInterval(timer);
   }, [eventDate, eventTime]);
@@ -119,9 +115,44 @@ const EventCard = ({
             )}
           </div>
 
-          <div className="mb-4 flex items-center gap-2 text-sm font-medium">
-            <Timer className="h-4 w-4 text-blue-600" />
-            <span className="text-blue-600">{countdown}</span>
+          {/* Shopee-style countdown timer */}
+          <div className="mb-4">
+            {countdown.isExpired ? (
+              <div className="text-red-500 font-medium">Evento já aconteceu</div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <Timer className="h-4 w-4 text-blue-600" />
+                  <span className="text-sm font-medium text-blue-600">Tempo até o evento:</span>
+                </div>
+                <div className="flex gap-2 justify-start">
+                  <div className="flex flex-col items-center">
+                    <div className="bg-blue-600 text-white px-3 py-2 rounded-md font-bold min-w-[3rem]">
+                      {countdown.days}
+                    </div>
+                    <span className="text-xs mt-1 text-gray-600">Dias</span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <div className="bg-blue-600 text-white px-3 py-2 rounded-md font-bold min-w-[3rem]">
+                      {String(countdown.hours).padStart(2, '0')}
+                    </div>
+                    <span className="text-xs mt-1 text-gray-600">Horas</span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <div className="bg-blue-600 text-white px-3 py-2 rounded-md font-bold min-w-[3rem]">
+                      {String(countdown.minutes).padStart(2, '0')}
+                    </div>
+                    <span className="text-xs mt-1 text-gray-600">Min</span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <div className="bg-blue-600 text-white px-3 py-2 rounded-md font-bold min-w-[3rem]">
+                      {String(countdown.seconds).padStart(2, '0')}
+                    </div>
+                    <span className="text-xs mt-1 text-gray-600">Seg</span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {formattedCreatedAt && (
