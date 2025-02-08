@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Edit, Trash, Plus, Search } from "lucide-react";
@@ -35,9 +36,10 @@ import {
 type Store = Database["public"]["Tables"]["stores"]["Row"];
 type Category = Database["public"]["Tables"]["categories"]["Row"];
 
-interface StoreWithCategory extends Store {
-  categories: Category;
-}
+type StoreWithCategory = Omit<Store, "category_id"> & {
+  categories: Category | null;
+  category_id: string | null;
+};
 
 interface FormData extends Partial<Store> {
   name: string;
@@ -77,7 +79,10 @@ const AdminStores = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("stores")
-        .select("*, categories:category_id(*)")
+        .select(`
+          *,
+          categories:category_id (*)
+        `)
         .order("name");
 
       if (error) throw error;
