@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,11 +15,17 @@ const AdminEvents = () => {
   const [newEvent, setNewEvent] = useState<Omit<Event, 'id' | 'created_at' | 'updated_at'>>({
     title: "",
     description: "",
-    event_date: new Date().toISOString().split('T')[0],
+    event_date: new Date().toISOString(),
     event_time: "00:00",
     image: "",
     images: [],
     location: "",
+    maps_url: null,
+    owner_name: null,
+    phone: null,
+    social_media: null,
+    website: null,
+    whatsapp: null
   });
 
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
@@ -71,11 +78,17 @@ const AdminEvents = () => {
       setNewEvent({
         title: "",
         description: "",
-        event_date: new Date().toISOString().split('T')[0],
+        event_date: new Date().toISOString(),
         event_time: "00:00",
         image: "",
         images: [],
         location: "",
+        maps_url: null,
+        owner_name: null,
+        phone: null,
+        social_media: null,
+        website: null,
+        whatsapp: null
       });
       fetchEvents();
     } catch (error: any) {

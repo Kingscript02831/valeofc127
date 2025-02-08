@@ -88,11 +88,17 @@ const Admin = () => {
   const [newEvent, setNewEvent] = useState<Omit<Event, 'id' | 'created_at' | 'updated_at'>>({
     title: "",
     description: "",
-    event_date: new Date().toISOString().split('T')[0],
+    event_date: new Date().toISOString(),
     event_time: "00:00",
     image: "",
     images: [],
     location: "",
+    maps_url: null,
+    owner_name: null,
+    phone: null,
+    social_media: null,
+    website: null,
+    whatsapp: null
   });
 
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
@@ -496,6 +502,12 @@ const Admin = () => {
         image: "",
         images: [],
         location: "",
+        maps_url: null,
+        owner_name: null,
+        phone: null,
+        social_media: null,
+        website: null,
+        whatsapp: null
       });
       fetchEvents();
     } catch (error: any) {
@@ -521,6 +533,12 @@ const Admin = () => {
           image: editingEvent.image,
           images: editingEvent.images || [], // Garante que images seja sempre um array
           location: editingEvent.location,
+          maps_url: editingEvent.maps_url,
+          owner_name: editingEvent.owner_name,
+          phone: editingEvent.phone,
+          social_media: editingEvent.social_media,
+          website: editingEvent.website,
+          whatsapp: editingEvent.whatsapp
         })
         .eq("id", editingEvent.id);
 
