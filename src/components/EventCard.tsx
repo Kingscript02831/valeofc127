@@ -1,5 +1,5 @@
 
-import { format } from "date-fns";
+import { format, isValid, parse } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Calendar, ChevronDown, ChevronUp, Clock, MapPin, ChevronLeft, ChevronRight, X, Timer } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -37,10 +37,22 @@ const EventCard = ({
   const [isImageFullscreen, setIsImageFullscreen] = useState(false);
   const [countdown, setCountdown] = useState({ days: 0, hrs: 0, mins: 0, secs: 0, isExpired: false });
   const [config, setConfig] = useState<SiteConfig | null>(null);
-  
-  // Ajuste para garantir que a data seja interpretada na timezone local
-  const date = new Date(eventDate + 'T00:00:00');
-  const formattedDate = format(date, "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
+
+  // Parse and validate the date
+  const parseDate = (dateStr: string) => {
+    try {
+      const date = parse(dateStr, 'yyyy-MM-dd', new Date());
+      return isValid(date) ? date : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const date = parseDate(eventDate);
+  const formattedDate = date 
+    ? format(date, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
+    : 'Data inválida';
+
   const formattedCreatedAt = createdAt 
     ? format(new Date(createdAt), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })
     : null;
@@ -53,7 +65,7 @@ const EventCard = ({
       const { data } = await supabase
         .from("site_configuration")
         .select("*")
-        .single();
+        .maybeSingle();
       
       if (data) {
         setConfig(data);
@@ -66,13 +78,13 @@ const EventCard = ({
   useEffect(() => {
     const calculateTimeLeft = () => {
       try {
-        if (!eventDate || !eventTime) {
+        if (!eventDate || !eventTime || !date) {
           setCountdown({ days: 0, hrs: 0, mins: 0, secs: 0, isExpired: true });
           return;
         }
 
         const [timeHours, timeMinutes] = eventTime.split(':').map(Number);
-        const targetDate = new Date(eventDate);
+        const targetDate = new Date(date);
         targetDate.setHours(timeHours, timeMinutes, 0, 0);
         
         const now = new Date();
@@ -121,7 +133,7 @@ const EventCard = ({
     const timer = setInterval(calculateTimeLeft, 1000);
 
     return () => clearInterval(timer);
-  }, [eventDate, eventTime]);
+  }, [eventDate, eventTime, date]);
 
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
@@ -137,7 +149,7 @@ const EventCard = ({
     setIsImageFullscreen(!isImageFullscreen);
   };
 
-  if (!config) return null;
+  const primaryColor = config?.primary_color || '#000000';
 
   return (
     <>
@@ -178,33 +190,33 @@ const EventCard = ({
             ) : (
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-1 mb-1">
-                  <Timer className="h-3 w-3" style={{ color: config.primary_color }} />
-                  <span className="text-[10px] font-medium" style={{ color: config.primary_color }}>
+                  <Timer className="h-3 w-3" style={{ color: primaryColor }} />
+                  <span className="text-[10px] font-medium" style={{ color: primaryColor }}>
                     Tempo até o evento:
                   </span>
                 </div>
                 <div className="flex gap-1 justify-start">
                   <span 
                     className="text-white text-xs px-1.5 py-0.5 rounded"
-                    style={{ backgroundColor: config.primary_color }}
+                    style={{ backgroundColor: primaryColor }}
                   >
                     {countdown.days}d
                   </span>
                   <span 
                     className="text-white text-xs px-1.5 py-0.5 rounded"
-                    style={{ backgroundColor: config.primary_color }}
+                    style={{ backgroundColor: primaryColor }}
                   >
                     {String(countdown.hrs).padStart(2, '0')}h
                   </span>
                   <span 
                     className="text-white text-xs px-1.5 py-0.5 rounded"
-                    style={{ backgroundColor: config.primary_color }}
+                    style={{ backgroundColor: primaryColor }}
                   >
                     {String(countdown.mins).padStart(2, '0')}m
                   </span>
                   <span 
                     className="text-white text-xs px-1.5 py-0.5 rounded"
-                    style={{ backgroundColor: config.primary_color }}
+                    style={{ backgroundColor: primaryColor }}
                   >
                     {String(countdown.secs).padStart(2, '0')}s
                   </span>
@@ -227,9 +239,9 @@ const EventCard = ({
 
           <Button
             variant="ghost"
-            className="mt-2 w-full flex items-center justify-center gap-1 text-sm"
+            className="mt-2 w-full flex items-center justify-center gap-1 text-sm hover:bg-gray-100"
             onClick={() => setIsExpanded(!isExpanded)}
-            style={{ color: config.primary_color }}
+            style={{ color: primaryColor }}
           >
             {isExpanded ? (
               <>
@@ -295,3 +307,4 @@ const EventCard = ({
 };
 
 export default EventCard;
+
