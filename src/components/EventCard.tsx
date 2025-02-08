@@ -1,3 +1,4 @@
+
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Calendar, ChevronDown, ChevronUp, Clock, MapPin, ChevronLeft, ChevronRight, X, Timer } from "lucide-react";
@@ -74,6 +75,8 @@ const EventCard = ({
         targetDate.setHours(timeHours, timeMinutes, 0, 0);
         
         const now = new Date();
+        // Removendo os milissegundos para uma comparação mais precisa
+        now.setMilliseconds(0);
 
         if (isNaN(targetDate.getTime())) {
           console.error('Invalid date:', { eventDate, eventTime });
@@ -81,13 +84,27 @@ const EventCard = ({
           return;
         }
 
-        const difference = targetDate.getTime() - now.getTime();
+        // Se o evento é no mesmo dia, comparamos apenas as horas
+        const isSameDay = 
+          now.getDate() === targetDate.getDate() &&
+          now.getMonth() === targetDate.getMonth() &&
+          now.getFullYear() === targetDate.getFullYear();
 
-        if (difference <= 0) {
-          setCountdown({ days: 0, hrs: 0, mins: 0, secs: 0, isExpired: true });
-          return;
+        if (isSameDay) {
+          const difference = targetDate.getTime() - now.getTime();
+          if (difference <= 0) {
+            setCountdown({ days: 0, hrs: 0, mins: 0, secs: 0, isExpired: true });
+            return;
+          }
+        } else {
+          // Se não é no mesmo dia, verificamos se a data já passou
+          if (targetDate < now) {
+            setCountdown({ days: 0, hrs: 0, mins: 0, secs: 0, isExpired: true });
+            return;
+          }
         }
 
+        const difference = targetDate.getTime() - now.getTime();
         const days = Math.floor(difference / (1000 * 60 * 60 * 24));
         const hrs = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const mins = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
@@ -278,3 +295,4 @@ const EventCard = ({
 };
 
 export default EventCard;
+
