@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Edit, Trash, Plus, Search } from "lucide-react";
@@ -36,9 +35,8 @@ import {
 type Store = Database["public"]["Tables"]["stores"]["Row"];
 type Category = Database["public"]["Tables"]["categories"]["Row"];
 
-type StoreWithCategory = Omit<Store, "category_id"> & {
+type StoreWithCategory = Store & {
   categories: Category | null;
-  category_id: string | null;
 };
 
 interface FormData extends Partial<Store> {
