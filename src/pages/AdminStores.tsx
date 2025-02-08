@@ -84,7 +84,7 @@ const AdminStores = () => {
         .order("name");
 
       if (error) throw error;
-      return data as StoreWithCategory[];
+      return data as unknown as StoreWithCategory[];
     },
   });
 
