@@ -1,3 +1,4 @@
+<lov-code>
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -981,4 +982,4 @@ const Admin = () => {
                       <Input
                         id="event_date"
                         type="date"
-                        value={newEvent.
+                        value
