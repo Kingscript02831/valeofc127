@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Search } from "lucide-react";
@@ -33,7 +34,7 @@ const Events = () => {
       let query = supabase
         .from("events")
         .select("*")
-        .order("event_date", { ascending: false }); // Changed to descending order
+        .order("created_at", { ascending: false }); // Changed to order by created_at descending
 
       if (searchTerm) {
         query = query.ilike("title", `%${searchTerm}%`);
@@ -46,17 +47,17 @@ const Events = () => {
   });
 
   const LoadingSkeleton = () => (
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-      {[1, 2, 3].map((i) => (
+    <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
+      {[1, 2, 3, 4].map((i) => (
         <div key={i} className="overflow-hidden rounded-lg border bg-card">
           <Skeleton className="h-48 w-full" />
-          <div className="p-6 space-y-4">
-            <Skeleton className="h-6 w-3/4" />
+          <div className="p-4 space-y-3">
+            <Skeleton className="h-5 w-3/4" />
             <div className="space-y-2">
               <Skeleton className="h-4 w-1/2" />
               <Skeleton className="h-4 w-1/3" />
             </div>
-            <Skeleton className="h-20 w-full" />
+            <Skeleton className="h-16 w-full" />
           </div>
         </div>
       ))}
@@ -85,7 +86,7 @@ const Events = () => {
         {isLoading ? (
           <LoadingSkeleton />
         ) : events && events.length > 0 ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
             {events.map((event) => (
               <EventCard
                 key={event.id}
