@@ -365,7 +365,6 @@ export type Database = {
           category_id: string | null
           created_at: string
           description: string | null
-          entrance_fee: string | null
           id: string
           image: string | null
           images: string[] | null
@@ -384,7 +383,6 @@ export type Database = {
           category_id?: string | null
           created_at?: string
           description?: string | null
-          entrance_fee?: string | null
           id?: string
           image?: string | null
           images?: string[] | null
@@ -403,7 +401,6 @@ export type Database = {
           category_id?: string | null
           created_at?: string
           description?: string | null
-          entrance_fee?: string | null
           id?: string
           image?: string | null
           images?: string[] | null
@@ -418,13 +415,6 @@ export type Database = {
           whatsapp?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "fk_store_category"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "categories"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "stores_category_id_fkey"
             columns: ["category_id"]
