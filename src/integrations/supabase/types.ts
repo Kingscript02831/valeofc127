@@ -143,6 +143,63 @@ export type Database = {
           },
         ]
       }
+      places: {
+        Row: {
+          address: string
+          created_at: string
+          description: string | null
+          entrance_fee: string | null
+          id: string
+          image: string | null
+          images: string[] | null
+          maps_url: string | null
+          name: string
+          opening_hours: string | null
+          owner_name: string | null
+          phone: string | null
+          social_media: Json | null
+          updated_at: string
+          website: string | null
+          whatsapp: string | null
+        }
+        Insert: {
+          address: string
+          created_at?: string
+          description?: string | null
+          entrance_fee?: string | null
+          id?: string
+          image?: string | null
+          images?: string[] | null
+          maps_url?: string | null
+          name: string
+          opening_hours?: string | null
+          owner_name?: string | null
+          phone?: string | null
+          social_media?: Json | null
+          updated_at?: string
+          website?: string | null
+          whatsapp?: string | null
+        }
+        Update: {
+          address?: string
+          created_at?: string
+          description?: string | null
+          entrance_fee?: string | null
+          id?: string
+          image?: string | null
+          images?: string[] | null
+          maps_url?: string | null
+          name?: string
+          opening_hours?: string | null
+          owner_name?: string | null
+          phone?: string | null
+          social_media?: Json | null
+          updated_at?: string
+          website?: string | null
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
       site_configuration: {
         Row: {
           background_color: string
