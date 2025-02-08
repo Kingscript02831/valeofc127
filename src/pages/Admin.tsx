@@ -482,7 +482,7 @@ const Admin = () => {
         .from("events")
         .insert({
           ...newEvent,
-          images: newEvent.images || [], // Garante que images seja sempre um array
+          images: newEvent.images?.filter(url => url.trim() !== '') || [], // Filter out empty lines
         });
 
       if (error) throw error;
@@ -519,7 +519,7 @@ const Admin = () => {
           event_date: editingEvent.event_date,
           event_time: editingEvent.event_time,
           image: editingEvent.image,
-          images: editingEvent.images || [], // Garante que images seja sempre um array
+          images: editingEvent.images?.filter(url => url.trim() !== '') || [], // Filter out empty lines
           location: editingEvent.location,
         })
         .eq("id", editingEvent.id);
@@ -549,6 +549,10 @@ const Admin = () => {
     } catch (error: any) {
       toast.error("Erro ao remover evento");
     }
+  };
+
+  const openImageInNewTab = (imageUrl: string) => {
+    window.open(imageUrl, '_blank');
   };
 
   return (
@@ -887,10 +891,11 @@ const Admin = () => {
                         images: e.target.value.split('\n').filter(url => url.trim() !== '')
                       })}
                       placeholder="https://exemplo.com/imagem2.jpg&#10;https://exemplo.com/imagem3.jpg"
-                      className="min-h-[100px]"
+                      className="min-h-[100px] whitespace-pre-wrap"
+                      rows={5}
                     />
                     <p className="text-sm text-gray-500 mt-1">
-                      Adicione uma URL por linha para incluir múltiplas imagens
+                      Adicione uma URL por linha para incluir múltiplas imagens. Pressione Enter para adicionar nova linha.
                     </p>
                   </div>
 
@@ -972,10 +977,11 @@ const Admin = () => {
                         images: e.target.value.split('\n').filter(url => url.trim() !== '')
                       })}
                       placeholder="https://exemplo.com/imagem2.jpg&#10;https://exemplo.com/imagem3.jpg"
-                      className="min-h-[100px]"
+                      className="min-h-[100px] whitespace-pre-wrap"
+                      rows={5}
                     />
                     <p className="text-sm text-gray-500 mt-1">
-                      Adicione uma URL por linha para incluir múltiplas imagens
+                      Adicione uma URL por linha para incluir múltiplas imagens. Pressione Enter para adicionar nova linha.
                     </p>
                   </div>
 
@@ -1036,7 +1042,31 @@ const Admin = () => {
                       <p className="text-sm text-gray-500">Local: {event.location}</p>
                     )}
                     {event.image && (
-                      <p className="text-sm text-gray-500">Imagem: {event.image}</p>
+                      <div className="mt-2">
+                        <p className="text-sm font-medium text-gray-500 mb-1">Imagem Principal:</p>
+                        <img 
+                          src={event.image} 
+                          alt={event.title}
+                          className="max-w-xs h-auto rounded cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => openImageInNewTab(event.image || '')}
+                        />
+                      </div>
+                    )}
+                    {event.images && event.images.length > 0 && (
+                      <div className="mt-4">
+                        <p className="text-sm font-medium text-gray-500 mb-2">Imagens Adicionais:</p>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                          {event.images.map((imgUrl, index) => imgUrl.trim() && (
+                            <img
+                              key={index}
+                              src={imgUrl}
+                              alt={`${event.title} - Imagem ${index + 1}`}
+                              className="w-full h-32 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
+                              onClick={() => openImageInNewTab(imgUrl)}
+                            />
+                          ))}
+                        </div>
+                      </div>
                     )}
                   </div>
                 ))}
