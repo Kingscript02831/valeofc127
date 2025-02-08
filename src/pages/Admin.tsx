@@ -962,3 +962,132 @@ const Admin = () => {
                       value={editingEvent.location || ""}
                       onChange={(e) => setEditingEvent({ ...editingEvent, location: e.target.value })}
                       placeholder="Local do evento"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="edit-image">Link da Imagem Principal</Label>
+                    <Input
+                      id="edit-image"
+                      value={editingEvent.image || ""}
+                      onChange={(e) => setEditingEvent({ ...editingEvent, image: e.target.value })}
+                      placeholder="https://exemplo.com/imagem.jpg"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="edit-additional_images">Links de Imagens Adicionais (uma por linha)</Label>
+                    <Textarea
+                      id="edit-additional_images"
+                      value={editingEvent.images?.join('\n') || ""}
+                      onChange={(e) => {
+                        const imageUrls = e.target.value.split('\n').filter(url => url.trim() !== '');
+                        setEditingEvent({
+                          ...editingEvent,
+                          images: imageUrls
+                        });
+                      }}
+                      placeholder="https://exemplo.com/imagem2.jpg&#10;https://exemplo.com/imagem3.jpg"
+                      className="min-h-[100px]"
+                    />
+                    <p className="text-sm text-gray-500 mt-1">
+                      Adicione uma URL por linha para incluir múltiplas imagens
+                    </p>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button onClick={handleEventEdit}>Salvar Alterações</Button>
+                    <Button variant="outline" onClick={() => setEditingEvent(null)}>Cancelar</Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="flex items-center gap-4 mb-6">
+                <h2 className="text-xl font-semibold">Lista de Eventos</h2>
+                <div className="relative flex-1 max-w-sm">
+                  <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 h-4 w-4" />
+                  <Input
+                    type="search"
+                    placeholder="Buscar eventos..."
+                    className="pl-8"
+                    value={searchEventTerm}
+                    onChange={(e) => setSearchEventTerm(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {events.map((item) => (
+                  <div key={item.id} className="bg-gray-50 rounded-lg p-6">
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h3 className="text-lg font-semibold">{item.title}</h3>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-sm text-gray-500">
+                            {new Date(item.event_date).toLocaleDateString()} às {item.event_time}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setEditingEvent(item)}
+                        >
+                          Editar
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleEventDelete(item.id)}
+                        >
+                          Excluir
+                        </Button>
+                      </div>
+                    </div>
+                    <p className="whitespace-pre-wrap mb-2">{item.description}</p>
+                    {item.location && (
+                      <p className="text-sm text-gray-500">Local: {item.location}</p>
+                    )}
+                    {item.image && (
+                      <p className="text-sm text-gray-500">Imagem principal: {item.image}</p>
+                    )}
+                    {item.images && item.images.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-sm font-medium text-gray-500">Imagens adicionais:</p>
+                        {item.images.map((url, index) => (
+                          <p key={index} className="text-sm text-gray-500">{url}</p>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+                {events.length === 0 && (
+                  <p className="text-gray-500 text-center py-8">
+                    Nenhum evento encontrado.
+                  </p>
+                )}
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="config">
+            {/* ... keep existing code (config content) */}
+          </TabsContent>
+
+          <TabsContent value="footer">
+            {/* ... keep existing code (footer content) */}
+          </TabsContent>
+
+          <TabsContent value="general">
+            {/* ... keep existing code (general content) */}
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+};
+
+export default Admin;
