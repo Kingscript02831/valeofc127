@@ -11,7 +11,6 @@ import Stores from "./pages/Stores";
 import Admin from "./pages/Admin";
 import AdminPlaces from "./pages/AdminPlaces";
 import AdminEvents from "./pages/AdminEvents";
-import AdminEvents from "./pages/AdminNews";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,7 +29,6 @@ const App = () => (
           <Route path="/admin" element={<Admin />} />
           <Route path="/admin/lugares" element={<AdminPlaces />} />
           <Route path="/admin/eventos" element={<AdminEvents />} />
-          <Route path="/admin/noticias" element={<AdminNews />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
