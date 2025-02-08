@@ -74,7 +74,7 @@ const AdminStores = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("stores")
-        .select("*, categories(*)")
+        .select("*, categories:category_id(*)") // Updated relationship query
         .order("name");
 
       if (error) throw error;
