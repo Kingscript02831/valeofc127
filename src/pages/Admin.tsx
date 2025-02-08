@@ -703,6 +703,7 @@ const Admin = () => {
             <TabsTrigger value="general">Geral</TabsTrigger>
           </TabsList>
 
+          {/* News Tab Content */}
           <TabsContent value="news" className="space-y-6">
             {!editingNews ? (
               <div className="bg-white rounded-lg shadow p-6">
@@ -949,6 +950,7 @@ const Admin = () => {
             </div>
           </TabsContent>
 
+          {/* Events Tab Content */}
           <TabsContent value="events" className="space-y-6">
             {!editingEvent ? (
               <div className="bg-white rounded-lg shadow p-6">
@@ -979,5 +981,4 @@ const Admin = () => {
                       <Input
                         id="event_date"
                         type="date"
-                        value={newEvent.event_date}
-                        onChange={(e) => setNewEvent({ ...newEvent
+                        value={newEvent.
