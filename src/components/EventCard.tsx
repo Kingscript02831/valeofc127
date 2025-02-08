@@ -1,10 +1,10 @@
 
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Calendar, ChevronDown, ChevronUp, Clock, MapPin, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { Calendar, ChevronDown, ChevronUp, Clock, MapPin, ChevronLeft, ChevronRight, X, Timer } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
 interface EventCardProps {
@@ -29,6 +29,7 @@ const EventCard = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isImageFullscreen, setIsImageFullscreen] = useState(false);
+  const [countdown, setCountdown] = useState<string>("");
   
   const date = new Date(eventDate);
   const formattedDate = format(date, "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
@@ -36,6 +37,35 @@ const EventCard = ({
   // Combine single image with images array
   const allImages = image ? [image, ...images] : images;
   const hasMultipleImages = allImages.length > 1;
+
+  useEffect(() => {
+    const calculateTimeLeft = () => {
+      const eventDateTime = new Date(`${eventDate}T${eventTime}`);
+      const now = new Date();
+      const difference = eventDateTime.getTime() - now.getTime();
+
+      if (difference <= 0) {
+        setCountdown("Evento já aconteceu");
+        return;
+      }
+
+      const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+
+      let countdownText = "";
+      if (days > 0) countdownText += `${days} dia${days > 1 ? 's' : ''} `;
+      if (hours > 0) countdownText += `${hours} hora${hours > 1 ? 's' : ''} `;
+      if (minutes > 0) countdownText += `${minutes} minuto${minutes > 1 ? 's' : ''}`;
+
+      setCountdown(countdownText.trim() || "Menos de 1 minuto");
+    };
+
+    calculateTimeLeft();
+    const timer = setInterval(calculateTimeLeft, 60000); // Update every minute
+
+    return () => clearInterval(timer);
+  }, [eventDate, eventTime]);
 
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
@@ -82,6 +112,11 @@ const EventCard = ({
                 <span>{location}</span>
               </div>
             )}
+          </div>
+
+          <div className="mb-4 flex items-center gap-2 text-sm font-medium">
+            <Timer className="h-4 w-4 text-blue-600" />
+            <span className="text-blue-600">{countdown}</span>
           </div>
           
           <div className={cn("prose prose-sm max-w-none", !isExpanded && "line-clamp-3")}>
