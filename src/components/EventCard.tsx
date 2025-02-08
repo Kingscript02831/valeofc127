@@ -1,8 +1,11 @@
 
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Calendar, Clock, MapPin } from "lucide-react";
+import { Calendar, ChevronDown, ChevronUp, Clock, MapPin } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { cn } from "@/lib/utils";
 
 interface EventCardProps {
   title: string;
@@ -21,6 +24,7 @@ const EventCard = ({
   image,
   location,
 }: EventCardProps) => {
+  const [isExpanded, setIsExpanded] = useState(false);
   const date = new Date(eventDate);
   const formattedDate = format(date, "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
 
@@ -55,7 +59,29 @@ const EventCard = ({
           )}
         </div>
         
-        <p className="text-gray-600">{description}</p>
+        <div className={cn("prose prose-sm max-w-none", !isExpanded && "line-clamp-3")}>
+          {description.split('\n').map((paragraph, index) => (
+            paragraph.trim() ? <p key={index} className="mb-4">{paragraph}</p> : null
+          ))}
+        </div>
+
+        <Button
+          variant="ghost"
+          className="mt-2 w-full flex items-center justify-center gap-2"
+          onClick={() => setIsExpanded(!isExpanded)}
+        >
+          {isExpanded ? (
+            <>
+              Ver menos
+              <ChevronUp className="h-4 w-4" />
+            </>
+          ) : (
+            <>
+              Ver mais
+              <ChevronDown className="h-4 w-4" />
+            </>
+          )}
+        </Button>
       </div>
     </Card>
   );
