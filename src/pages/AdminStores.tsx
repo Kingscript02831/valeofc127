@@ -1,306 +1,507 @@
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { PlusCircle, Pencil, Trash2, Loader2 } from "lucide-react";
-import { toast } from "sonner";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Edit, Trash, Plus, Search } from "lucide-react";
+import { useToast } from "../hooks/use-toast";
 import type { Database } from "../integrations/supabase/types";
 import { supabase } from "../integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import Navbar from "../components/Navbar";
-import SubNav from "../components/SubNav";
-import Footer from "../components/Footer";
+import { Button } from "../components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../components/ui/dialog";
+import { Input } from "../components/ui/input";
+import { Textarea } from "../components/ui/textarea";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "../components/ui/alert-dialog";
 
 type Store = Database["public"]["Tables"]["stores"]["Row"];
 
+interface FormData extends Partial<Store> {
+  name: string;
+  address: string;
+}
+
 const AdminStores = () => {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [currentStore, setCurrentStore] = useState<Store | null>(null);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
-  
-  const { data: stores, isLoading, refetch } = useQuery({
-    queryKey: ["admin-stores", searchTerm],
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedStore, setSelectedStore] = useState<Store | null>(null);
+  const [isAddEditDialogOpen, setIsAddEditDialogOpen] = useState(false);
+
+  // Form state
+  const [formData, setFormData] = useState<FormData>({
+    name: "",
+    address: "",
+    description: "",
+    maps_url: "",
+    opening_hours: "",
+    owner_name: "",
+    phone: "",
+    whatsapp: "",
+    website: "",
+    image: "",
+    social_media: {
+      facebook: "",
+      instagram: "",
+    },
+  });
+
+  // Fetch stores
+  const { data: stores, isLoading } = useQuery({
+    queryKey: ["admin-stores"],
     queryFn: async () => {
-      let query = supabase
+      const { data, error } = await supabase
         .from("stores")
         .select("*")
         .order("name");
 
-      if (searchTerm) {
-        query = query.ilike("name", `%${searchTerm}%`);
-      }
-
-      const { data, error } = await query;
       if (error) throw error;
       return data;
     },
   });
 
-  const handleSave = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const form = event.currentTarget;
-    const formData = new FormData(form);
-    
-    const storeData = {
-      name: formData.get("name") as string,
-      description: formData.get("description") as string,
-      address: formData.get("address") as string,
-      owner_name: formData.get("owner_name") as string,
-      phone: formData.get("phone") as string,
-      whatsapp: formData.get("whatsapp") as string,
-      website: formData.get("website") as string,
-      opening_hours: formData.get("opening_hours") as string,
-      maps_url: formData.get("maps_url") as string,
-      social_media: {
-        facebook: formData.get("facebook") as string,
-        instagram: formData.get("instagram") as string,
-      },
-    };
+  // Filter stores based on search term
+  const filteredStores = stores?.filter((store) =>
+    store.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-    try {
-      if (currentStore) {
-        await supabase
-          .from("stores")
-          .update(storeData)
-          .eq("id", currentStore.id);
-        toast.success("Loja atualizada com sucesso!");
-      } else {
-        await supabase
-          .from("stores")
-          .insert([storeData]);
-        toast.success("Loja criada com sucesso!");
-      }
-      
-      setIsDialogOpen(false);
-      setCurrentStore(null);
-      refetch();
-    } catch (error) {
-      toast.error("Erro ao salvar a loja. Tente novamente.");
+  // Handle form input changes
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    if (name.startsWith("social_media.")) {
+      const socialMedia = name.split(".")[1];
+      setFormData((prev) => ({
+        ...prev,
+        social_media: {
+          ...(prev.social_media as any),
+          [socialMedia]: value,
+        },
+      }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
 
-  const handleDelete = async (store: Store) => {
-    if (window.confirm("Tem certeza que deseja excluir esta loja?")) {
-      try {
-        await supabase
+  // Reset form
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      address: "",
+      description: "",
+      maps_url: "",
+      opening_hours: "",
+      owner_name: "",
+      phone: "",
+      whatsapp: "",
+      website: "",
+      image: "",
+      social_media: {
+        facebook: "",
+        instagram: "",
+      },
+    });
+    setSelectedStore(null);
+  };
+
+  // Handle add/edit submission
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (selectedStore) {
+        // Update existing store
+        const { error } = await supabase
           .from("stores")
-          .delete()
-          .eq("id", store.id);
-        toast.success("Loja excluída com sucesso!");
-        refetch();
-      } catch (error) {
-        toast.error("Erro ao excluir a loja. Tente novamente.");
+          .update(formData)
+          .eq("id", selectedStore.id);
+
+        if (error) throw error;
+        toast({
+          title: "Loja atualizada com sucesso!",
+          variant: "default",
+        });
+      } else {
+        // Add new store - ensure required fields are present
+        if (!formData.name || !formData.address) {
+          toast({
+            title: "Erro ao salvar a loja",
+            description: "Nome e endereço são obrigatórios.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        const { error } = await supabase.from("stores").insert(formData);
+
+        if (error) throw error;
+        toast({
+          title: "Loja adicionada com sucesso!",
+          variant: "default",
+        });
       }
+
+      queryClient.invalidateQueries({ queryKey: ["admin-stores"] });
+      setIsAddEditDialogOpen(false);
+      resetForm();
+    } catch (error) {
+      console.error("Error saving store:", error);
+      toast({
+        title: "Erro ao salvar a loja",
+        description: "Por favor, tente novamente.",
+        variant: "destructive",
+      });
     }
+  };
+
+  // Handle store deletion
+  const handleDelete = async () => {
+    if (!selectedStore) return;
+
+    try {
+      const { error } = await supabase
+        .from("stores")
+        .delete()
+        .eq("id", selectedStore.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Loja excluída com sucesso!",
+        variant: "default",
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["admin-stores"] });
+      setIsDeleteDialogOpen(false);
+      setSelectedStore(null);
+    } catch (error) {
+      console.error("Error deleting store:", error);
+      toast({
+        title: "Erro ao excluir a loja",
+        description: "Por favor, tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Handle edit click
+  const handleEditClick = (store: Store) => {
+    setSelectedStore(store);
+    setFormData({
+      name: store.name,
+      description: store.description || "",
+      address: store.address,
+      maps_url: store.maps_url || "",
+      opening_hours: store.opening_hours || "",
+      owner_name: store.owner_name || "",
+      phone: store.phone || "",
+      whatsapp: store.whatsapp || "",
+      website: store.website || "",
+      image: store.image || "",
+      social_media: store.social_media || { facebook: "", instagram: "" },
+    });
+    setIsAddEditDialogOpen(true);
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-      <SubNav />
-      <main className="flex-1 container mx-auto py-8 px-4">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold">Gerenciar Lojas</h1>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button
-                onClick={() => setCurrentStore(null)}
-                className="flex items-center gap-2"
-              >
-                <PlusCircle className="w-4 h-4" />
-                Nova Loja
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>
-                  {currentStore ? "Editar Loja" : "Nova Loja"}
-                </DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleSave} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Nome</Label>
-                    <Input
-                      id="name"
-                      name="name"
-                      defaultValue={currentStore?.name}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="owner_name">Proprietário</Label>
-                    <Input
-                      id="owner_name"
-                      name="owner_name"
-                      defaultValue={currentStore?.owner_name || ""}
-                    />
-                  </div>
-                  <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="description">Descrição</Label>
-                    <Textarea
-                      id="description"
-                      name="description"
-                      defaultValue={currentStore?.description || ""}
-                    />
-                  </div>
-                  <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="address">Endereço</Label>
-                    <Input
-                      id="address"
-                      name="address"
-                      defaultValue={currentStore?.address}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Telefone</Label>
-                    <Input
-                      id="phone"
-                      name="phone"
-                      defaultValue={currentStore?.phone || ""}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="whatsapp">WhatsApp</Label>
-                    <Input
-                      id="whatsapp"
-                      name="whatsapp"
-                      defaultValue={currentStore?.whatsapp || ""}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="website">Website</Label>
-                    <Input
-                      id="website"
-                      name="website"
-                      defaultValue={currentStore?.website || ""}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="opening_hours">Horário de Funcionamento</Label>
-                    <Input
-                      id="opening_hours"
-                      name="opening_hours"
-                      defaultValue={currentStore?.opening_hours || ""}
-                    />
-                  </div>
-                  <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="maps_url">Link do Google Maps</Label>
-                    <Input
-                      id="maps_url"
-                      name="maps_url"
-                      defaultValue={currentStore?.maps_url || ""}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="facebook">Facebook</Label>
-                    <Input
-                      id="facebook"
-                      name="facebook"
-                      defaultValue={currentStore?.social_media && typeof currentStore.social_media === 'object' 
-                        ? (currentStore.social_media as any).facebook || ""
-                        : ""}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="instagram">Instagram</Label>
-                    <Input
-                      id="instagram"
-                      name="instagram"
-                      defaultValue={currentStore?.social_media && typeof currentStore.social_media === 'object'
-                        ? (currentStore.social_media as any).instagram || ""
-                        : ""}
-                    />
-                  </div>
+    <div className="container mx-auto p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Gerenciar Lojas</h1>
+        <Dialog open={isAddEditDialogOpen} onOpenChange={setIsAddEditDialogOpen}>
+          <DialogTrigger asChild>
+            <Button
+              onClick={() => {
+                resetForm();
+                setIsAddEditDialogOpen(true);
+              }}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Adicionar Loja
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>
+                {selectedStore ? "Editar Loja" : "Adicionar Nova Loja"}
+              </DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label htmlFor="name" className="text-sm font-medium">
+                    Nome *
+                  </label>
+                  <Input
+                    id="name"
+                    name="name"
+                    value={formData.name || ""}
+                    onChange={handleInputChange}
+                    required
+                  />
                 </div>
-                <div className="flex justify-end gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setIsDialogOpen(false)}
+                <div className="space-y-2">
+                  <label htmlFor="address" className="text-sm font-medium">
+                    Endereço *
+                  </label>
+                  <Input
+                    id="address"
+                    name="address"
+                    value={formData.address || ""}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+                <div className="space-y-2 col-span-2">
+                  <label htmlFor="description" className="text-sm font-medium">
+                    Descrição
+                  </label>
+                  <Textarea
+                    id="description"
+                    name="description"
+                    value={formData.description || ""}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="owner_name" className="text-sm font-medium">
+                    Nome do Proprietário
+                  </label>
+                  <Input
+                    id="owner_name"
+                    name="owner_name"
+                    value={formData.owner_name || ""}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="opening_hours" className="text-sm font-medium">
+                    Horário de Funcionamento
+                  </label>
+                  <Input
+                    id="opening_hours"
+                    name="opening_hours"
+                    value={formData.opening_hours || ""}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="maps_url" className="text-sm font-medium">
+                    Link do Google Maps
+                  </label>
+                  <Input
+                    id="maps_url"
+                    name="maps_url"
+                    value={formData.maps_url || ""}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="phone" className="text-sm font-medium">
+                    Telefone
+                  </label>
+                  <Input
+                    id="phone"
+                    name="phone"
+                    value={formData.phone || ""}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="whatsapp" className="text-sm font-medium">
+                    WhatsApp
+                  </label>
+                  <Input
+                    id="whatsapp"
+                    name="whatsapp"
+                    value={formData.whatsapp || ""}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="website" className="text-sm font-medium">
+                    Website
+                  </label>
+                  <Input
+                    id="website"
+                    name="website"
+                    value={formData.website || ""}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="image" className="text-sm font-medium">
+                    URL da Imagem
+                  </label>
+                  <Input
+                    id="image"
+                    name="image"
+                    value={formData.image || ""}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label
+                    htmlFor="social_media.facebook"
+                    className="text-sm font-medium"
                   >
-                    Cancelar
-                  </Button>
-                  <Button type="submit">Salvar</Button>
+                    Facebook
+                  </label>
+                  <Input
+                    id="social_media.facebook"
+                    name="social_media.facebook"
+                    value={(formData.social_media as any)?.facebook || ""}
+                    onChange={handleInputChange}
+                  />
                 </div>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </div>
+                <div className="space-y-2">
+                  <label
+                    htmlFor="social_media.instagram"
+                    className="text-sm font-medium"
+                  >
+                    Instagram
+                  </label>
+                  <Input
+                    id="social_media.instagram"
+                    name="social_media.instagram"
+                    value={(formData.social_media as any)?.instagram || ""}
+                    onChange={handleInputChange}
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setIsAddEditDialogOpen(false);
+                    resetForm();
+                  }}
+                >
+                  Cancelar
+                </Button>
+                <Button type="submit">
+                  {selectedStore ? "Salvar" : "Adicionar"}
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
 
-        <div className="mb-6">
+      <div className="mb-6">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
           <Input
-            type="search"
-            placeholder="Buscar lojas..."
+            className="pl-10"
+            placeholder="Pesquisar lojas..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
+      </div>
 
-        {isLoading ? (
-          <div className="flex justify-center items-center h-64">
-            <Loader2 className="w-8 h-8 animate-spin" />
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {stores?.map((store) => (
-              <Card key={store.id}>
-                <CardContent className="p-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h3 className="text-lg font-semibold">{store.name}</h3>
-                      {store.owner_name && (
-                        <p className="text-sm text-gray-500">{store.owner_name}</p>
-                      )}
-                    </div>
-                    <div className="flex gap-2">
+      {isLoading ? (
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      ) : (
+        <div className="bg-white rounded-lg shadow">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Nome
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Endereço
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Proprietário
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Telefone
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Ações
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredStores?.map((store) => (
+                  <tr key={store.id} className="border-b hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">{store.name}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {store.address}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {store.owner_name || "-"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {store.phone || "-"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
                       <Button
-                        size="icon"
                         variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditClick(store)}
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => {
-                          setCurrentStore(store);
-                          setIsDialogOpen(true);
+                          setSelectedStore(store);
+                          setIsDeleteDialogOpen(true);
                         }}
                       >
-                        <Pencil className="w-4 h-4" />
+                        <Trash className="w-4 h-4" />
                       </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => handleDelete(store)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                  <p className="text-sm text-gray-600 mb-2">{store.address}</p>
-                  {store.description && (
-                    <p className="text-sm text-gray-500 line-clamp-2 mb-2">
-                      {store.description}
-                    </p>
-                  )}
-                  {store.opening_hours && (
-                    <p className="text-sm text-gray-500">
-                      Horário: {store.opening_hours}
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-            {!isLoading && (!stores || stores.length === 0) && (
-              <p className="text-gray-500 col-span-full text-center py-8">
-                Nenhuma loja encontrada.
-              </p>
-            )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        )}
-      </main>
-      <Footer />
+        </div>
+      )}
+
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir esta loja? Esta ação não pode ser
+              desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setIsDeleteDialogOpen(false)}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
