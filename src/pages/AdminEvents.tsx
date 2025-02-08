@@ -34,7 +34,9 @@ const AdminEvents = () => {
     social_media: null,
     website: null,
     whatsapp: null,
-    category_id: null
+    category_id: null,
+    button_color: null,
+    button_secondary_color: null
   });
 
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
@@ -277,6 +279,47 @@ const AdminEvents = () => {
               </p>
             </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="button_color">Cor do Botão</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="button_color"
+                    type="color"
+                    value={newEvent.button_color || "#000000"}
+                    onChange={(e) => setNewEvent({ ...newEvent, button_color: e.target.value })}
+                    className="w-16"
+                  />
+                  <Input
+                    value={newEvent.button_color || "#000000"}
+                    onChange={(e) => setNewEvent({ ...newEvent, button_color: e.target.value })}
+                    placeholder="#000000"
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <Label htmlFor="button_secondary_color">Cor Secundária do Botão (opcional)</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="button_secondary_color"
+                    type="color"
+                    value={newEvent.button_secondary_color || "#000000"}
+                    onChange={(e) => setNewEvent({ ...newEvent, button_secondary_color: e.target.value })}
+                    className="w-16"
+                  />
+                  <Input
+                    value={newEvent.button_secondary_color || "#000000"}
+                    onChange={(e) => setNewEvent({ ...newEvent, button_secondary_color: e.target.value })}
+                    placeholder="#000000"
+                  />
+                </div>
+                <p className="text-sm text-gray-500 mt-1">
+                  Se definida, criará um efeito gradiente com a cor principal
+                </p>
+              </div>
+            </div>
+
             <Button onClick={handleEventSubmit}>Adicionar Evento</Button>
           </div>
         </div>
@@ -380,6 +423,47 @@ const AdminEvents = () => {
               <p className="text-sm text-gray-500 mt-1">
                 Adicione uma URL por linha para incluir múltiplas imagens
               </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-button_color">Cor do Botão</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="edit-button_color"
+                    type="color"
+                    value={editingEvent.button_color || "#000000"}
+                    onChange={(e) => setEditingEvent({ ...editingEvent, button_color: e.target.value })}
+                    className="w-16"
+                  />
+                  <Input
+                    value={editingEvent.button_color || "#000000"}
+                    onChange={(e) => setEditingEvent({ ...editingEvent, button_color: e.target.value })}
+                    placeholder="#000000"
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <Label htmlFor="edit-button_secondary_color">Cor Secundária do Botão (opcional)</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="edit-button_secondary_color"
+                    type="color"
+                    value={editingEvent.button_secondary_color || "#000000"}
+                    onChange={(e) => setEditingEvent({ ...editingEvent, button_secondary_color: e.target.value })}
+                    className="w-16"
+                  />
+                  <Input
+                    value={editingEvent.button_secondary_color || "#000000"}
+                    onChange={(e) => setEditingEvent({ ...editingEvent, button_secondary_color: e.target.value })}
+                    placeholder="#000000"
+                  />
+                </div>
+                <p className="text-sm text-gray-500 mt-1">
+                  Se definida, criará um efeito gradiente com a cor principal
+                </p>
+              </div>
             </div>
 
             <div className="flex gap-2">
