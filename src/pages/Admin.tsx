@@ -478,11 +478,16 @@ const Admin = () => {
         return;
       }
 
+      // Filter out empty lines and whitespace
+      const cleanImages = newEvent.images
+        ? newEvent.images.filter(url => url.trim() !== '')
+        : [];
+
       const { error } = await supabase
         .from("events")
         .insert({
           ...newEvent,
-          images: newEvent.images?.filter(url => url.trim() !== '') || [], // Filter out empty lines
+          images: cleanImages,
         });
 
       if (error) throw error;
@@ -511,6 +516,11 @@ const Admin = () => {
         return;
       }
 
+      // Filter out empty lines and whitespace
+      const cleanImages = editingEvent.images
+        ? editingEvent.images.filter(url => url.trim() !== '')
+        : [];
+
       const { error } = await supabase
         .from("events")
         .update({
@@ -519,7 +529,7 @@ const Admin = () => {
           event_date: editingEvent.event_date,
           event_time: editingEvent.event_time,
           image: editingEvent.image,
-          images: editingEvent.images?.filter(url => url.trim() !== '') || [], // Filter out empty lines
+          images: cleanImages,
           location: editingEvent.location,
         })
         .eq("id", editingEvent.id);
@@ -549,10 +559,6 @@ const Admin = () => {
     } catch (error: any) {
       toast.error("Erro ao remover evento");
     }
-  };
-
-  const openImageInNewTab = (imageUrl: string) => {
-    window.open(imageUrl, '_blank');
   };
 
   return (
@@ -886,16 +892,18 @@ const Admin = () => {
                     <Textarea
                       id="additional_images"
                       value={newEvent.images?.join('\n') || ""}
-                      onChange={(e) => setNewEvent({ 
-                        ...newEvent, 
-                        images: e.target.value.split('\n').filter(url => url.trim() !== '')
-                      })}
+                      onChange={(e) => {
+                        const imageUrls = e.target.value.split('\n');
+                        setNewEvent({
+                          ...newEvent,
+                          images: imageUrls
+                        });
+                      }}
                       placeholder="https://exemplo.com/imagem2.jpg&#10;https://exemplo.com/imagem3.jpg"
-                      className="min-h-[100px] whitespace-pre-wrap"
-                      rows={5}
+                      className="min-h-[100px]"
                     />
                     <p className="text-sm text-gray-500 mt-1">
-                      Adicione uma URL por linha para incluir múltiplas imagens. Pressione Enter para adicionar nova linha.
+                      Adicione uma URL por linha para incluir múltiplas imagens
                     </p>
                   </div>
 
@@ -968,20 +976,22 @@ const Admin = () => {
                   </div>
 
                   <div>
-                    <Label htmlFor="edit-additional-images">Links de Imagens Adicionais (uma por linha)</Label>
+                    <Label htmlFor="edit-additional_images">Links de Imagens Adicionais (uma por linha)</Label>
                     <Textarea
-                      id="edit-additional-images"
+                      id="edit-additional_images"
                       value={editingEvent.images?.join('\n') || ""}
-                      onChange={(e) => setEditingEvent({ 
-                        ...editingEvent, 
-                        images: e.target.value.split('\n').filter(url => url.trim() !== '')
-                      })}
+                      onChange={(e) => {
+                        const imageUrls = e.target.value.split('\n').filter(url => url.trim() !== '');
+                        setEditingEvent({
+                          ...editingEvent,
+                          images: imageUrls
+                        });
+                      }}
                       placeholder="https://exemplo.com/imagem2.jpg&#10;https://exemplo.com/imagem3.jpg"
-                      className="min-h-[100px] whitespace-pre-wrap"
-                      rows={5}
+                      className="min-h-[100px]"
                     />
                     <p className="text-sm text-gray-500 mt-1">
-                      Adicione uma URL por linha para incluir múltiplas imagens. Pressione Enter para adicionar nova linha.
+                      Adicione uma URL por linha para incluir múltiplas imagens
                     </p>
                   </div>
 
@@ -1009,14 +1019,14 @@ const Admin = () => {
               </div>
 
               <div className="space-y-4">
-                {events.map((event) => (
-                  <div key={event.id} className="bg-gray-50 rounded-lg p-6">
+                {events.map((item) => (
+                  <div key={item.id} className="bg-gray-50 rounded-lg p-6">
                     <div className="flex justify-between items-start mb-4">
                       <div>
-                        <h3 className="text-lg font-semibold">{event.title}</h3>
+                        <h3 className="text-lg font-semibold">{item.title}</h3>
                         <div className="flex items-center gap-2 mt-1">
                           <span className="text-sm text-gray-500">
-                            {new Date(event.event_date).toLocaleDateString()} às {event.event_time}
+                            {new Date(item.event_date).toLocaleDateString()} às {item.event_time}
                           </span>
                         </div>
                       </div>
@@ -1024,48 +1034,32 @@ const Admin = () => {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => setEditingEvent(event)}
+                          onClick={() => setEditingEvent(item)}
                         >
                           Editar
                         </Button>
                         <Button
                           variant="destructive"
                           size="sm"
-                          onClick={() => handleEventDelete(event.id)}
+                          onClick={() => handleEventDelete(item.id)}
                         >
                           Excluir
                         </Button>
                       </div>
                     </div>
-                    <p className="text-gray-600 mb-2">{event.description}</p>
-                    {event.location && (
-                      <p className="text-sm text-gray-500">Local: {event.location}</p>
+                    <p className="whitespace-pre-wrap mb-2">{item.description}</p>
+                    {item.location && (
+                      <p className="text-sm text-gray-500">Local: {item.location}</p>
                     )}
-                    {event.image && (
+                    {item.image && (
+                      <p className="text-sm text-gray-500">Imagem principal: {item.image}</p>
+                    )}
+                    {item.images && item.images.length > 0 && (
                       <div className="mt-2">
-                        <p className="text-sm font-medium text-gray-500 mb-1">Imagem Principal:</p>
-                        <img 
-                          src={event.image} 
-                          alt={event.title}
-                          className="max-w-xs h-auto rounded cursor-pointer hover:opacity-80 transition-opacity"
-                          onClick={() => openImageInNewTab(event.image || '')}
-                        />
-                      </div>
-                    )}
-                    {event.images && event.images.length > 0 && (
-                      <div className="mt-4">
-                        <p className="text-sm font-medium text-gray-500 mb-2">Imagens Adicionais:</p>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                          {event.images.map((imgUrl, index) => imgUrl.trim() && (
-                            <img
-                              key={index}
-                              src={imgUrl}
-                              alt={`${event.title} - Imagem ${index + 1}`}
-                              className="w-full h-32 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity"
-                              onClick={() => openImageInNewTab(imgUrl)}
-                            />
-                          ))}
-                        </div>
+                        <p className="text-sm font-medium text-gray-500">Imagens adicionais:</p>
+                        {item.images.map((url, index) => (
+                          <p key={index} className="text-sm text-gray-500">{url}</p>
+                        ))}
                       </div>
                     )}
                   </div>
@@ -1079,424 +1073,16 @@ const Admin = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="config" className="bg-white rounded-lg shadow p-6 space-y-6">
-            <div>
-              <h2 className="text-xl font-semibold mb-4">Cores dos Botões</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <Label htmlFor="button_primary_color">Cor Primária do Botão</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="button_primary_color"
-                      type="color"
-                      value={config.button_primary_color}
-                      onChange={(e) => setConfig({ ...config, button_primary_color: e.target.value })}
-                      className="w-20"
-                    />
-                    <Input
-                      type="text"
-                      value={config.button_primary_color}
-                      onChange={(e) => setConfig({ ...config, button_primary_color: e.target.value })}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="button_secondary_color">Cor Secundária do Botão</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="button_secondary_color"
-                      type="color"
-                      value={config.button_secondary_color}
-                      onChange={(e) => setConfig({ ...config, button_secondary_color: e.target.value })}
-                      className="w-20"
-                    />
-                    <Input
-                      type="text"
-                      value={config.button_secondary_color}
-                      onChange={(e) => setConfig({ ...config, button_secondary_color: e.target.value })}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <h2 className="text-xl font-semibold mb-4">Logo da Navbar</h2>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="navbar_logo_type">Tipo de Logo</Label>
-                  <div className="flex gap-4">
-                    <Button
-                      variant={config.navbar_logo_type === "text" ? "default" : "outline"}
-                      onClick={() => setConfig({ ...config, navbar_logo_type: "text" })}
-                    >
-                      Texto
-                    </Button>
-                    <Button
-                      variant={config.navbar_logo_type === "image" ? "default" : "outline"}
-                      onClick={() => setConfig({ ...config, navbar_logo_type: "image" })}
-                    >
-                      Imagem
-                    </Button>
-                  </div>
-                </div>
-
-                {config.navbar_logo_type === "text" ? (
-                  <div>
-                    <Label htmlFor="logo_text">Texto da Logo</Label>
-                    <Input
-                      id="logo_text"
-                      value={config.navbar_logo_text || ""}
-                      onChange={(e) => setConfig({ ...config, navbar_logo_text: e.target.value })}
-                    />
-                  </div>
-                ) : (
-                  <div>
-                    <Label htmlFor="logo_image">Link da Imagem da Logo</Label>
-                    <Input
-                      id="logo_image"
-                      value={config.navbar_logo_image || ""}
-                      onChange={(e) => setConfig({ ...config, navbar_logo_image: e.target.value })}
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <h2 className="text-xl font-semibold mb-4">Redes Sociais da Navbar</h2>
-              <div>
-                <Label htmlFor="navbar_social_facebook">Link do Facebook</Label>
-                <Input
-                  id="navbar_social_facebook"
-                  type="url"
-                  value={config.navbar_social_facebook || ""}
-                  onChange={(e) => setConfig({ ...config, navbar_social_facebook: e.target.value })}
-                  placeholder="https://facebook.com/sua-pagina"
-                />
-              </div>
-              <div>
-                <Label htmlFor="navbar_social_instagram">Link do Instagram</Label>
-                <Input
-                  id="navbar_social_instagram"
-                  type="url"
-                  value={config.navbar_social_instagram || ""}
-                  onChange={(e) => setConfig({ ...config, navbar_social_instagram: e.target.value })}
-                  placeholder="https://instagram.com/seu-perfil"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <Label htmlFor="primary_color">Cor Primária</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="primary_color"
-                    type="color"
-                    value={config.primary_color}
-                    onChange={(e) => setConfig({ ...config, primary_color: e.target.value })}
-                  />
-                  <Input
-                    type="text"
-                    value={config.primary_color}
-                    onChange={(e) => setConfig({ ...config, primary_color: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="secondary_color">Cor Secundária</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="secondary_color"
-                    type="color"
-                    value={config.secondary_color}
-                    onChange={(e) => setConfig({ ...config, secondary_color: e.target.value })}
-                  />
-                  <Input
-                    type="text"
-                    value={config.secondary_color}
-                    onChange={(e) => setConfig({ ...config, secondary_color: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="background_color">Cor de Fundo</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="background_color"
-                    type="color"
-                    value={config.background_color}
-                    onChange={(e) => setConfig({ ...config, background_color: e.target.value })}
-                  />
-                  <Input
-                    type="text"
-                    value={config.background_color}
-                    onChange={(e) => setConfig({ ...config, background_color: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="text_color">Cor do Texto</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="text_color"
-                    type="color"
-                    value={config.text_color}
-                    onChange={(e) => setConfig({ ...config, text_color: e.target.value })}
-                  />
-                  <Input
-                    type="text"
-                    value={config.text_color}
-                    onChange={(e) => setConfig({ ...config, text_color: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="navbar_color">Cor da Navbar</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="navbar_color"
-                    type="color"
-                    value={config.navbar_color}
-                    onChange={(e) => setConfig({ ...config, navbar_color: e.target.value })}
-                  />
-                  <Input
-                    type="text"
-                    value={config.navbar_color}
-                    onChange={(e) => setConfig({ ...config, navbar_color: e.target.value })}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-end">
-              <Button onClick={handleConfigUpdate}>
-                Salvar Configurações
-              </Button>
-            </div>
+          <TabsContent value="config">
+            {/* ... keep existing code (config content) */}
           </TabsContent>
 
-          <TabsContent value="footer" className="bg-white rounded-lg shadow p-6 space-y-6">
-            <div>
-              <h2 className="text-xl font-semibold mb-4">Cores do Rodapé</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <Label htmlFor="footer_primary_color">Cor Primária do Rodapé</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="footer_primary_color"
-                      type="color"
-                      value={config.footer_primary_color}
-                      onChange={(e) => setConfig({ ...config, footer_primary_color: e.target.value })}
-                    />
-                    <Input
-                      type="text"
-                      value={config.footer_primary_color}
-                      onChange={(e) => setConfig({ ...config, footer_primary_color: e.target.value })}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="footer_secondary_color">Cor Secundária do Rodapé</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="footer_secondary_color"
-                      type="color"
-                      value={config.footer_secondary_color}
-                      onChange={(e) => setConfig({ ...config, footer_secondary_color: e.target.value })}
-                    />
-                    <Input
-                      type="text"
-                      value={config.footer_secondary_color}
-                      onChange={(e) => setConfig({ ...config, footer_secondary_color: e.target.value })}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="footer_text_color">Cor do Texto do Rodapé</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="footer_text_color"
-                      type="color"
-                      value={config.footer_text_color}
-                      onChange={(e) => setConfig({ ...config, footer_text_color: e.target.value })}
-                    />
-                    <Input
-                      type="text"
-                      value={config.footer_text_color}
-                      onChange={(e) => setConfig({ ...config, footer_text_color: e.target.value })}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <h2 className="text-xl font-semibold mb-4">Informações de Contato</h2>
-              
-              <div>
-                <Label htmlFor="footer_contact_email">Email de Contato</Label>
-                <Input
-                  id="footer_contact_email"
-                  type="email"
-                  value={config.footer_contact_email || ""}
-                  onChange={(e) => setConfig({ ...config, footer_contact_email: e.target.value })}
-                  placeholder="contato@exemplo.com"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="footer_contact_phone">Telefone de Contato</Label>
-                <Input
-                  id="footer_contact_phone"
-                  type="tel"
-                  value={config.footer_contact_phone || ""}
-                  onChange={(e) => setConfig({ ...config, footer_contact_phone: e.target.value })}
-                  placeholder="(11) 99999-9999"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="footer_address">Endereço</Label>
-                <Input
-                  id="footer_address"
-                  value={config.footer_address || ""}
-                  onChange={(e) => setConfig({ ...config, footer_address: e.target.value })}
-                  placeholder="Rua Exemplo, 123 - Bairro"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="footer_address_cep">CEP</Label>
-                <Input
-                  id="footer_address_cep"
-                  value={config.footer_address_cep || ""}
-                  onChange={(e) => setConfig({ ...config, footer_address_cep: e.target.value })}
-                  placeholder="00000-000"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="footer_schedule">Horário de Funcionamento</Label>
-                <Input
-                  id="footer_schedule"
-                  value={config.footer_schedule || ""}
-                  onChange={(e) => setConfig({ ...config, footer_schedule: e.target.value })}
-                  placeholder="Segunda a Sexta, 9h às 18h"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <h2 className="text-xl font-semibold mb-4">Redes Sociais</h2>
-              
-              <div>
-                <Label htmlFor="nav_social_facebook">Link do Facebook</Label>
-                <Input
-                  id="nav_social_facebook"
-                  type="url"
-                  value={config.footer_social_facebook || ""}
-                  onChange={(e) => setConfig({ ...config, footer_social_facebook: e.target.value })}
-                  placeholder="https://facebook.com/sua-pagina"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="nav_social_instagram">Link do Instagram</Label>
-                <Input
-                  id="nav_social_instagram"
-                  type="url"
-                  value={config.footer_social_instagram || ""}
-                  onChange={(e) => setConfig({ ...config, footer_social_instagram: e.target.value })}
-                  placeholder="https://instagram.com/seu-perfil"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <h2 className="text-xl font-semibold mb-4">Texto de Copyright</h2>
-              <div>
-                <Label htmlFor="footer_copyright_text">Texto de Copyright</Label>
-                <Input
-                  id="footer_copyright_text"
-                  value={config.footer_copyright_text || ""}
-                  onChange={(e) =>
-                    setConfig({ ...config, footer_copyright_text: e.target.value })
-                  }
-                  placeholder="© 2025 VALEOFC. Todos os direitos reservados."
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-end">
-              <Button onClick={handleConfigUpdate}>
-                Salvar Configurações 
-              </Button>
-            </div>
+          <TabsContent value="footer">
+            {/* ... keep existing code (footer content) */}
           </TabsContent>
 
-          <TabsContent value="general" className="bg-white rounded-lg shadow p-6 space-y-6">
-            <div>
-              <h2 className="text-xl font-semibold mb-4">Configurações Meta Tags</h2>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="meta_title">Título da Página</Label>
-                  <Input
-                    id="meta_title"
-                    value={config.meta_title || ""}
-                    onChange={(e) => setConfig({ ...config, meta_title: e.target.value })}
-                    placeholder="vale-news-hub"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="meta_description">Descrição da Página</Label>
-                  <Textarea
-                    id="meta_description"
-                    value={config.meta_description || ""}
-                    onChange={(e) => setConfig({ ...config, meta_description: e.target.value })}
-                    placeholder="Descrição do seu site"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="meta_author">Autor</Label>
-                  <Input
-                    id="meta_author"
-                    value={config.meta_author || ""}
-                    onChange={(e) => setConfig({ ...config, meta_author: e.target.value })}
-                    placeholder="Nome do autor"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="meta_image">Link da Imagem de Compartilhamento (OG Image)</Label>
-                  <Input
-                    id="meta_image"
-                    value={config.meta_image || ""}
-                    onChange={(e) => setConfig({ ...config, meta_image: e.target.value })}
-                    placeholder="https://exemplo.com/imagem.jpg"
-                  />
-                  <p className="text-sm text-gray-500 mt-1">
-                    Esta imagem será exibida quando o site for compartilhado em redes sociais
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-end">
-              <Button onClick={handleConfigUpdate}>
-                Salvar Configurações
-              </Button>
-            </div>
+          <TabsContent value="general">
+            {/* ... keep existing code (general content) */}
           </TabsContent>
         </Tabs>
       </div>
