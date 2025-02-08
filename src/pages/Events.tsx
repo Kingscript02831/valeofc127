@@ -5,7 +5,9 @@ import { Search } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import SubNav from "@/components/SubNav";
 import Footer from "@/components/Footer";
+import EventCard from "@/components/EventCard";
 import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 
 interface Event {
@@ -15,12 +17,13 @@ interface Event {
   event_date: string;
   event_time: string;
   image?: string;
+  images?: string[];
   location?: string;
 }
 
 const Events = () => {
   const [searchTerm, setSearchTerm] = useState("");
-
+  
   useEffect(() => {
     document.title = "Eventos | Vale Notícias";
   }, []);
@@ -43,6 +46,24 @@ const Events = () => {
     },
   });
 
+  const LoadingSkeleton = () => (
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="overflow-hidden rounded-lg border bg-card">
+          <Skeleton className="h-48 w-full" />
+          <div className="p-6 space-y-4">
+            <Skeleton className="h-6 w-3/4" />
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-1/2" />
+              <Skeleton className="h-4 w-1/3" />
+            </div>
+            <Skeleton className="h-20 w-full" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -61,42 +82,28 @@ const Events = () => {
             />
           </div>
         </div>
-
+        
         {isLoading ? (
-          <div className="flex justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <LoadingSkeleton />
+        ) : events && events.length > 0 ? (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {events.map((event) => (
+              <EventCard
+                key={event.id}
+                title={event.title}
+                description={event.description}
+                eventDate={event.event_date}
+                eventTime={event.event_time}
+                image={event.image}
+                images={event.images}
+                location={event.location}
+              />
+            ))}
           </div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {events?.map((event) => (
-              <div
-                key={event.id}
-                className="bg-white rounded-lg shadow-md overflow-hidden"
-              >
-                {event.image && (
-                  <img
-                    src={event.image}
-                    alt={event.title}
-                    className="w-full h-48 object-cover"
-                  />
-                )}
-                <div className="p-4">
-                  <h3 className="text-xl font-semibold mb-2">{event.title}</h3>
-                  <p className="text-gray-600 mb-4">{event.description}</p>
-                  <div className="text-sm text-gray-500">
-                    <p>Data: {new Date(event.event_date).toLocaleDateString()}</p>
-                    <p>Horário: {event.event_time}</p>
-                    {event.location && <p>Local: {event.location}</p>}
-                  </div>
-                </div>
-              </div>
-            ))}
-            {!isLoading && (!events || events.length === 0) && (
-              <p className="text-gray-500 text-center col-span-full">
-                Nenhum evento encontrado.
-              </p>
-            )}
-          </div>
+          <p className="text-center text-gray-600">
+            Nenhum evento encontrado no momento.
+          </p>
         )}
       </main>
       <Footer />
