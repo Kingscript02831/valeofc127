@@ -46,6 +46,8 @@ export type Database = {
       }
       events: {
         Row: {
+          button_color: string | null
+          button_secondary_color: string | null
           category_id: string | null
           created_at: string
           description: string
@@ -65,6 +67,8 @@ export type Database = {
           whatsapp: string | null
         }
         Insert: {
+          button_color?: string | null
+          button_secondary_color?: string | null
           category_id?: string | null
           created_at?: string
           description: string
@@ -84,6 +88,8 @@ export type Database = {
           whatsapp?: string | null
         }
         Update: {
+          button_color?: string | null
+          button_secondary_color?: string | null
           category_id?: string | null
           created_at?: string
           description?: string

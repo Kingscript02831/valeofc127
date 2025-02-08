@@ -20,6 +20,8 @@ interface Event {
   images?: string[];
   location?: string;
   created_at: string;
+  button_color?: string;
+  button_secondary_color?: string;
 }
 
 const Events = () => {
@@ -99,6 +101,8 @@ const Events = () => {
                 images={event.images}
                 location={event.location}
                 createdAt={event.created_at}
+                buttonColor={event.button_color}
+                buttonSecondaryColor={event.button_secondary_color}
               />
             ))}
           </div>

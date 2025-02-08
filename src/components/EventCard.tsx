@@ -6,8 +6,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/integrations/supabase/client";
-import type { Database } from '@/integrations/supabase/types';
+import { supabase } from "../integrations/supabase/client";
+import type { Database } from '../integrations/supabase/types';
 
 type SiteConfig = Database['public']['Tables']['site_configuration']['Row'];
 
@@ -20,6 +20,8 @@ interface EventCardProps {
   images?: string[];
   location?: string;
   createdAt?: string;
+  buttonColor?: string;
+  buttonSecondaryColor?: string;
 }
 
 const EventCard = ({
@@ -31,6 +33,8 @@ const EventCard = ({
   images = [],
   location,
   createdAt,
+  buttonColor,
+  buttonSecondaryColor,
 }: EventCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -124,7 +128,16 @@ const EventCard = ({
     setIsImageFullscreen(!isImageFullscreen);
   };
 
-  const primaryColor = config?.primary_color || '#000000';
+  const primaryColor = buttonColor || config?.primary_color || '#000000';
+  
+  // Create button styles with gradient if both colors are provided
+  const buttonStyle = buttonColor ? {
+    background: buttonSecondaryColor 
+      ? `linear-gradient(to right, ${buttonColor}, ${buttonSecondaryColor})`
+      : buttonColor,
+    color: '#FFFFFF',
+    border: 'none'
+  } : undefined;
 
   return (
     <>
@@ -214,9 +227,12 @@ const EventCard = ({
 
           <Button
             variant="ghost"
-            className="mt-2 w-full flex items-center justify-center gap-1 text-sm hover:bg-gray-100"
+            className={cn(
+              "mt-2 w-full flex items-center justify-center gap-1 text-sm hover:bg-gray-100",
+              buttonColor && "text-white hover:text-white hover:opacity-90"
+            )}
             onClick={() => setIsExpanded(!isExpanded)}
-            style={{ color: primaryColor }}
+            style={buttonStyle}
           >
             {isExpanded ? (
               <>
