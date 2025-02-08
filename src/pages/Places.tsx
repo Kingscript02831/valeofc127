@@ -1,11 +1,10 @@
-
 import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import SubNav from "@/components/SubNav";
 import Footer from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { MapPin, Phone, Globe, Clock, User, DollarSign, WhatsappIcon, Facebook, Instagram } from "lucide-react";
+import { MapPin, Phone, Globe, Clock, User, DollarSign, MessageCircle, Facebook, Instagram } from "lucide-react";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -139,7 +138,7 @@ const Places = () => {
                             onClick={() => openWhatsApp(place.whatsapp!)}
                             className="flex items-center gap-2"
                           >
-                            <WhatsappIcon className="h-4 w-4" />
+                            <MessageCircle className="h-4 w-4" />
                             WhatsApp
                           </Button>
                         )}
