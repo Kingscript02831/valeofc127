@@ -50,22 +50,13 @@ const EventCard = ({
 
   useEffect(() => {
     const fetchConfig = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("site_configuration")
-          .select("*")
-          .maybeSingle();
-        
-        if (error) {
-          console.error('Error fetching site configuration:', error);
-          return;
-        }
-        
-        if (data) {
-          setConfig(data);
-        }
-      } catch (error) {
-        console.error('Error in fetchConfig:', error);
+      const { data } = await supabase
+        .from("site_configuration")
+        .select("*")
+        .single();
+      
+      if (data) {
+        setConfig(data);
       }
     };
 
@@ -146,8 +137,7 @@ const EventCard = ({
     setIsImageFullscreen(!isImageFullscreen);
   };
 
-  // Default colors if config is not loaded yet
-  const primaryColor = config?.primary_color || '#1A1F2C';
+  if (!config) return null;
 
   return (
     <>
@@ -188,33 +178,33 @@ const EventCard = ({
             ) : (
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-1 mb-1">
-                  <Timer className="h-3 w-3" style={{ color: primaryColor }} />
-                  <span className="text-[10px] font-medium" style={{ color: primaryColor }}>
+                  <Timer className="h-3 w-3" style={{ color: config.primary_color }} />
+                  <span className="text-[10px] font-medium" style={{ color: config.primary_color }}>
                     Tempo até o evento:
                   </span>
                 </div>
                 <div className="flex gap-1 justify-start">
                   <span 
                     className="text-white text-xs px-1.5 py-0.5 rounded"
-                    style={{ backgroundColor: primaryColor }}
+                    style={{ backgroundColor: config.primary_color }}
                   >
                     {countdown.days}d
                   </span>
                   <span 
                     className="text-white text-xs px-1.5 py-0.5 rounded"
-                    style={{ backgroundColor: primaryColor }}
+                    style={{ backgroundColor: config.primary_color }}
                   >
                     {String(countdown.hrs).padStart(2, '0')}h
                   </span>
                   <span 
                     className="text-white text-xs px-1.5 py-0.5 rounded"
-                    style={{ backgroundColor: primaryColor }}
+                    style={{ backgroundColor: config.primary_color }}
                   >
                     {String(countdown.mins).padStart(2, '0')}m
                   </span>
                   <span 
                     className="text-white text-xs px-1.5 py-0.5 rounded"
-                    style={{ backgroundColor: primaryColor }}
+                    style={{ backgroundColor: config.primary_color }}
                   >
                     {String(countdown.secs).padStart(2, '0')}s
                   </span>
@@ -236,13 +226,10 @@ const EventCard = ({
           </div>
 
           <Button
-            variant="outline"
-            className="mt-2 w-full flex items-center justify-center gap-1 text-sm hover:bg-transparent border"
+            variant="ghost"
+            className="mt-2 w-full flex items-center justify-center gap-1 text-sm"
             onClick={() => setIsExpanded(!isExpanded)}
-            style={{ 
-              borderColor: primaryColor,
-              color: primaryColor,
-            }}
+            style={{ color: config.primary_color }}
           >
             {isExpanded ? (
               <>
@@ -308,4 +295,3 @@ const EventCard = ({
 };
 
 export default EventCard;
-
