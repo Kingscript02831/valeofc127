@@ -489,7 +489,7 @@ const Admin = () => {
         .from("events")
         .insert({
           ...newEvent,
-          images: newEvent.images || [], // Garante que images seja sempre um array
+          images: newEvent.images || [], 
         });
 
       if (error) throw error;
@@ -508,7 +508,8 @@ const Admin = () => {
         phone: null,
         social_media: null,
         website: null,
-        whatsapp: null
+        whatsapp: null,
+        category_id: null
       });
       fetchEvents();
     } catch (error: any) {
@@ -532,7 +533,7 @@ const Admin = () => {
           event_date: editingEvent.event_date,
           event_time: editingEvent.event_time,
           image: editingEvent.image,
-          images: editingEvent.images || [], // Garante que images seja sempre um array
+          images: editingEvent.images || [], 
           location: editingEvent.location,
           maps_url: editingEvent.maps_url,
           owner_name: editingEvent.owner_name,
