@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Search } from "lucide-react";
@@ -33,7 +34,7 @@ const Events = () => {
       let query = supabase
         .from("events")
         .select("*")
-        .order("event_date", { ascending: false }); // Changed to descending order
+        .order("event_date", { ascending: false });
 
       if (searchTerm) {
         query = query.ilike("title", `%${searchTerm}%`);
