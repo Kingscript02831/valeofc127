@@ -46,6 +46,7 @@ export type Database = {
       }
       events: {
         Row: {
+          category_id: string | null
           created_at: string
           description: string
           event_date: string
@@ -64,6 +65,7 @@ export type Database = {
           whatsapp: string | null
         }
         Insert: {
+          category_id?: string | null
           created_at?: string
           description: string
           event_date: string
@@ -82,6 +84,7 @@ export type Database = {
           whatsapp?: string | null
         }
         Update: {
+          category_id?: string | null
           created_at?: string
           description?: string
           event_date?: string
@@ -99,7 +102,15 @@ export type Database = {
           website?: string | null
           whatsapp?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "events_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       news: {
         Row: {
@@ -164,6 +175,7 @@ export type Database = {
       places: {
         Row: {
           address: string
+          category_id: string | null
           created_at: string
           description: string | null
           entrance_fee: string | null
@@ -182,6 +194,7 @@ export type Database = {
         }
         Insert: {
           address: string
+          category_id?: string | null
           created_at?: string
           description?: string | null
           entrance_fee?: string | null
@@ -200,6 +213,7 @@ export type Database = {
         }
         Update: {
           address?: string
+          category_id?: string | null
           created_at?: string
           description?: string | null
           entrance_fee?: string | null
@@ -216,7 +230,15 @@ export type Database = {
           website?: string | null
           whatsapp?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "places_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       site_configuration: {
         Row: {

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import SubNav from "@/components/SubNav";
@@ -7,9 +8,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type { Database } from "@/integrations/supabase/types";
 
 type News = Database['public']['Tables']['news']['Row'];
+type Category = Database['public']['Tables']['categories']['Row'];
 interface InstagramMedia {
   url: string;
   type: 'post' | 'video';
@@ -17,19 +26,36 @@ interface InstagramMedia {
 
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+
+  // Fetch categories
+  const { data: categories = [] } = useQuery<Category[]>({
+    queryKey: ['categories'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .order('name');
+      if (error) throw error;
+      return data;
+    }
+  });
 
   const { data: news = [], error, isLoading } = useQuery<News[]>({
-    queryKey: ['news', searchTerm],
+    queryKey: ['news', searchTerm, selectedCategory],
     queryFn: async () => {
-      console.log('Fetching news with searchTerm:', searchTerm);
       try {
         let query = supabase
           .from('news')
-          .select('*')
+          .select('*, categories(name)')
           .order('created_at', { ascending: false });
 
         if (searchTerm) {
           query = query.ilike('title', `%${searchTerm}%`);
+        }
+
+        if (selectedCategory) {
+          query = query.eq('category_id', selectedCategory);
         }
 
         const { data, error } = await query;
@@ -60,16 +86,38 @@ const Index = () => {
         <div className="flex flex-col gap-8">
           <h1 className="text-3xl font-bold">Últimas Notícias</h1>
           
-          {/* Lupa de pesquisa abaixo do título */}
-          <div className="relative flex-1 max-w-sm mt-4">
-            <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 h-4 w-4" />
-            <Input
-              type="search"
-              placeholder="Buscar notícias..."
-              className="pl-8"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+          <div className="flex flex-col sm:flex-row gap-4">
+            {/* Lupa de pesquisa */}
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 h-4 w-4" />
+              <Input
+                type="search"
+                placeholder="Buscar notícias..."
+                className="pl-8"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+
+            {/* Category filter */}
+            <div className="w-full sm:w-48">
+              <Select
+                value={selectedCategory}
+                onValueChange={setSelectedCategory}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Todas as categorias</SelectItem>
+                  {categories.map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {isLoading ? (
@@ -90,6 +138,11 @@ const Index = () => {
                     image={item.image || undefined}
                     video={item.video || undefined}
                     instagramMedia={instagramMedia}
+                    category={item.categories ? {
+                      name: item.categories.name,
+                      slug: item.categories.slug
+                    } : undefined}
+                    buttonColor={item.button_color || undefined}
                   />
                 );
               })}
