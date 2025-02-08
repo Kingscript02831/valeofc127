@@ -103,19 +103,17 @@ const AdminEvents = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-white shadow">
-        <div className="container mx-auto px-4 py-6">
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-4xl mx-auto px-4">
+        <header className="bg-white rounded-lg shadow p-6 mb-8">
           <div className="flex justify-between items-center">
             <h1 className="text-3xl font-bold text-gray-900">Admin - Eventos</h1>
             <Button variant="outline" onClick={() => navigate("/admin")}>
               Voltar
             </Button>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <main className="container mx-auto px-4 py-8">
         <div className="bg-white rounded-lg shadow p-6 mb-8">
           <h2 className="text-xl font-semibold mb-4">Adicionar Novo Evento</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -214,7 +212,7 @@ const AdminEvents = () => {
             ))}
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 };
