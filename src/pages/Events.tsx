@@ -1,7 +1,6 @@
 
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { format } from "date-fns";
 import Navbar from "@/components/Navbar";
 import SubNav from "@/components/SubNav";
 import Footer from "@/components/Footer";
@@ -18,6 +17,15 @@ interface Event {
   image?: string;
   images?: string[];
   location?: string;
+  maps_url?: string;
+  owner_name?: string;
+  phone?: string;
+  whatsapp?: string;
+  website?: string;
+  social_media?: {
+    facebook?: string;
+    instagram?: string;
+  };
 }
 
 const Events = () => {
@@ -77,6 +85,12 @@ const Events = () => {
                 image={event.image}
                 images={event.images}
                 location={event.location}
+                mapsUrl={event.maps_url}
+                ownerName={event.owner_name}
+                phone={event.phone}
+                whatsapp={event.whatsapp}
+                website={event.website}
+                socialMedia={event.social_media}
               />
             ))}
           </div>
