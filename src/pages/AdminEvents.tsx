@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -190,14 +191,14 @@ const AdminEvents = () => {
             <div>
               <Label htmlFor="category">Categoria</Label>
               <Select
-                value={newEvent.category_id || ""}
-                onValueChange={(value) => setNewEvent({ ...newEvent, category_id: value })}
+                value={newEvent.category_id || "none"}
+                onValueChange={(value) => setNewEvent({ ...newEvent, category_id: value === "none" ? null : value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione uma categoria" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Sem categoria</SelectItem>
+                  <SelectItem value="none">Sem categoria</SelectItem>
                   {categories.map((category) => (
                     <SelectItem key={category.id} value={category.id}>
                       {category.name}
@@ -290,6 +291,26 @@ const AdminEvents = () => {
                 value={editingEvent.title}
                 onChange={(e) => setEditingEvent({ ...editingEvent, title: e.target.value })}
               />
+            </div>
+            
+            <div>
+              <Label htmlFor="edit-category">Categoria</Label>
+              <Select
+                value={editingEvent.category_id || "none"}
+                onValueChange={(value) => setEditingEvent({ ...editingEvent, category_id: value === "none" ? null : value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione uma categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Sem categoria</SelectItem>
+                  {categories.map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             
             <div>
