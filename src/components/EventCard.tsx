@@ -1,4 +1,3 @@
-
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Calendar, ChevronDown, ChevronUp, Clock, MapPin, ChevronLeft, ChevronRight, X, Timer } from "lucide-react";
@@ -65,20 +64,17 @@ const EventCard = ({
   useEffect(() => {
     const calculateTimeLeft = () => {
       try {
-        // Ensure we have a valid date and time
         if (!eventDate || !eventTime) {
           setCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0, isExpired: true });
           return;
         }
 
-        // Create a valid date object from the event date and time
         const [year, month, day] = eventDate.split('-').map(Number);
-        const [hours, minutes] = eventTime.split(':').map(Number);
+        const [eventHours, eventMinutes] = eventTime.split(':').map(Number);
         
-        const eventDateTime = new Date(year, month - 1, day, hours, minutes);
+        const eventDateTime = new Date(year, month - 1, day, eventHours, eventMinutes);
         const now = new Date();
 
-        // Check if the date is valid
         if (isNaN(eventDateTime.getTime())) {
           console.error('Invalid date:', { eventDate, eventTime });
           setCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0, isExpired: true });
