@@ -72,26 +72,32 @@ const EventCard = ({
           return;
         }
 
-        const [timeHours, timeMinutes] = eventTime.split(':').map(Number);
+        const [hours, minutes] = eventTime.split(':').map(Number);
         const targetDate = new Date(date);
-        targetDate.setHours(timeHours, timeMinutes, 0, 0);
+        targetDate.setHours(hours, minutes, 0, 0);
         
         const now = new Date();
-        now.setMilliseconds(0);
+        const difference = targetDate.getTime() - now.getTime();
 
         // Se o evento já passou
-        if (targetDate < now) {
+        if (difference <= 0) {
           setCountdown({ days: 0, hrs: 0, mins: 0, secs: 0, isExpired: true });
           return;
         }
 
-        const difference = targetDate.getTime() - now.getTime();
+        // Calculando os valores corretamente
         const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-        const hrs = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const mins = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-        const secs = Math.floor((difference % (1000 * 60)) / 1000);
+        const totalHours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const totalMinutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
 
-        setCountdown({ days, hrs, mins, secs, isExpired: false });
+        setCountdown({
+          days,
+          hrs: totalHours,
+          mins: totalMinutes,
+          secs: seconds,
+          isExpired: false
+        });
       } catch (error) {
         console.error('Error calculating countdown:', error);
         setCountdown({ days: 0, hrs: 0, mins: 0, secs: 0, isExpired: true });
@@ -276,4 +282,3 @@ const EventCard = ({
 };
 
 export default EventCard;
-
