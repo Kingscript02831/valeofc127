@@ -45,10 +45,10 @@ const GeneralTab = () => {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">Cor de Destaque</label>
+            <label className="text-sm font-medium">Cor Secundária</label>
             <Input
               type="color"
-              value={config?.accent_color || '#000000'}
+              value={config?.secondary_color || '#000000'}
               className="h-10"
             />
           </div>
