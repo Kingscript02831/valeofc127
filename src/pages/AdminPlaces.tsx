@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Edit, Trash, Plus, Search } from "lucide-react";
@@ -28,6 +27,11 @@ import {
 
 type Place = Database["public"]["Tables"]["places"]["Row"];
 
+interface FormData extends Partial<Place> {
+  name: string;
+  address: string;
+}
+
 const AdminPlaces = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -37,10 +41,10 @@ const AdminPlaces = () => {
   const [isAddEditDialogOpen, setIsAddEditDialogOpen] = useState(false);
 
   // Form state
-  const [formData, setFormData] = useState<Partial<Place>>({
+  const [formData, setFormData] = useState<FormData>({
     name: "",
-    description: "",
     address: "",
+    description: "",
     maps_url: "",
     opening_hours: "",
     entrance_fee: "",
@@ -97,8 +101,8 @@ const AdminPlaces = () => {
   const resetForm = () => {
     setFormData({
       name: "",
-      description: "",
       address: "",
+      description: "",
       maps_url: "",
       opening_hours: "",
       entrance_fee: "",
@@ -132,8 +136,17 @@ const AdminPlaces = () => {
           variant: "default",
         });
       } else {
-        // Add new place
-        const { error } = await supabase.from("places").insert([formData]);
+        // Add new place - ensure required fields are present
+        if (!formData.name || !formData.address) {
+          toast({
+            title: "Erro ao salvar o local",
+            description: "Nome e endereço são obrigatórios.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        const { error } = await supabase.from("places").insert(formData);
 
         if (error) throw error;
         toast({
