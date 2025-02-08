@@ -11,8 +11,7 @@ import Stores from "./pages/Stores";
 import Admin from "./pages/Admin";
 import AdminPlaces from "./pages/AdminPlaces";
 import AdminEvents from "./pages/AdminEvents";
-import AdminNews from "./pages/AdminNews";
-import AdminStores from "./pages/AdminStores";
+import AdminEvents from "./pages/AdminNews";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,7 +31,6 @@ const App = () => (
           <Route path="/admin/lugares" element={<AdminPlaces />} />
           <Route path="/admin/eventos" element={<AdminEvents />} />
           <Route path="/admin/noticias" element={<AdminNews />} />
-          <Route path="/admin/lojas" element={<AdminStores />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
@@ -41,4 +39,3 @@ const App = () => (
 );
 
 export default App;
-
