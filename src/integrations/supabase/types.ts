@@ -365,6 +365,7 @@ export type Database = {
           category_id: string | null
           created_at: string
           description: string | null
+          entrance_fee: string | null
           id: string
           image: string | null
           images: string[] | null
@@ -383,6 +384,7 @@ export type Database = {
           category_id?: string | null
           created_at?: string
           description?: string | null
+          entrance_fee?: string | null
           id?: string
           image?: string | null
           images?: string[] | null
@@ -401,6 +403,7 @@ export type Database = {
           category_id?: string | null
           created_at?: string
           description?: string | null
+          entrance_fee?: string | null
           id?: string
           image?: string | null
           images?: string[] | null

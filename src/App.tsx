@@ -11,7 +11,7 @@ import Stores from "./pages/Stores";
 import Admin from "./pages/Admin";
 import AdminPlaces from "./pages/AdminPlaces";
 import AdminEvents from "./pages/AdminEvents";
-import AdminEvents from "./pages/AdminNews";
+import AdminNews from "./pages/AdminNews";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
