@@ -982,3 +982,566 @@ const Admin = () => {
                         onChange={(e) => setNewEvent({ ...newEvent, event_date: e.target.value })}
                       />
                     </div>
+                    <div>
+                      <Label htmlFor="event_time">Horário do Evento</Label>
+                      <Input
+                        id="event_time"
+                        type="time"
+                        value={newEvent.event_time}
+                        onChange={(e) => setNewEvent({ ...newEvent, event_time: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="location">Local</Label>
+                    <Input
+                      id="location"
+                      value={newEvent.location}
+                      onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
+                      placeholder="Nome ou endereço do local"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="image">Link da Imagem Principal</Label>
+                    <Input
+                      id="image"
+                      value={newEvent.image}
+                      onChange={(e) => setNewEvent({ ...newEvent, image: e.target.value })}
+                      placeholder="https://exemplo.com/imagem.jpg"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="images">Links de Imagens Adicionais (um por linha)</Label>
+                    <Textarea
+                      id="images"
+                      value={Array.isArray(newEvent.images) ? newEvent.images.join('\n') : ''}
+                      onChange={(e) => setNewEvent({
+                        ...newEvent,
+                        images: e.target.value.split('\n').filter(url => url.trim() !== '')
+                      })}
+                      placeholder="https://exemplo.com/imagem1.jpg&#10;https://exemplo.com/imagem2.jpg"
+                      className="min-h-[100px]"
+                    />
+                  </div>
+
+                  <Button onClick={handleEventSubmit}>Adicionar Evento</Button>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-white rounded-lg shadow p-6">
+                <h2 className="text-xl font-semibold mb-4">Editar Evento</h2>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="edit-title">Título</Label>
+                    <Input
+                      id="edit-title"
+                      value={editingEvent.title}
+                      onChange={(e) => setEditingEvent({ ...editingEvent, title: e.target.value })}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="edit-description">Descrição</Label>
+                    <Textarea
+                      id="edit-description"
+                      value={editingEvent.description}
+                      onChange={(e) => setEditingEvent({ ...editingEvent, description: e.target.value })}
+                      className="min-h-[100px]"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="edit-event_date">Data do Evento</Label>
+                      <Input
+                        id="edit-event_date"
+                        type="date"
+                        value={editingEvent.event_date}
+                        onChange={(e) => setEditingEvent({ ...editingEvent, event_date: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-event_time">Horário do Evento</Label>
+                      <Input
+                        id="edit-event_time"
+                        type="time"
+                        value={editingEvent.event_time}
+                        onChange={(e) => setEditingEvent({ ...editingEvent, event_time: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="edit-location">Local</Label>
+                    <Input
+                      id="edit-location"
+                      value={editingEvent.location}
+                      onChange={(e) => setEditingEvent({ ...editingEvent, location: e.target.value })}
+                      placeholder="Nome ou endereço do local"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="edit-image">Link da Imagem Principal</Label>
+                    <Input
+                      id="edit-image"
+                      value={editingEvent.image}
+                      onChange={(e) => setEditingEvent({ ...editingEvent, image: e.target.value })}
+                      placeholder="https://exemplo.com/imagem.jpg"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="edit-images">Links de Imagens Adicionais (um por linha)</Label>
+                    <Textarea
+                      id="edit-images"
+                      value={Array.isArray(editingEvent.images) ? editingEvent.images.join('\n') : ''}
+                      onChange={(e) => setEditingEvent({
+                        ...editingEvent,
+                        images: e.target.value.split('\n').filter(url => url.trim() !== '')
+                      })}
+                      placeholder="https://exemplo.com/imagem1.jpg&#10;https://exemplo.com/imagem2.jpg"
+                      className="min-h-[100px]"
+                    />
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button onClick={handleEventEdit}>Salvar Alterações</Button>
+                    <Button variant="outline" onClick={() => setEditingEvent(null)}>Cancelar</Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="flex items-center gap-4 mb-6">
+                <h2 className="text-xl font-semibold">Lista de Eventos</h2>
+                <div className="relative flex-1 max-w-sm">
+                  <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 h-4 w-4" />
+                  <Input
+                    type="search"
+                    placeholder="Buscar eventos..."
+                    className="pl-8"
+                    value={searchEventTerm}
+                    onChange={(e) => setSearchEventTerm(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {events.map((event) => (
+                  <div key={event.id} className="bg-gray-50 rounded-lg p-6">
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h3 className="text-lg font-semibold">{event.title}</h3>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-sm text-gray-500">
+                            {new Date(event.event_date).toLocaleDateString()} às {event.event_time}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setEditingEvent(event)}
+                        >
+                          Editar
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleEventDelete(event.id)}
+                        >
+                          Excluir
+                        </Button>
+                      </div>
+                    </div>
+                    <p className="whitespace-pre-wrap mb-2">{event.description}</p>
+                    {event.location && <p className="text-sm text-gray-500">Local: {event.location}</p>}
+                    {event.image && <p className="text-sm text-gray-500">Imagem: {event.image}</p>}
+                    {Array.isArray(event.images) && event.images.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-sm text-gray-500">Imagens adicionais:</p>
+                        {event.images.map((img, index) => (
+                          <p key={index} className="text-sm text-gray-500">{img}</p>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+                {events.length === 0 && (
+                  <p className="text-gray-500 text-center py-8">
+                    Nenhum evento encontrado.
+                  </p>
+                )}
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="places" className="space-y-6">
+            {!editingPlace ? (
+              <div className="bg-white rounded-lg shadow p-6">
+                <h2 className="text-xl font-semibold mb-4">Adicionar Lugar</h2>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="name">Nome</Label>
+                    <Input
+                      id="name"
+                      value={newPlace.name}
+                      onChange={(e) => setNewPlace({ ...newPlace, name: e.target.value })}
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="description">Descrição</Label>
+                    <Textarea
+                      id="description"
+                      value={newPlace.description}
+                      onChange={(e) => setNewPlace({ ...newPlace, description: e.target.value })}
+                      className="min-h-[100px]"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="address">Endereço</Label>
+                    <Input
+                      id="address"
+                      value={newPlace.address}
+                      onChange={(e) => setNewPlace({ ...newPlace, address: e.target.value })}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="owner_name">Nome do Proprietário</Label>
+                    <Input
+                      id="owner_name"
+                      value={newPlace.owner_name}
+                      onChange={(e) => setNewPlace({ ...newPlace, owner_name: e.target.value })}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="opening_hours">Horário de Funcionamento</Label>
+                    <Input
+                      id="opening_hours"
+                      value={newPlace.opening_hours}
+                      onChange={(e) => setNewPlace({ ...newPlace, opening_hours: e.target.value })}
+                      placeholder="Ex: Segunda a Sexta, 9h às 18h"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="entrance_fee">Valor da Entrada</Label>
+                    <Input
+                      id="entrance_fee"
+                      value={newPlace.entrance_fee}
+                      onChange={(e) => setNewPlace({ ...newPlace, entrance_fee: e.target.value })}
+                      placeholder="Ex: R$ 20,00 ou Gratuito"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="phone">Telefone</Label>
+                      <Input
+                        id="phone"
+                        value={newPlace.phone}
+                        onChange={(e) => setNewPlace({ ...newPlace, phone: e.target.value })}
+                        placeholder="(00) 0000-0000"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="whatsapp">WhatsApp</Label>
+                      <Input
+                        id="whatsapp"
+                        value={newPlace.whatsapp}
+                        onChange={(e) => setNewPlace({ ...newPlace, whatsapp: e.target.value })}
+                        placeholder="(00) 00000-0000"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="website">Website</Label>
+                      <Input
+                        id="website"
+                        value={newPlace.website}
+                        onChange={(e) => setNewPlace({ ...newPlace, website: e.target.value })}
+                        placeholder="https://exemplo.com"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="maps_url">Link do Google Maps</Label>
+                      <Input
+                        id="maps_url"
+                        value={newPlace.maps_url}
+                        onChange={(e) => setNewPlace({ ...newPlace, maps_url: e.target.value })}
+                        placeholder="https://maps.google.com/..."
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="image">Link da Imagem Principal</Label>
+                    <Input
+                      id="image"
+                      value={newPlace.image}
+                      onChange={(e) => setNewPlace({ ...newPlace, image: e.target.value })}
+                      placeholder="https://exemplo.com/imagem.jpg"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="images">Links de Imagens Adicionais (um por linha)</Label>
+                    <Textarea
+                      id="images"
+                      value={Array.isArray(newPlace.images) ? newPlace.images.join('\n') : ''}
+                      onChange={(e) => setNewPlace({
+                        ...newPlace,
+                        images: e.target.value.split('\n').filter(url => url.trim() !== '')
+                      })}
+                      placeholder="https://exemplo.com/imagem1.jpg&#10;https://exemplo.com/imagem2.jpg"
+                      className="min-h-[100px]"
+                    />
+                  </div>
+
+                  <Button onClick={handlePlaceSubmit}>Adicionar Lugar</Button>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-white rounded-lg shadow p-6">
+                <h2 className="text-xl font-semibold mb-4">Editar Lugar</h2>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="edit-name">Nome</Label>
+                    <Input
+                      id="edit-name"
+                      value={editingPlace.name}
+                      onChange={(e) => setEditingPlace({ ...editingPlace, name: e.target.value })}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="edit-description">Descrição</Label>
+                    <Textarea
+                      id="edit-description"
+                      value={editingPlace.description}
+                      onChange={(e) => setEditingPlace({ ...editingPlace, description: e.target.value })}
+                      className="min-h-[100px]"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="edit-address">Endereço</Label>
+                    <Input
+                      id="edit-address"
+                      value={editingPlace.address}
+                      onChange={(e) => setEditingPlace({ ...editingPlace, address: e.target.value })}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="edit-owner_name">Nome do Proprietário</Label>
+                    <Input
+                      id="edit-owner_name"
+                      value={editingPlace.owner_name}
+                      onChange={(e) => setEditingPlace({ ...editingPlace, owner_name: e.target.value })}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="edit-opening_hours">Horário de Funcionamento</Label>
+                    <Input
+                      id="edit-opening_hours"
+                      value={editingPlace.opening_hours}
+                      onChange={(e) => setEditingPlace({ ...editingPlace, opening_hours: e.target.value })}
+                      placeholder="Ex: Segunda a Sexta, 9h às 18h"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="edit-entrance_fee">Valor da Entrada</Label>
+                    <Input
+                      id="edit-entrance_fee"
+                      value={editingPlace.entrance_fee}
+                      onChange={(e) => setEditingPlace({ ...editingPlace, entrance_fee: e.target.value })}
+                      placeholder="Ex: R$ 20,00 ou Gratuito"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="edit-phone">Telefone</Label>
+                      <Input
+                        id="edit-phone"
+                        value={editingPlace.phone}
+                        onChange={(e) => setEditingPlace({ ...editingPlace, phone: e.target.value })}
+                        placeholder="(00) 0000-0000"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-whatsapp">WhatsApp</Label>
+                      <Input
+                        id="edit-whatsapp"
+                        value={editingPlace.whatsapp}
+                        onChange={(e) => setEditingPlace({ ...editingPlace, whatsapp: e.target.value })}
+                        placeholder="(00) 00000-0000"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="edit-website">Website</Label>
+                      <Input
+                        id="edit-website"
+                        value={editingPlace.website}
+                        onChange={(e) => setEditingPlace({ ...editingPlace, website: e.target.value })}
+                        placeholder="https://exemplo.com"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-maps_url">Link do Google Maps</Label>
+                      <Input
+                        id="edit-maps_url"
+                        value={editingPlace.maps_url}
+                        onChange={(e) => setEditingPlace({ ...editingPlace, maps_url: e.target.value })}
+                        placeholder="https://maps.google.com/..."
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="edit-image">Link da Imagem Principal</Label>
+                    <Input
+                      id="edit-image"
+                      value={editingPlace.image}
+                      onChange={(e) => setEditingPlace({ ...editingPlace, image: e.target.value })}
+                      placeholder="https://exemplo.com/imagem.jpg"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="edit-images">Links de Imagens Adicionais (um por linha)</Label>
+                    <Textarea
+                      id="edit-images"
+                      value={Array.isArray(editingPlace.images) ? editingPlace.images.join('\n') : ''}
+                      onChange={(e) => setEditingPlace({
+                        ...editingPlace,
+                        images: e.target.value.split('\n').filter(url => url.trim() !== '')
+                      })}
+                      placeholder="https://exemplo.com/imagem1.jpg&#10;https://exemplo.com/imagem2.jpg"
+                      className="min-h-[100px]"
+                    />
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button onClick={handlePlaceEdit}>Salvar Alterações</Button>
+                    <Button variant="outline" onClick={() => setEditingPlace(null)}>Cancelar</Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="flex items-center gap-4 mb-6">
+                <h2 className="text-xl font-semibold">Lista de Lugares</h2>
+                <div className="relative flex-1 max-w-sm">
+                  <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 h-4 w-4" />
+                  <Input
+                    type="search"
+                    placeholder="Buscar lugares..."
+                    className="pl-8"
+                    value={searchPlaceTerm}
+                    onChange={(e) => setSearchPlaceTerm(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {places.map((place) => (
+                  <div key={place.id} className="bg-gray-50 rounded-lg p-6">
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h3 className="text-lg font-semibold">{place.name}</h3>
+                        <p className="text-sm text-gray-500">{place.address}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setEditingPlace(place)}
+                        >
+                          Editar
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handlePlaceDelete(place.id)}
+                        >
+                          Excluir
+                        </Button>
+                      </div>
+                    </div>
+                    <p className="whitespace-pre-wrap mb-2">{place.description}</p>
+                    {place.owner_name && (
+                      <p className="text-sm text-gray-500">Proprietário: {place.owner_name}</p>
+                    )}
+                    {place.opening_hours && (
+                      <p className="text-sm text-gray-500">
+                        Horário de Funcionamento: {place.opening_hours}
+                      </p>
+                    )}
+                    {place.entrance_fee && (
+                      <p className="text-sm text-gray-500">
+                        Valor da Entrada: {place.entrance_fee}
+                      </p>
+                    )}
+                    {(place.phone || place.whatsapp) && (
+                      <p className="text-sm text-gray-500">
+                        Contato: {place.phone} {place.whatsapp && `/ WhatsApp: ${place.whatsapp}`}
+                      </p>
+                    )}
+                    {place.website && (
+                      <p className="text-sm text-gray-500">
+                        Website: <a href={place.website} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">{place.website}</a>
+                      </p>
+                    )}
+                    {place.maps_url && (
+                      <p className="text-sm text-gray-500">
+                        <a href={place.maps_url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">Ver no Google Maps</a>
+                      </p>
+                    )}
+                    {place.image && (
+                      <p className="text-sm text-gray-500">Imagem Principal: {place.image}</p>
+                    )}
+                    {Array.isArray(place.images) && place.images.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-sm text-gray-500">Imagens adicionais:</p>
+                        {place.images.map((img, index) => (
+                          <p key={index} className="text-sm text-gray-500">{img}</p>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+                {places.length === 0 && (
+                  <p className="text-gray-500 text-center py-8">
+                    Nenhum lugar encontrado.
+                  </p>
+                )}
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+};
+
+export default Admin;
