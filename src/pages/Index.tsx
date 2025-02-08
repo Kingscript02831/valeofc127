@@ -28,7 +28,7 @@ interface InstagramMedia {
 
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
   // Fetch categories
   const { data: categories = [] } = useQuery<Category[]>({
@@ -39,7 +39,7 @@ const Index = () => {
         .select('*')
         .order('name');
       if (error) throw error;
-      return data;
+      return data || [];
     }
   });
 
@@ -49,16 +49,17 @@ const Index = () => {
       try {
         let query = supabase
           .from('news')
-          .select('*, categories(*)')
-          .order('created_at', { ascending: false });
+          .select('*, categories(*)');
 
         if (searchTerm) {
           query = query.ilike('title', `%${searchTerm}%`);
         }
 
-        if (selectedCategory) {
+        if (selectedCategory && selectedCategory !== "all") {
           query = query.eq('category_id', selectedCategory);
         }
+
+        query = query.order('created_at', { ascending: false });
 
         const { data, error } = await query;
         
@@ -68,7 +69,7 @@ const Index = () => {
         }
         
         console.log('Fetched news data:', data);
-        return data || [];
+        return (data as News[]) || [];
       } catch (err) {
         console.error('Error fetching news:', err);
         throw err;
@@ -109,7 +110,7 @@ const Index = () => {
                   <SelectValue placeholder="Categoria" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todas as categorias</SelectItem>
+                  <SelectItem value="all">Todas as categorias</SelectItem>
                   {categories.map((category) => (
                     <SelectItem key={category.id} value={category.id}>
                       {category.name}

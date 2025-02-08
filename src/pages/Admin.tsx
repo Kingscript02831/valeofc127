@@ -98,7 +98,8 @@ const Admin = () => {
     phone: null,
     social_media: null,
     website: null,
-    whatsapp: null
+    whatsapp: null,
+    category_id: null
   });
 
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
