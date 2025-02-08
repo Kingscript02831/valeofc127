@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Edit, Trash, Plus, Search } from "lucide-react";
@@ -35,6 +34,10 @@ import {
 
 type Store = Database["public"]["Tables"]["stores"]["Row"];
 type Category = Database["public"]["Tables"]["categories"]["Row"];
+
+interface StoreWithCategory extends Store {
+  categories: Category;
+}
 
 interface FormData extends Partial<Store> {
   name: string;
@@ -74,11 +77,11 @@ const AdminStores = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("stores")
-        .select("*, categories:category_id(*)") // Updated relationship query
+        .select("*, categories:category_id(*)")
         .order("name");
 
       if (error) throw error;
-      return data;
+      return data as StoreWithCategory[];
     },
   });
 
@@ -503,7 +506,7 @@ const AdminStores = () => {
                       {store.address}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {(store.categories as Category)?.name || "-"}
+                      {store.categories?.name || "-"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {store.owner_name || "-"}
@@ -565,4 +568,3 @@ const AdminStores = () => {
 };
 
 export default AdminStores;
-
