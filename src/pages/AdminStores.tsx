@@ -202,7 +202,9 @@ const AdminStores = () => {
                     <Input
                       id="facebook"
                       name="facebook"
-                      defaultValue={currentStore?.social_media?.facebook || ""}
+                      defaultValue={currentStore?.social_media && typeof currentStore.social_media === 'object' 
+                        ? (currentStore.social_media as any).facebook || ""
+                        : ""}
                     />
                   </div>
                   <div className="space-y-2">
@@ -210,7 +212,9 @@ const AdminStores = () => {
                     <Input
                       id="instagram"
                       name="instagram"
-                      defaultValue={currentStore?.social_media?.instagram || ""}
+                      defaultValue={currentStore?.social_media && typeof currentStore.social_media === 'object'
+                        ? (currentStore.social_media as any).instagram || ""
+                        : ""}
                     />
                   </div>
                 </div>
