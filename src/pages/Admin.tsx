@@ -482,7 +482,7 @@ const Admin = () => {
         .from("events")
         .insert({
           ...newEvent,
-          images: newEvent.images || [],
+          images: newEvent.images || [], // Garante que images seja sempre um array
         });
 
       if (error) throw error;
@@ -519,6 +519,7 @@ const Admin = () => {
           event_date: editingEvent.event_date,
           event_time: editingEvent.event_time,
           image: editingEvent.image,
+          images: editingEvent.images || [], // Garante que images seja sempre um array
           location: editingEvent.location,
         })
         .eq("id", editingEvent.id);
