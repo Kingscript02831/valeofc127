@@ -91,6 +91,7 @@ const Admin = () => {
     event_date: new Date().toISOString().split('T')[0],
     event_time: "00:00",
     image: "",
+    images: [],
     location: "",
   });
 
@@ -479,7 +480,10 @@ const Admin = () => {
 
       const { error } = await supabase
         .from("events")
-        .insert(newEvent);
+        .insert({
+          ...newEvent,
+          images: newEvent.images || [],
+        });
 
       if (error) throw error;
 
@@ -490,6 +494,7 @@ const Admin = () => {
         event_date: new Date().toISOString().split('T')[0],
         event_time: "00:00",
         image: "",
+        images: [],
         location: "",
       });
       fetchEvents();
@@ -862,13 +867,30 @@ const Admin = () => {
                   </div>
 
                   <div>
-                    <Label htmlFor="image">Link da Imagem</Label>
+                    <Label htmlFor="image">Link da Imagem Principal</Label>
                     <Input
                       id="image"
                       value={newEvent.image || ""}
                       onChange={(e) => setNewEvent({ ...newEvent, image: e.target.value })}
                       placeholder="https://exemplo.com/imagem.jpg"
                     />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="additional_images">Links de Imagens Adicionais (uma por linha)</Label>
+                    <Textarea
+                      id="additional_images"
+                      value={newEvent.images?.join('\n') || ""}
+                      onChange={(e) => setNewEvent({ 
+                        ...newEvent, 
+                        images: e.target.value.split('\n').filter(url => url.trim() !== '')
+                      })}
+                      placeholder="https://exemplo.com/imagem2.jpg&#10;https://exemplo.com/imagem3.jpg"
+                      className="min-h-[100px]"
+                    />
+                    <p className="text-sm text-gray-500 mt-1">
+                      Adicione uma URL por linha para incluir múltiplas imagens
+                    </p>
                   </div>
 
                   <Button onClick={handleEventSubmit}>Adicionar Evento</Button>
@@ -930,13 +952,30 @@ const Admin = () => {
                   </div>
 
                   <div>
-                    <Label htmlFor="edit-image">Link da Imagem</Label>
+                    <Label htmlFor="edit-image">Link da Imagem Principal</Label>
                     <Input
                       id="edit-image"
                       value={editingEvent.image || ""}
                       onChange={(e) => setEditingEvent({ ...editingEvent, image: e.target.value })}
                       placeholder="https://exemplo.com/imagem.jpg"
                     />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="edit-additional-images">Links de Imagens Adicionais (uma por linha)</Label>
+                    <Textarea
+                      id="edit-additional-images"
+                      value={editingEvent.images?.join('\n') || ""}
+                      onChange={(e) => setEditingEvent({ 
+                        ...editingEvent, 
+                        images: e.target.value.split('\n').filter(url => url.trim() !== '')
+                      })}
+                      placeholder="https://exemplo.com/imagem2.jpg&#10;https://exemplo.com/imagem3.jpg"
+                      className="min-h-[100px]"
+                    />
+                    <p className="text-sm text-gray-500 mt-1">
+                      Adicione uma URL por linha para incluir múltiplas imagens
+                    </p>
                   </div>
 
                   <div className="flex gap-2">
