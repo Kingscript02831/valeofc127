@@ -1,28 +1,36 @@
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Phone, Globe, MapPin, Clock, Ticket, User2, Facebook, Instagram, MessageCircle } from "lucide-react";
+import { Phone, Globe, MapPin, Clock, Ticket, User2, Facebook, Instagram, MessageCircle, Search } from "lucide-react";
 import type { Database } from "../integrations/supabase/types";
 import { supabase } from "../integrations/supabase/client";
 import Navbar from "../components/Navbar";
 import SubNav from "../components/SubNav";
 import Footer from "../components/Footer";
+import { Input } from "@/components/ui/input";
 
 type Place = Database["public"]["Tables"]["places"]["Row"];
 
 const Places = () => {
+  const [searchTerm, setSearchTerm] = useState("");
+
   useEffect(() => {
     document.title = "Lugares | Vale Notícias";
   }, []);
 
   const { data: places, isLoading } = useQuery({
-    queryKey: ["places"],
+    queryKey: ["places", searchTerm],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("places")
         .select("*")
         .order("name");
 
+      if (searchTerm) {
+        query = query.ilike("name", `%${searchTerm}%`);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       return data;
     },
@@ -33,7 +41,19 @@ const Places = () => {
       <Navbar />
       <SubNav />
       <main className="flex-1 container mx-auto py-8 px-4">
-        <h1 className="text-3xl font-bold mb-6">Lugares</h1>
+        <div className="flex flex-col md:flex-row md:items-center gap-4 mb-8">
+          <h1 className="text-3xl font-bold">Lugares</h1>
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 h-4 w-4" />
+            <Input
+              type="search"
+              placeholder="Buscar lugares..."
+              className="pl-8"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </div>
         
         {isLoading ? (
           <div className="flex justify-center items-center h-64">
@@ -165,6 +185,11 @@ const Places = () => {
                 </div>
               </div>
             ))}
+            {!isLoading && (!places || places.length === 0) && (
+              <p className="text-gray-500 col-span-full text-center py-8">
+                Nenhum lugar encontrado.
+              </p>
+            )}
           </div>
         )}
       </main>
