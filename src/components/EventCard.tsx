@@ -1,4 +1,3 @@
-
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Calendar, ChevronDown, ChevronUp, Clock, MapPin, ChevronLeft, ChevronRight, X, Timer } from "lucide-react";
@@ -70,10 +69,10 @@ const EventCard = ({
           return;
         }
 
-        const [year, month, day] = eventDate.split('-').map(Number);
-        const [eventHours, eventMinutes] = eventTime.split(':').map(Number);
+        const [hours, minutes] = eventTime.split(':').map(Number);
+        const eventDateTime = new Date(eventDate);
+        eventDateTime.setHours(hours, minutes, 0, 0);
         
-        const eventDateTime = new Date(year, month - 1, day, eventHours, eventMinutes);
         const now = new Date();
 
         if (isNaN(eventDateTime.getTime())) {
@@ -156,7 +155,6 @@ const EventCard = ({
             )}
           </div>
 
-          {/* Contador regressivo mais compacto e sincronizado com as cores da Navbar */}
           <div className="mb-3">
             {countdown.isExpired ? (
               <div className="text-red-500 text-xs font-medium">Evento já aconteceu</div>
@@ -231,7 +229,6 @@ const EventCard = ({
         </div>
       </Card>
 
-      {/* Modal de imagem em tela cheia */}
       {isImageFullscreen && allImages.length > 0 && (
         <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center">
           <div className="relative w-full h-full flex items-center justify-center">
