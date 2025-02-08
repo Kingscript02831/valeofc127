@@ -8,47 +8,26 @@ import Navbar from "../components/Navbar";
 import SubNav from "../components/SubNav";
 import Footer from "../components/Footer";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type Store = Database["public"]["Tables"]["stores"]["Row"];
-type Category = Database["public"]["Tables"]["categories"]["Row"];
 
 const Stores = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
 
   useEffect(() => {
     document.title = "Lojas | Vale Notícias";
   }, []);
 
-  // Fetch categories
-  const { data: categories } = useQuery({
-    queryKey: ["categories"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("categories")
-        .select("*")
-        .order("name");
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  // Fetch stores with search and category filter
   const { data: stores, isLoading } = useQuery({
-    queryKey: ["stores", searchTerm, selectedCategory],
+    queryKey: ["stores", searchTerm],
     queryFn: async () => {
       let query = supabase
         .from("stores")
-        .select("*, categories(name)")
+        .select("*")
         .order("name");
 
       if (searchTerm) {
         query = query.ilike("name", `%${searchTerm}%`);
-      }
-
-      if (selectedCategory) {
-        query = query.eq("category_id", selectedCategory);
       }
 
       const { data, error } = await query;
@@ -64,33 +43,15 @@ const Stores = () => {
       <main className="flex-1 container mx-auto py-8 px-4">
         <div className="flex flex-col md:flex-row md:items-center gap-4 mb-8">
           <h1 className="text-3xl font-bold">Lojas</h1>
-          <div className="flex flex-col md:flex-row gap-4 flex-1">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 h-4 w-4" />
-              <Input
-                type="search"
-                placeholder="Buscar lojas..."
-                className="pl-8"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <Select
-              value={selectedCategory}
-              onValueChange={setSelectedCategory}
-            >
-              <SelectTrigger className="w-full md:w-[180px]">
-                <SelectValue placeholder="Categoria" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">Todas as categorias</SelectItem>
-                {categories?.map((category) => (
-                  <SelectItem key={category.id} value={category.id}>
-                    {category.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 h-4 w-4" />
+            <Input
+              type="search"
+              placeholder="Buscar lojas..."
+              className="pl-8"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
         </div>
         
