@@ -1,3 +1,4 @@
+
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Calendar, ChevronDown, ChevronUp, Clock, MapPin, ChevronLeft, ChevronRight, X, Timer } from "lucide-react";
@@ -34,7 +35,7 @@ const EventCard = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isImageFullscreen, setIsImageFullscreen] = useState(false);
-  const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0, isExpired: false });
+  const [countdown, setCountdown] = useState({ days: 0, hrs: 0, mins: 0, secs: 0, isExpired: false });
   const [config, setConfig] = useState<SiteConfig | null>(null);
   
   const date = new Date(eventDate);
@@ -65,38 +66,38 @@ const EventCard = ({
     const calculateTimeLeft = () => {
       try {
         if (!eventDate || !eventTime) {
-          setCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0, isExpired: true });
+          setCountdown({ days: 0, hrs: 0, mins: 0, secs: 0, isExpired: true });
           return;
         }
 
-        const [hours, minutes] = eventTime.split(':').map(Number);
-        const eventDateTime = new Date(eventDate);
-        eventDateTime.setHours(hours, minutes, 0, 0);
+        const [timeHours, timeMinutes] = eventTime.split(':').map(Number);
+        const targetDate = new Date(eventDate);
+        targetDate.setHours(timeHours, timeMinutes, 0, 0);
         
         const now = new Date();
 
-        if (isNaN(eventDateTime.getTime())) {
+        if (isNaN(targetDate.getTime())) {
           console.error('Invalid date:', { eventDate, eventTime });
-          setCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0, isExpired: true });
+          setCountdown({ days: 0, hrs: 0, mins: 0, secs: 0, isExpired: true });
           return;
         }
 
-        const difference = eventDateTime.getTime() - now.getTime();
+        const difference = targetDate.getTime() - now.getTime();
 
         if (difference <= 0) {
-          setCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0, isExpired: true });
+          setCountdown({ days: 0, hrs: 0, mins: 0, secs: 0, isExpired: true });
           return;
         }
 
         const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+        const hrs = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const mins = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+        const secs = Math.floor((difference % (1000 * 60)) / 1000);
 
-        setCountdown({ days, hours, minutes, seconds, isExpired: false });
+        setCountdown({ days, hrs, mins, secs, isExpired: false });
       } catch (error) {
         console.error('Error calculating countdown:', error);
-        setCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0, isExpired: true });
+        setCountdown({ days: 0, hrs: 0, mins: 0, secs: 0, isExpired: true });
       }
     };
 
@@ -177,19 +178,19 @@ const EventCard = ({
                     className="text-white text-xs px-1.5 py-0.5 rounded"
                     style={{ backgroundColor: config.primary_color }}
                   >
-                    {String(countdown.hours).padStart(2, '0')}h
+                    {String(countdown.hrs).padStart(2, '0')}h
                   </span>
                   <span 
                     className="text-white text-xs px-1.5 py-0.5 rounded"
                     style={{ backgroundColor: config.primary_color }}
                   >
-                    {String(countdown.minutes).padStart(2, '0')}m
+                    {String(countdown.mins).padStart(2, '0')}m
                   </span>
                   <span 
                     className="text-white text-xs px-1.5 py-0.5 rounded"
                     style={{ backgroundColor: config.primary_color }}
                   >
-                    {String(countdown.seconds).padStart(2, '0')}s
+                    {String(countdown.secs).padStart(2, '0')}s
                   </span>
                 </div>
               </div>
