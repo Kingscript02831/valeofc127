@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { Database } from "@/integrations/supabase/types";
 
-type Event = Database['public']['Tables']['events']['Row'];
+type Event = Database['public']['Tables']['events']['Row'] & {
+  categories: Database['public']['Tables']['categories']['Row'] | null;
+};
 
 interface EventListProps {
   events: Event[];
@@ -47,6 +49,11 @@ export const EventList = ({
                   <span className="text-sm text-gray-500">
                     {new Date(event.event_date).toLocaleDateString()} às {event.event_time}
                   </span>
+                  {event.categories && (
+                    <span className="text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full">
+                      {event.categories.name}
+                    </span>
+                  )}
                 </div>
               </div>
               <div className="flex gap-2">
