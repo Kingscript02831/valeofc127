@@ -35,7 +35,7 @@ const Events = () => {
       let query = supabase
         .from("events")
         .select("*")
-        .order("created_at", { ascending: false });
+        .order("event_date", { ascending: true });
 
       if (searchTerm) {
         query = query.ilike("title", `%${searchTerm}%`);
@@ -93,7 +93,7 @@ const Events = () => {
                 key={event.id}
                 title={event.title}
                 description={event.description}
-                eventDate={event.event_date}
+                eventDate={event.event_date.split('T')[0]}
                 eventTime={event.event_time}
                 image={event.image}
                 images={event.images}

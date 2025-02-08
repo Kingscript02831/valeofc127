@@ -1,5 +1,5 @@
 
-import { format, isValid, parse } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Calendar, ChevronDown, ChevronUp, Clock, MapPin, ChevronLeft, ChevronRight, X, Timer } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -38,20 +38,9 @@ const EventCard = ({
   const [countdown, setCountdown] = useState({ days: 0, hrs: 0, mins: 0, secs: 0, isExpired: false });
   const [config, setConfig] = useState<SiteConfig | null>(null);
 
-  // Parse and validate the date
-  const parseDate = (dateStr: string) => {
-    try {
-      const date = parse(dateStr, 'yyyy-MM-dd', new Date());
-      return isValid(date) ? date : null;
-    } catch {
-      return null;
-    }
-  };
-
-  const date = parseDate(eventDate);
-  const formattedDate = date 
-    ? format(date, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
-    : 'Data inválida';
+  // Parse the date safely
+  const date = parseISO(eventDate);
+  const formattedDate = format(date, "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
 
   const formattedCreatedAt = createdAt 
     ? format(new Date(createdAt), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })
@@ -90,30 +79,10 @@ const EventCard = ({
         const now = new Date();
         now.setMilliseconds(0);
 
-        if (isNaN(targetDate.getTime())) {
-          console.error('Invalid date:', { eventDate, eventTime });
+        // Se o evento já passou
+        if (targetDate < now) {
           setCountdown({ days: 0, hrs: 0, mins: 0, secs: 0, isExpired: true });
           return;
-        }
-
-        // Se o evento é no mesmo dia, comparamos apenas as horas
-        const isSameDay = 
-          now.getDate() === targetDate.getDate() &&
-          now.getMonth() === targetDate.getMonth() &&
-          now.getFullYear() === targetDate.getFullYear();
-
-        if (isSameDay) {
-          const difference = targetDate.getTime() - now.getTime();
-          if (difference <= 0) {
-            setCountdown({ days: 0, hrs: 0, mins: 0, secs: 0, isExpired: true });
-            return;
-          }
-        } else {
-          // Se não é no mesmo dia, verificamos se a data já passou
-          if (targetDate < now) {
-            setCountdown({ days: 0, hrs: 0, mins: 0, secs: 0, isExpired: true });
-            return;
-          }
         }
 
         const difference = targetDate.getTime() - now.getTime();
