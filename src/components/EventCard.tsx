@@ -1,4 +1,3 @@
-
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Calendar, ChevronDown, ChevronUp, Clock, MapPin, ChevronLeft, ChevronRight, X, Timer } from "lucide-react";
@@ -226,10 +225,13 @@ const EventCard = ({
           </div>
 
           <Button
-            variant="ghost"
-            className="mt-2 w-full flex items-center justify-center gap-1 text-sm"
+            variant="outline"
+            className="mt-2 w-full flex items-center justify-center gap-1 text-sm hover:bg-transparent border"
             onClick={() => setIsExpanded(!isExpanded)}
-            style={{ color: config.primary_color }}
+            style={{ 
+              borderColor: config.primary_color,
+              color: config.primary_color,
+            }}
           >
             {isExpanded ? (
               <>
