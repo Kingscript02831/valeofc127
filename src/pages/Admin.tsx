@@ -1,12 +1,12 @@
 
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import NewsTab from "@/components/admin/NewsTab";
-import EventsTab from "@/components/admin/EventsTab";
-import PlacesTab from "@/components/admin/PlacesTab";
-import NavConfigTab from "@/components/admin/NavConfigTab";
-import FooterTab from "@/components/admin/FooterTab";
-import GeneralTab from "@/components/admin/GeneralTab";
+import NewsTab from "../components/admin/NewsTab";
+import EventsTab from "../components/admin/EventsTab";
+import PlacesTab from "../components/admin/PlacesTab";
+import NavConfigTab from "../components/admin/NavConfigTab";
+import FooterTab from "../components/admin/FooterTab";
+import GeneralTab from "../components/admin/GeneralTab";
 
 const Admin = () => {
   const [searchTerm, setSearchTerm] = useState("");
