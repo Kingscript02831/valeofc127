@@ -1,7 +1,7 @@
 
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Calendar, ChevronDown, ChevronUp, Clock, MapPin, ChevronLeft, ChevronRight, Phone, Globe, MessageCircle, User2, Facebook, Instagram } from "lucide-react";
+import { Calendar, ChevronDown, ChevronUp, Clock, MapPin, ChevronLeft, ChevronRight } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -15,15 +15,6 @@ interface EventCardProps {
   image?: string;
   images?: string[];
   location?: string;
-  mapsUrl?: string;
-  ownerName?: string;
-  phone?: string;
-  whatsapp?: string;
-  website?: string;
-  socialMedia?: {
-    facebook?: string;
-    instagram?: string;
-  };
 }
 
 const EventCard = ({
@@ -34,12 +25,6 @@ const EventCard = ({
   image,
   images = [],
   location,
-  mapsUrl,
-  ownerName,
-  phone,
-  whatsapp,
-  website,
-  socialMedia,
 }: EventCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -113,12 +98,6 @@ const EventCard = ({
               <span>{location}</span>
             </div>
           )}
-          {ownerName && (
-            <div className="flex items-center gap-1">
-              <User2 className="h-4 w-4" />
-              <span>{ownerName}</span>
-            </div>
-          )}
         </div>
         
         <div className={cn("prose prose-sm max-w-none", !isExpanded && "line-clamp-3")}>
@@ -144,81 +123,6 @@ const EventCard = ({
             </>
           )}
         </Button>
-
-        <div className="mt-4 pt-4 border-t flex flex-wrap gap-3">
-          {phone && (
-            <a
-              href={`tel:${phone}`}
-              className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
-              title="Ligar"
-            >
-              <Phone className="w-4 h-4" />
-            </a>
-          )}
-
-          {whatsapp && (
-            <a
-              href={`https://wa.me/${whatsapp.replace(/\D/g, '')}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1 text-sm text-green-600 hover:text-green-800"
-              title="WhatsApp"
-            >
-              <MessageCircle className="w-4 h-4" />
-            </a>
-          )}
-
-          {website && (
-            <a
-              href={website}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1 text-sm text-purple-600 hover:text-purple-800"
-              title="Site"
-            >
-              <Globe className="w-4 h-4" />
-            </a>
-          )}
-
-          {socialMedia && (
-            <>
-              {socialMedia.facebook && (
-                <a
-                  href={socialMedia.facebook}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
-                  title="Facebook"
-                >
-                  <Facebook className="w-4 h-4" />
-                </a>
-              )}
-              {socialMedia.instagram && (
-                <a
-                  href={socialMedia.instagram}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-sm text-pink-600 hover:text-pink-800"
-                  title="Instagram"
-                >
-                  <Instagram className="w-4 h-4" />
-                </a>
-              )}
-            </>
-          )}
-
-          {mapsUrl && (
-            <a
-              href={mapsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1 text-sm text-red-600 hover:text-red-800"
-              title="Ver no mapa"
-            >
-              <MapPin className="w-4 h-4" />
-            </a>
-          )}
-        </div>
       </div>
     </Card>
   );
