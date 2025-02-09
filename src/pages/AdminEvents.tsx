@@ -132,7 +132,24 @@ const AdminEvents = () => {
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-xl font-semibold mb-4">Editar Evento</h2>
           <EventForm
-            initialData={editingEvent}
+            initialData={{
+              title: editingEvent.title,
+              description: editingEvent.description,
+              event_date: editingEvent.event_date,
+              event_time: editingEvent.event_time,
+              location: editingEvent.location || "",
+              maps_url: editingEvent.maps_url || null,
+              image: editingEvent.image || "",
+              images: editingEvent.images || [],
+              owner_name: editingEvent.owner_name || null,
+              phone: editingEvent.phone || null,
+              whatsapp: editingEvent.whatsapp || null,
+              website: editingEvent.website || null,
+              social_media: editingEvent.social_media || null,
+              category_id: editingEvent.category_id || null,
+              button_color: editingEvent.button_color || null,
+              button_secondary_color: editingEvent.button_secondary_color || null
+            }}
             categories={categories}
             onSubmit={handleEventEdit}
             onCancel={() => setEditingEvent(null)}
