@@ -30,7 +30,7 @@ const BottomNav = () => {
 
   const handleNavigation = (path: string, e: React.MouseEvent) => {
     e.preventDefault();
-    if (!session) {
+    if (!session && path !== "/profile") {
       toast.error("Você precisa fazer login para acessar esta área");
       navigate("/login");
       return;
@@ -72,15 +72,14 @@ const BottomNav = () => {
             <span className="text-xs">Notificações</span>
           </a>
 
-          <a
-            href={session ? "/profile" : "/login"}
-            onClick={(e) => session ? handleNavigation("/profile", e) : null}
+          <Link
+            to={session ? "/profile" : "/login"}
             className={`flex flex-col items-center p-1`}
             style={{ color: isActive("/profile") ? iconColor : textColor }}
           >
             <User className="h-5 w-5" />
             <span className="text-xs">Eu</span>
-          </a>
+          </Link>
         </div>
       </div>
     </nav>
@@ -88,4 +87,3 @@ const BottomNav = () => {
 };
 
 export default BottomNav;
-
