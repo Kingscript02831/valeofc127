@@ -41,7 +41,7 @@ const BottomNav = () => {
           </Link>
 
           <Link
-            to="/profile"
+            to="/login"
             className={`flex flex-col items-center p-1`}
             style={{ color: isActive("/profile") ? iconColor : textColor }}
           >
