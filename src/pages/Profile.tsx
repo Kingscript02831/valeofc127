@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -85,23 +84,25 @@ export default function Profile() {
       }
       return data;
     },
-    enabled: !isLoading, // Only run query when authentication check is complete
-    onSuccess: (data) => {
-      if (data) {
-        form.reset({
-          ...data,
-          birth_date: data.birth_date ? format(new Date(data.birth_date), "yyyy-MM-dd") : "",
+    enabled: !isLoading,
+    meta: {
+      onSuccess: (data: any) => {
+        if (data) {
+          form.reset({
+            ...data,
+            birth_date: data.birth_date ? format(new Date(data.birth_date), "yyyy-MM-dd") : "",
+          });
+        }
+      },
+      onError: (error: Error) => {
+        console.error("Error in profile query:", error);
+        toast({
+          title: "Erro ao carregar perfil",
+          description: "Não foi possível carregar seus dados. Por favor, tente novamente.",
+          variant: "destructive",
         });
       }
-    },
-    onError: (error) => {
-      console.error("Error in profile query:", error);
-      toast({
-        title: "Erro ao carregar perfil",
-        description: "Não foi possível carregar seus dados. Por favor, tente novamente.",
-        variant: "destructive",
-      });
-    },
+    }
   });
 
   // Update profile mutation
