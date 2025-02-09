@@ -14,6 +14,7 @@ import AdminPlaces from "./pages/AdminPlaces";
 import AdminEvents from "./pages/AdminEvents";
 import AdminStores from "./pages/AdminStores";
 import AdminCategories from "./pages/AdminCategories";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/lugares" element={<Places />} />
           <Route path="/lojas" element={<Stores />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/perfil" element={<Profile />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/admin/lugares" element={<AdminPlaces />} />
           <Route path="/admin/eventos" element={<AdminEvents />} />
