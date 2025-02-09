@@ -22,7 +22,10 @@ const AdminCategories = () => {
   const [newCategory, setNewCategory] = useState<Omit<Category, "id" | "created_at">>({
     name: "",
     background_color: "#000000",
-    page_type: "events"
+    page_type: "events",
+    parent_id: null,
+    slug: "",
+    updated_at: new Date().toISOString()
   });
 
   const { data: categories, refetch } = useQuery({
@@ -53,7 +56,10 @@ const AdminCategories = () => {
       setNewCategory({
         name: "",
         background_color: "#000000",
-        page_type: "events"
+        page_type: "events",
+        parent_id: null,
+        slug: "",
+        updated_at: new Date().toISOString()
       });
 
       refetch();

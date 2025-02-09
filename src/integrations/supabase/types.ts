@@ -476,7 +476,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      page_type: "events" | "places" | "stores"
     }
     CompositeTypes: {
       [_ in never]: never
