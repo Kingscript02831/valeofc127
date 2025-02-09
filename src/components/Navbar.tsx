@@ -1,29 +1,25 @@
 
 import { Share2, Facebook, Instagram } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 
 type SiteConfig = Database['public']['Tables']['site_configuration']['Row'];
 
 const Navbar = () => {
-  const [config, setConfig] = useState<SiteConfig | null>(null);
-
-  useEffect(() => {
-    fetchConfiguration();
-  }, []);
-
-  const fetchConfiguration = async () => {
-    const { data } = await supabase
-      .from("site_configuration")
-      .select("*")
-      .single();
-
-    if (data) {
-      setConfig(data);
-    }
-  };
+  const { data: config } = useQuery<SiteConfig>({
+    queryKey: ['site-configuration'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("site_configuration")
+        .select("*")
+        .single();
+      return data;
+    },
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    placeholderData: (previousData) => previousData, // Use previous data while refetching
+  });
 
   const handleShare = async () => {
     try {
@@ -36,7 +32,23 @@ const Navbar = () => {
     }
   };
 
-  if (!config) return null;
+  // Return a loading state instead of null
+  if (!config) {
+    return (
+      <nav className="w-full animate-pulse bg-gray-200 h-16">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="w-12 h-12 bg-gray-300 rounded-full"></div>
+            <div className="flex space-x-4">
+              <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
+              <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
+              <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
+            </div>
+          </div>
+        </div>
+      </nav>
+    );
+  }
 
   return (
     <nav className="w-full"
