@@ -27,7 +27,7 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
   const [eventData, setEventData] = useState<Omit<Event, 'id' | 'created_at' | 'updated_at'>>({
     title: initialData?.title || "",
     description: initialData?.description || "",
-    event_date: initialData?.event_date || new Date().toISOString(),
+    event_date: initialData?.event_date ? new Date(initialData.event_date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
     event_time: initialData?.event_time || "00:00",
     image: initialData?.image || "",
     images: initialData?.images || [],
@@ -39,12 +39,17 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
     website: initialData?.website || null,
     whatsapp: initialData?.whatsapp || null,
     category_id: initialData?.category_id || null,
-    button_color: initialData?.button_color || null,
-    button_secondary_color: initialData?.button_secondary_color || null
+    button_color: initialData?.button_color || "#000000",
+    button_secondary_color: initialData?.button_secondary_color || "#000000"
   });
 
   const handleSubmit = () => {
-    onSubmit(eventData);
+    // Format the date back to ISO string before submitting
+    const formattedData = {
+      ...eventData,
+      event_date: new Date(eventData.event_date).toISOString()
+    };
+    onSubmit(formattedData);
   };
 
   return (
@@ -94,7 +99,7 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
           <Input
             id="event_date"
             type="date"
-            value={eventData.event_date.split('T')[0]}
+            value={eventData.event_date}
             onChange={(e) => setEventData({ ...eventData, event_date: e.target.value })}
           />
         </div>
