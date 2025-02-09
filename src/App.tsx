@@ -1,4 +1,5 @@
 
+import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -19,29 +20,33 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/eventos" element={<Events />} />
-          <Route path="/lugares" element={<Places />} />
-          <Route path="/lojas" element={<Stores />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/perfil" element={<Profile />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="/admin/lugares" element={<AdminPlaces />} />
-          <Route path="/admin/eventos" element={<AdminEvents />} />
-          <Route path="/admin/lojas" element={<AdminStores />} />
-          <Route path="/admin/categorias" element={<AdminCategories />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App: React.FC = () => {
+  return (
+    <React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/eventos" element={<Events />} />
+              <Route path="/lugares" element={<Places />} />
+              <Route path="/lojas" element={<Stores />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/perfil" element={<Profile />} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="/admin/lugares" element={<AdminPlaces />} />
+              <Route path="/admin/eventos" element={<AdminEvents />} />
+              <Route path="/admin/lojas" element={<AdminStores />} />
+              <Route path="/admin/categorias" element={<AdminCategories />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </React.StrictMode>
+  );
+};
 
 export default App;
