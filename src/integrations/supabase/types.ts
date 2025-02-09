@@ -15,7 +15,7 @@ export type Database = {
           created_at: string
           id: string
           name: string
-          page_type: string
+          page_type: Database["public"]["Enums"]["page_type_enum"]
           parent_id: string | null
           slug: string
           updated_at: string
@@ -25,7 +25,7 @@ export type Database = {
           created_at?: string
           id?: string
           name: string
-          page_type?: string
+          page_type?: Database["public"]["Enums"]["page_type_enum"]
           parent_id?: string | null
           slug: string
           updated_at?: string
@@ -35,7 +35,7 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
-          page_type?: string
+          page_type?: Database["public"]["Enums"]["page_type_enum"]
           parent_id?: string | null
           slug?: string
           updated_at?: string
@@ -547,6 +547,7 @@ export type Database = {
     Enums: {
       app_role: "admin" | "user"
       page_type: "events" | "places" | "stores"
+      page_type_enum: "events" | "places" | "stores" | "news"
     }
     CompositeTypes: {
       [_ in never]: never
