@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/use-toast";
-import { User, Lock, LogIn, Smile, KeyRound, Facebook } from "lucide-react";
+import { User, Lock, LogIn, Smile, KeyRound } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 
@@ -25,7 +25,6 @@ const loginSchema = z.object({
 
 const Login = () => {
   const [loading, setLoading] = useState(false);
-  const [facebookLoading, setFacebookLoading] = useState(false);
   const navigate = useNavigate();
 
   const form = useForm({
@@ -59,28 +58,6 @@ const Login = () => {
       });
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleFacebookLogin = async () => {
-    try {
-      setFacebookLoading(true);
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'facebook',
-        options: {
-          redirectTo: `${window.location.origin}/`,
-        },
-      });
-
-      if (error) throw error;
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Erro",
-        description: error.message || "Falha ao realizar login com Facebook. Tente novamente.",
-      });
-    } finally {
-      setFacebookLoading(false);
     }
   };
 
@@ -158,25 +135,6 @@ const Login = () => {
             >
               <LogIn className="h-5 w-5" />
               {loading ? "Entrando..." : "Entrar"}
-            </Button>
-
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-gray-600"></span>
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-[#202C33] px-2 text-gray-400">Ou continue com</span>
-              </div>
-            </div>
-
-            <Button 
-              type="button"
-              onClick={handleFacebookLogin}
-              className="w-full h-12 bg-[#1877F2] hover:bg-[#0C63D4] transition-all duration-300 rounded-lg font-medium flex items-center justify-center gap-2 shadow-md"
-              disabled={facebookLoading}
-            >
-              <Facebook className="h-5 w-5" />
-              {facebookLoading ? "Conectando..." : "Entrar com Facebook"}
             </Button>
           </form>
         </Form>
