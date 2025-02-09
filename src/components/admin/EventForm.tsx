@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,23 +25,47 @@ interface EventFormProps {
 
 export const EventForm = ({ initialData, categories, onSubmit, onCancel }: EventFormProps) => {
   const [eventData, setEventData] = useState<Omit<Event, 'id' | 'created_at' | 'updated_at'>>({
-    title: initialData?.title || "",
-    description: initialData?.description || "",
-    event_date: initialData?.event_date ? new Date(initialData.event_date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-    event_time: initialData?.event_time || "00:00",
-    image: initialData?.image || "",
-    images: initialData?.images || [],
-    location: initialData?.location || "",
-    maps_url: initialData?.maps_url || null,
-    owner_name: initialData?.owner_name || null,
-    phone: initialData?.phone || null,
-    social_media: initialData?.social_media || null,
-    website: initialData?.website || null,
-    whatsapp: initialData?.whatsapp || null,
-    category_id: initialData?.category_id || null,
-    button_color: initialData?.button_color || "#000000",
-    button_secondary_color: initialData?.button_secondary_color || "#000000"
+    title: "",
+    description: "",
+    event_date: new Date().toISOString().split('T')[0],
+    event_time: "00:00",
+    image: "",
+    images: [],
+    location: "",
+    maps_url: null,
+    owner_name: null,
+    phone: null,
+    social_media: null,
+    website: null,
+    whatsapp: null,
+    category_id: null,
+    button_color: "#000000",
+    button_secondary_color: "#000000"
   });
+
+  // Use useEffect to update form data when initialData changes
+  useEffect(() => {
+    if (initialData) {
+      setEventData({
+        title: initialData.title || "",
+        description: initialData.description || "",
+        event_date: initialData.event_date ? new Date(initialData.event_date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        event_time: initialData.event_time || "00:00",
+        image: initialData.image || "",
+        images: initialData.images || [],
+        location: initialData.location || "",
+        maps_url: initialData.maps_url || null,
+        owner_name: initialData.owner_name || null,
+        phone: initialData.phone || null,
+        social_media: initialData.social_media || null,
+        website: initialData.website || null,
+        whatsapp: initialData.whatsapp || null,
+        category_id: initialData.category_id || null,
+        button_color: initialData.button_color || "#000000",
+        button_secondary_color: initialData.button_secondary_color || "#000000"
+      });
+    }
+  }, [initialData]);
 
   const handleSubmit = () => {
     // Format the date back to ISO string before submitting
