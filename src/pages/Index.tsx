@@ -1,14 +1,13 @@
 import { useState } from "react";
-import Navbar from "../components/Navbar";
-import SubNav from "../components/SubNav";
-import Footer from "../components/Footer";
-import NewsCard from "../components/NewsCard";
-import BottomNav from "../components/BottomNav";
-import { supabase } from "../integrations/supabase/client";
+import Navbar from "@/components/Navbar";
+import SubNav from "@/components/SubNav";
+import Footer from "@/components/Footer";
+import NewsCard from "@/components/NewsCard";
+import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Search } from "lucide-react";
-import { Input } from "../components/ui/input";
-import type { Database } from "../integrations/supabase/types";
+import { Input } from "@/components/ui/input";
+import type { Database } from "@/integrations/supabase/types";
 
 type News = Database['public']['Tables']['news']['Row'] & {
   categories: Database['public']['Tables']['categories']['Row'] | null;
@@ -75,7 +74,7 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col pb-[72px] md:pb-0">
+    <div className="min-h-screen flex flex-col">
       <Navbar />
       <SubNav />
       <main className="flex-1 container mx-auto py-8 px-4">
@@ -164,7 +163,6 @@ const Index = () => {
         </div>
       </main>
       <Footer />
-      <BottomNav />
     </div>
   );
 };
