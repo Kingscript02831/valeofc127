@@ -443,7 +443,7 @@ const Admin = () => {
         <Tabs defaultValue="news" className="space-y-6">
           <TabsList>
             <TabsTrigger value="news">Notícias</TabsTrigger>
-            <TabsTrigger value="config">Config Navbar</TabsTrigger>
+            <TabsTrigger value="config">Navbar</TabsTrigger>
             <TabsTrigger value="footer">Rodapé</TabsTrigger>
             <TabsTrigger value="bottom-nav">Barra</TabsTrigger>
             <TabsTrigger value="general">Geral</TabsTrigger>
