@@ -90,8 +90,8 @@ const Events = () => {
             onClick={() => setSelectedCategory(null)}
             className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${
               !selectedCategory
-                ? "bg-[#F1F1F1] text-[#1EAEDB] font-medium"
-                : "bg-gray-100 hover:bg-gray-200 text-gray-600"
+                ? "bg-[#F1F1F1] text-gray-800"
+                : "bg-gray-100 hover:bg-gray-200"
             }`}
           >
             Todas
@@ -102,8 +102,8 @@ const Events = () => {
               onClick={() => setSelectedCategory(category.id)}
               className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${
                 selectedCategory === category.id
-                  ? "bg-[#F1F1F1] text-[#1EAEDB] font-medium"
-                  : "text-gray-600 hover:opacity-80"
+                  ? "bg-[#F1F1F1] text-gray-800"
+                  : "hover:opacity-80"
               }`}
               style={{
                 backgroundColor:
