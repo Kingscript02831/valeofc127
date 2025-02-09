@@ -30,7 +30,7 @@ const BottomNav = () => {
 
   const handleNavigation = (path: string, e: React.MouseEvent) => {
     e.preventDefault();
-    if (!session && path !== "/profile") {
+    if (!session && path === "/notifications") {
       toast.error("Você precisa fazer login para acessar esta área");
       navigate("/login");
       return;
@@ -73,9 +73,9 @@ const BottomNav = () => {
           </a>
 
           <Link
-            to={session ? "/profile" : "/login"}
+            to={session ? "/perfil" : "/login"}
             className={`flex flex-col items-center p-1`}
-            style={{ color: isActive("/profile") ? iconColor : textColor }}
+            style={{ color: isActive("/perfil") || isActive("/login") ? iconColor : textColor }}
           >
             <User className="h-5 w-5" />
             <span className="text-xs">Eu</span>
