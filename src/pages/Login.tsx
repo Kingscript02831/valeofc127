@@ -70,7 +70,7 @@ const Login = () => {
         title: "Bem-vindo!",
         description: "Login realizado com sucesso.",
       });
-      navigate("/");
+      navigate("/profile");
     } catch (error: any) {
       let errorMessage = "Falha ao realizar login. Tente novamente.";
       if (error.message === "Invalid login credentials") {
