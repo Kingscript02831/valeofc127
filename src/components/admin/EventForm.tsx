@@ -32,14 +32,14 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
     image: "",
     images: [],
     location: "",
-    maps_url: null,
-    entrance_fee: null,
-    owner_name: null,
-    phone: null,
+    maps_url: "",
+    entrance_fee: "",
+    owner_name: "",
+    phone: "",
     social_media: null,
-    website: null,
-    whatsapp: null,
-    category_id: null,
+    website: "",
+    whatsapp: "",
+    category_id: "",
     button_color: "#000000",
     button_secondary_color: "#000000"
   });
@@ -54,14 +54,14 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
         image: initialData.image || "",
         images: initialData.images || [],
         location: initialData.location || "",
-        maps_url: initialData.maps_url || null,
-        entrance_fee: initialData.entrance_fee || null,
-        owner_name: initialData.owner_name || null,
-        phone: initialData.phone || null,
+        maps_url: initialData.maps_url || "",
+        entrance_fee: initialData.entrance_fee || "",
+        owner_name: initialData.owner_name || "",
+        phone: initialData.phone || "",
         social_media: initialData.social_media || null,
-        website: initialData.website || null,
-        whatsapp: initialData.whatsapp || null,
-        category_id: initialData.category_id || null,
+        website: initialData.website || "",
+        whatsapp: initialData.whatsapp || "",
+        category_id: initialData.category_id || "",
         button_color: initialData.button_color || "#000000",
         button_secondary_color: initialData.button_secondary_color || "#000000"
       });
@@ -91,7 +91,7 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
         <Label htmlFor="category">Categoria</Label>
         <Select
           value={eventData.category_id || "none"}
-          onValueChange={(value) => setEventData({ ...eventData, category_id: value === "none" ? null : value })}
+          onValueChange={(value) => setEventData({ ...eventData, category_id: value === "none" ? "" : value })}
         >
           <SelectTrigger>
             <SelectValue placeholder="Selecione uma categoria" />
@@ -143,7 +143,7 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
         <Label htmlFor="location">Local</Label>
         <Input
           id="location"
-          value={eventData.location || ""}
+          value={eventData.location}
           onChange={(e) => setEventData({ ...eventData, location: e.target.value })}
           placeholder="Local do evento"
         />
@@ -153,7 +153,7 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
         <Label htmlFor="maps_url">Link do Google Maps</Label>
         <Input
           id="maps_url"
-          value={eventData.maps_url || ""}
+          value={eventData.maps_url}
           onChange={(e) => setEventData({ ...eventData, maps_url: e.target.value })}
           placeholder="https://maps.google.com/..."
         />
@@ -163,7 +163,7 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
         <Label htmlFor="entrance_fee">Preço da Entrada</Label>
         <Input
           id="entrance_fee"
-          value={eventData.entrance_fee || ""}
+          value={eventData.entrance_fee}
           onChange={(e) => setEventData({ ...eventData, entrance_fee: e.target.value })}
           placeholder="Gratuito ou valor da entrada"
         />
@@ -173,7 +173,7 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
         <Label htmlFor="image">Link da Imagem Principal</Label>
         <Input
           id="image"
-          value={eventData.image || ""}
+          value={eventData.image}
           onChange={(e) => setEventData({ ...eventData, image: e.target.value })}
           placeholder="https://exemplo.com/imagem.jpg"
         />
@@ -203,12 +203,12 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
             <Input
               id="button_color"
               type="color"
-              value={eventData.button_color || "#000000"}
+              value={eventData.button_color}
               onChange={(e) => setEventData({ ...eventData, button_color: e.target.value })}
               className="w-16"
             />
             <Input
-              value={eventData.button_color || "#000000"}
+              value={eventData.button_color}
               onChange={(e) => setEventData({ ...eventData, button_color: e.target.value })}
               placeholder="#000000"
             />
@@ -221,12 +221,12 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
             <Input
               id="button_secondary_color"
               type="color"
-              value={eventData.button_secondary_color || "#000000"}
+              value={eventData.button_secondary_color}
               onChange={(e) => setEventData({ ...eventData, button_secondary_color: e.target.value })}
               className="w-16"
             />
             <Input
-              value={eventData.button_secondary_color || "#000000"}
+              value={eventData.button_secondary_color}
               onChange={(e) => setEventData({ ...eventData, button_secondary_color: e.target.value })}
               placeholder="#000000"
             />
