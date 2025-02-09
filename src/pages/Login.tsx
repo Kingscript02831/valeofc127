@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -26,17 +25,17 @@ import {
 } from "@/components/ui/dialog";
 
 const loginSchema = z.object({
-  email: z.string().email("Email inválido"),
+  email: z.string().min(1, "O email é obrigatório").email("Digite um email válido"),
   password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
 });
 
 const resetPasswordSchema = z.object({
-  email: z.string().email("Email inválido"),
+  email: z.string().min(1, "O email é obrigatório").email("Digite um email válido"),
 });
 
 const signupSchema = z
   .object({
-    email: z.string().email("Email inválido"),
+    email: z.string().min(1, "O email é obrigatório").email("Digite um email válido"),
     password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
     confirmPassword: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
   })
@@ -202,7 +201,7 @@ const Login = () => {
                     <FormControl>
                       <Input 
                         placeholder="seu@email.com" 
-                        type="email"
+                        autoComplete="email"
                         {...field}
                         className="bg-[#2A3942] border-none focus:ring-[#00A884] text-white h-12"
                       />
@@ -225,6 +224,7 @@ const Login = () => {
                       <Input 
                         type="password" 
                         placeholder="******" 
+                        autoComplete="new-password"
                         {...field}
                         className="bg-[#2A3942] border-none focus:ring-[#00A884] text-white h-12"
                       />
@@ -247,6 +247,7 @@ const Login = () => {
                       <Input 
                         type="password" 
                         placeholder="******" 
+                        autoComplete="new-password"
                         {...field}
                         className="bg-[#2A3942] border-none focus:ring-[#00A884] text-white h-12"
                       />
@@ -281,7 +282,7 @@ const Login = () => {
                     <FormControl>
                       <Input 
                         placeholder="seu@email.com" 
-                        type="email"
+                        autoComplete="email"
                         {...field}
                         className="bg-[#2A3942] border-none focus:ring-[#00A884] text-white h-12"
                       />
@@ -304,6 +305,7 @@ const Login = () => {
                       <Input 
                         type="password" 
                         placeholder="******" 
+                        autoComplete="current-password"
                         {...field}
                         className="bg-[#2A3942] border-none focus:ring-[#00A884] text-white h-12"
                       />
@@ -391,4 +393,3 @@ const Login = () => {
 };
 
 export default Login;
-
