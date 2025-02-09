@@ -1,8 +1,8 @@
 
 import { Home, Bell, User } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useSiteConfig } from "../hooks/useSiteConfig";
-import { supabase } from "../integrations/supabase/client";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -30,7 +30,7 @@ const BottomNav = () => {
 
   const handleNavigation = (path: string, e: React.MouseEvent) => {
     e.preventDefault();
-    if (!session && path !== "/profile") {
+    if (!session) {
       toast.error("Você precisa fazer login para acessar esta área");
       navigate("/login");
       return;
@@ -72,14 +72,15 @@ const BottomNav = () => {
             <span className="text-xs">Notificações</span>
           </a>
 
-          <Link
-            to={session ? "/profile" : "/login"}
+          <a
+            href={session ? "/profile" : "/login"}
+            onClick={(e) => session ? handleNavigation("/profile", e) : null}
             className={`flex flex-col items-center p-1`}
             style={{ color: isActive("/profile") ? iconColor : textColor }}
           >
             <User className="h-5 w-5" />
             <span className="text-xs">Eu</span>
-          </Link>
+          </a>
         </div>
       </div>
     </nav>
@@ -87,3 +88,4 @@ const BottomNav = () => {
 };
 
 export default BottomNav;
+
