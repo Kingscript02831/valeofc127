@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Phone, Globe, MapPin, Clock, User2, Facebook, Instagram, MessageCircle, Search } from "lucide-react";
@@ -7,7 +6,7 @@ import { supabase } from "../integrations/supabase/client";
 import Navbar from "../components/Navbar";
 import SubNav from "../components/SubNav";
 import Footer from "../components/Footer";
-import { Input } from "@/components/ui/input";
+import { Input } from "../components/ui/input";
 
 type Store = Database["public"]["Tables"]["stores"]["Row"];
 type Category = Database["public"]["Tables"]["categories"]["Row"];
@@ -243,4 +242,3 @@ const Stores = () => {
 };
 
 export default Stores;
-
