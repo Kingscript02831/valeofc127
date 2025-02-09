@@ -201,3 +201,4 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
     </div>
   );
 };
+
