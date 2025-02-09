@@ -1482,6 +1482,163 @@ const Admin = () => {
               </div>
             </div>
 
+            <div>
+              <h2 className="text-xl font-semibold mb-4">Configurações Gerais</h2>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="theme_name">Tema</Label>
+                  <select
+                    id="theme_name"
+                    className="w-full border border-gray-300 rounded-md p-2"
+                    value={config.theme_name}
+                    onChange={(e) => setConfig({ ...config, theme_name: e.target.value })}
+                  >
+                    <option value="light">Claro</option>
+                    <option value="dark">Escuro</option>
+                  </select>
+                </div>
+
+                <div>
+                  <Label htmlFor="language">Idioma</Label>
+                  <select
+                    id="language"
+                    className="w-full border border-gray-300 rounded-md p-2"
+                    value={config.language || "pt-BR"}
+                    onChange={(e) => setConfig({ ...config, language: e.target.value })}
+                  >
+                    <option value="pt-BR">Português (Brasil)</option>
+                    <option value="en">English</option>
+                    <option value="es">Español</option>
+                  </select>
+                </div>
+
+                <div>
+                  <Label htmlFor="font_size">Tamanho da Fonte</Label>
+                  <select
+                    id="font_size"
+                    className="w-full border border-gray-300 rounded-md p-2"
+                    value={config.font_size || "medium"}
+                    onChange={(e) => setConfig({ ...config, font_size: e.target.value })}
+                  >
+                    <option value="small">Pequeno</option>
+                    <option value="medium">Médio</option>
+                    <option value="large">Grande</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="enable_dark_mode"
+                    checked={config.enable_dark_mode || false}
+                    onChange={(e) => setConfig({ ...config, enable_dark_mode: e.target.checked })}
+                    className="h-4 w-4"
+                  />
+                  <Label htmlFor="enable_dark_mode">Habilitar Modo Escuro</Label>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="high_contrast"
+                    checked={config.high_contrast || false}
+                    onChange={(e) => setConfig({ ...config, high_contrast: e.target.checked })}
+                    className="h-4 w-4"
+                  />
+                  <Label htmlFor="high_contrast">Alto Contraste</Label>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h2 className="text-xl font-semibold mb-4">Configurações de Localização</h2>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="location_city">Cidade</Label>
+                  <Input
+                    id="location_city"
+                    value={config.location_city || ""}
+                    onChange={(e) => setConfig({ ...config, location_city: e.target.value })}
+                    placeholder="São Paulo"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="location_state">Estado</Label>
+                  <Input
+                    id="location_state"
+                    value={config.location_state || ""}
+                    onChange={(e) => setConfig({ ...config, location_state: e.target.value })}
+                    placeholder="SP"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="location_country">País</Label>
+                  <Input
+                    id="location_country"
+                    value={config.location_country || ""}
+                    onChange={(e) => setConfig({ ...config, location_country: e.target.value })}
+                    placeholder="BR"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="location_lat">Latitude</Label>
+                  <Input
+                    id="location_lat"
+                    type="number"
+                    step="0.000001"
+                    value={config.location_lat || ""}
+                    onChange={(e) => setConfig({ ...config, location_lat: parseFloat(e.target.value) })}
+                    placeholder="-23.5505"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="location_lng">Longitude</Label>
+                  <Input
+                    id="location_lng"
+                    type="number"
+                    step="0.000001"
+                    value={config.location_lng || ""}
+                    onChange={(e) => setConfig({ ...config, location_lng: parseFloat(e.target.value) })}
+                    placeholder="-46.6333"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h2 className="text-xl font-semibold mb-4">Configurações do Clima</h2>
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="enable_weather"
+                    checked={config.enable_weather || false}
+                    onChange={(e) => setConfig({ ...config, enable_weather: e.target.checked })}
+                    className="h-4 w-4"
+                  />
+                  <Label htmlFor="enable_weather">Habilitar Previsão do Tempo</Label>
+                </div>
+
+                <div>
+                  <Label htmlFor="weather_api_key">Chave da API do Clima</Label>
+                  <Input
+                    id="weather_api_key"
+                    type="password"
+                    value={config.weather_api_key || ""}
+                    onChange={(e) => setConfig({ ...config, weather_api_key: e.target.value })}
+                    placeholder="Sua chave da API do clima"
+                  />
+                  <p className="text-sm text-gray-500 mt-1">
+                    Necessária para exibir informações do clima no site
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <div className="flex justify-end">
               <Button onClick={handleConfigUpdate}>
                 Salvar Configurações
