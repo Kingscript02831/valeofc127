@@ -6,6 +6,7 @@ import Navbar from "@/components/Navbar";
 import SubNav from "@/components/SubNav";
 import Footer from "@/components/Footer";
 import EventCard from "@/components/EventCard";
+import BottomNav from "@/components/BottomNav";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
@@ -65,7 +66,7 @@ const Events = () => {
   });
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col pb-[72px] md:pb-0">
       <Navbar />
       <SubNav />
       <main className="flex-1 container mx-auto py-8 px-4">
@@ -144,6 +145,7 @@ const Events = () => {
         )}
       </main>
       <Footer />
+      <BottomNav />
     </div>
   );
 };
