@@ -9,13 +9,18 @@ export function useSiteConfig() {
   return useQuery({
     queryKey: ['site-configuration'],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("site_configuration")
         .select("*")
-        .single();
+        .maybeSingle();
+      
+      if (error) throw error;
+      if (!data) throw new Error("No site configuration found");
+      
       return data;
     },
     staleTime: Infinity,
     gcTime: Infinity,
+    retry: 2,
   });
 }

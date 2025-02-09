@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 
 const Navbar = () => {
-  const { data: config, isLoading } = useSiteConfig();
+  const { data: config, isLoading, isError } = useSiteConfig();
 
   const handleShare = async () => {
     try {
@@ -23,11 +23,23 @@ const Navbar = () => {
     );
   }
 
+  if (isError || !config) {
+    return (
+      <nav className="w-full fixed top-0 z-50 h-16 bg-gray-800">
+        <div className="max-w-screen-2xl mx-auto px-4">
+          <div className="flex justify-between items-center h-16">
+            <span className="text-white">Vale Notícias</span>
+          </div>
+        </div>
+      </nav>
+    );
+  }
+
   return (
     <nav className="w-full fixed top-0 z-50 shadow-md"
          style={{ 
-           background: `linear-gradient(to right, ${config?.navbar_color || '#D6BCFA'}, ${config?.primary_color || '#1A1F2C'})`,
-           borderColor: `${config?.primary_color || '#1A1F2C'}20`
+           background: `linear-gradient(to right, ${config.navbar_color}, ${config.primary_color})`,
+           borderColor: `${config.primary_color}20`
          }}>
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
@@ -35,7 +47,7 @@ const Navbar = () => {
             href="/" 
             className="flex items-center space-x-2 transform transition duration-300 hover:scale-105"
           >
-            {config?.navbar_logo_type === 'image' && config?.navbar_logo_image ? (
+            {config.navbar_logo_type === 'image' && config.navbar_logo_image ? (
               <img 
                 src={config.navbar_logo_image} 
                 alt="Logo" 
@@ -48,17 +60,17 @@ const Navbar = () => {
               <span 
                 className="text-3xl font-bold tracking-tighter px-6 py-3 rounded-full"
                 style={{ 
-                  color: config?.text_color || '#FFFFFF',
-                  backgroundColor: `${config?.primary_color || '#1A1F2C'}20`
+                  color: config.text_color,
+                  backgroundColor: `${config.primary_color}20`
                 }}
               >
-                {config?.navbar_logo_text || 'VALEOFC'}
+                {config.navbar_logo_text || 'VALEOFC'}
               </span>
             )}
           </a>
 
           <div className="flex items-center space-x-3">
-            {config?.navbar_social_facebook && (
+            {config.navbar_social_facebook && (
               <a
                 href={config.navbar_social_facebook}
                 target="_blank"
@@ -73,7 +85,7 @@ const Navbar = () => {
               </a>
             )}
 
-            {config?.navbar_social_instagram && (
+            {config.navbar_social_instagram && (
               <a
                 href={config.navbar_social_instagram}
                 target="_blank"
@@ -94,7 +106,7 @@ const Navbar = () => {
               onClick={handleShare}
               className="transition-all duration-300 ease-out hover:scale-110 rounded-full p-2 hover:bg-primary/20"
               style={{ 
-                color: config?.text_color || '#FFFFFF',
+                color: config.text_color,
               }}
               aria-label="Compartilhar"
             >
