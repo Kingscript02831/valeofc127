@@ -1,10 +1,10 @@
 
 import { useState } from "react";
-import Navbar from "@/components/Navbar";
-import SubNav from "@/components/SubNav";
-import Footer from "@/components/Footer";
-import NewsCard from "@/components/NewsCard";
-import BottomNav from "@/components/BottomNav";
+import Navbar from "../components/Navbar";
+import SubNav from "../components/SubNav";
+import Footer from "../components/Footer";
+import NewsCard from "../components/NewsCard";
+import BottomNav from "../components/BottomNav";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Search } from "lucide-react";
