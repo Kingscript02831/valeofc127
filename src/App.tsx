@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Events from "./pages/Events";
 import Places from "./pages/Places";
 import Stores from "./pages/Stores";
+import Login from "./pages/Login";
 import Admin from "./pages/Admin";
 import AdminPlaces from "./pages/AdminPlaces";
 import AdminEvents from "./pages/AdminEvents";
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/eventos" element={<Events />} />
           <Route path="/lugares" element={<Places />} />
           <Route path="/lojas" element={<Stores />} />
+          <Route path="/" element={<Login />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/admin/lugares" element={<AdminPlaces />} />
           <Route path="/admin/eventos" element={<AdminEvents />} />
