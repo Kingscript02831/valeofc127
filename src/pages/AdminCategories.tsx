@@ -17,6 +17,15 @@ import type { Database } from "@/integrations/supabase/types";
 
 type Category = Database["public"]["Tables"]["categories"]["Row"];
 
+const generateSlug = (name: string): string => {
+  return name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)+/g, '');
+};
+
 const AdminCategories = () => {
   const { toast } = useToast();
   const [newCategory, setNewCategory] = useState<Omit<Category, "id" | "created_at">>({
@@ -40,13 +49,49 @@ const AdminCategories = () => {
     },
   });
 
+  const handleNameChange = (value: string) => {
+    setNewCategory({
+      ...newCategory,
+      name: value,
+      slug: generateSlug(value)
+    });
+  };
+
   const handleAddCategory = async () => {
     try {
+      if (!newCategory.name) {
+        toast({
+          variant: "destructive",
+          title: "Nome da categoria é obrigatório",
+          description: "Por favor, insira um nome para a categoria.",
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from("categories")
-        .insert([newCategory]);
+        .insert([{
+          ...newCategory,
+          slug: generateSlug(newCategory.name)
+        }]);
 
-      if (error) throw error;
+      if (error) {
+        if (error.code === '23505') { // Unique constraint violation
+          toast({
+            variant: "destructive",
+            title: "Erro ao adicionar categoria",
+            description: "Já existe uma categoria com este nome. Por favor, escolha outro nome.",
+          });
+        } else {
+          console.error("Error details:", error);
+          toast({
+            variant: "destructive",
+            title: "Erro ao adicionar categoria",
+            description: "Ocorreu um erro ao adicionar a categoria. Tente novamente.",
+          });
+        }
+        return;
+      }
 
       toast({
         title: "Categoria adicionada com sucesso!",
@@ -110,7 +155,7 @@ const AdminCategories = () => {
             <Input
               id="name"
               value={newCategory.name}
-              onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
+              onChange={(e) => handleNameChange(e.target.value)}
               placeholder="Digite o nome da categoria"
             />
           </div>
@@ -119,7 +164,7 @@ const AdminCategories = () => {
             <Label htmlFor="page_type">Tipo de Página</Label>
             <Select
               value={newCategory.page_type}
-              onValueChange={(value: "events" | "places" | "stores") => 
+              onValueChange={(value: "events" | "places" | "stores" | "news") => 
                 setNewCategory({ ...newCategory, page_type: value })
               }
             >
@@ -130,6 +175,7 @@ const AdminCategories = () => {
                 <SelectItem value="events">Eventos</SelectItem>
                 <SelectItem value="places">Lugares</SelectItem>
                 <SelectItem value="stores">Lojas</SelectItem>
+                <SelectItem value="news">Notícias</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -177,6 +223,7 @@ const AdminCategories = () => {
                     {category.page_type === "events" && "Eventos"}
                     {category.page_type === "places" && "Lugares"}
                     {category.page_type === "stores" && "Lojas"}
+                    {category.page_type === "news" && "Notícias"}
                   </p>
                 </div>
               </div>
@@ -201,3 +248,4 @@ const AdminCategories = () => {
 };
 
 export default AdminCategories;
+
