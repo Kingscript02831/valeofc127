@@ -279,6 +279,10 @@ export type Database = {
       site_configuration: {
         Row: {
           background_color: string
+          bottom_nav_icon_color: string
+          bottom_nav_primary_color: string
+          bottom_nav_secondary_color: string
+          bottom_nav_text_color: string
           button_primary_color: string
           button_secondary_color: string
           created_at: string
@@ -326,6 +330,10 @@ export type Database = {
         }
         Insert: {
           background_color?: string
+          bottom_nav_icon_color?: string
+          bottom_nav_primary_color?: string
+          bottom_nav_secondary_color?: string
+          bottom_nav_text_color?: string
           button_primary_color?: string
           button_secondary_color?: string
           created_at?: string
@@ -373,6 +381,10 @@ export type Database = {
         }
         Update: {
           background_color?: string
+          bottom_nav_icon_color?: string
+          bottom_nav_primary_color?: string
+          bottom_nav_secondary_color?: string
+          bottom_nav_text_color?: string
           button_primary_color?: string
           button_secondary_color?: string
           created_at?: string
