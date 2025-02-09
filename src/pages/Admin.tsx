@@ -1136,6 +1136,12 @@ const Admin = () => {
                 </div>
               </div>
             </div>
+
+            <div className="flex justify-end">
+              <Button onClick={handleConfigUpdate}>
+                Salvar Configurações
+              </Button>
+            </div>
           </TabsContent>
 
           <TabsContent value="general" className="bg-white rounded-lg shadow p-6 space-y-6">
