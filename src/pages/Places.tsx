@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Phone, Globe, MapPin, Clock, Ticket, User2, Facebook, Instagram, MessageCircle, Search } from "lucide-react";
@@ -6,6 +7,7 @@ import { supabase } from "../integrations/supabase/client";
 import Navbar from "../components/Navbar";
 import SubNav from "../components/SubNav";
 import Footer from "../components/Footer";
+import BottomNav from "../components/BottomNav";
 import { Input } from "@/components/ui/input";
 
 type Place = Database["public"]["Tables"]["places"]["Row"];
@@ -54,7 +56,7 @@ const Places = () => {
   });
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col pb-[72px] md:pb-0">
       <Navbar />
       <SubNav />
       <main className="flex-1 container mx-auto py-8 px-4">
@@ -244,6 +246,7 @@ const Places = () => {
         )}
       </main>
       <Footer />
+      <BottomNav />
     </div>
   );
 };
