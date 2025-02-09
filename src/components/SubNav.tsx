@@ -17,25 +17,16 @@ const SubNav = () => {
       return data;
     },
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
-    placeholderData: (previousData) => previousData, // Use previous data while refetching
+    cacheTime: 1000 * 60 * 30, // Keep in cache for 30 minutes
+    placeholderData: {
+      navbar_color: '#D6BCFA',
+      primary_color: '#1A1F2C',
+    } as SiteConfig,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
   
   const location = useLocation();
-
-  // Return a loading state instead of null
-  if (!config) {
-    return (
-      <nav className="w-full border-b animate-pulse bg-gray-200">
-        <div className="max-w-screen-2xl mx-auto px-4">
-          <div className="flex justify-center space-x-8 py-2">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="w-20 h-6 bg-gray-300 rounded"></div>
-            ))}
-          </div>
-        </div>
-      </nav>
-    );
-  }
 
   const links = [
     { path: "/", label: "Notícias" },
@@ -48,8 +39,8 @@ const SubNav = () => {
     <nav 
       className="w-full border-b"
       style={{ 
-        background: `linear-gradient(to right, ${config.navbar_color}, ${config.primary_color})`,
-        borderColor: `${config.primary_color}20`
+        background: `linear-gradient(to right, ${config?.navbar_color || '#D6BCFA'}, ${config?.primary_color || '#1A1F2C'})`,
+        borderColor: `${config?.primary_color || '#1A1F2C'}20`
       }}
     >
       <div className="max-w-screen-2xl mx-auto px-4">
