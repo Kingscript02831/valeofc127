@@ -17,6 +17,13 @@ import { toast } from "@/components/ui/use-toast";
 import { User, Lock, LogIn, Smile, KeyRound, UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 const loginSchema = z.object({
   email: z.string().email("Email inválido"),
@@ -34,9 +41,14 @@ const signupSchema = z
     path: ["confirmPassword"],
   });
 
+const resetPasswordSchema = z.object({
+  email: z.string().email("Email inválido"),
+});
+
 const Login = () => {
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
+  const [isResetPasswordOpen, setIsResetPasswordOpen] = useState(false);
   const navigate = useNavigate();
 
   const loginForm = useForm({
@@ -53,6 +65,13 @@ const Login = () => {
       email: "",
       password: "",
       confirmPassword: "",
+    },
+  });
+
+  const resetPasswordForm = useForm({
+    resolver: zodResolver(resetPasswordSchema),
+    defaultValues: {
+      email: "",
     },
   });
 
@@ -100,7 +119,7 @@ const Login = () => {
         title: "Conta criada!",
         description: "Sua conta foi criada com sucesso. Faça login para continuar.",
       });
-      setIsSignUp(false); // Switch back to login form
+      setIsSignUp(false);
     } catch (error: any) {
       let errorMessage = "Falha ao criar conta. Tente novamente.";
       if (error.message.includes("already registered")) {
@@ -116,9 +135,34 @@ const Login = () => {
     }
   };
 
+  const onResetPassword = async (data: z.infer<typeof resetPasswordSchema>) => {
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
+        redirectTo: window.location.origin + '/reset-password',
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Email enviado!",
+        description: "Verifique sua caixa de entrada para redefinir sua senha.",
+      });
+      setIsResetPasswordOpen(false);
+      resetPasswordForm.reset();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Falha ao enviar email de redefinição. Tente novamente.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const toggleForm = () => {
     setIsSignUp(!isSignUp);
-    // Reset form states when toggling
     loginForm.reset();
     signupForm.reset();
   };
@@ -266,6 +310,8 @@ const Login = () => {
                       <Button 
                         variant="link" 
                         className="p-0 h-auto text-sm text-[#00A884] hover:text-[#1DA57A] transition-colors font-medium flex items-center gap-1"
+                        onClick={() => setIsResetPasswordOpen(true)}
+                        type="button"
                       >
                         <KeyRound className="h-3 w-3" />
                         Esqueceu a senha?
@@ -301,6 +347,48 @@ const Login = () => {
           </p>
         </div>
       </div>
+
+      <Dialog open={isResetPasswordOpen} onOpenChange={setIsResetPasswordOpen}>
+        <DialogContent className="bg-[#202C33] border border-[#2A3942] text-white">
+          <DialogHeader>
+            <DialogTitle>Redefinir Senha</DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Digite seu email para receber um link de redefinição de senha.
+            </DialogDescription>
+          </DialogHeader>
+
+          <Form {...resetPasswordForm}>
+            <form onSubmit={resetPasswordForm.handleSubmit(onResetPassword)} className="space-y-4">
+              <FormField
+                control={resetPasswordForm.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-gray-300">Email</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="seu@email.com" 
+                        type="email"
+                        {...field}
+                        className="bg-[#2A3942] border-none text-white focus:ring-[#00A884] h-12 placeholder-gray-400"
+                      />
+                    </FormControl>
+                    <FormMessage className="text-red-400" />
+                  </FormItem>
+                )}
+              />
+
+              <Button 
+                type="submit"
+                className="w-full h-12 bg-[#00A884] hover:bg-[#1DA57A] transition-all duration-300 rounded-lg font-medium"
+                disabled={loading}
+              >
+                {loading ? "Enviando..." : "Enviar link de redefinição"}
+              </Button>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
