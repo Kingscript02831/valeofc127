@@ -1,11 +1,42 @@
 
 import { Home, Bell, User } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 const BottomNav = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { data: config } = useSiteConfig();
+  const [session, setSession] = useState<any>(null);
+
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleNavigation = (path: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!session) {
+      toast.error("Você precisa fazer login para acessar esta área");
+      navigate("/login");
+      return;
+    }
+    navigate(path);
+  };
 
   const isActive = (path: string) => {
     return location.pathname === path;
@@ -31,23 +62,25 @@ const BottomNav = () => {
             <span className="text-xs">Início</span>
           </Link>
 
-          <Link
-            to="/notifications"
+          <a
+            href="/notifications"
+            onClick={(e) => handleNavigation("/notifications", e)}
             className={`flex flex-col items-center p-1`}
             style={{ color: isActive("/notifications") ? iconColor : textColor }}
           >
             <Bell className="h-5 w-5" />
             <span className="text-xs">Notificações</span>
-          </Link>
+          </a>
 
-          <Link
-            to="/login"
+          <a
+            href={session ? "/profile" : "/login"}
+            onClick={(e) => session ? handleNavigation("/profile", e) : null}
             className={`flex flex-col items-center p-1`}
             style={{ color: isActive("/profile") ? iconColor : textColor }}
           >
             <User className="h-5 w-5" />
             <span className="text-xs">Eu</span>
-          </Link>
+          </a>
         </div>
       </div>
     </nav>
@@ -55,3 +88,4 @@ const BottomNav = () => {
 };
 
 export default BottomNav;
+
