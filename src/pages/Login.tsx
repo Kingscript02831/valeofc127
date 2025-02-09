@@ -162,10 +162,12 @@ const Login = () => {
   };
 
   const toggleForm = () => {
+    const currentEmail = isSignUp ? signupForm.getValues("email") : loginForm.getValues("email");
     setIsSignUp(!isSignUp);
-    // Reset form states when toggling
-    loginForm.reset();
-    signupForm.reset();
+    
+    // Reset forms but preserve the email
+    loginForm.reset({ email: currentEmail, password: "" });
+    signupForm.reset({ email: currentEmail, password: "", confirmPassword: "" });
   };
 
   return (
