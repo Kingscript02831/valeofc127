@@ -23,14 +23,16 @@ const loginSchema = z.object({
   password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
 });
 
-const signupSchema = z.object({
-  email: z.string().email("Email inválido"),
-  password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
-  confirmPassword: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "As senhas não coincidem",
-  path: ["confirmPassword"],
-});
+const signupSchema = z
+  .object({
+    email: z.string().email("Email inválido"),
+    password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
+    confirmPassword: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "As senhas não coincidem",
+    path: ["confirmPassword"],
+  });
 
 const Login = () => {
   const [loading, setLoading] = useState(false);
@@ -70,10 +72,14 @@ const Login = () => {
       });
       navigate("/");
     } catch (error: any) {
+      let errorMessage = "Falha ao realizar login. Tente novamente.";
+      if (error.message === "Invalid login credentials") {
+        errorMessage = "Email ou senha incorretos.";
+      }
       toast({
         variant: "destructive",
         title: "Erro",
-        description: error.message || "Falha ao realizar login. Tente novamente.",
+        description: errorMessage,
       });
     } finally {
       setLoading(false);
@@ -96,14 +102,25 @@ const Login = () => {
       });
       setIsSignUp(false); // Switch back to login form
     } catch (error: any) {
+      let errorMessage = "Falha ao criar conta. Tente novamente.";
+      if (error.message.includes("already registered")) {
+        errorMessage = "Este email já está cadastrado.";
+      }
       toast({
         variant: "destructive",
         title: "Erro",
-        description: error.message || "Falha ao criar conta. Tente novamente.",
+        description: errorMessage,
       });
     } finally {
       setLoading(false);
     }
+  };
+
+  const toggleForm = () => {
+    setIsSignUp(!isSignUp);
+    // Reset form states when toggling
+    loginForm.reset();
+    signupForm.reset();
   };
 
   return (
@@ -125,7 +142,7 @@ const Login = () => {
 
         {isSignUp ? (
           <Form {...signupForm}>
-            <form onSubmit={signupForm.handleSubmit(onSignUp)} className="space-y-6">
+            <form onSubmit={signupForm.handleSubmit(onSignUp)} className="space-y-6 mt-6">
               <FormField
                 control={signupForm.control}
                 name="email"
@@ -138,11 +155,12 @@ const Login = () => {
                     <FormControl>
                       <Input 
                         placeholder="seu@email.com" 
+                        type="email"
                         {...field}
                         className="bg-[#2A3942] border-none focus:ring-[#00A884] text-white h-12"
                       />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-red-400" />
                   </FormItem>
                 )}
               />
@@ -164,7 +182,7 @@ const Login = () => {
                         className="bg-[#2A3942] border-none focus:ring-[#00A884] text-white h-12"
                       />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-red-400" />
                   </FormItem>
                 )}
               />
@@ -186,7 +204,7 @@ const Login = () => {
                         className="bg-[#2A3942] border-none focus:ring-[#00A884] text-white h-12"
                       />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-red-400" />
                   </FormItem>
                 )}
               />
@@ -203,7 +221,7 @@ const Login = () => {
           </Form>
         ) : (
           <Form {...loginForm}>
-            <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-6">
+            <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-6 mt-6">
               <FormField
                 control={loginForm.control}
                 name="email"
@@ -216,11 +234,12 @@ const Login = () => {
                     <FormControl>
                       <Input 
                         placeholder="seu@email.com" 
+                        type="email"
                         {...field}
                         className="bg-[#2A3942] border-none focus:ring-[#00A884] text-white h-12"
                       />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-red-400" />
                   </FormItem>
                 )}
               />
@@ -242,7 +261,7 @@ const Login = () => {
                         className="bg-[#2A3942] border-none focus:ring-[#00A884] text-white h-12"
                       />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-red-400" />
                     <div className="flex justify-end">
                       <Button 
                         variant="link" 
@@ -274,7 +293,8 @@ const Login = () => {
             <Button 
               variant="link" 
               className="p-0 text-[#00A884] hover:text-[#1DA57A] transition-colors font-medium"
-              onClick={() => setIsSignUp(!isSignUp)}
+              onClick={toggleForm}
+              type="button"
             >
               {isSignUp ? "Faça login" : "Cadastre-se"}
             </Button>
