@@ -36,24 +36,26 @@ const SubNav = () => {
 
   return (
     <nav 
-      className="py-2 px-4 shadow-sm"
+      className="w-full border-b"
       style={{ 
         background: `linear-gradient(to right, ${config.navbar_color}, ${config.primary_color})`,
         borderColor: `${config.primary_color}20`
       }}
     >
-      <div className="max-w-7xl mx-auto flex justify-center space-x-8">
-        {links.map((link) => (
-          <Link
-            key={link.path}
-            to={link.path}
-            className={`text-white hover:opacity-80 transition-opacity ${
-              location.pathname === link.path ? "border-b-2" : ""
-            }`}
-          >
-            {link.label}
-          </Link>
-        ))}
+      <div className="max-w-screen-2xl mx-auto px-4">
+        <div className="flex justify-center space-x-8 py-2">
+          {links.map((link) => (
+            <Link
+              key={link.path}
+              to={link.path}
+              className={`text-white hover:opacity-80 transition-opacity ${
+                location.pathname === link.path ? "border-b-2" : ""
+              }`}
+            >
+              {link.label}
+            </Link>
+          ))}
+        </div>
       </div>
     </nav>
   );

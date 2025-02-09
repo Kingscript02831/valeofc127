@@ -39,12 +39,12 @@ const Navbar = () => {
   if (!config) return null;
 
   return (
-    <nav className="bg-gradient-to-r from-primary to-primary-dark border-b border-primary/20 shadow-xl"
+    <nav className="w-full"
          style={{ 
            background: `linear-gradient(to right, ${config.navbar_color}, ${config.primary_color})`,
            borderColor: `${config.primary_color}20`
          }}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <a 
             href="/" 
