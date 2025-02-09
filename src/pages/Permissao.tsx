@@ -27,10 +27,11 @@ interface Permission {
 }
 
 const availablePages = [
-  "/admin/categorias",
-  "/admin/eventos",
+  "/admin",
   "/admin/lugares",
+  "/admin/eventos",
   "/admin/lojas",
+  "/admin/categorias",
 ];
 
 const Permissao = () => {
@@ -310,3 +311,4 @@ const Permissao = () => {
 };
 
 export default Permissao;
+
