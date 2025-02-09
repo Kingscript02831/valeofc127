@@ -17,8 +17,6 @@ const Navbar = () => {
         .single();
       return data;
     },
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
-    gcTime: 1000 * 60 * 30, // Keep in cache for 30 minutes
     placeholderData: {
       navbar_color: '#D6BCFA',
       primary_color: '#1A1F2C',
@@ -28,8 +26,10 @@ const Navbar = () => {
       navbar_social_facebook: '',
       navbar_social_instagram: '',
     } as SiteConfig,
+    staleTime: Infinity, // Never mark the data as stale
     refetchOnMount: false,
     refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 
   const handleShare = async () => {
@@ -44,7 +44,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="w-full"
+    <nav className="w-full fixed top-0 z-50 shadow-md"
          style={{ 
            background: `linear-gradient(to right, ${config?.navbar_color || '#D6BCFA'}, ${config?.primary_color || '#1A1F2C'})`,
            borderColor: `${config?.primary_color || '#1A1F2C'}20`
