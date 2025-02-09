@@ -33,6 +33,7 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
     images: [],
     location: "",
     maps_url: null,
+    entrance_fee: null,
     owner_name: null,
     phone: null,
     social_media: null,
@@ -43,7 +44,6 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
     button_secondary_color: "#000000"
   });
 
-  // Use useEffect to update form data when initialData changes
   useEffect(() => {
     if (initialData) {
       setEventData({
@@ -55,6 +55,7 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
         images: initialData.images || [],
         location: initialData.location || "",
         maps_url: initialData.maps_url || null,
+        entrance_fee: initialData.entrance_fee || null,
         owner_name: initialData.owner_name || null,
         phone: initialData.phone || null,
         social_media: initialData.social_media || null,
@@ -68,7 +69,6 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
   }, [initialData]);
 
   const handleSubmit = () => {
-    // Format the date back to ISO string before submitting
     const formattedData = {
       ...eventData,
       event_date: new Date(eventData.event_date).toISOString()
@@ -146,6 +146,26 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
           value={eventData.location || ""}
           onChange={(e) => setEventData({ ...eventData, location: e.target.value })}
           placeholder="Local do evento"
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="maps_url">Link do Google Maps</Label>
+        <Input
+          id="maps_url"
+          value={eventData.maps_url || ""}
+          onChange={(e) => setEventData({ ...eventData, maps_url: e.target.value })}
+          placeholder="https://maps.google.com/..."
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="entrance_fee">Preço da Entrada</Label>
+        <Input
+          id="entrance_fee"
+          value={eventData.entrance_fee || ""}
+          onChange={(e) => setEventData({ ...eventData, entrance_fee: e.target.value })}
+          placeholder="Gratuito ou valor da entrada"
         />
       </div>
 
