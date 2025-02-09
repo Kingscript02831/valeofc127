@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/components/ui/use-toast";
@@ -13,7 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import type { Database } from "@/integrations/supabase/types";
+import type { Database } from "../integrations/supabase/types";
 
 type Category = Database["public"]["Tables"]["categories"]["Row"];
 
@@ -248,4 +247,3 @@ const AdminCategories = () => {
 };
 
 export default AdminCategories;
-
