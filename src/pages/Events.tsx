@@ -81,7 +81,7 @@ const Events = () => {
             onClick={() => setSelectedCategory(null)}
             className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${
               !selectedCategory
-                ? "bg-primary text-white"
+                ? "bg-[#F1F1F1] text-gray-800"
                 : "bg-gray-100 hover:bg-gray-200"
             }`}
           >
@@ -93,13 +93,13 @@ const Events = () => {
               onClick={() => setSelectedCategory(category.id)}
               className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${
                 selectedCategory === category.id
-                  ? "text-white"
+                  ? "bg-[#F1F1F1] text-gray-800"
                   : "hover:opacity-80"
               }`}
               style={{
                 backgroundColor:
                   selectedCategory === category.id
-                    ? category.background_color || "#D6BCFA"
+                    ? "#F1F1F1"
                     : category.background_color + "40" || "#D6BCFA40",
               }}
             >
@@ -158,3 +158,4 @@ const LoadingSkeleton = () => (
 );
 
 export default Events;
+
