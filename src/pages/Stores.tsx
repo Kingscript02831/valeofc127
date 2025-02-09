@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Phone, Globe, MapPin, Clock, User2, Facebook, Instagram, MessageCircle, Search } from "lucide-react";
@@ -20,11 +21,12 @@ const Stores = () => {
   }, []);
 
   const { data: categories } = useQuery({
-    queryKey: ["categories"],
+    queryKey: ["categories", "stores"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("categories")
         .select("*")
+        .eq('page_type', 'stores')
         .order("name");
       if (error) throw error;
       return data;

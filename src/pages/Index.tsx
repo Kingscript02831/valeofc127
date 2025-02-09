@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import SubNav from "@/components/SubNav";
@@ -23,13 +22,13 @@ const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
-  // Fetch categories
   const { data: categories = [] } = useQuery<Category[]>({
-    queryKey: ['categories'],
+    queryKey: ['categories', 'news'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('categories')
         .select('*')
+        .eq('page_type', 'news')
         .order('name');
       if (error) throw error;
       return data || [];
@@ -169,4 +168,3 @@ const Index = () => {
 };
 
 export default Index;
-

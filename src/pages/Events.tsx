@@ -22,11 +22,12 @@ const Events = () => {
   }, []);
 
   const { data: categories } = useQuery({
-    queryKey: ["categories"],
+    queryKey: ["categories", "events"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("categories")
         .select("*")
+        .eq('page_type', 'events')
         .order("name");
       if (error) throw error;
       return data;
