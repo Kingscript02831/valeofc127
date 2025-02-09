@@ -297,6 +297,7 @@ export type Database = {
           text_color: string
           theme_name: string
           updated_at: string
+          version: number | null
           weather_api_key: string | null
         }
         Insert: {
@@ -343,6 +344,7 @@ export type Database = {
           text_color?: string
           theme_name?: string
           updated_at?: string
+          version?: number | null
           weather_api_key?: string | null
         }
         Update: {
@@ -389,6 +391,7 @@ export type Database = {
           text_color?: string
           theme_name?: string
           updated_at?: string
+          version?: number | null
           weather_api_key?: string | null
         }
         Relationships: []

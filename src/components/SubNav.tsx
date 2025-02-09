@@ -1,31 +1,9 @@
 
-import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import type { Database } from "@/integrations/supabase/types";
-
-type SiteConfig = Database['public']['Tables']['site_configuration']['Row'];
+import { useSiteConfig } from "@/hooks/useSiteConfig";
 
 const SubNav = () => {
-  const { data: config } = useQuery<SiteConfig>({
-    queryKey: ['site-configuration'],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("site_configuration")
-        .select("*")
-        .single();
-      return data;
-    },
-    placeholderData: {
-      navbar_color: '#D6BCFA',
-      primary_color: '#1A1F2C',
-    } as SiteConfig,
-    staleTime: Infinity, // Never mark the data as stale
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-  });
-  
+  const { data: config, isLoading } = useSiteConfig();
   const location = useLocation();
 
   const links = [
@@ -34,6 +12,12 @@ const SubNav = () => {
     { path: "/lugares", label: "Lugares" },
     { path: "/lojas", label: "Lojas" },
   ];
+
+  if (isLoading) {
+    return (
+      <nav className="w-full border-b mt-16 h-12 animate-pulse bg-gray-200" />
+    );
+  }
 
   return (
     <nav 

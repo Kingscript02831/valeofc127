@@ -1,36 +1,10 @@
 
 import { Share2, Facebook, Instagram } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import type { Database } from "@/integrations/supabase/types";
-
-type SiteConfig = Database['public']['Tables']['site_configuration']['Row'];
+import { useSiteConfig } from "@/hooks/useSiteConfig";
 
 const Navbar = () => {
-  const { data: config } = useQuery<SiteConfig>({
-    queryKey: ['site-configuration'],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("site_configuration")
-        .select("*")
-        .single();
-      return data;
-    },
-    placeholderData: {
-      navbar_color: '#D6BCFA',
-      primary_color: '#1A1F2C',
-      text_color: '#FFFFFF',
-      navbar_logo_type: 'text',
-      navbar_logo_text: 'VALEOFC',
-      navbar_social_facebook: '',
-      navbar_social_instagram: '',
-    } as SiteConfig,
-    staleTime: Infinity, // Never mark the data as stale
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-  });
+  const { data: config, isLoading } = useSiteConfig();
 
   const handleShare = async () => {
     try {
@@ -42,6 +16,12 @@ const Navbar = () => {
       console.error("Error sharing:", err);
     }
   };
+
+  if (isLoading) {
+    return (
+      <nav className="w-full fixed top-0 z-50 h-16 animate-pulse bg-gray-200" />
+    );
+  }
 
   return (
     <nav className="w-full fixed top-0 z-50 shadow-md"
