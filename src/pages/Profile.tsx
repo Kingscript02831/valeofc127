@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -34,17 +35,25 @@ export default function Profile() {
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(true);
 
+  // Check for authentication status
   useEffect(() => {
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          navigate("/login");
+          return;
+        }
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error checking session:", error);
         navigate("/login");
       }
-      setIsLoading(false);
     };
     checkSession();
   }, [navigate]);
 
+  // Set up form with default values
   const form = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
@@ -57,7 +66,8 @@ export default function Profile() {
     },
   });
 
-const { data: profile } = useQuery({
+  // Fetch profile data
+  const { data: profile, isError: isProfileError } = useQuery({
     queryKey: ["profile"],
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -69,9 +79,13 @@ const { data: profile } = useQuery({
         .eq("id", session.user.id)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching profile:", error);
+        throw error;
+      }
       return data;
     },
+    enabled: !isLoading, // Only run query when authentication check is complete
     onSuccess: (data) => {
       if (data) {
         form.reset({
@@ -80,8 +94,17 @@ const { data: profile } = useQuery({
         });
       }
     },
+    onError: (error) => {
+      console.error("Error in profile query:", error);
+      toast({
+        title: "Erro ao carregar perfil",
+        description: "Não foi possível carregar seus dados. Por favor, tente novamente.",
+        variant: "destructive",
+      });
+    },
   });
 
+  // Update profile mutation
   const updateProfile = useMutation({
     mutationFn: async (values: z.infer<typeof profileSchema>) => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -105,6 +128,7 @@ const { data: profile } = useQuery({
       });
     },
     onError: (error) => {
+      console.error("Error updating profile:", error);
       toast({
         title: "Erro ao atualizar perfil",
         description: error.message,
@@ -114,54 +138,59 @@ const { data: profile } = useQuery({
   });
 
   const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      navigate("/login");
+    } catch (error: any) {
+      console.error("Error during logout:", error);
       toast({
         title: "Erro ao sair",
         description: error.message,
         variant: "destructive",
       });
-    } else {
-      navigate("/login");
     }
   };
 
-
   const handleDeleteAccount = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return;
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: "Erro",
+          description: "Você precisa estar logado para deletar sua conta",
+          variant: "destructive",
+        });
+        return;
+      }
 
-    const { error: deleteError } = await supabase
-      .from("profiles")
-      .delete()
-      .eq("id", session.user.id);
+      const { error: deleteError } = await supabase
+        .from("profiles")
+        .delete()
+        .eq("id", session.user.id);
 
-    if (deleteError) {
+      if (deleteError) throw deleteError;
+
+      const { error: signOutError } = await supabase.auth.signOut();
+      if (signOutError) throw signOutError;
+
+      navigate("/login");
+    } catch (error: any) {
+      console.error("Error deleting account:", error);
       toast({
         title: "Erro ao deletar conta",
-        description: deleteError.message,
+        description: error.message,
         variant: "destructive",
       });
-      return;
     }
-
-    const { error: signOutError } = await supabase.auth.signOut();
-    if (signOutError) {
-      toast({
-        title: "Erro ao sair",
-        description: signOutError.message,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    navigate("/login");
   };
 
   if (isLoading) {
-    return <div className="flex items-center justify-center min-h-screen">
-      <p>Carregando...</p>
-    </div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p>Carregando...</p>
+      </div>
+    );
   }
 
   return (
