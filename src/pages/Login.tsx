@@ -17,10 +17,21 @@ import { toast } from "@/components/ui/use-toast";
 import { User, Lock, LogIn, Smile, KeyRound, UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 const loginSchema = z.object({
   email: z.string().email("Email inválido"),
   password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
+});
+
+const resetPasswordSchema = z.object({
+  email: z.string().email("Email inválido"),
 });
 
 const signupSchema = z
@@ -37,6 +48,7 @@ const signupSchema = z
 const Login = () => {
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
+  const [isResetPasswordDialogOpen, setIsResetPasswordDialogOpen] = useState(false);
   const navigate = useNavigate();
 
   const loginForm = useForm({
@@ -44,6 +56,13 @@ const Login = () => {
     defaultValues: {
       email: "",
       password: "",
+    },
+  });
+
+  const resetPasswordForm = useForm({
+    resolver: zodResolver(resetPasswordSchema),
+    defaultValues: {
+      email: "",
     },
   });
 
@@ -80,6 +99,32 @@ const Login = () => {
         variant: "destructive",
         title: "Erro",
         description: errorMessage,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onResetPassword = async (data: z.infer<typeof resetPasswordSchema>) => {
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Email enviado!",
+        description: "Verifique sua caixa de entrada para redefinir sua senha.",
+      });
+      setIsResetPasswordDialogOpen(false);
+      resetPasswordForm.reset();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Falha ao enviar email de redefinição de senha. Tente novamente.",
       });
     } finally {
       setLoading(false);
@@ -263,13 +308,51 @@ const Login = () => {
                     </FormControl>
                     <FormMessage className="text-red-400" />
                     <div className="flex justify-end">
-                      <Button 
-                        variant="link" 
-                        className="p-0 h-auto text-sm text-[#00A884] hover:text-[#1DA57A] transition-colors font-medium flex items-center gap-1"
-                      >
-                        <KeyRound className="h-3 w-3" />
-                        Esqueceu a senha?
-                      </Button>
+                      <Dialog open={isResetPasswordDialogOpen} onOpenChange={setIsResetPasswordDialogOpen}>
+                        <DialogTrigger asChild>
+                          <Button 
+                            variant="link" 
+                            className="p-0 h-auto text-sm text-[#00A884] hover:text-[#1DA57A] transition-colors font-medium flex items-center gap-1"
+                          >
+                            <KeyRound className="h-3 w-3" />
+                            Esqueceu a senha?
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="bg-[#202C33] border border-[#2A3942]">
+                          <DialogHeader>
+                            <DialogTitle className="text-white">Redefinir Senha</DialogTitle>
+                          </DialogHeader>
+                          <Form {...resetPasswordForm}>
+                            <form onSubmit={resetPasswordForm.handleSubmit(onResetPassword)} className="space-y-4">
+                              <FormField
+                                control={resetPasswordForm.control}
+                                name="email"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-gray-300">Email</FormLabel>
+                                    <FormControl>
+                                      <Input 
+                                        placeholder="seu@email.com" 
+                                        type="email"
+                                        {...field}
+                                        className="bg-[#2A3942] border-none focus:ring-[#00A884] text-white"
+                                      />
+                                    </FormControl>
+                                    <FormMessage className="text-red-400" />
+                                  </FormItem>
+                                )}
+                              />
+                              <Button 
+                                type="submit" 
+                                className="w-full bg-[#00A884] hover:bg-[#1DA57A]"
+                                disabled={loading}
+                              >
+                                {loading ? "Enviando..." : "Enviar link de redefinição"}
+                              </Button>
+                            </form>
+                          </Form>
+                        </DialogContent>
+                      </Dialog>
                     </div>
                   </FormItem>
                 )}
