@@ -38,7 +38,7 @@ const Admin = () => {
     navbar_social_instagram: null,
     language: "pt-BR",
     enable_dark_mode: false,
-    high_contrast: false,
+    enable_weather: false,
     header_alerts: [],
     navigation_links: [],
     font_size: "medium",
@@ -53,19 +53,24 @@ const Admin = () => {
     footer_social_instagram: null,
     footer_schedule: null,
     footer_copyright_text: "© 2025 VALEOFC. Todos os direitos reservados.",
-    enable_weather: false,
-    weather_api_key: null,
-    location_lat: null,
-    location_lng: null,
-    location_city: null,
-    location_state: null,
-    location_country: null,
     meta_title: 'vale-news-hub',
     meta_description: 'Lovable Generated Project',
     meta_author: 'Lovable',
     meta_image: '/og-image.png',
     button_primary_color: "#9b87f5",
     button_secondary_color: "#7E69AB",
+    bottom_nav_primary_color: "#1A1F2C",
+    bottom_nav_secondary_color: "#D6BCFA",
+    bottom_nav_text_color: "#FFFFFF",
+    bottom_nav_icon_color: "#FFFFFF",
+    high_contrast: false,
+    location_lat: null,
+    location_lng: null,
+    location_city: null,
+    location_state: null,
+    location_country: null,
+    weather_api_key: null,
+    version: 1
   });
 
   const [newNews, setNewNews] = useState<NewsInsert>({
@@ -440,6 +445,7 @@ const Admin = () => {
             <TabsTrigger value="news">Notícias</TabsTrigger>
             <TabsTrigger value="config">Config Navbar</TabsTrigger>
             <TabsTrigger value="footer">Rodapé</TabsTrigger>
+            <TabsTrigger value="bottom-nav">Barra</TabsTrigger>
             <TabsTrigger value="general">Geral</TabsTrigger>
           </TabsList>
 
@@ -1050,6 +1056,85 @@ const Admin = () => {
               <Button onClick={handleConfigUpdate}>
                 Salvar Configurações 
               </Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="bottom-nav" className="bg-white rounded-lg shadow p-6 space-y-6">
+            <div>
+              <h2 className="text-xl font-semibold mb-4">Configurações da Barra Inferior</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <Label htmlFor="bottom_nav_primary_color">Cor Primária do Fundo</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="bottom_nav_primary_color"
+                      type="color"
+                      value={config.bottom_nav_primary_color}
+                      onChange={(e) => setConfig({ ...config, bottom_nav_primary_color: e.target.value })}
+                      className="w-20"
+                    />
+                    <Input
+                      type="text"
+                      value={config.bottom_nav_primary_color}
+                      onChange={(e) => setConfig({ ...config, bottom_nav_primary_color: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="bottom_nav_secondary_color">Cor Secundária do Fundo</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="bottom_nav_secondary_color"
+                      type="color"
+                      value={config.bottom_nav_secondary_color}
+                      onChange={(e) => setConfig({ ...config, bottom_nav_secondary_color: e.target.value })}
+                      className="w-20"
+                    />
+                    <Input
+                      type="text"
+                      value={config.bottom_nav_secondary_color}
+                      onChange={(e) => setConfig({ ...config, bottom_nav_secondary_color: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="bottom_nav_text_color">Cor do Texto</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="bottom_nav_text_color"
+                      type="color"
+                      value={config.bottom_nav_text_color}
+                      onChange={(e) => setConfig({ ...config, bottom_nav_text_color: e.target.value })}
+                      className="w-20"
+                    />
+                    <Input
+                      type="text"
+                      value={config.bottom_nav_text_color}
+                      onChange={(e) => setConfig({ ...config, bottom_nav_text_color: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="bottom_nav_icon_color">Cor dos Ícones</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="bottom_nav_icon_color"
+                      type="color"
+                      value={config.bottom_nav_icon_color}
+                      onChange={(e) => setConfig({ ...config, bottom_nav_icon_color: e.target.value })}
+                      className="w-20"
+                    />
+                    <Input
+                      type="text"
+                      value={config.bottom_nav_icon_color}
+                      onChange={(e) => setConfig({ ...config, bottom_nav_icon_color: e.target.value })}
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           </TabsContent>
 
