@@ -28,7 +28,7 @@ interface InstagramMedia {
 
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   // Fetch categories
   const { data: categories = [] } = useQuery<Category[]>({
@@ -55,11 +55,10 @@ const Index = () => {
           query = query.ilike('title', `%${searchTerm}%`);
         }
 
-        if (selectedCategory && selectedCategory !== "all") {
+        if (selectedCategory) {
           query = query.eq('category_id', selectedCategory);
         }
 
-        // Modificando a ordenação para mostrar as notícias mais recentes primeiro
         query = query.order('date', { ascending: false });
 
         const { data, error } = await query;
@@ -101,25 +100,39 @@ const Index = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
+          </div>
 
-            <div className="w-full sm:w-48">
-              <Select
-                value={selectedCategory}
-                onValueChange={setSelectedCategory}
+          {/* Categories Section */}
+          <div className="flex gap-2 overflow-x-auto pb-4 mb-6 scrollbar-hide">
+            <button
+              onClick={() => setSelectedCategory(null)}
+              className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${
+                !selectedCategory
+                  ? "bg-primary text-white"
+                  : "bg-gray-100 hover:bg-gray-200"
+              }`}
+            >
+              Todas
+            </button>
+            {categories?.map((category) => (
+              <button
+                key={category.id}
+                onClick={() => setSelectedCategory(category.id)}
+                className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${
+                  selectedCategory === category.id
+                    ? "text-white"
+                    : "hover:opacity-80"
+                }`}
+                style={{
+                  backgroundColor:
+                    selectedCategory === category.id
+                      ? category.background_color || "#D6BCFA"
+                      : category.background_color + "40" || "#D6BCFA40",
+                }}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Categoria" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas as categorias</SelectItem>
-                  {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+                {category.name}
+              </button>
+            ))}
           </div>
 
           {isLoading ? (
