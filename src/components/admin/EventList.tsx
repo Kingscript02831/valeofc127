@@ -5,9 +5,11 @@ import { Input } from "@/components/ui/input";
 import type { Database } from "@/integrations/supabase/types";
 
 type Event = Database['public']['Tables']['events']['Row'];
+type Category = Database['public']['Tables']['categories']['Row'];
 
 interface EventListProps {
   events: Event[];
+  categories: Category[];
   searchTerm: string;
   onSearchChange: (term: string) => void;
   onEdit: (event: Event) => void;
@@ -16,6 +18,7 @@ interface EventListProps {
 
 export const EventList = ({ 
   events, 
+  categories,
   searchTerm, 
   onSearchChange, 
   onEdit, 
@@ -47,6 +50,11 @@ export const EventList = ({
                   <span className="text-sm text-gray-500">
                     {new Date(event.event_date).toLocaleDateString()} às {event.event_time}
                   </span>
+                  {event.category_id && (
+                    <span className="text-sm bg-purple-100 text-purple-800 px-2 py-0.5 rounded">
+                      {categories.find(c => c.id === event.category_id)?.name}
+                    </span>
+                  )}
                 </div>
               </div>
               <div className="flex gap-2">
@@ -73,6 +81,19 @@ export const EventList = ({
             {event.image && (
               <p className="text-sm text-gray-500">Imagem: {event.image}</p>
             )}
+            {event.button_color && (
+              <div className="flex items-center gap-2 mt-2">
+                <span className="text-sm text-gray-500">Cor do botão:</span>
+                <div 
+                  className="w-6 h-6 rounded border"
+                  style={{ 
+                    background: event.button_secondary_color 
+                      ? `linear-gradient(to right, ${event.button_color}, ${event.button_secondary_color})`
+                      : event.button_color 
+                  }}
+                />
+              </div>
+            )}
           </div>
         ))}
         {events.length === 0 && (
@@ -84,4 +105,3 @@ export const EventList = ({
     </div>
   );
 };
-
