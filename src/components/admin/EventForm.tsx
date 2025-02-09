@@ -17,7 +17,7 @@ type Event = Database['public']['Tables']['events']['Row'];
 type Category = Database['public']['Tables']['categories']['Row'];
 
 interface EventFormProps {
-  initialData?: Event;
+  initialData?: Partial<Event>;
   categories: Category[];
   onSubmit: (eventData: Omit<Event, 'id' | 'created_at' | 'updated_at'>) => void;
   onCancel?: () => void;

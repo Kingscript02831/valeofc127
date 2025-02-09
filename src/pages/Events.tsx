@@ -9,6 +9,7 @@ import EventCard from "@/components/EventCard";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface Event {
   id: string;
@@ -22,17 +23,37 @@ interface Event {
   created_at: string;
   button_color?: string;
   button_secondary_color?: string;
+  category_id?: string;
+}
+
+interface Category {
+  id: string;
+  name: string;
+  background_color: string;
 }
 
 const Events = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
   
   useEffect(() => {
     document.title = "Eventos | Vale Notícias";
   }, []);
 
+  const { data: categories } = useQuery({
+    queryKey: ["categories"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("categories")
+        .select("*")
+        .order("name");
+      if (error) throw error;
+      return data as Category[];
+    },
+  });
+
   const { data: events, isLoading } = useQuery({
-    queryKey: ["events", searchTerm],
+    queryKey: ["events", searchTerm, selectedCategory],
     queryFn: async () => {
       let query = supabase
         .from("events")
@@ -41,6 +62,10 @@ const Events = () => {
 
       if (searchTerm) {
         query = query.ilike("title", `%${searchTerm}%`);
+      }
+
+      if (selectedCategory !== "all") {
+        query = query.eq("category_id", selectedCategory);
       }
 
       const { data, error } = await query;
@@ -74,15 +99,41 @@ const Events = () => {
       <main className="flex-1 container mx-auto py-8 px-4">
         <div className="flex flex-col md:flex-row md:items-center gap-4 mb-8">
           <h1 className="text-3xl font-bold">Eventos</h1>
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 h-4 w-4" />
-            <Input
-              type="search"
-              placeholder="Buscar eventos..."
-              className="pl-8"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl">
+            <div className="relative">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 h-4 w-4" />
+              <Input
+                type="search"
+                placeholder="Buscar eventos..."
+                className="pl-8"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <Select
+              value={selectedCategory}
+              onValueChange={setSelectedCategory}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Todas as Categorias" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as Categorias</SelectItem>
+                {categories?.map((category) => (
+                  <SelectItem
+                    key={category.id}
+                    value={category.id}
+                    className="flex items-center gap-2"
+                  >
+                    <div
+                      className="w-4 h-4 rounded-full"
+                      style={{ backgroundColor: category.background_color }}
+                    />
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
         

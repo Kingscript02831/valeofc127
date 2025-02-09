@@ -11,6 +11,7 @@ export type Database = {
     Tables: {
       categories: {
         Row: {
+          background_color: string | null
           created_at: string
           id: string
           name: string
@@ -19,6 +20,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          background_color?: string | null
           created_at?: string
           id?: string
           name: string
@@ -27,6 +29,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          background_color?: string | null
           created_at?: string
           id?: string
           name?: string
