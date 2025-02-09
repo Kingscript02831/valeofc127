@@ -70,7 +70,7 @@ const Login = () => {
         title: "Bem-vindo!",
         description: "Login realizado com sucesso.",
       });
-      navigate("/profile");
+      navigate("/");
     } catch (error: any) {
       let errorMessage = "Falha ao realizar login. Tente novamente.";
       if (error.message === "Invalid login credentials") {
@@ -157,7 +157,7 @@ const Login = () => {
                         placeholder="seu@email.com" 
                         type="email"
                         {...field}
-                        className="bg-[#2A3942] border-none text-white focus:ring-[#00A884] h-12 placeholder-gray-400"
+                        className="bg-[#2A3942] border-none focus:ring-[#00A884] text-white h-12"
                       />
                     </FormControl>
                     <FormMessage className="text-red-400" />
@@ -179,7 +179,7 @@ const Login = () => {
                         type="password" 
                         placeholder="******" 
                         {...field}
-                        className="bg-[#2A3942] border-none text-white focus:ring-[#00A884] h-12 placeholder-gray-400"
+                        className="bg-[#2A3942] border-none focus:ring-[#00A884] text-white h-12"
                       />
                     </FormControl>
                     <FormMessage className="text-red-400" />
@@ -201,7 +201,7 @@ const Login = () => {
                         type="password" 
                         placeholder="******" 
                         {...field}
-                        className="bg-[#2A3942] border-none text-white focus:ring-[#00A884] h-12 placeholder-gray-400"
+                        className="bg-[#2A3942] border-none focus:ring-[#00A884] text-white h-12"
                       />
                     </FormControl>
                     <FormMessage className="text-red-400" />
@@ -236,7 +236,7 @@ const Login = () => {
                         placeholder="seu@email.com" 
                         type="email"
                         {...field}
-                        className="bg-[#2A3942] border-none text-white focus:ring-[#00A884] h-12 placeholder-gray-400"
+                        className="bg-[#2A3942] border-none focus:ring-[#00A884] text-white h-12"
                       />
                     </FormControl>
                     <FormMessage className="text-red-400" />
@@ -258,7 +258,7 @@ const Login = () => {
                         type="password" 
                         placeholder="******" 
                         {...field}
-                        className="bg-[#2A3942] border-none text-white focus:ring-[#00A884] h-12 placeholder-gray-400"
+                        className="bg-[#2A3942] border-none focus:ring-[#00A884] text-white h-12"
                       />
                     </FormControl>
                     <FormMessage className="text-red-400" />
