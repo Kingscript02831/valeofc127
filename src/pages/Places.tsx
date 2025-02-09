@@ -10,16 +10,30 @@ import Footer from "../components/Footer";
 import { Input } from "@/components/ui/input";
 
 type Place = Database["public"]["Tables"]["places"]["Row"];
+type Category = Database["public"]["Tables"]["categories"]["Row"];
 
 const Places = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   useEffect(() => {
     document.title = "Lugares | Vale Notícias";
   }, []);
 
+  const { data: categories } = useQuery({
+    queryKey: ["categories"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("categories")
+        .select("*")
+        .order("name");
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const { data: places, isLoading } = useQuery({
-    queryKey: ["places", searchTerm],
+    queryKey: ["places", searchTerm, selectedCategory],
     queryFn: async () => {
       let query = supabase
         .from("places")
@@ -28,6 +42,10 @@ const Places = () => {
 
       if (searchTerm) {
         query = query.ilike("name", `%${searchTerm}%`);
+      }
+
+      if (selectedCategory) {
+        query = query.eq("category_id", selectedCategory);
       }
 
       const { data, error } = await query;
@@ -53,6 +71,39 @@ const Places = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
+        </div>
+
+        {/* Categories Section */}
+        <div className="flex gap-2 overflow-x-auto pb-4 mb-6 scrollbar-hide">
+          <button
+            onClick={() => setSelectedCategory(null)}
+            className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${
+              !selectedCategory
+                ? "bg-primary text-white"
+                : "bg-gray-100 hover:bg-gray-200"
+            }`}
+          >
+            Todas
+          </button>
+          {categories?.map((category) => (
+            <button
+              key={category.id}
+              onClick={() => setSelectedCategory(category.id)}
+              className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${
+                selectedCategory === category.id
+                  ? "text-white"
+                  : "hover:opacity-80"
+              }`}
+              style={{
+                backgroundColor:
+                  selectedCategory === category.id
+                    ? category.background_color || "#D6BCFA"
+                    : category.background_color + "40" || "#D6BCFA40",
+              }}
+            >
+              {category.name}
+            </button>
+          ))}
         </div>
         
         {isLoading ? (

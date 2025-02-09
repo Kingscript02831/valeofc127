@@ -9,33 +9,15 @@ import EventCard from "@/components/EventCard";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import type { Database } from "@/integrations/supabase/types";
 
-interface Event {
-  id: string;
-  title: string;
-  description: string;
-  event_date: string;
-  event_time: string;
-  image?: string;
-  images?: string[];
-  location?: string;
-  created_at: string;
-  button_color?: string;
-  button_secondary_color?: string;
-  category_id?: string;
-}
-
-interface Category {
-  id: string;
-  name: string;
-  background_color: string;
-}
+type Event = Database["public"]["Tables"]["events"]["Row"];
+type Category = Database["public"]["Tables"]["categories"]["Row"];
 
 const Events = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
   useEffect(() => {
     document.title = "Eventos | Vale Notícias";
   }, []);
@@ -48,7 +30,7 @@ const Events = () => {
         .select("*")
         .order("name");
       if (error) throw error;
-      return data as Category[];
+      return data;
     },
   });
 
@@ -64,33 +46,15 @@ const Events = () => {
         query = query.ilike("title", `%${searchTerm}%`);
       }
 
-      if (selectedCategory !== "all") {
+      if (selectedCategory) {
         query = query.eq("category_id", selectedCategory);
       }
 
       const { data, error } = await query;
       if (error) throw error;
-      return data as Event[];
+      return data;
     },
   });
-
-  const LoadingSkeleton = () => (
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-      {[1, 2, 3].map((i) => (
-        <div key={i} className="overflow-hidden rounded-lg border bg-card">
-          <Skeleton className="h-48 w-full" />
-          <div className="p-6 space-y-4">
-            <Skeleton className="h-6 w-3/4" />
-            <div className="space-y-2">
-              <Skeleton className="h-4 w-1/2" />
-              <Skeleton className="h-4 w-1/3" />
-            </div>
-            <Skeleton className="h-20 w-full" />
-          </div>
-        </div>
-      ))}
-    </div>
-  );
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -99,42 +63,49 @@ const Events = () => {
       <main className="flex-1 container mx-auto py-8 px-4">
         <div className="flex flex-col md:flex-row md:items-center gap-4 mb-8">
           <h1 className="text-3xl font-bold">Eventos</h1>
-          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl">
-            <div className="relative">
-              <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 h-4 w-4" />
-              <Input
-                type="search"
-                placeholder="Buscar eventos..."
-                className="pl-8"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <Select
-              value={selectedCategory}
-              onValueChange={setSelectedCategory}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Todas as Categorias" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas as Categorias</SelectItem>
-                {categories?.map((category) => (
-                  <SelectItem
-                    key={category.id}
-                    value={category.id}
-                    className="flex items-center gap-2"
-                  >
-                    <div
-                      className="w-4 h-4 rounded-full"
-                      style={{ backgroundColor: category.background_color }}
-                    />
-                    {category.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 h-4 w-4" />
+            <Input
+              type="search"
+              placeholder="Buscar eventos..."
+              className="pl-8"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
+        </div>
+
+        {/* Categories Section */}
+        <div className="flex gap-2 overflow-x-auto pb-4 mb-6 scrollbar-hide">
+          <button
+            onClick={() => setSelectedCategory(null)}
+            className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${
+              !selectedCategory
+                ? "bg-primary text-white"
+                : "bg-gray-100 hover:bg-gray-200"
+            }`}
+          >
+            Todas
+          </button>
+          {categories?.map((category) => (
+            <button
+              key={category.id}
+              onClick={() => setSelectedCategory(category.id)}
+              className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${
+                selectedCategory === category.id
+                  ? "text-white"
+                  : "hover:opacity-80"
+              }`}
+              style={{
+                backgroundColor:
+                  selectedCategory === category.id
+                    ? category.background_color || "#D6BCFA"
+                    : category.background_color + "40" || "#D6BCFA40",
+              }}
+            >
+              {category.name}
+            </button>
+          ))}
         </div>
         
         {isLoading ? (
@@ -167,5 +138,23 @@ const Events = () => {
     </div>
   );
 };
+
+const LoadingSkeleton = () => (
+  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+    {[1, 2, 3].map((i) => (
+      <div key={i} className="overflow-hidden rounded-lg border bg-card">
+        <Skeleton className="h-48 w-full" />
+        <div className="p-6 space-y-4">
+          <Skeleton className="h-6 w-3/4" />
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-1/2" />
+            <Skeleton className="h-4 w-1/3" />
+          </div>
+          <Skeleton className="h-20 w-full" />
+        </div>
+      </div>
+    ))}
+  </div>
+);
 
 export default Events;
