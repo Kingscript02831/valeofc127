@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/use-toast";
-import { User, Lock, LogIn, Smile, KeyRound, UserPlus } from "lucide-react";
+import { User, Lock, LogIn, Smile, KeyRound, UserPlus, AtSign, Calendar, Phone } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import {
@@ -38,6 +38,12 @@ const signupSchema = z
     email: z.string().min(1, "O email é obrigatório").email("Digite um email válido"),
     password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
     confirmPassword: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
+    name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
+    username: z.string()
+      .min(3, "Username deve ter pelo menos 3 caracteres")
+      .regex(/^[a-zA-Z0-9_]+$/, "Username deve conter apenas letras, números e _"),
+    birth_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida"),
+    phone: z.string().min(10, "Telefone deve ter pelo menos 10 dígitos"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "As senhas não coincidem",
@@ -71,6 +77,10 @@ const Login = () => {
       email: "",
       password: "",
       confirmPassword: "",
+      name: "",
+      username: "",
+      birth_date: "",
+      phone: "",
     },
   });
 
@@ -133,22 +143,36 @@ const Login = () => {
   const onSignUp = async (data: z.infer<typeof signupSchema>) => {
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signUp({
+      const { error: signUpError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
       });
 
-      if (error) throw error;
+      if (signUpError) throw signUpError;
+
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          name: data.name,
+          username: data.username,
+          birth_date: data.birth_date,
+          phone: data.phone,
+        })
+        .eq('id', (await supabase.auth.getUser()).data.user?.id);
+
+      if (profileError) throw profileError;
 
       toast({
         title: "Conta criada!",
         description: "Sua conta foi criada com sucesso. Faça login para continuar.",
       });
-      setIsSignUp(false); // Switch back to login form
+      setIsSignUp(false);
     } catch (error: any) {
       let errorMessage = "Falha ao criar conta. Tente novamente.";
       if (error.message.includes("already registered")) {
         errorMessage = "Este email já está cadastrado.";
+      } else if (error.message.includes("unique constraint")) {
+        errorMessage = "Este username já está em uso.";
       }
       toast({
         variant: "destructive",
@@ -166,7 +190,7 @@ const Login = () => {
     
     // Reset forms but preserve the email
     loginForm.reset({ email: currentEmail, password: "" });
-    signupForm.reset({ email: currentEmail, password: "", confirmPassword: "" });
+    signupForm.reset({ email: currentEmail, password: "", confirmPassword: "", name: "", username: "", birth_date: "", phone: "" });
   };
 
   return (
@@ -248,6 +272,90 @@ const Login = () => {
                         type="password" 
                         placeholder="******" 
                         autoComplete="new-password"
+                        {...field}
+                        className="bg-[#2A3942] border-none focus:ring-[#00A884] text-white h-12"
+                      />
+                    </FormControl>
+                    <FormMessage className="text-red-400" />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={signupForm.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2 text-gray-300">
+                      <User className="h-4 w-4" />
+                      Nome Completo
+                    </FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="Seu nome completo"
+                        {...field}
+                        className="bg-[#2A3942] border-none focus:ring-[#00A884] text-white h-12"
+                      />
+                    </FormControl>
+                    <FormMessage className="text-red-400" />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={signupForm.control}
+                name="username"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2 text-gray-300">
+                      <AtSign className="h-4 w-4" />
+                      Username
+                    </FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="seu_username"
+                        {...field}
+                        className="bg-[#2A3942] border-none focus:ring-[#00A884] text-white h-12"
+                      />
+                    </FormControl>
+                    <FormMessage className="text-red-400" />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={signupForm.control}
+                name="birth_date"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2 text-gray-300">
+                      <Calendar className="h-4 w-4" />
+                      Data de Nascimento
+                    </FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="date"
+                        {...field}
+                        className="bg-[#2A3942] border-none focus:ring-[#00A884] text-white h-12"
+                      />
+                    </FormControl>
+                    <FormMessage className="text-red-400" />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={signupForm.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2 text-gray-300">
+                      <Phone className="h-4 w-4" />
+                      Telefone
+                    </FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="(00) 00000-0000"
                         {...field}
                         className="bg-[#2A3942] border-none focus:ring-[#00A884] text-white h-12"
                       />

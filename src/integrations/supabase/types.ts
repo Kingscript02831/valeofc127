@@ -314,9 +314,10 @@ export type Database = {
           created_at: string
           email: string | null
           id: string
-          name: string | null
+          name: string
           phone: string | null
           updated_at: string
+          username: string | null
         }
         Insert: {
           address?: string | null
@@ -325,9 +326,10 @@ export type Database = {
           created_at?: string
           email?: string | null
           id: string
-          name?: string | null
+          name: string
           phone?: string | null
           updated_at?: string
+          username?: string | null
         }
         Update: {
           address?: string | null
@@ -336,9 +338,10 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
-          name?: string | null
+          name?: string
           phone?: string | null
           updated_at?: string
+          username?: string | null
         }
         Relationships: []
       }

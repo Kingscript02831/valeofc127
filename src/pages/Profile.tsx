@@ -17,7 +17,7 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { LogOut, Trash2, User } from "lucide-react";
+import { LogOut, Trash2, User, AtSign } from "lucide-react";
 
 const profileSchema = z.object({
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
@@ -26,6 +26,7 @@ const profileSchema = z.object({
   birth_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida"),
   address: z.string().min(5, "Endereço deve ter pelo menos 5 caracteres"),
   avatar_url: z.string().url("URL inválida").optional(),
+  username: z.string().min(2, "Username deve ter pelo menos 2 caracteres"),
 });
 
 export default function Profile() {
@@ -62,6 +63,7 @@ export default function Profile() {
       birth_date: "",
       address: "",
       avatar_url: "",
+      username: "",
     },
   });
 
@@ -197,7 +199,15 @@ export default function Profile() {
   return (
     <div className="container max-w-2xl mx-auto p-4 space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Perfil</h1>
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold">Perfil</h1>
+          {profile?.username && (
+            <p className="text-muted-foreground flex items-center gap-1">
+              <AtSign className="h-4 w-4" />
+              {profile.username}
+            </p>
+          )}
+        </div>
         <div className="flex gap-2">
           <Button
             variant="outline"
@@ -314,6 +324,20 @@ export default function Profile() {
                 <FormLabel>Endereço</FormLabel>
                 <FormControl>
                   <Input placeholder="Seu endereço completo" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="username"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Username</FormLabel>
+                <FormControl>
+                  <Input placeholder="seu_username" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
