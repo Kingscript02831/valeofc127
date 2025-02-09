@@ -1,4 +1,3 @@
-
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Calendar, ChevronDown, ChevronUp, Clock, MapPin, ChevronLeft, ChevronRight, X, Timer } from "lucide-react";
@@ -22,6 +21,11 @@ interface EventCardProps {
   createdAt?: string;
   buttonColor?: string;
   buttonSecondaryColor?: string;
+  category?: {
+    id: string;
+    name: string;
+    background_color?: string;
+  } | null;
 }
 
 const EventCard = ({
@@ -35,6 +39,7 @@ const EventCard = ({
   createdAt,
   buttonColor,
   buttonSecondaryColor,
+  category,
 }: EventCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -42,7 +47,6 @@ const EventCard = ({
   const [countdown, setCountdown] = useState({ days: 0, hrs: 0, mins: 0, secs: 0, isExpired: false });
   const [config, setConfig] = useState<SiteConfig | null>(null);
 
-  // Parse the date safely
   const date = parseISO(eventDate);
   const formattedDate = format(date, "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
 
@@ -83,13 +87,11 @@ const EventCard = ({
         const now = new Date();
         const difference = targetDate.getTime() - now.getTime();
 
-        // Se o evento já passou
         if (difference <= 0) {
           setCountdown({ days: 0, hrs: 0, mins: 0, secs: 0, isExpired: true });
           return;
         }
 
-        // Calculando os valores corretamente
         const days = Math.floor(difference / (1000 * 60 * 60 * 24));
         const totalHours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const totalMinutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
@@ -130,7 +132,6 @@ const EventCard = ({
 
   const primaryColor = buttonColor || config?.primary_color || '#000000';
   
-  // Create button styles with gradient if both colors are provided
   const buttonStyle = buttonColor ? {
     background: buttonSecondaryColor 
       ? `linear-gradient(to right, ${buttonColor}, ${buttonSecondaryColor})`
@@ -169,6 +170,17 @@ const EventCard = ({
                 <MapPin className="h-3 w-3" />
                 <span>{location}</span>
               </div>
+            )}
+            {category && (
+              <span 
+                className="px-2 py-0.5 rounded-full text-xs"
+                style={{
+                  backgroundColor: category.background_color ? `${category.background_color}40` : '#D6BCFA40',
+                  color: category.background_color || '#1A1F2C'
+                }}
+              >
+                {category.name}
+              </span>
             )}
           </div>
 

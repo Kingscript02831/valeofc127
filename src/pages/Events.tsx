@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Search } from "lucide-react";
@@ -39,7 +40,14 @@ const Events = () => {
     queryFn: async () => {
       let query = supabase
         .from("events")
-        .select("*")
+        .select(`
+          *,
+          categories:category_id (
+            id,
+            name,
+            background_color
+          )
+        `)
         .order("event_date", { ascending: true });
 
       if (searchTerm) {
@@ -125,6 +133,7 @@ const Events = () => {
                 createdAt={event.created_at}
                 buttonColor={event.button_color}
                 buttonSecondaryColor={event.button_secondary_color}
+                category={event.categories}
               />
             ))}
           </div>
