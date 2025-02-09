@@ -16,7 +16,7 @@ const BottomNav = () => {
           <Link
             to="/"
             className={`flex flex-col items-center p-2 ${
-              isActive("/") ? "text-blue-600" : "text-gray-600"
+              isActive("/") ? "text-primary" : "text-gray-600"
             }`}
           >
             <Home className="h-6 w-6" />
@@ -26,7 +26,7 @@ const BottomNav = () => {
           <Link
             to="/notifications"
             className={`flex flex-col items-center p-2 ${
-              isActive("/notifications") ? "text-blue-600" : "text-gray-600"
+              isActive("/notifications") ? "text-primary" : "text-gray-600"
             }`}
           >
             <Bell className="h-6 w-6" />
@@ -36,7 +36,7 @@ const BottomNav = () => {
           <Link
             to="/profile"
             className={`flex flex-col items-center p-2 ${
-              isActive("/profile") ? "text-blue-600" : "text-gray-600"
+              isActive("/profile") ? "text-primary" : "text-gray-600"
             }`}
           >
             <User className="h-6 w-6" />
