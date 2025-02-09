@@ -63,7 +63,7 @@ const Login = () => {
             </div>
           </div>
           <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            Bem-vindo de volta!
+            Bem-vindo!
           </h2>
           <p className="text-gray-500">
             Faça login para acessar sua conta
