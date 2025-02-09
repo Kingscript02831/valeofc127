@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -58,7 +57,7 @@ export default function Profile() {
     },
   });
 
-  const { data: profile } = useQuery({
+const { data: profile } = useQuery({
     queryKey: ["profile"],
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -126,6 +125,7 @@ export default function Profile() {
       navigate("/login");
     }
   };
+
 
   const handleDeleteAccount = async () => {
     const { data: { session } } = await supabase.auth.getSession();
