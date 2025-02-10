@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bell, CheckCircle, Clock, ChevronRight, Calendar, Newspaper, Trash2 } from "lucide-react";
@@ -86,10 +85,16 @@ const Notify = () => {
       // Also invalidate the unreadNotifications query
       queryClient.invalidateQueries({ queryKey: ["unreadNotifications"] });
 
-      toast.success("Notificação excluída com sucesso");
+      toast.success("Notificação excluída com sucesso", {
+        position: "top-center",
+        style: { marginTop: "64px" }
+      });
     } catch (error: any) {
       console.error("Error in deleteNotification:", error);
-      toast.error("Erro ao excluir notificação");
+      toast.error("Erro ao excluir notificação", {
+        position: "top-center",
+        style: { marginTop: "64px" }
+      });
     }
   };
 
@@ -120,7 +125,10 @@ const Notify = () => {
         }
       }
     } catch (error: any) {
-      toast.error("Erro ao marcar notificação como lida");
+      toast.error("Erro ao marcar notificação como lida", {
+        position: "top-center",
+        style: { marginTop: "64px" }
+      });
     }
   };
 
@@ -141,9 +149,15 @@ const Notify = () => {
       // Also invalidate the unreadNotifications query
       queryClient.invalidateQueries({ queryKey: ["unreadNotifications"] });
 
-      toast.success("Todas as notificações foram marcadas como lidas");
+      toast.success("Todas as notificações foram marcadas como lidas", {
+        position: "top-center",
+        style: { marginTop: "64px" }
+      });
     } catch (error: any) {
-      toast.error("Erro ao marcar notificações como lidas");
+      toast.error("Erro ao marcar notificações como lidas", {
+        position: "top-center",
+        style: { marginTop: "64px" }
+      });
     }
   };
 
