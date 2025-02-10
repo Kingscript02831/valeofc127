@@ -154,27 +154,6 @@ export type Database = {
         }
         Relationships: []
       }
-      followers: {
-        Row: {
-          created_at: string
-          follower_id: string | null
-          following_id: string | null
-          id: string
-        }
-        Insert: {
-          created_at?: string
-          follower_id?: string | null
-          following_id?: string | null
-          id?: string
-        }
-        Update: {
-          created_at?: string
-          follower_id?: string | null
-          following_id?: string | null
-          id?: string
-        }
-        Relationships: []
-      }
       news: {
         Row: {
           button_color: string | null
@@ -331,7 +310,6 @@ export type Database = {
         Row: {
           address: string | null
           avatar_url: string | null
-          bio: string | null
           birth_date: string | null
           created_at: string
           email: string | null
@@ -340,12 +318,10 @@ export type Database = {
           phone: string | null
           updated_at: string
           username: string | null
-          website: string | null
         }
         Insert: {
           address?: string | null
           avatar_url?: string | null
-          bio?: string | null
           birth_date?: string | null
           created_at?: string
           email?: string | null
@@ -354,12 +330,10 @@ export type Database = {
           phone?: string | null
           updated_at?: string
           username?: string | null
-          website?: string | null
         }
         Update: {
           address?: string | null
           avatar_url?: string | null
-          bio?: string | null
           birth_date?: string | null
           created_at?: string
           email?: string | null
@@ -368,7 +342,6 @@ export type Database = {
           phone?: string | null
           updated_at?: string
           username?: string | null
-          website?: string | null
         }
         Relationships: []
       }
