@@ -32,7 +32,7 @@ const PostCard = ({ post }: PostCardProps) => {
         .from('profiles')
         .select('*')
         .eq('id', post.user_id)
-        .single();
+        .maybeSingle();
       return data;
     }
   });
@@ -74,7 +74,7 @@ const PostCard = ({ post }: PostCardProps) => {
           .select('*')
           .eq('post_id', post.id)
           .eq('user_id', session.user.id)
-          .single();
+          .maybeSingle();
         setIsLiked(!!like);
       }
       return session;
