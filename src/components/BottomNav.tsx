@@ -1,10 +1,11 @@
 
-import { Home, Bell, User } from "lucide-react";
+import { Home, PlusCircle, User } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSiteConfig } from "../hooks/useSiteConfig";
 import { supabase } from "../integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import CreatePostDialog from "./CreatePostDialog";
 
 const BottomNav = () => {
   const location = useLocation();
@@ -13,12 +14,10 @@ const BottomNav = () => {
   const [session, setSession] = useState<any>(null);
 
   useEffect(() => {
-    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
     });
 
-    // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -30,7 +29,7 @@ const BottomNav = () => {
 
   const handleNavigation = (path: string, e: React.MouseEvent) => {
     e.preventDefault();
-    if (!session && path === "/notifications") {
+    if (!session) {
       toast.error("Você precisa fazer login para acessar esta área");
       navigate("/login");
       return;
@@ -38,9 +37,7 @@ const BottomNav = () => {
     navigate(path);
   };
 
-  const isActive = (path: string) => {
-    return location.pathname === path;
-  };
+  const isActive = (path: string) => location.pathname === path;
 
   const navStyle = {
     background: `linear-gradient(to right, ${config?.bottom_nav_primary_color || '#1A1F2C'}, ${config?.bottom_nav_secondary_color || '#D6BCFA'})`,
@@ -55,26 +52,29 @@ const BottomNav = () => {
         <div className="flex justify-around items-center">
           <Link
             to="/"
-            className={`flex flex-col items-center p-1`}
+            className="flex flex-col items-center p-1"
             style={{ color: isActive("/") ? iconColor : textColor }}
           >
             <Home className="h-5 w-5" />
             <span className="text-xs">Início</span>
           </Link>
 
-          <a
-            href="/notifications"
-            onClick={(e) => handleNavigation("/notifications", e)}
-            className={`flex flex-col items-center p-1`}
-            style={{ color: isActive("/notifications") ? iconColor : textColor }}
-          >
-            <Bell className="h-5 w-5" />
-            <span className="text-xs">Notificações</span>
-          </a>
+          {session ? (
+            <CreatePostDialog />
+          ) : (
+            <Link
+              to="/login"
+              className="flex flex-col items-center p-1"
+              style={{ color: textColor }}
+            >
+              <PlusCircle className="h-5 w-5" />
+              <span className="text-xs">Criar</span>
+            </Link>
+          )}
 
           <Link
             to={session ? "/perfil" : "/login"}
-            className={`flex flex-col items-center p-1`}
+            className="flex flex-col items-center p-1"
             style={{ color: isActive("/perfil") || isActive("/login") ? iconColor : textColor }}
           >
             <User className="h-5 w-5" />
