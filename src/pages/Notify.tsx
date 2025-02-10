@@ -74,13 +74,15 @@ const Notify = () => {
 
       if (error) throw error;
 
-      // Update local cache
       queryClient.setQueryData<Notification[]>(["notifications"], (old) =>
         old?.filter((n) => n.id !== id)
       );
 
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+
       toast.success("Notificação excluída com sucesso");
     } catch (error: any) {
+      console.error("Erro ao excluir notificação:", error);
       toast.error("Erro ao excluir notificação");
     }
   };
@@ -94,12 +96,10 @@ const Notify = () => {
 
       if (error) throw error;
 
-      // Update local cache
       queryClient.setQueryData<Notification[]>(["notifications"], (old) =>
         old?.map((n) => (n.id === id ? { ...n, read: true } : n))
       );
 
-      // Navigate if there's a reference_id
       const notification = notifications.find(n => n.id === id);
       if (notification?.reference_id) {
         if (notification.type === 'event') {
@@ -122,7 +122,6 @@ const Notify = () => {
 
       if (error) throw error;
 
-      // Update local cache
       queryClient.setQueryData<Notification[]>(["notifications"], (old) =>
         old?.map((n) => ({ ...n, read: true }))
       );
