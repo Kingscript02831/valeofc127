@@ -93,9 +93,9 @@ const BottomNav = () => {
 
           <a
             href="/notify"
-            onClick={(e) => handleNavigation("/notifications", e)}
+            onClick={(e) => handleNavigation("/notify", e)}
             className={`flex flex-col items-center p-1 relative`}
-            style={{ color: isActive("/notifications") ? iconColor : textColor }}
+            style={{ color: isActive("/notify") ? iconColor : textColor }}
           >
             <Bell className="h-5 w-5" />
             {unreadCount > 0 && (
