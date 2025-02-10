@@ -1,6 +1,4 @@
 // app/notify.tsx
-'use client'
-
 import { useState, useEffect } from "react";
 import { Bell, CheckCircle, Clock, ChevronRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
