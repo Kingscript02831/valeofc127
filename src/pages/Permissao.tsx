@@ -12,6 +12,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { PermissionType } from '@/hooks/usePermissions';
+import { Badge } from '@/components/ui/badge';
 
 type Permission = {
   id: string;
@@ -23,6 +24,12 @@ type Profile = {
   id: string;
   email: string;
   name: string;
+  phone?: string;
+  birth_date?: string;
+  avatar_url?: string;
+  username?: string;
+  city?: string;
+  bio?: string;
 };
 
 type UserPermission = {
@@ -79,7 +86,6 @@ const Permissao = () => {
   const togglePermission = async (userId: string, permission: PermissionType, currentValue: boolean) => {
     try {
       if (currentValue) {
-        // Remover permissão
         const { error } = await supabase
           .from('user_permissions')
           .delete()
@@ -88,7 +94,6 @@ const Permissao = () => {
 
         if (error) throw error;
       } else {
-        // Adicionar permissão
         const { error } = await supabase
           .from('user_permissions')
           .insert({
@@ -99,7 +104,6 @@ const Permissao = () => {
         if (error) throw error;
       }
 
-      // Atualizar a interface
       await fetchUsers();
       toast.success('Permissões atualizadas com sucesso');
     } catch (error) {
@@ -119,8 +123,9 @@ const Permissao = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Usuário</TableHead>
-              <TableHead>Email</TableHead>
+              <TableHead>Avatar</TableHead>
+              <TableHead>Informações do Usuário</TableHead>
+              <TableHead>Contato</TableHead>
               {permissionTypes.map((type) => (
                 <TableHead key={type} className="text-center">
                   {type.replace('admin_', '').charAt(0).toUpperCase() + 
@@ -132,8 +137,46 @@ const Permissao = () => {
           <TableBody>
             {users.map((user) => (
               <TableRow key={user.profile.id}>
-                <TableCell>{user.profile.name}</TableCell>
-                <TableCell>{user.profile.email}</TableCell>
+                <TableCell>
+                  {user.profile.avatar_url ? (
+                    <img 
+                      src={user.profile.avatar_url} 
+                      alt={user.profile.name} 
+                      className="w-10 h-10 rounded-full"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                      {user.profile.name.charAt(0)}
+                    </div>
+                  )}
+                </TableCell>
+                <TableCell>
+                  <div className="space-y-1">
+                    <div className="font-medium">{user.profile.name}</div>
+                    <div className="text-sm text-gray-500">
+                      {user.profile.username && <div>@{user.profile.username}</div>}
+                      {user.profile.email}
+                    </div>
+                    {user.profile.bio && (
+                      <div className="text-sm text-gray-600">{user.profile.bio}</div>
+                    )}
+                    {user.profile.city && (
+                      <Badge variant="secondary" className="text-xs">
+                        {user.profile.city}
+                      </Badge>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className="space-y-1 text-sm">
+                    {user.profile.phone && (
+                      <div>📱 {user.profile.phone}</div>
+                    )}
+                    {user.profile.birth_date && (
+                      <div>🎂 {new Date(user.profile.birth_date).toLocaleDateString()}</div>
+                    )}
+                  </div>
+                </TableCell>
                 {permissionTypes.map((permission) => (
                   <TableCell key={permission} className="text-center">
                     <Switch
