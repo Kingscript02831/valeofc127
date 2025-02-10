@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../integrations/supabase/client";
@@ -38,18 +37,16 @@ const Login = () => {
   };
 
   return (
-    <div className="container max-w-md mx-auto p-4 min-h-screen flex flex-col justify-center">
-      <div className="space-y-6 bg-card p-6 rounded-lg shadow-lg">
-        <div className="space-y-2 text-center">
-          <h1 className="text-2xl font-bold">Login</h1>
-          <p className="text-muted-foreground">
-            Entre com suas credenciais para acessar
-          </p>
+    <div className="min-h-screen flex items-center justify-center bg-[#111B21] p-6">
+      <div className="w-full max-w-md bg-[#202C33]/90 backdrop-blur-md p-8 rounded-xl shadow-xl border border-white/10">
+        <div className="text-center space-y-3">
+          <h1 className="text-3xl font-bold text-white">Bem-vindo</h1>
+          <p className="text-gray-400">Entre com suas credenciais para acessar</p>
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div className="space-y-2">
-            <label htmlFor="email" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+        <form onSubmit={handleLogin} className="space-y-6 mt-6">
+          <div>
+            <label htmlFor="email" className="text-sm font-medium text-gray-300">
               Email
             </label>
             <Input
@@ -59,23 +56,26 @@ const Login = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              className="bg-[#2A3942] border-[#37454F] text-white placeholder-gray-400"
             />
           </div>
 
-          <div className="space-y-2">
-            <label htmlFor="password" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+          <div>
+            <label htmlFor="password" className="text-sm font-medium text-gray-300">
               Senha
             </label>
             <Input
               id="password"
               type="password"
+              placeholder="******"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              className="bg-[#2A3942] border-[#37454F] text-white placeholder-gray-400"
             />
             <Button
               variant="link"
-              className="p-0 h-auto text-sm"
+              className="p-0 text-sm text-green-400 hover:text-green-300 transition"
               onClick={() => navigate("/reset-password")}
             >
               Esqueceu sua senha?
@@ -84,17 +84,17 @@ const Login = () => {
 
           <Button
             type="submit"
-            className="w-full"
+            className="w-full h-12 bg-green-500 hover:bg-green-400 text-white font-medium rounded-lg transition duration-300 shadow-md"
             disabled={loading}
           >
             {loading ? "Entrando..." : "Entrar"}
           </Button>
 
-          <p className="text-center text-sm text-muted-foreground">
+          <p className="text-center text-sm text-gray-400">
             Não possui uma conta?{" "}
             <Button
               variant="link"
-              className="p-0 h-auto"
+              className="p-0 text-green-400 hover:text-green-300 transition"
               onClick={() => navigate("/signup")}
             >
               Criar conta
