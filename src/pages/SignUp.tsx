@@ -12,6 +12,9 @@ const SignUp = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
+  const [phone, setPhone] = useState("");
+  const [birthDate, setBirthDate] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -25,6 +28,9 @@ const SignUp = () => {
         options: {
           data: {
             full_name: name,
+            username,
+            phone,
+            birth_date: birthDate,
           },
         },
       });
@@ -61,7 +67,7 @@ const SignUp = () => {
         <form onSubmit={handleSignUp} className="space-y-4">
           <div className="space-y-2">
             <label htmlFor="name" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-              Nome
+              Nome Completo
             </label>
             <Input
               id="name"
@@ -69,6 +75,20 @@ const SignUp = () => {
               placeholder="Seu nome completo"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="username" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              Nome de Usuário
+            </label>
+            <Input
+              id="username"
+              type="text"
+              placeholder="@seu.usuario"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               required
             />
           </div>
@@ -83,6 +103,33 @@ const SignUp = () => {
               placeholder="seu@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="phone" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              Telefone
+            </label>
+            <Input
+              id="phone"
+              type="tel"
+              placeholder="(00) 00000-0000"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="birthDate" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              Data de Nascimento
+            </label>
+            <Input
+              id="birthDate"
+              type="date"
+              value={birthDate}
+              onChange={(e) => setBirthDate(e.target.value)}
               required
             />
           </div>
