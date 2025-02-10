@@ -20,7 +20,7 @@ interface Notification {
   };
 }
 
-const NotificationsPage = () => {
+const Notify = () => {
   const [notifications, setNotifications] = useState<Notification[]>([
     {
       id: '1',
@@ -42,7 +42,6 @@ const NotificationsPage = () => {
       isRead: true,
       type: 'alert'
     },
-    // Adicione mais notificações...
   ]);
 
   const markAsRead = (id: string) => {
@@ -165,4 +164,4 @@ const NotificationsPage = () => {
   );
 };
 
-export default NotificationsPage;
+export default Notify;
