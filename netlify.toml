@@ -1,7 +1,8 @@
 [build]
   command = "npm install --legacy-peer-deps && npm run build"
-  publish = "dist"
-  functions = "functions"  # Remova se não usar serverless functions
+  publish = "dist"  # Verifique se 'dist' é o diretório correto do seu build
+  # Remova a linha abaixo se você não estiver usando funções serverless
+  functions = "functions"  
 
 [dev]
   framework = "vite"
