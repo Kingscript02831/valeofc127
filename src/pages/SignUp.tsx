@@ -19,6 +19,17 @@ const SignUp = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validar se todos os campos estão preenchidos
+    if (!email || !password || !name || !username || !phone || !birthDate) {
+      toast({
+        title: "Erro ao criar conta",
+        description: "Por favor, preencha todos os campos",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -38,11 +49,11 @@ const SignUp = () => {
       if (error) throw error;
 
       toast({
-        title: "Registro realizado com sucesso",
-        description: "Você já pode fazer login na sua conta",
+        title: "Conta criada com sucesso",
+        description: "Bem-vindo ao sistema!",
       });
       
-      navigate("/login");
+      navigate("/"); // Redireciona para a página inicial após o cadastro
     } catch (error: any) {
       toast({
         title: "Erro ao criar conta",
@@ -60,7 +71,7 @@ const SignUp = () => {
         <div className="space-y-2 text-center">
           <h1 className="text-2xl font-bold">Criar Conta</h1>
           <p className="text-muted-foreground">
-            Preencha os dados abaixo para se registrar
+            Preencha todos os campos abaixo para se registrar
           </p>
         </div>
 
