@@ -209,241 +209,256 @@ export default function Profile() {
   }
 
   return (
-    <div className="container max-w-2xl mx-auto p-4 pb-20">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-2">
-          {profile?.username && (
-            <h1 className="text-xl font-semibold flex items-center gap-1">
-              <AtSign className="h-5 w-5" />
-              {profile.username}
-            </h1>
-          )}
-        </div>
-        <div className="flex gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsEditing(!isEditing)}
-          >
-            <Settings className="h-5 w-5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleLogout}
-          >
-            <LogOut className="h-5 w-5" />
-          </Button>
+    <div className="pb-20 bg-gray-50 min-h-screen">
+      {/* Header Section */}
+      <div className="bg-white border-b">
+        <div className="container max-w-2xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {profile?.username && (
+                <h1 className="text-xl font-semibold flex items-center gap-1">
+                  <AtSign className="h-5 w-5 text-primary" />
+                  {profile.username}
+                </h1>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsEditing(!isEditing)}
+              >
+                <Settings className="h-5 w-5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleLogout}
+              >
+                <LogOut className="h-5 w-5" />
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Profile Info Section */}
-      <div className="grid grid-cols-3 gap-8 mb-8">
-        {/* Profile Picture */}
-        <div className="flex justify-center">
-          <div className="relative">
-            {profile?.avatar_url ? (
-              <img
-                src={profile.avatar_url}
-                alt="Avatar"
-                className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
-              />
-            ) : (
-              <div className="w-24 h-24 rounded-full bg-secondary flex items-center justify-center border-2 border-gray-200">
-                <User className="w-12 h-12 text-muted-foreground" />
+      <div className="container max-w-2xl mx-auto px-4 py-6">
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="grid grid-cols-3 gap-8 mb-8">
+            {/* Profile Picture */}
+            <div className="flex justify-center">
+              <div className="relative">
+                {profile?.avatar_url ? (
+                  <img
+                    src={profile.avatar_url}
+                    alt="Avatar"
+                    className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
+                  />
+                ) : (
+                  <div className="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center border-2 border-gray-200">
+                    <User className="w-12 h-12 text-gray-400" />
+                  </div>
+                )}
               </div>
-            )}
+            </div>
+
+            {/* Profile Stats */}
+            <div className="col-span-2">
+              <div className="flex flex-col">
+                <h2 className="text-xl font-semibold mb-1">{profile?.name || "Nome não definido"}</h2>
+                <div className="flex gap-6 mb-4">
+                  <div className="text-center">
+                    <span className="font-semibold">0</span>
+                    <p className="text-sm text-gray-500">Publicações</p>
+                  </div>
+                  <div className="text-center">
+                    <span className="font-semibold">{followersCount}</span>
+                    <p className="text-sm text-gray-500">Seguidores</p>
+                  </div>
+                  <div className="text-center">
+                    <span className="font-semibold">{followingCount}</span>
+                    <p className="text-sm text-gray-500">Seguindo</p>
+                  </div>
+                </div>
+                {profile?.bio && (
+                  <p className="text-sm text-gray-700 mb-2">{profile.bio}</p>
+                )}
+                {profile?.website && (
+                  <a
+                    href={profile.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-blue-500 flex items-center gap-1 mb-2 hover:text-blue-600"
+                  >
+                    <LinkIcon className="h-4 w-4" />
+                    {profile.website.replace(/^https?:\/\//, '')}
+                  </a>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Profile Stats */}
-        <div className="col-span-2">
-          <div className="flex flex-col">
-            <h2 className="text-xl font-semibold mb-1">{profile?.name || "Nome não definido"}</h2>
-            <div className="flex gap-6 mb-4">
-              <div className="text-center">
-                <span className="font-semibold">0</span>
-                <p className="text-sm text-muted-foreground">Publicações</p>
-              </div>
-              <div className="text-center">
-                <span className="font-semibold">{followersCount}</span>
-                <p className="text-sm text-muted-foreground">Seguidores</p>
-              </div>
-              <div className="text-center">
-                <span className="font-semibold">{followingCount}</span>
-                <p className="text-sm text-muted-foreground">Seguindo</p>
-              </div>
+        {/* Grid Section */}
+        <div className="mt-6 bg-white rounded-lg shadow-sm p-6">
+          <div className="grid grid-cols-3 gap-1">
+            <div className="aspect-square bg-gray-100 flex items-center justify-center">
+              <Grid className="w-6 h-6 text-gray-400" />
             </div>
-            {profile?.bio && (
-              <p className="text-sm mb-2">{profile.bio}</p>
-            )}
-            {profile?.website && (
-              <a
-                href={profile.website}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-blue-500 flex items-center gap-1 mb-2"
-              >
-                <LinkIcon className="h-4 w-4" />
-                {profile.website.replace(/^https?:\/\//, '')}
-              </a>
-            )}
           </div>
         </div>
       </div>
 
       {/* Settings Modal */}
       {isEditing && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50">
-          <div className="fixed inset-x-0 top-[50%] translate-y-[-50%] p-4 max-w-2xl mx-auto">
-            <div className="bg-card rounded-lg shadow-lg p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-semibold">Editar Perfil</h2>
-                <Button variant="ghost" size="icon" onClick={() => setIsEditing(false)}>
-                  <Settings className="h-5 w-5" />
-                </Button>
-              </div>
-
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit((data) => updateProfile.mutate(data))} className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="avatar_url"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>URL da Foto de Perfil</FormLabel>
-                        <FormControl>
-                          <Input placeholder="https://exemplo.com/foto.jpg" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Nome</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Seu nome" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="username"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Nome de usuário</FormLabel>
-                        <FormControl>
-                          <Input placeholder="seu_username" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="bio"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Bio</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Conte um pouco sobre você..."
-                            className="resize-none"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="website"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Website</FormLabel>
-                        <FormControl>
-                          <Input placeholder="https://seusite.com" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input type="email" placeholder="seu@email.com" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="phone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Telefone</FormLabel>
-                        <FormControl>
-                          <Input type="tel" placeholder="(00) 00000-0000" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="birth_date"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Data de Nascimento</FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    disabled={updateProfile.isPending}
-                  >
-                    {updateProfile.isPending ? "Salvando..." : "Salvar alterações"}
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 overflow-y-auto">
+          <div className="min-h-screen flex items-center justify-center p-4">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl">
+              <div className="p-6">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-xl font-semibold">Editar Perfil</h2>
+                  <Button variant="ghost" size="icon" onClick={() => setIsEditing(false)}>
+                    <Settings className="h-5 w-5" />
                   </Button>
-                </form>
-              </Form>
+                </div>
+
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit((data) => updateProfile.mutate(data))} className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="avatar_url"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>URL da Foto de Perfil</FormLabel>
+                          <FormControl>
+                            <Input placeholder="https://exemplo.com/foto.jpg" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Nome</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Seu nome" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="username"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Nome de usuário</FormLabel>
+                            <FormControl>
+                              <Input placeholder="seu_username" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <FormField
+                      control={form.control}
+                      name="bio"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Bio</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="Conte um pouco sobre você..."
+                              className="resize-none"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="website"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Website</FormLabel>
+                          <FormControl>
+                            <Input placeholder="https://seusite.com" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email</FormLabel>
+                            <FormControl>
+                              <Input type="email" placeholder="seu@email.com" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="phone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Telefone</FormLabel>
+                            <FormControl>
+                              <Input type="tel" placeholder="(00) 00000-0000" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <FormField
+                      control={form.control}
+                      name="birth_date"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Data de Nascimento</FormLabel>
+                          <FormControl>
+                            <Input type="date" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={updateProfile.isPending}
+                    >
+                      {updateProfile.isPending ? "Salvando..." : "Salvar alterações"}
+                    </Button>
+                  </form>
+                </Form>
+              </div>
             </div>
           </div>
         </div>
       )}
-
-      {/* Grid Section */}
-      <div className="grid grid-cols-3 gap-1">
-        {/* Este é um placeholder para o grid de posts */}
-        <div className="aspect-square bg-gray-100 flex items-center justify-center">
-          <Grid className="w-6 h-6 text-gray-400" />
-        </div>
-      </div>
 
       <BottomNav />
     </div>
