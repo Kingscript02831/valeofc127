@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bell, CheckCircle, Clock, ChevronRight, Calendar, Newspaper, Trash2 } from "lucide-react";
@@ -75,12 +74,13 @@ const Notify = () => {
 
       if (error) throw error;
 
-      // Invalidate and refetch notifications
-      await queryClient.invalidateQueries({ queryKey: ["notifications"] });
-      
+      // Update local cache
+      queryClient.setQueryData<Notification[]>(["notifications"], (old) =>
+        old?.filter((n) => n.id !== id)
+      );
+
       toast.success("Notificação excluída com sucesso");
     } catch (error: any) {
-      console.error("Error deleting notification:", error);
       toast.error("Erro ao excluir notificação");
     }
   };
