@@ -1,6 +1,7 @@
+
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Calendar, ChevronDown, ChevronUp, Clock, MapPin, ChevronLeft, ChevronRight, X, Timer, ExternalLink, Ticket } from "lucide-react";
+import { Calendar, ChevronDown, ChevronUp, Clock, MapPin, ChevronLeft, ChevronRight, X, Timer, ExternalLink, Ticket, Youtube } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
@@ -23,6 +24,7 @@ interface EventCardProps {
   createdAt?: string;
   buttonColor?: string;
   buttonSecondaryColor?: string;
+  videoUrl?: string;
   category?: {
     id: string;
     name: string;
@@ -43,6 +45,7 @@ const EventCard = ({
   createdAt,
   buttonColor,
   buttonSecondaryColor,
+  videoUrl,
   category,
 }: EventCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -206,6 +209,17 @@ const EventCard = ({
               >
                 <ExternalLink className="h-4 w-4" />
                 <span>Ver no Google Maps</span>
+              </a>
+            )}
+            {videoUrl && (
+              <a
+                href={videoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-sm text-red-600 hover:text-red-800"
+              >
+                <Youtube className="h-4 w-4" />
+                <span>Assistir vídeo</span>
               </a>
             )}
             {entranceFee && (

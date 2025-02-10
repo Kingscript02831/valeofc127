@@ -136,6 +136,7 @@ const Events = () => {
                 createdAt={event.created_at}
                 buttonColor={event.button_color}
                 buttonSecondaryColor={event.button_secondary_color}
+                videoUrl={event.video_url}
                 category={event.categories}
               />
             ))}
