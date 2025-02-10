@@ -1,4 +1,12 @@
 
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
 export type Database = {
   public: {
     Tables: {
@@ -27,7 +35,7 @@ export type Database = {
           footer_social_facebook: string | null
           footer_social_instagram: string | null
           footer_text_color: string
-          header_alerts: any | null
+          header_alerts: Json | null
           high_contrast: boolean | null
           language: string | null
           location_city: string | null
@@ -45,7 +53,7 @@ export type Database = {
           navbar_logo_type: string
           navbar_social_facebook: string | null
           navbar_social_instagram: string | null
-          navigation_links: any | null
+          navigation_links: Json | null
           primary_color: string
           secondary_color: string
           text_color: string
@@ -53,39 +61,35 @@ export type Database = {
           updated_at: string
           version: number | null
           weather_api_key: string | null
-        };
-      };
-      notifications: {
+        }
+      }
+      events: {
         Row: {
           id: string;
-          user_id: string;
           title: string;
-          message: string;
-          type: "news" | "comment" | "like" | "follow";
-          reference_id: string | null;
-          read: boolean;
+          description: string;
+          event_date: string;
+          event_time: string;
+          end_time: string;
+          location?: string;
+          maps_url?: string;
+          entrance_fee?: string;
           created_at: string;
-        };
-      };
-      profiles: {
+          button_color?: string;
+          button_secondary_color?: string;
+          video_url?: string;
+          image?: string;
+          images?: string[];
+          category_id?: string;
+        }
+      }
+      categories: {
         Row: {
           id: string;
-          email: string | null;
           name: string;
-          username: string | null;
-          phone: string | null;
-          birth_date: string | null;
-          street: string | null;
-          house_number: string | null;
-          city: string | null;
-          postal_code: string | null;
-          avatar_url: string | null;
-          bio: string | null;
-          website: string | null;
-          created_at: string;
-          updated_at: string;
-        };
-      };
-    };
-  };
-};
+          background_color?: string;
+        }
+      }
+    }
+  }
+}

@@ -1,7 +1,7 @@
 
 import { Share2, Facebook, Instagram } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { Button } from "../components/ui/button";
+import { useSiteConfig } from "../hooks/useSiteConfig";
 
 const Navbar = () => {
   const { data: config, isLoading, isError } = useSiteConfig();
@@ -38,8 +38,8 @@ const Navbar = () => {
   return (
     <nav className="w-full fixed top-0 z-50 shadow-md"
          style={{ 
-           background: `linear-gradient(to right, ${config.navbar_color}, ${config.primary_color})`,
-           borderColor: `${config.primary_color}20`
+           background: `linear-gradient(to right, ${config?.navbar_color}, ${config?.primary_color})`,
+           borderColor: `${config?.primary_color}20`
          }}>
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">

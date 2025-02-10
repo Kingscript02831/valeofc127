@@ -1,6 +1,6 @@
 
 import { Link, useLocation } from "react-router-dom";
-import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { useSiteConfig } from "../hooks/useSiteConfig";
 
 const SubNav = () => {
   const { data: config, isLoading, isError } = useSiteConfig();
@@ -43,8 +43,8 @@ const SubNav = () => {
     <nav 
       className="w-full border-b mt-16 shadow-sm"
       style={{ 
-        background: `linear-gradient(to right, ${config.navbar_color}, ${config.primary_color})`,
-        borderColor: `${config.primary_color}20`
+        background: `linear-gradient(to right, ${config?.navbar_color}, ${config?.primary_color})`,
+        borderColor: `${config?.primary_color}20`
       }}
     >
       <div className="max-w-screen-2xl mx-auto px-4">

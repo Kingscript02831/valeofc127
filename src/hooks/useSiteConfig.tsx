@@ -24,4 +24,3 @@ export function useSiteConfig() {
     retry: 2,
   });
 }
-
