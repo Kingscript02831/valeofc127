@@ -1,7 +1,9 @@
 [build]
+  # Comando para instalar dependências e gerar o build
   command = "npm install --legacy-peer-deps && npm run build"
-  publish = "dist"  # Verifique se 'dist' é o diretório correto do seu build
-  # Remova a linha abaixo se você não estiver usando funções serverless
+  # Diretório de saída do build
+  publish = "dist"  # Certifique-se de que 'dist' é o diretório correto do seu build
+  # Funções serverless (remova se não estiver utilizando)
   functions = "functions"  
 
 [dev]
