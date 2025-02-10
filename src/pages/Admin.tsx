@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -781,4 +780,23 @@ const Admin = () => {
                     onChange={(e) => setConfig({ ...config, weather_api_key: e.target.value })}
                     placeholder="Sua chave da API do clima"
                   />
-                
+                  <p className="text-sm text-gray-500 mt-1">
+                    Esta chave é necessária para acessar os dados de previsão do tempo
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <Button onClick={handleConfigUpdate}>
+                Salvar Configurações
+              </Button>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+};
+
+export default Admin;
