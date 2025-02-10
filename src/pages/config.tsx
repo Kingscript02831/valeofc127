@@ -1,15 +1,16 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { supabase } from "../integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import type { Database } from "../integrations/supabase/types";
+import type { Database } from "@/integrations/supabase/types";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { updateMetaTags } from "../utils/updateMetaTags";
-import Navbar2 from "../components/Navbar2";
-import SubNav2 from "../components/SubNav2";
+import { updateMetaTags } from "@/utils/updateMetaTags";
+import Navbar2 from "@/components/Navbar2";
+import SubNav2 from "@/components/SubNav2";
 
 type SiteConfig = Database['public']['Tables']['site_configuration']['Row'];
 
