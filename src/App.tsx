@@ -12,6 +12,7 @@ import Stores from "./pages/Stores";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
 import Config from "./pages/config";
+import Admin from "./pages/Admin";
 import AdminPlaces from "./pages/AdminPlaces";
 import AdminEvents from "./pages/AdminEvents";
 import AdminStores from "./pages/AdminStores";
@@ -39,11 +40,13 @@ const App: React.FC = () => {
               <Route path="/signup" element={<SignUp />} />
               <Route path="/perfil" element={<Profile />} />
               <Route path="/config" element={<Config />} />
-              <Route path="/admin/lugares" element={<AdminPlaces />} />
-              <Route path="/admin/eventos" element={<AdminEvents />} />
-              <Route path="/admin/lojas" element={<AdminStores />} />
-              <Route path="/admin/noticias" element={<AdminNews />} />
-              <Route path="/admin/categorias" element={<AdminCategories />} />
+              <Route path="/admin" element={<Admin />}>
+                <Route path="lugares" element={<AdminPlaces />} />
+                <Route path="eventos" element={<AdminEvents />} />
+                <Route path="lojas" element={<AdminStores />} />
+                <Route path="noticias" element={<AdminNews />} />
+                <Route path="categorias" element={<AdminCategories />} />
+              </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
@@ -54,4 +57,3 @@ const App: React.FC = () => {
 };
 
 export default App;
-
