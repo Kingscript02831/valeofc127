@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -81,15 +82,35 @@ export default function Profile() {
         .from("profiles")
         .select("*")
         .eq("id", session.user.id)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error("Error fetching profile:", error);
         throw error;
       }
+
+      // If no profile exists, create one
+      if (!data) {
+        const { data: newProfile, error: createError } = await supabase
+          .from("profiles")
+          .insert([
+            {
+              id: session.user.id,
+              email: session.user.email,
+              name: session.user.email?.split('@')[0] || 'User',
+            }
+          ])
+          .select()
+          .single();
+
+        if (createError) throw createError;
+        return newProfile;
+      }
+
       return data;
     },
     enabled: !isLoading,
+    retry: 1,
   });
 
   useEffect(() => {
