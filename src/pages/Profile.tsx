@@ -18,7 +18,8 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { LogOut, Trash2, User, AtSign, Grid, Settings, Edit } from "lucide-react";
+import { LogOut, Trash2, User, AtSign, Grid, Settings, Edit, Key, MapPin } from "lucide-react";
+import BottomNav from "@/components/BottomNav";
 
 const profileSchema = z.object({
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
@@ -36,6 +37,7 @@ export default function Profile() {
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
+  const [selectedOption, setSelectedOption] = useState<'profile' | 'password' | 'address'>('profile');
 
   // Check for authentication status
   useEffect(() => {
@@ -89,25 +91,16 @@ export default function Profile() {
       return data;
     },
     enabled: !isLoading,
-    meta: {
-      onSuccess: (data: any) => {
-        if (data) {
-          form.reset({
-            ...data,
-            birth_date: data.birth_date ? format(new Date(data.birth_date), "yyyy-MM-dd") : "",
-          });
-        }
-      },
-      onError: (error: Error) => {
-        console.error("Error in profile query:", error);
-        toast({
-          title: "Erro ao carregar perfil",
-          description: "Não foi possível carregar seus dados. Por favor, tente novamente.",
-          variant: "destructive",
-        });
-      }
-    }
   });
+
+  useEffect(() => {
+    if (profile) {
+      form.reset({
+        ...profile,
+        birth_date: profile.birth_date ? format(new Date(profile.birth_date), "yyyy-MM-dd") : "",
+      });
+    }
+  }, [profile, form]);
 
   // Update profile mutation
   const updateProfile = useMutation({
@@ -191,6 +184,34 @@ export default function Profile() {
     }
   };
 
+  const handlePasswordReset = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user.email) {
+        toast({
+          title: "Erro",
+          description: "Email não encontrado",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { error } = await supabase.auth.resetPasswordForEmail(session.user.email);
+      if (error) throw error;
+
+      toast({
+        title: "Email enviado",
+        description: "Verifique seu email para redefinir sua senha",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erro ao redefinir senha",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -200,7 +221,7 @@ export default function Profile() {
   }
 
   return (
-    <div className="container max-w-2xl mx-auto p-4">
+    <div className="container max-w-2xl mx-auto p-4 pb-20">
       {/* Header with settings and logout */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-2">
@@ -208,6 +229,9 @@ export default function Profile() {
             <h1 className="text-xl font-semibold flex items-center gap-1">
               <AtSign className="h-5 w-5" />
               {profile.username}
+              <span className="text-sm text-muted-foreground">
+                (ID: {profile.id})
+              </span>
             </h1>
           )}
         </div>
@@ -289,142 +313,202 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* Edit Profile Form */}
+      {/* Settings Modal */}
       {isEditing && (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50">
           <div className="fixed inset-x-0 top-[50%] translate-y-[-50%] p-4 max-w-2xl mx-auto">
             <div className="bg-card rounded-lg shadow-lg p-6">
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-semibold">Editar Perfil</h2>
+                <h2 className="text-xl font-semibold">Configurações</h2>
                 <Button variant="ghost" size="icon" onClick={() => setIsEditing(false)}>
-                  <Edit className="h-5 w-5" />
+                  <Settings className="h-5 w-5" />
                 </Button>
               </div>
 
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit((data) => updateProfile.mutate(data))} className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="avatar_url"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>URL da Foto de Perfil</FormLabel>
-                        <FormControl>
-                          <Input placeholder="https://exemplo.com/foto.jpg" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+              {/* Settings Options */}
+              <div className="flex flex-col gap-2 mb-6">
+                <Button
+                  variant={selectedOption === 'profile' ? 'default' : 'outline'}
+                  onClick={() => setSelectedOption('profile')}
+                  className="justify-start"
+                >
+                  <Edit className="mr-2 h-4 w-4" />
+                  Editar Perfil
+                </Button>
+                <Button
+                  variant={selectedOption === 'password' ? 'default' : 'outline'}
+                  onClick={() => {
+                    setSelectedOption('password');
+                    handlePasswordReset();
+                  }}
+                  className="justify-start"
+                >
+                  <Key className="mr-2 h-4 w-4" />
+                  Redefinir Senha
+                </Button>
+                <Button
+                  variant={selectedOption === 'address' ? 'default' : 'outline'}
+                  onClick={() => setSelectedOption('address')}
+                  className="justify-start"
+                >
+                  <MapPin className="mr-2 h-4 w-4" />
+                  Adicionar Endereço
+                </Button>
+              </div>
 
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Nome</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Seu nome" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+              {selectedOption === 'profile' && (
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit((data) => updateProfile.mutate(data))} className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="avatar_url"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>URL da Foto de Perfil</FormLabel>
+                          <FormControl>
+                            <Input placeholder="https://exemplo.com/foto.jpg" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name="username"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Username</FormLabel>
-                        <FormControl>
-                          <Input placeholder="seu_username" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nome</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Seu nome" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input type="email" placeholder="seu@email.com" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    <FormField
+                      control={form.control}
+                      name="username"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Username</FormLabel>
+                          <FormControl>
+                            <Input placeholder="seu_username" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name="phone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Telefone</FormLabel>
-                        <FormControl>
-                          <Input type="tel" placeholder="(00) 00000-0000" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input type="email" placeholder="seu@email.com" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                  <FormField
-                    control={form.control}
-                    name="birth_date"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Data de Nascimento</FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                    <FormField
+                      control={form.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Telefone</FormLabel>
+                          <FormControl>
+                            <Input type="tel" placeholder="(00) 00000-0000" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
+                    <FormField
+                      control={form.control}
+                      name="birth_date"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Data de Nascimento</FormLabel>
+                          <FormControl>
+                            <Input type="date" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="address"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Endereço</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Seu endereço completo" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="flex justify-between gap-4 pt-4">
+                      <Button
+                        type="submit"
+                        className="flex-1"
+                        disabled={updateProfile.isPending}
+                      >
+                        {updateProfile.isPending ? "Salvando..." : "Salvar alterações"}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        onClick={handleDeleteAccount}
+                        className="flex items-center gap-2"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Excluir conta
+                      </Button>
+                    </div>
+                  </form>
+                </Form>
+              )}
+
+              {selectedOption === 'address' && (
+                <div className="space-y-4">
                   <FormField
                     control={form.control}
                     name="address"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Endereço</FormLabel>
+                        <FormLabel>Endereço Completo</FormLabel>
                         <FormControl>
-                          <Input placeholder="Seu endereço completo" {...field} />
+                          <Input placeholder="Rua, número, bairro, cidade, estado" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-
-                  <div className="flex justify-between gap-4 pt-4">
-                    <Button
-                      type="submit"
-                      className="flex-1"
-                      disabled={updateProfile.isPending}
-                    >
-                      {updateProfile.isPending ? "Salvando..." : "Salvar alterações"}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      onClick={handleDeleteAccount}
-                      className="flex items-center gap-2"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      Excluir conta
-                    </Button>
-                  </div>
-                </form>
-              </Form>
+                  <Button
+                    type="button"
+                    onClick={form.handleSubmit((data) => updateProfile.mutate(data))}
+                    className="w-full"
+                  >
+                    Salvar Endereço
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </div>
       )}
+
+      <BottomNav />
     </div>
   );
 }
