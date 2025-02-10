@@ -23,32 +23,31 @@ const queryClient = new QueryClient();
 
 const App: React.FC = () => {
   return (
-    <React.StrictMode>
-      <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/eventos" element={<Events />} />
-              <Route path="/lugares" element={<Places />} />
-              <Route path="/lojas" element={<Stores />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<SignUp />} />
-              <Route path="/perfil" element={<Profile />} />
-              <Route path="/admin" element={<Admin />} />
-              <Route path="/admin/lugares" element={<AdminPlaces />} />
-              <Route path="/admin/eventos" element={<AdminEvents />} />
-              <Route path="/admin/lojas" element={<AdminStores />} />
-              <Route path="/admin/categorias" element={<AdminCategories />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/eventos" element={<Events />} />
+            <Route path="/lugares" element={<Places />} />
+            <Route path="/lojas" element={<Stores />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/perfil" element={<Profile />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="/admin/lugares" element={<AdminPlaces />} />
+            <Route path="/admin/eventos" element={<AdminEvents />} />
+            <Route path="/admin/lojas" element={<AdminStores />} />
+            <Route path="/admin/categorias" element={<AdminCategories />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
         </TooltipProvider>
-      </QueryClientProvider>
-    </React.StrictMode>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 };
 
 export default App;
+
