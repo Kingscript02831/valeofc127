@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, CheckCircle, Clock, ChevronRight, Calendar, Newspaper } from "lucide-react";
+import { Bell, CheckCircle, Clock, ChevronRight, Calendar, Newspaper, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -64,6 +64,26 @@ const Notify = () => {
     },
     enabled: !isLoading,
   });
+
+  const deleteNotification = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("notifications")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+
+      // Update local cache
+      queryClient.setQueryData<Notification[]>(["notifications"], (old) =>
+        old?.filter((n) => n.id !== id)
+      );
+
+      toast.success("Notificação excluída com sucesso");
+    } catch (error: any) {
+      toast.error("Erro ao excluir notificação");
+    }
+  };
 
   const markAsRead = async (id: string) => {
     try {
@@ -248,6 +268,17 @@ const Notify = () => {
                         ) : (
                           <Clock className="h-3 w-3 text-yellow-500" />
                         )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 hover:bg-destructive/10 hover:text-destructive"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteNotification(notification.id);
+                          }}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
                       </div>
                     </div>
                   </div>
