@@ -92,7 +92,7 @@ const BottomNav = () => {
           </a>
 
           <a
-            href="/notifications"
+            href="/notify"
             onClick={(e) => handleNavigation("/notifications", e)}
             className={`flex flex-col items-center p-1 relative`}
             style={{ color: isActive("/notifications") ? iconColor : textColor }}
