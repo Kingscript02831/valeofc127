@@ -163,7 +163,7 @@ const AdminNews = () => {
             size="sm"
             variant="outline"
             onClick={() => {
-              const newMedia = [...media, { url: "", type: "post" }];
+              const newMedia = [...media, { url: "", type: "post" as const }];
               if (editingNews) {
                 setEditingNews({ ...editingNews, instagram_media: newMedia });
               } else {
