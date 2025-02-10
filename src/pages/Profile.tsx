@@ -71,7 +71,7 @@ export default function Profile() {
   });
 
   // Fetch profile data
-  const { data: profile, isError: isProfileError } = useQuery({
+  const { data: profile } = useQuery({
     queryKey: ["profile"],
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -94,6 +94,7 @@ export default function Profile() {
 
   useEffect(() => {
     if (profile) {
+      console.log("Setting form values with profile:", profile);
       form.reset({
         ...profile,
         birth_date: profile.birth_date ? format(new Date(profile.birth_date), "yyyy-MM-dd") : "",
@@ -150,39 +151,6 @@ export default function Profile() {
     }
   };
 
-  const handleDeleteAccount = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast({
-          title: "Erro",
-          description: "Você precisa estar logado para deletar sua conta",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const { error: deleteError } = await supabase
-        .from("profiles")
-        .delete()
-        .eq("id", session.user.id);
-
-      if (deleteError) throw deleteError;
-
-      const { error: signOutError } = await supabase.auth.signOut();
-      if (signOutError) throw signOutError;
-
-      navigate("/login");
-    } catch (error: any) {
-      console.error("Error deleting account:", error);
-      toast({
-        title: "Erro ao deletar conta",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
   const handlePasswordReset = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -228,9 +196,6 @@ export default function Profile() {
             <h1 className="text-xl font-semibold flex items-center gap-1">
               <AtSign className="h-5 w-5" />
               {profile.username}
-              <span className="text-sm text-muted-foreground">
-                (ID: {profile.id})
-              </span>
             </h1>
           )}
         </div>
@@ -271,44 +236,14 @@ export default function Profile() {
           </div>
         </div>
 
-        {/* Stats and Bio */}
+        {/* Profile Info */}
         <div className="col-span-2">
           <div className="flex flex-col">
-            <h2 className="text-xl font-semibold mb-1">{profile?.name}</h2>
-            <p className="text-muted-foreground text-sm mb-4">
-              {profile?.email}
-            </p>
-            <div className="grid grid-cols-3 gap-4 text-center mb-4">
-              <div>
-                <span className="font-semibold block">0</span>
-                <span className="text-sm text-muted-foreground">Posts</span>
-              </div>
-              <div>
-                <span className="font-semibold block">0</span>
-                <span className="text-sm text-muted-foreground">Seguidores</span>
-              </div>
-              <div>
-                <span className="font-semibold block">0</span>
-                <span className="text-sm text-muted-foreground">Seguindo</span>
-              </div>
-            </div>
+            <h2 className="text-xl font-semibold mb-1">{profile?.name || "Nome não definido"}</h2>
+            <p className="text-muted-foreground text-sm mb-2">{profile?.email}</p>
+            <p className="text-muted-foreground text-sm">{profile?.phone || "Telefone não definido"}</p>
+            <p className="text-muted-foreground text-sm">{profile?.address || "Endereço não definido"}</p>
           </div>
-        </div>
-      </div>
-
-      {/* Grid/Gallery Section */}
-      <div className="border-t pt-4">
-        <div className="flex justify-center mb-4">
-          <Button variant="ghost" className="flex items-center gap-2">
-            <Grid className="h-5 w-5" />
-            Posts
-          </Button>
-        </div>
-        <div className="grid grid-cols-3 gap-1">
-          {/* Placeholder for posts */}
-          <div className="aspect-square bg-secondary" />
-          <div className="aspect-square bg-secondary" />
-          <div className="aspect-square bg-secondary" />
         </div>
       </div>
 
@@ -442,38 +377,13 @@ export default function Profile() {
                       )}
                     />
 
-                    <FormField
-                      control={form.control}
-                      name="address"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Endereço</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Seu endereço completo" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <div className="flex justify-between gap-4 pt-4">
-                      <Button
-                        type="submit"
-                        className="flex-1"
-                        disabled={updateProfile.isPending}
-                      >
-                        {updateProfile.isPending ? "Salvando..." : "Salvar alterações"}
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        onClick={handleDeleteAccount}
-                        className="flex items-center gap-2"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        Excluir conta
-                      </Button>
-                    </div>
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={updateProfile.isPending}
+                    >
+                      {updateProfile.isPending ? "Salvando..." : "Salvar alterações"}
+                    </Button>
                   </form>
                 </Form>
               )}
