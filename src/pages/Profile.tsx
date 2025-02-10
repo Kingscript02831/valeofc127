@@ -123,18 +123,46 @@ export default function Profile() {
     }
   }, [profile, form]);
 
-  // Update profile mutation
+  // Update profile mutation with 30-day check
   const updateProfile = useMutation({
     mutationFn: async (values: z.infer<typeof profileSchema>) => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Não autenticado");
 
+      // Check if basic info is being updated
+      const isUpdatingBasicInfo = 
+        values.name !== profile?.name ||
+        values.username !== profile?.username ||
+        values.phone !== profile?.phone ||
+        values.birth_date !== profile?.birth_date;
+
+      if (isUpdatingBasicInfo) {
+        // Get the last update time
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("basic_info_updated_at")
+          .eq("id", session.user.id)
+          .single();
+
+        if (profileData) {
+          const lastUpdate = new Date(profileData.basic_info_updated_at);
+          const daysSinceLastUpdate = Math.floor((Date.now() - lastUpdate.getTime()) / (1000 * 60 * 60 * 24));
+
+          if (daysSinceLastUpdate < 30) {
+            throw new Error(`Você só pode alterar suas informações básicas após 30 dias da última atualização. Dias restantes: ${30 - daysSinceLastUpdate}`);
+          }
+        }
+
+        // If we're here, it's been more than 30 days, so update the timestamp
+        values = {
+          ...values,
+          basic_info_updated_at: new Date().toISOString(),
+        };
+      }
+
       const { error } = await supabase
         .from("profiles")
-        .update({
-          ...values,
-          birth_date: values.birth_date ? new Date(values.birth_date).toISOString() : null,
-        })
+        .update(values)
         .eq("id", session.user.id);
 
       if (error) throw error;
