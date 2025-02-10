@@ -1,6 +1,6 @@
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Calendar, ChevronDown, ChevronUp, Clock, MapPin, ChevronLeft, ChevronRight, X, Timer } from "lucide-react";
+import { Calendar, ChevronDown, ChevronUp, Clock, MapPin, ChevronLeft, ChevronRight, X, Timer, ExternalLink, Ticket } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
@@ -18,6 +18,8 @@ interface EventCardProps {
   image?: string;
   images?: string[];
   location?: string;
+  mapsUrl?: string;
+  entranceFee?: string;
   createdAt?: string;
   buttonColor?: string;
   buttonSecondaryColor?: string;
@@ -36,6 +38,8 @@ const EventCard = ({
   image,
   images = [],
   location,
+  mapsUrl,
+  entranceFee,
   createdAt,
   buttonColor,
   buttonSecondaryColor,
@@ -151,6 +155,14 @@ const EventCard = ({
               className="h-full w-full object-cover cursor-pointer"
               onClick={toggleImageFullscreen}
             />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-4 right-4 text-white hover:bg-black/50"
+              onClick={toggleImageFullscreen}
+            >
+              <X className="h-6 w-6" />
+            </Button>
           </div>
         )}
         <div className="p-4">
@@ -181,6 +193,26 @@ const EventCard = ({
               >
                 {category.name}
               </span>
+            )}
+          </div>
+
+          <div className="mb-3 space-y-2">
+            {mapsUrl && (
+              <a
+                href={mapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800"
+              >
+                <ExternalLink className="h-4 w-4" />
+                <span>Ver no Google Maps</span>
+              </a>
+            )}
+            {entranceFee && (
+              <div className="flex items-center gap-2 text-sm">
+                <Ticket className="h-4 w-4 text-gray-500" />
+                <span>{entranceFee}</span>
+              </div>
             )}
           </div>
 

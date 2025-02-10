@@ -131,6 +131,8 @@ const Events = () => {
                 image={event.image}
                 images={event.images}
                 location={event.location}
+                mapsUrl={event.maps_url}
+                entranceFee={event.entrance_fee}
                 createdAt={event.created_at}
                 buttonColor={event.button_color}
                 buttonSecondaryColor={event.button_secondary_color}
