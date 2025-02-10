@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "../integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -209,7 +209,7 @@ export default function Profile() {
   }
 
   return (
-    <div className="pb-20 bg-gray-50 min-h-screen">
+    <div className="pb-24 bg-gray-50 min-h-screen"> {/* Updated padding-bottom to 6rem (24) */}
       {/* Header Section */}
       <div className="bg-white border-b">
         <div className="container max-w-2xl mx-auto px-4 py-4">
