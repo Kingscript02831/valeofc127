@@ -7,12 +7,12 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { supabase } from "../integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import Navbar from "../components/Navbar";
-import SubNav from "../components/SubNav";
-import BottomNav from "../components/BottomNav";
+import Navbar from "@/components/Navbar";
+import SubNav from "@/components/SubNav";
+import BottomNav from "@/components/BottomNav";
 
 interface Notification {
   id: string;
@@ -22,6 +22,10 @@ interface Notification {
   read: boolean;
   type: 'news' | 'event';
   reference_id?: string;
+  publication_title?: string;
+  publication_description?: string;
+  publication_category?: string;
+  publication_date?: string;
 }
 
 const Notify = () => {
@@ -71,12 +75,12 @@ const Notify = () => {
 
       if (error) throw error;
 
-      // Atualiza o cache local
+      // Update local cache
       queryClient.setQueryData<Notification[]>(["notifications"], (old) =>
         old?.map((n) => (n.id === id ? { ...n, read: true } : n))
       );
 
-      // Se houver um reference_id, navegue para a página apropriada
+      // Navigate if there's a reference_id
       const notification = notifications.find(n => n.id === id);
       if (notification?.reference_id) {
         if (notification.type === 'event') {
@@ -99,7 +103,7 @@ const Notify = () => {
 
       if (error) throw error;
 
-      // Atualiza o cache local
+      // Update local cache
       queryClient.setQueryData<Notification[]>(["notifications"], (old) =>
         old?.map((n) => ({ ...n, read: true }))
       );
@@ -179,7 +183,7 @@ const Notify = () => {
                     {getNotificationIcon(notification.type)}
                   </div>
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
                       <Badge
                         variant={notification.read ? "outline" : "default"}
                         className={cn(
@@ -190,6 +194,11 @@ const Notify = () => {
                       >
                         {notification.type === 'event' ? 'Evento' : 'Notícia'}
                       </Badge>
+                      {notification.publication_category && (
+                        <Badge variant="outline" className="text-xs">
+                          {notification.publication_category}
+                        </Badge>
+                      )}
                       {!notification.read && (
                         <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
                       )}
@@ -199,8 +208,15 @@ const Notify = () => {
                       "font-semibold mb-1",
                       !notification.read && "text-primary"
                     )}>
-                      {notification.title}
+                      {notification.publication_title || notification.title}
                     </h3>
+                    
+                    {notification.publication_description && (
+                      <p className="text-sm text-muted-foreground mb-2">
+                        {notification.publication_description}
+                      </p>
+                    )}
+                    
                     <p className="text-sm text-muted-foreground">
                       {notification.message}
                     </p>
@@ -224,6 +240,11 @@ const Notify = () => {
                     <span className="text-xs text-muted-foreground">
                       {format(new Date(notification.created_at), "dd MMM yyyy 'às' HH:mm", { locale: ptBR })}
                     </span>
+                    {notification.publication_date && (
+                      <span className="text-xs text-muted-foreground mt-1">
+                        Data da publicação: {format(new Date(notification.publication_date), "dd/MM/yyyy", { locale: ptBR })}
+                      </span>
+                    )}
                     <div className="mt-2">
                       {notification.read ? (
                         <CheckCircle className="h-4 w-4 text-green-500" />

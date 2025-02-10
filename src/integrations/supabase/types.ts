@@ -304,6 +304,10 @@ export type Database = {
           created_at: string
           id: string
           message: string
+          publication_category: string | null
+          publication_date: string | null
+          publication_description: string | null
+          publication_title: string | null
           read: boolean | null
           reference_id: string | null
           title: string
@@ -314,6 +318,10 @@ export type Database = {
           created_at?: string
           id?: string
           message: string
+          publication_category?: string | null
+          publication_date?: string | null
+          publication_description?: string | null
+          publication_title?: string | null
           read?: boolean | null
           reference_id?: string | null
           title: string
@@ -324,6 +332,10 @@ export type Database = {
           created_at?: string
           id?: string
           message?: string
+          publication_category?: string | null
+          publication_date?: string | null
+          publication_description?: string | null
+          publication_title?: string | null
           read?: boolean | null
           reference_id?: string | null
           title?: string
