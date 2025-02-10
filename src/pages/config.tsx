@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +9,8 @@ import type { Database } from "@/integrations/supabase/types";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { updateMetaTags } from "@/utils/updateMetaTags";
+import Navbar2 from "@/components/Navbar2";
+import SubNav2 from "@/components/SubNav2";
 
 type SiteConfig = Database['public']['Tables']['site_configuration']['Row'];
 
@@ -120,8 +123,10 @@ const Admin = () => {
   }, [config]);
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
+    <div className="min-h-screen bg-gray-50">
+      <Navbar2 />
+      <SubNav2 />
+      <div className="max-w-4xl mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-8">Painel De Configurações</h1>
 
         <Tabs defaultValue="config" className="space-y-6">
