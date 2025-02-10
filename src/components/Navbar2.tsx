@@ -1,7 +1,6 @@
-
 import { Share2, Facebook, Instagram } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { useSiteConfig } from "../hooks/useSiteConfig";
 
 const Navbar2 = () => {
   const { data: config, isLoading, isError } = useSiteConfig();
@@ -120,4 +119,3 @@ const Navbar2 = () => {
 };
 
 export default Navbar2;
-

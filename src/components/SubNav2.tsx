@@ -1,6 +1,5 @@
-
 import { Link, useLocation } from "react-router-dom";
-import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { useSiteConfig } from "../hooks/useSiteConfig";
 
 const SubNav2 = () => {
   const { data: config, isLoading, isError } = useSiteConfig();
@@ -66,4 +65,3 @@ const SubNav2 = () => {
 };
 
 export default SubNav2;
-

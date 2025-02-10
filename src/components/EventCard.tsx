@@ -5,9 +5,9 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "../integrations/supabase/client";
 import { toast } from "sonner";
-import type { Database } from '@/integrations/supabase/types';
+import type { Database } from "../../types/supabase";
 
 type SiteConfig = Database['public']['Tables']['site_configuration']['Row'];
 
