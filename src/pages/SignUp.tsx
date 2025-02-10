@@ -12,15 +12,12 @@ const SignUp = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [username, setUsername] = useState("");
-  const [phone, setPhone] = useState("");
-  const [birthDate, setBirthDate] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!email || !password || !name || !username || !phone || !birthDate) {
+    if (!email || !password || !name) {
       toast({
         title: "Erro ao criar conta",
         description: "Por favor, preencha todos os campos",
@@ -38,9 +35,6 @@ const SignUp = () => {
         options: {
           data: {
             full_name: name,
-            username,
-            phone,
-            birth_date: birthDate,
           },
         },
       });
@@ -74,10 +68,7 @@ const SignUp = () => {
 
         <form onSubmit={handleSignUp} className="space-y-5 mt-6">
           <InputField label="Nome Completo" id="name" type="text" value={name} setValue={setName} placeholder="Seu nome completo" />
-          <InputField label="Nome de Usuário" id="username" type="text" value={username} setValue={setUsername} placeholder="@seu.usuario" />
           <InputField label="Email" id="email" type="email" value={email} setValue={setEmail} placeholder="seu@email.com" />
-          <InputField label="Telefone" id="phone" type="tel" value={phone} setValue={setPhone} placeholder="(00) 00000-0000" />
-          <InputField label="Data de Nascimento" id="birthDate" type="date" value={birthDate} setValue={setBirthDate} />
           <InputField label="Senha" id="password" type="password" value={password} setValue={setPassword} placeholder="******" />
 
           <Button
