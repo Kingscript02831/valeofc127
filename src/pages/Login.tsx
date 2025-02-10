@@ -6,7 +6,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { useToast } from "../components/ui/use-toast";
 
-export default function Login() {
+const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [email, setEmail] = useState("");
@@ -86,4 +86,6 @@ export default function Login() {
       </div>
     </div>
   );
-}
+};
+
+export default Login;
