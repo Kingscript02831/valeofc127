@@ -3,11 +3,9 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { supabase } from "../integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import {
   Form,
@@ -20,7 +18,7 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { LogOut, Settings, Grid, Link as LinkIcon, MapPin, User, AtSign } from "lucide-react";
+import { LogOut, Trash2, User, AtSign, Grid, Settings, Edit, Key, MapPin } from "lucide-react";
 import BottomNav from "../components/BottomNav";
 
 const profileSchema = z.object({
@@ -31,8 +29,6 @@ const profileSchema = z.object({
   address: z.string().min(5, "Endereço deve ter pelo menos 5 caracteres"),
   avatar_url: z.string().url("URL inválida").optional(),
   username: z.string().min(2, "Username deve ter pelo menos 2 caracteres"),
-  bio: z.string().max(150, "Bio deve ter no máximo 150 caracteres").optional(),
-  website: z.string().url("URL inválida").optional().or(z.literal("")),
 });
 
 export default function Profile() {
@@ -54,7 +50,7 @@ export default function Profile() {
         }
         setIsLoading(false);
       } catch (error) {
-        console.error("Erro ao verificar sessão:", error);
+        console.error("Error checking session:", error);
         navigate("/login");
       }
     };
@@ -72,8 +68,6 @@ export default function Profile() {
       address: "",
       avatar_url: "",
       username: "",
-      bio: "",
-      website: "",
     },
   });
 
@@ -90,8 +84,12 @@ export default function Profile() {
         .eq("id", session.user.id)
         .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching profile:", error);
+        throw error;
+      }
 
+      // If no profile exists, create one
       if (!data) {
         const { data: newProfile, error: createError } = await supabase
           .from("profiles")
@@ -99,7 +97,7 @@ export default function Profile() {
             {
               id: session.user.id,
               email: session.user.email,
-              name: session.user.email?.split('@')[0] || 'Usuário',
+              name: session.user.email?.split('@')[0] || 'User',
             }
           ])
           .select()
@@ -112,38 +110,12 @@ export default function Profile() {
       return data;
     },
     enabled: !isLoading,
-  });
-
-  // Fetch followers count
-  const { data: followersCount = 0 } = useQuery({
-    queryKey: ["followers", profile?.id],
-    queryFn: async () => {
-      const { count } = await supabase
-        .from("followers")
-        .select("*", { count: "exact", head: true })
-        .eq("following_id", profile?.id);
-      
-      return count || 0;
-    },
-    enabled: !!profile?.id,
-  });
-
-  // Fetch following count
-  const { data: followingCount = 0 } = useQuery({
-    queryKey: ["following", profile?.id],
-    queryFn: async () => {
-      const { count } = await supabase
-        .from("followers")
-        .select("*", { count: "exact", head: true })
-        .eq("follower_id", profile?.id);
-      
-      return count || 0;
-    },
-    enabled: !!profile?.id,
+    retry: 1,
   });
 
   useEffect(() => {
     if (profile) {
+      console.log("Setting form values with profile:", profile);
       form.reset({
         ...profile,
         birth_date: profile.birth_date ? format(new Date(profile.birth_date), "yyyy-MM-dd") : "",
@@ -176,7 +148,7 @@ export default function Profile() {
       });
     },
     onError: (error) => {
-      console.error("Erro ao atualizar perfil:", error);
+      console.error("Error updating profile:", error);
       toast({
         title: "Erro ao atualizar perfil",
         description: error.message,
@@ -191,9 +163,37 @@ export default function Profile() {
       if (error) throw error;
       navigate("/login");
     } catch (error: any) {
-      console.error("Erro ao sair:", error);
+      console.error("Error during logout:", error);
       toast({
         title: "Erro ao sair",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handlePasswordReset = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user.email) {
+        toast({
+          title: "Erro",
+          description: "Email não encontrado",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { error } = await supabase.auth.resetPasswordForEmail(session.user.email);
+      if (error) throw error;
+
+      toast({
+        title: "Email enviado",
+        description: "Verifique seu email para redefinir sua senha",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erro ao redefinir senha",
         description: error.message,
         variant: "destructive",
       });
@@ -209,120 +209,109 @@ export default function Profile() {
   }
 
   return (
-    <div className="pb-24 bg-gray-50 min-h-screen"> {/* Updated padding-bottom to 6rem (24) */}
-      {/* Header Section */}
-      <div className="bg-white border-b">
-        <div className="container max-w-2xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              {profile?.username && (
-                <h1 className="text-xl font-semibold flex items-center gap-1">
-                  <AtSign className="h-5 w-5 text-primary" />
-                  {profile.username}
-                </h1>
-              )}
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsEditing(!isEditing)}
-              >
-                <Settings className="h-5 w-5" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleLogout}
-              >
-                <LogOut className="h-5 w-5" />
-              </Button>
-            </div>
-          </div>
+    <div className="container max-w-2xl mx-auto p-4 pb-20">
+      {/* Header with settings and logout */}
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-2">
+          {profile?.username && (
+            <h1 className="text-xl font-semibold flex items-center gap-1">
+              <AtSign className="h-5 w-5" />
+              {profile.username}
+            </h1>
+          )}
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsEditing(!isEditing)}
+          >
+            <Settings className="h-5 w-5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleLogout}
+          >
+            <LogOut className="h-5 w-5" />
+          </Button>
         </div>
       </div>
 
       {/* Profile Info Section */}
-      <div className="container max-w-2xl mx-auto px-4 py-6">
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="grid grid-cols-3 gap-8 mb-8">
-            {/* Profile Picture */}
-            <div className="flex justify-center">
-              <div className="relative">
-                {profile?.avatar_url ? (
-                  <img
-                    src={profile.avatar_url}
-                    alt="Avatar"
-                    className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
-                  />
-                ) : (
-                  <div className="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center border-2 border-gray-200">
-                    <User className="w-12 h-12 text-gray-400" />
-                  </div>
-                )}
+      <div className="grid grid-cols-3 gap-8 mb-8">
+        {/* Profile Picture */}
+        <div className="flex justify-center">
+          <div className="relative">
+            {profile?.avatar_url ? (
+              <img
+                src={profile.avatar_url}
+                alt="Avatar"
+                className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
+              />
+            ) : (
+              <div className="w-24 h-24 rounded-full bg-secondary flex items-center justify-center border-2 border-gray-200">
+                <User className="w-12 h-12 text-muted-foreground" />
               </div>
-            </div>
-
-            {/* Profile Stats */}
-            <div className="col-span-2">
-              <div className="flex flex-col">
-                <h2 className="text-xl font-semibold mb-1">{profile?.name || "Nome não definido"}</h2>
-                <div className="flex gap-6 mb-4">
-                  <div className="text-center">
-                    <span className="font-semibold">0</span>
-                    <p className="text-sm text-gray-500">Publicações</p>
-                  </div>
-                  <div className="text-center">
-                    <span className="font-semibold">{followersCount}</span>
-                    <p className="text-sm text-gray-500">Seguidores</p>
-                  </div>
-                  <div className="text-center">
-                    <span className="font-semibold">{followingCount}</span>
-                    <p className="text-sm text-gray-500">Seguindo</p>
-                  </div>
-                </div>
-                {profile?.bio && (
-                  <p className="text-sm text-gray-700 mb-2">{profile.bio}</p>
-                )}
-                {profile?.website && (
-                  <a
-                    href={profile.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-blue-500 flex items-center gap-1 mb-2 hover:text-blue-600"
-                  >
-                    <LinkIcon className="h-4 w-4" />
-                    {profile.website.replace(/^https?:\/\//, '')}
-                  </a>
-                )}
-              </div>
-            </div>
+            )}
           </div>
         </div>
 
-        {/* Grid Section */}
-        <div className="mt-6 bg-white rounded-lg shadow-sm p-6">
-          <div className="grid grid-cols-3 gap-1">
-            <div className="aspect-square bg-gray-100 flex items-center justify-center">
-              <Grid className="w-6 h-6 text-gray-400" />
-            </div>
+        {/* Profile Info */}
+        <div className="col-span-2">
+          <div className="flex flex-col">
+            <h2 className="text-xl font-semibold mb-1">{profile?.name || "Nome não definido"}</h2>
+            <p className="text-muted-foreground text-sm mb-2">{profile?.email}</p>
+            <p className="text-muted-foreground text-sm">{profile?.phone || "Telefone não definido"}</p>
+            <p className="text-muted-foreground text-sm">{profile?.address || "Endereço não definido"}</p>
           </div>
         </div>
       </div>
 
       {/* Settings Modal */}
       {isEditing && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 overflow-y-auto">
-          <div className="min-h-screen flex items-center justify-center p-4">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl">
-              <div className="p-6">
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-semibold">Editar Perfil</h2>
-                  <Button variant="ghost" size="icon" onClick={() => setIsEditing(false)}>
-                    <Settings className="h-5 w-5" />
-                  </Button>
-                </div>
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50">
+          <div className="fixed inset-x-0 top-[50%] translate-y-[-50%] p-4 max-w-2xl mx-auto">
+            <div className="bg-card rounded-lg shadow-lg p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-semibold">Configurações</h2>
+                <Button variant="ghost" size="icon" onClick={() => setIsEditing(false)}>
+                  <Settings className="h-5 w-5" />
+                </Button>
+              </div>
 
+              {/* Settings Options */}
+              <div className="flex flex-col gap-2 mb-6">
+                <Button
+                  variant={selectedOption === 'profile' ? 'default' : 'outline'}
+                  onClick={() => setSelectedOption('profile')}
+                  className="justify-start"
+                >
+                  <Edit className="mr-2 h-4 w-4" />
+                  Editar Perfil
+                </Button>
+                <Button
+                  variant={selectedOption === 'password' ? 'default' : 'outline'}
+                  onClick={() => {
+                    setSelectedOption('password');
+                    handlePasswordReset();
+                  }}
+                  className="justify-start"
+                >
+                  <Key className="mr-2 h-4 w-4" />
+                  Redefinir Senha
+                </Button>
+                <Button
+                  variant={selectedOption === 'address' ? 'default' : 'outline'}
+                  onClick={() => setSelectedOption('address')}
+                  className="justify-start"
+                >
+                  <MapPin className="mr-2 h-4 w-4" />
+                  Adicionar Endereço
+                </Button>
+              </div>
+
+              {selectedOption === 'profile' && (
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit((data) => updateProfile.mutate(data))} className="space-y-4">
                     <FormField
@@ -339,48 +328,14 @@ export default function Profile() {
                       )}
                     />
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="name"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Nome</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Seu nome" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="username"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Nome de usuário</FormLabel>
-                            <FormControl>
-                              <Input placeholder="seu_username" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
                     <FormField
                       control={form.control}
-                      name="bio"
+                      name="name"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Bio</FormLabel>
+                          <FormLabel>Nome</FormLabel>
                           <FormControl>
-                            <Textarea 
-                              placeholder="Conte um pouco sobre você..."
-                              className="resize-none"
-                              {...field}
-                            />
+                            <Input placeholder="Seu nome" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -389,47 +344,45 @@ export default function Profile() {
 
                     <FormField
                       control={form.control}
-                      name="website"
+                      name="username"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Website</FormLabel>
+                          <FormLabel>Username</FormLabel>
                           <FormControl>
-                            <Input placeholder="https://seusite.com" {...field} />
+                            <Input placeholder="seu_username" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Email</FormLabel>
-                            <FormControl>
-                              <Input type="email" placeholder="seu@email.com" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input type="email" placeholder="seu@email.com" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                      <FormField
-                        control={form.control}
-                        name="phone"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Telefone</FormLabel>
-                            <FormControl>
-                              <Input type="tel" placeholder="(00) 00000-0000" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
+                    <FormField
+                      control={form.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Telefone</FormLabel>
+                          <FormControl>
+                            <Input type="tel" placeholder="(00) 00000-0000" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
                     <FormField
                       control={form.control}
@@ -454,7 +407,32 @@ export default function Profile() {
                     </Button>
                   </form>
                 </Form>
-              </div>
+              )}
+
+              {selectedOption === 'address' && (
+                <div className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="address"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Endereço Completo</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Rua, número, bairro, cidade, estado" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button
+                    type="button"
+                    onClick={form.handleSubmit((data) => updateProfile.mutate(data))}
+                    className="w-full"
+                  >
+                    Salvar Endereço
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </div>
