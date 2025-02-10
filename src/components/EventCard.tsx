@@ -160,7 +160,8 @@ const EventCard = ({
     setIsImageFullscreen(!isImageFullscreen);
   };
 
-  const primaryColor = buttonColor || config?.primary_color || '#000000';
+  const primaryColor = buttonColor || config?.primary_color || '#9b87f5';
+  const secondaryColor = buttonSecondaryColor || config?.secondary_color || '#7E69AB';
   
   const buttonStyle = buttonColor ? {
     background: buttonSecondaryColor 

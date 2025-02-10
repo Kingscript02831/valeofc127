@@ -40,8 +40,8 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
     website: "",
     whatsapp: "",
     category_id: "",
-    button_color: "#000000",
-    button_secondary_color: "#000000"
+    button_color: "#9b87f5",
+    button_secondary_color: "#7E69AB"
   });
 
   useEffect(() => {
