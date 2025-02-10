@@ -780,3 +780,5 @@ const Admin = () => {
                     value={config.weather_api_key || ""}
                     onChange={(e) => setConfig({ ...config, weather_api_key: e.target.value })}
                     placeholder="Sua chave da API do clima"
+                  />
+                
