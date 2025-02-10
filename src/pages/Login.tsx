@@ -70,7 +70,7 @@ const Login = () => {
             className="text-3xl font-bold"
             style={{ color: config.primary_color }}
           >
-            Bem-vindo
+            Conecte-se
           </h1>
           <p className="text-gray-600">Entre com suas credenciais para acessar</p>
         </div>
