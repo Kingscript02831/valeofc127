@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -42,7 +41,10 @@ const profileSchema = z.object({
   email: z.string().email("Email inválido"),
   phone: z.string().min(10, "Telefone deve ter pelo menos 10 dígitos"),
   birth_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida"),
-  address: z.string().min(5, "Endereço deve ter pelo menos 5 caracteres"),
+  street: z.string().min(3, "Rua deve ter pelo menos 3 caracteres"),
+  house_number: z.string().min(1, "Número da casa é obrigatório"),
+  city: z.string().min(2, "Cidade deve ter pelo menos 2 caracteres"),
+  postal_code: z.string().min(8, "CEP deve ter 8 dígitos"),
   avatar_url: z.string().url("URL inválida").optional(),
   username: z.string().min(2, "Username deve ter pelo menos 2 caracteres"),
   bio: z.string().optional(),
@@ -82,7 +84,10 @@ export default function Profile() {
       email: "",
       phone: "",
       birth_date: "",
-      address: "",
+      street: "",
+      house_number: "",
+      city: "",
+      postal_code: "",
       avatar_url: "",
       username: "",
       bio: "",
@@ -298,6 +303,12 @@ export default function Profile() {
                   <Mail className="h-4 w-4 text-muted-foreground" />
                   <span>{profile?.email}</span>
                 </div>
+                {profile?.username && (
+                  <div className="flex items-center gap-2">
+                    <AtSign className="h-4 w-4 text-muted-foreground" />
+                    <span>{profile.username}</span>
+                  </div>
+                )}
                 {profile?.phone && (
                   <div className="flex items-center gap-2">
                     <Phone className="h-4 w-4 text-muted-foreground" />
@@ -310,22 +321,53 @@ export default function Profile() {
                     <span>{format(new Date(profile.birth_date), "dd/MM/yyyy")}</span>
                   </div>
                 )}
-                {profile?.address && (
+              </CardContent>
+            </Card>
+
+            <Card className="mt-4">
+              <CardHeader>
+                <CardTitle>Endereço</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {profile?.street && (
                   <div className="flex items-center gap-2">
                     <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <span>{profile.address}</span>
+                    <span>Rua: {profile.street}</span>
                   </div>
                 )}
-                {profile?.website && (
+                {profile?.house_number && (
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <span>Número: {profile.house_number}</span>
+                  </div>
+                )}
+                {profile?.city && (
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <span>Cidade: {profile.city}</span>
+                  </div>
+                )}
+                {profile?.postal_code && (
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <span>CEP: {profile.postal_code}</span>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {profile?.website && (
+              <Card className="mt-4">
+                <CardContent className="pt-6">
                   <div className="flex items-center gap-2">
                     <Globe className="h-4 w-4 text-muted-foreground" />
                     <a href={profile.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
                       {profile.website}
                     </a>
                   </div>
-                )}
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           <TabsContent value="settings">
@@ -449,14 +491,7 @@ export default function Profile() {
                         </FormItem>
                       )}
                     />
-                  </CardContent>
-                </Card>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Outras Informações</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
                     <FormField
                       control={form.control}
                       name="birth_date"
@@ -470,13 +505,62 @@ export default function Profile() {
                         </FormItem>
                       )}
                     />
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Endereço</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <FormField
+                      control={form.control}
+                      name="street"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Rua</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
                     <FormField
                       control={form.control}
-                      name="address"
+                      name="house_number"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Endereço</FormLabel>
+                          <FormLabel>Número</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="city"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Cidade</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="postal_code"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>CEP</FormLabel>
                           <FormControl>
                             <Input {...field} />
                           </FormControl>

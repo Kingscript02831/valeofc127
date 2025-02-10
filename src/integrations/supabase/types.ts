@@ -472,11 +472,15 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           birth_date: string | null
+          city: string | null
           created_at: string
           email: string | null
+          house_number: string | null
           id: string
           name: string
           phone: string | null
+          postal_code: string | null
+          street: string | null
           updated_at: string
           username: string | null
           website: string | null
@@ -486,11 +490,15 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           birth_date?: string | null
+          city?: string | null
           created_at?: string
           email?: string | null
+          house_number?: string | null
           id: string
           name: string
           phone?: string | null
+          postal_code?: string | null
+          street?: string | null
           updated_at?: string
           username?: string | null
           website?: string | null
@@ -500,11 +508,15 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           birth_date?: string | null
+          city?: string | null
           created_at?: string
           email?: string | null
+          house_number?: string | null
           id?: string
           name?: string
           phone?: string | null
+          postal_code?: string | null
+          street?: string | null
           updated_at?: string
           username?: string | null
           website?: string | null
