@@ -11,7 +11,7 @@ import Places from "./pages/Places";
 import Stores from "./pages/Stores";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
-import Cores from "./pages/cores";
+import Config from "./pages/config";
 import AdminPlaces from "./pages/AdminPlaces";
 import AdminEvents from "./pages/AdminEvents";
 import AdminStores from "./pages/AdminStores";
@@ -38,7 +38,7 @@ const App: React.FC = () => {
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<SignUp />} />
               <Route path="/perfil" element={<Profile />} />
-              <Route path="/cores" element={<Cores />} />
+              <Route path="/config" element={<Config />} />
               <Route path="/admin/lugares" element={<AdminPlaces />} />
               <Route path="/admin/eventos" element={<AdminEvents />} />
               <Route path="/admin/lojas" element={<AdminStores />} />
@@ -54,3 +54,4 @@ const App: React.FC = () => {
 };
 
 export default App;
+
