@@ -83,9 +83,21 @@ const AdminNews = () => {
   const handleNewsSubmit = async () => {
     try {
       if (!newNews.title || !newNews.content) {
-        toast.error("Preencha os campos obrigatórios");
+        toast.error("Preencha os campos obrigatórios (título e conteúdo)");
         return;
       }
+
+      // Validate instagram_media if present
+      if (newNews.instagram_media && Array.isArray(newNews.instagram_media)) {
+        for (const media of newNews.instagram_media) {
+          if (!media.url || !media.type) {
+            toast.error("Preencha todos os campos da mídia do Instagram");
+            return;
+          }
+        }
+      }
+
+      console.log('Submitting news:', newNews); // Debug log
 
       const { data, error } = await supabase.from("news").insert([
         {
@@ -94,7 +106,10 @@ const AdminNews = () => {
         },
       ]);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error); // Debug log
+        throw error;
+      }
 
       toast.success("Notícia adicionada com sucesso!");
       setNewNews({
@@ -108,8 +123,8 @@ const AdminNews = () => {
       });
       fetchNews();
     } catch (error) {
-      console.error("Error adding news:", error);
-      toast.error("Erro ao adicionar notícia");
+      console.error("Error details:", error); // Debug log
+      toast.error("Erro ao adicionar notícia. Por favor, tente novamente.");
     }
   };
 
