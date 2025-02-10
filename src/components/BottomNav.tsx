@@ -1,5 +1,4 @@
-
-import { Home, Bell, User } from "lucide-react";
+import { Home, Bell, User, MessageCircle } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSiteConfig } from "../hooks/useSiteConfig";
 import { supabase } from "../integrations/supabase/client";
@@ -44,12 +43,12 @@ const BottomNav = () => {
       return count || 0;
     },
     enabled: !!session,
-    refetchInterval: 30000, // Refetch every 30 seconds
+    refetchInterval: 30000,
   });
 
   const handleNavigation = (path: string, e: React.MouseEvent) => {
     e.preventDefault();
-    if (!session && path === "/notifications") {
+    if (!session && (path === "/notifications" || path === "/chat")) {
       toast.error("Você precisa fazer login para acessar esta área");
       navigate("/login");
       return;
@@ -81,6 +80,17 @@ const BottomNav = () => {
             <span className="text-xs">Início</span>
           </Link>
 
+          {/* Novo botão de chat */}
+          <a
+            href="/chat"
+            onClick={(e) => handleNavigation("/chat", e)}
+            className={`flex flex-col items-center p-1`}
+            style={{ color: isActive("/chat") ? iconColor : textColor }}
+          >
+            <MessageCircle className="h-5 w-5" />
+            <span className="text-xs">Chat</span>
+          </a>
+
           <a
             href="/notifications"
             onClick={(e) => handleNavigation("/notifications", e)}
@@ -111,4 +121,3 @@ const BottomNav = () => {
 };
 
 export default BottomNav;
-
