@@ -50,41 +50,6 @@ export type Database = {
           },
         ]
       }
-      comments: {
-        Row: {
-          content: string
-          created_at: string
-          id: string
-          post_id: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          content: string
-          created_at?: string
-          id?: string
-          post_id: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          content?: string
-          created_at?: string
-          id?: string
-          post_id?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "comments_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "posts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       events: {
         Row: {
           button_color: string | null
@@ -209,35 +174,6 @@ export type Database = {
           id?: string
         }
         Relationships: []
-      }
-      likes: {
-        Row: {
-          created_at: string
-          id: string
-          post_id: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          post_id: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          post_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "likes_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "posts"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       news: {
         Row: {
@@ -390,33 +326,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      posts: {
-        Row: {
-          caption: string | null
-          created_at: string
-          id: string
-          image_url: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          caption?: string | null
-          created_at?: string
-          id?: string
-          image_url: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          caption?: string | null
-          created_at?: string
-          id?: string
-          image_url?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
       }
       profiles: {
         Row: {
