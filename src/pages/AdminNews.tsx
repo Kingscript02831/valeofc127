@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { supabase } from "../../integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { Search, Plus, Trash2 } from "lucide-react";
@@ -64,6 +64,55 @@ const AdminNews = () => {
       toast.error("Erro ao carregar notícias");
     }
   };
+
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("categories")
+        .select("*")
+        .order("name");
+
+      if (error) throw error;
+      setCategories(data || []);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      toast.error("Erro ao carregar categorias");
+    }
+  };
+
+  const handleNewsSubmit = async () => {
+    try {
+      if (!newNews.title || !newNews.content) {
+        toast.error("Preencha os campos obrigatórios");
+        return;
+      }
+
+      const { data, error } = await supabase.from("news").insert([
+        {
+          ...newNews,
+          date: new Date().toISOString(),
+        },
+      ]);
+
+      if (error) throw error;
+
+      toast.success("Notícia adicionada com sucesso!");
+      setNewNews({
+        title: "",
+        content: "",
+        category_id: null,
+        image: null,
+        video: null,
+        button_color: "#9b87f5",
+        instagram_media: [],
+      });
+      fetchNews();
+    } catch (error) {
+      console.error("Error adding news:", error);
+      toast.error("Erro ao adicionar notícia");
+    }
+  };
+
   const handleNewsEdit = async () => {
     try {
       if (!editingNews || !editingNews.title || !editingNews.content) {
@@ -182,7 +231,7 @@ const AdminNews = () => {
     );
   };
 
-return (
+  return (
     <div className="space-y-6">
       {!editingNews ? (
         <div className="bg-white rounded-lg shadow p-6">
@@ -302,7 +351,7 @@ return (
                 </select>
               </div>
               <div>
-<Label htmlFor="edit-button_color">Cor do Botão</Label>
+                <Label htmlFor="edit-button_color">Cor do Botão</Label>
                 <div className="flex gap-2">
                   <Input
                     id="edit-button_color"
@@ -436,8 +485,3 @@ return (
 };
 
 export default AdminNews;
-
-
-  
-  
-                    
