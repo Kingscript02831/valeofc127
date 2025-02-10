@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../integrations/supabase/client";
@@ -19,8 +18,7 @@ const SignUp = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validar se todos os campos estão preenchidos
+
     if (!email || !password || !name || !username || !phone || !birthDate) {
       toast({
         title: "Erro ao criar conta",
@@ -52,8 +50,8 @@ const SignUp = () => {
         title: "Conta criada com sucesso",
         description: "Bem-vindo ao sistema!",
       });
-      
-      navigate("/"); // Redireciona para a página inicial após o cadastro
+
+      navigate("/");
     } catch (error: any) {
       toast({
         title: "Erro ao criar conta",
@@ -66,111 +64,34 @@ const SignUp = () => {
   };
 
   return (
-    <div className="container max-w-md mx-auto p-4 min-h-screen flex flex-col justify-center">
-      <div className="space-y-6 bg-card p-6 rounded-lg shadow-lg">
-        <div className="space-y-2 text-center">
-          <h1 className="text-2xl font-bold">Criar Conta</h1>
-          <p className="text-muted-foreground">
-            Preencha todos os campos abaixo para se registrar
-          </p>
+    <div className="min-h-screen flex items-center justify-center bg-[#111B21] p-6">
+      <div className="w-full max-w-md bg-[#202C33]/90 backdrop-blur-md p-8 rounded-xl shadow-xl border border-white/10">
+        <div className="text-center space-y-3">
+          <h1 className="text-3xl font-bold text-white">Criar Conta</h1>
+          <p className="text-gray-400">Preencha todos os campos abaixo para se registrar</p>
         </div>
 
-        <form onSubmit={handleSignUp} className="space-y-4">
-          <div className="space-y-2">
-            <label htmlFor="name" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-              Nome Completo
-            </label>
-            <Input
-              id="name"
-              type="text"
-              placeholder="Seu nome completo"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="username" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-              Nome de Usuário
-            </label>
-            <Input
-              id="username"
-              type="text"
-              placeholder="@seu.usuario"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="email" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-              Email
-            </label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="seu@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="phone" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-              Telefone
-            </label>
-            <Input
-              id="phone"
-              type="tel"
-              placeholder="(00) 00000-0000"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="birthDate" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-              Data de Nascimento
-            </label>
-            <Input
-              id="birthDate"
-              type="date"
-              value={birthDate}
-              onChange={(e) => setBirthDate(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="password" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-              Senha
-            </label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
+        <form onSubmit={handleSignUp} className="space-y-5 mt-6">
+          <InputField label="Nome Completo" id="name" type="text" value={name} setValue={setName} placeholder="Seu nome completo" />
+          <InputField label="Nome de Usuário" id="username" type="text" value={username} setValue={setUsername} placeholder="@seu.usuario" />
+          <InputField label="Email" id="email" type="email" value={email} setValue={setEmail} placeholder="seu@email.com" />
+          <InputField label="Telefone" id="phone" type="tel" value={phone} setValue={setPhone} placeholder="(00) 00000-0000" />
+          <InputField label="Data de Nascimento" id="birthDate" type="date" value={birthDate} setValue={setBirthDate} />
+          <InputField label="Senha" id="password" type="password" value={password} setValue={setPassword} placeholder="******" />
 
           <Button
             type="submit"
-            className="w-full"
+            className="w-full h-12 bg-green-500 hover:bg-green-400 text-white font-medium rounded-lg transition duration-300 shadow-md"
             disabled={loading}
           >
             {loading ? "Criando conta..." : "Criar conta"}
           </Button>
 
-          <p className="text-center text-sm text-muted-foreground">
+          <p className="text-center text-sm text-gray-400">
             Já possui uma conta?{" "}
             <Button
               variant="link"
-              className="p-0 h-auto"
+              className="p-0 text-green-400 hover:text-green-300 transition"
               onClick={() => navigate("/login")}
             >
               Fazer login
@@ -181,5 +102,22 @@ const SignUp = () => {
     </div>
   );
 };
+
+const InputField = ({ label, id, type, value, setValue, placeholder = "" }) => (
+  <div>
+    <label htmlFor={id} className="text-sm font-medium text-gray-300">
+      {label}
+    </label>
+    <Input
+      id={id}
+      type={type}
+      placeholder={placeholder}
+      value={value}
+      onChange={(e) => setValue(e.target.value)}
+      required
+      className="bg-[#2A3942] border-[#37454F] text-white placeholder-gray-400"
+    />
+  </div>
+);
 
 export default SignUp;
