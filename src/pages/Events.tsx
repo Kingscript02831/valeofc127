@@ -1,16 +1,15 @@
-
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Search } from "lucide-react";
-import Navbar from "@/components/Navbar";
-import SubNav from "@/components/SubNav";
-import Footer from "@/components/Footer";
-import EventCard from "@/components/EventCard";
-import BottomNav from "@/components/BottomNav";
-import { supabase } from "@/integrations/supabase/client";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Input } from "@/components/ui/input";
-import type { Database } from "@/integrations/supabase/types";
+import Navbar from "../components/Navbar";
+import SubNav from "../components/SubNav";
+import Footer from "../components/Footer";
+import EventCard from "../components/EventCard";
+import BottomNav from "../components/BottomNav";
+import { supabase } from "../integrations/supabase/client";
+import { Skeleton } from "../components/ui/skeleton";
+import { Input } from "../components/ui/input";
+import type { Database } from "../integrations/supabase/types";
 
 type Event = Database["public"]["Tables"]["events"]["Row"];
 type Category = Database["public"]["Tables"]["categories"]["Row"];

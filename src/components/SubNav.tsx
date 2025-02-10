@@ -1,6 +1,5 @@
-
 import { Link, useLocation } from "react-router-dom";
-import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { useSiteConfig } from "../hooks/useSiteConfig";
 
 const SubNav = () => {
   const { data: config, isLoading, isError } = useSiteConfig();
