@@ -24,7 +24,7 @@ const SubNav2 = () => {
   if (isError || !config) {
     return (
       <nav className="w-full border-b mt-16 bg-gray-800">
-        <div className="max-w-screen-2xl mx-auto px-4">
+        <div className="container mx-auto px-4">
           <div className="flex overflow-x-auto scrollbar-hide py-2 gap-x-8">
             {links.map((link) => (
               <Link
@@ -49,7 +49,7 @@ const SubNav2 = () => {
         borderColor: `${config.primary_color}20`
       }}
     >
-      <div className="max-w-screen-2xl mx-auto px-4">
+      <div className="container mx-auto px-4">
         <div className="flex overflow-x-auto scrollbar-hide py-2 gap-x-8">
           {links.map((link) => (
             <Link
