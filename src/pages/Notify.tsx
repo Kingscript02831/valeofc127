@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bell, CheckCircle, Clock, ChevronRight, Calendar, Newspaper } from "lucide-react";
@@ -117,11 +116,11 @@ const Notify = () => {
   const getNotificationIcon = (type: Notification["type"]) => {
     switch (type) {
       case "event":
-        return <Calendar className="h-5 w-5" />;
+        return <Calendar className="h-4 w-4" />;
       case "news":
-        return <Newspaper className="h-5 w-5" />;
+        return <Newspaper className="h-4 w-4" />;
       default:
-        return <Bell className="h-5 w-5" />;
+        return <Bell className="h-4 w-4" />;
     }
   };
 
@@ -142,11 +141,11 @@ const Notify = () => {
     <>
       <Navbar />
       <SubNav />
-      <div className="max-w-4xl mx-auto p-4 md:p-6 mb-20">
+      <div className="max-w-3xl mx-auto p-4 md:p-6 mb-20">
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
           <div className="flex items-center gap-3">
-            <Bell className="h-8 w-8 text-primary" />
-            <h1 className="text-2xl font-bold">Notificações</h1>
+            <Bell className="h-6 w-6 text-primary" />
+            <h1 className="text-xl font-bold">Notificações</h1>
             <Badge variant="secondary" className="ml-2">
               {notifications.filter(n => !n.read).length} não lidas
             </Badge>
@@ -154,13 +153,14 @@ const Notify = () => {
           <Button 
             onClick={markAllAsRead} 
             variant="outline" 
+            size="sm"
             className="w-full md:w-auto"
           >
             Marcar todas como lidas
           </Button>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-2">
           {notifications.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               Nenhuma notificação encontrada
@@ -170,26 +170,26 @@ const Notify = () => {
               <div
                 key={notification.id}
                 className={cn(
-                  "group flex flex-col p-4 rounded-lg border transition-all",
-                  "hover:shadow-md cursor-pointer",
+                  "group flex flex-col p-3 rounded-lg border transition-all",
+                  "hover:shadow-sm cursor-pointer",
                   notification.read 
                     ? "bg-muted/50 border-transparent"
-                    : "bg-background border-primary/20 shadow-sm"
+                    : "bg-background border-primary/10"
                 )}
                 onClick={() => markAsRead(notification.id)}
               >
-                <div className="flex items-start gap-4">
+                <div className="flex items-start gap-3">
                   <div className="mt-1">
                     {getNotificationIcon(notification.type)}
                   </div>
-                  <div className="flex-1">
-                    <div className="flex flex-wrap items-center gap-2 mb-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 mb-1">
                       <Badge
                         variant={notification.read ? "outline" : "default"}
                         className={cn(
                           "text-xs font-medium",
-                          notification.type === 'event' && "bg-blue-500/20 text-blue-900",
-                          notification.type === 'news' && "bg-green-500/20 text-green-900"
+                          notification.type === 'event' && "bg-blue-500/10 text-blue-700",
+                          notification.type === 'news' && "bg-green-500/10 text-green-700"
                         )}
                       >
                         {notification.type === 'event' ? 'Evento' : 'Notícia'}
@@ -200,57 +200,55 @@ const Notify = () => {
                         </Badge>
                       )}
                       {!notification.read && (
-                        <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+                        <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
                       )}
                     </div>
 
                     <h3 className={cn(
-                      "font-semibold mb-1",
+                      "text-sm font-medium mb-0.5 truncate",
                       !notification.read && "text-primary"
                     )}>
                       {notification.publication_title || notification.title}
                     </h3>
                     
                     {notification.publication_description && (
-                      <p className="text-sm text-muted-foreground mb-2">
+                      <p className="text-xs text-muted-foreground mb-1 line-clamp-1">
                         {notification.publication_description}
                       </p>
                     )}
                     
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs text-muted-foreground line-clamp-1">
                       {notification.message}
                     </p>
 
-                    {notification.reference_id && (
-                      <Button
-                        variant="link"
-                        className="h-auto p-0 mt-2 text-sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          markAsRead(notification.id);
-                        }}
-                      >
-                        Ver detalhes
-                        <ChevronRight className="ml-1 h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-
-                  <div className="flex flex-col items-end min-w-[120px]">
-                    <span className="text-xs text-muted-foreground">
-                      {format(new Date(notification.created_at), "dd MMM yyyy 'às' HH:mm", { locale: ptBR })}
-                    </span>
-                    {notification.publication_date && (
-                      <span className="text-xs text-muted-foreground mt-1">
-                        Data da publicação: {format(new Date(notification.publication_date), "dd/MM/yyyy", { locale: ptBR })}
-                      </span>
-                    )}
-                    <div className="mt-2">
-                      {notification.read ? (
-                        <CheckCircle className="h-4 w-4 text-green-500" />
-                      ) : (
-                        <Clock className="h-4 w-4 text-yellow-500" />
-                      )}
+                    <div className="flex items-center justify-between mt-2">
+                      <div className="flex items-center gap-2">
+                        {notification.reference_id && (
+                          <Button
+                            variant="link"
+                            size="sm"
+                            className="h-auto p-0 text-xs"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              markAsRead(notification.id);
+                            }}
+                          >
+                            Ver detalhes
+                            <ChevronRight className="ml-1 h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
+                      
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <span>
+                          {format(new Date(notification.created_at), "dd MMM HH:mm", { locale: ptBR })}
+                        </span>
+                        {notification.read ? (
+                          <CheckCircle className="h-3 w-3 text-green-500" />
+                        ) : (
+                          <Clock className="h-3 w-3 text-yellow-500" />
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
