@@ -136,6 +136,7 @@ const Admin = () => {
             <TabsTrigger value="footer">Rodapé</TabsTrigger>
             <TabsTrigger value="bottom-nav">Barra</TabsTrigger>
             <TabsTrigger value="general">Geral</TabsTrigger>
+            <TabsTrigger value="login">Login/Registro</TabsTrigger>
           </TabsList>
 
           <TabsContent value="config" className="bg-white rounded-lg shadow p-6 space-y-6">
@@ -830,6 +831,55 @@ const Admin = () => {
                   <p className="text-sm text-gray-500 mt-1">
                     Esta chave é necessária para acessar os dados de previsão do tempo
                   </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <Button onClick={handleConfigUpdate}>
+                Salvar Configurações
+              </Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="login" className="bg-white rounded-lg shadow p-6 space-y-6">
+            <div>
+              <h2 className="text-xl font-semibold mb-4">Cores dos Textos de Autenticação</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <Label htmlFor="login_text_color">Cor do Texto "Conecte-se"</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="login_text_color"
+                      type="color"
+                      value={config.login_text_color}
+                      onChange={(e) => setConfig({ ...config, login_text_color: e.target.value })}
+                      className="w-20"
+                    />
+                    <Input
+                      type="text"
+                      value={config.login_text_color}
+                      onChange={(e) => setConfig({ ...config, login_text_color: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="signup_text_color">Cor do Texto "Inscreva-se"</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="signup_text_color"
+                      type="color"
+                      value={config.signup_text_color}
+                      onChange={(e) => setConfig({ ...config, signup_text_color: e.target.value })}
+                      className="w-20"
+                    />
+                    <Input
+                      type="text"
+                      value={config.signup_text_color}
+                      onChange={(e) => setConfig({ ...config, signup_text_color: e.target.value })}
+                    />
+                  </div>
                 </div>
               </div>
             </div>

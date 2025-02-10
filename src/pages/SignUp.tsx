@@ -191,7 +191,7 @@ const InputField = ({ label, id, type, value, setValue, placeholder = "", config
     <label 
       htmlFor={id} 
       className="text-sm font-medium"
-      style={{ color: config.primary_color }}
+      style={{ color: config.signup_text_color }}
     >
       {label}
     </label>

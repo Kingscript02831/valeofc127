@@ -80,7 +80,7 @@ const Login = () => {
             <label 
               htmlFor="email" 
               className="text-sm font-medium"
-              style={{ color: config.primary_color }}
+              style={{ color: config.login_text_color }}
             >
               Email
             </label>
@@ -99,7 +99,7 @@ const Login = () => {
             <label 
               htmlFor="password" 
               className="text-sm font-medium"
-              style={{ color: config.primary_color }}
+              style={{ color: config.login_text_color }}
             >
               Senha
             </label>
@@ -116,7 +116,7 @@ const Login = () => {
               variant="link"
               className="p-0 text-sm transition"
               onClick={() => navigate("/reset-password")}
-              style={{ color: config.primary_color }}
+              style={{ color: config.login_text_color }}
             >
               Esqueceu sua senha?
             </Button>
@@ -140,7 +140,7 @@ const Login = () => {
               variant="link"
               className="p-0 transition"
               onClick={() => navigate("/signup")}
-              style={{ color: config.primary_color }}
+              style={{ color: config.login_text_color }}
             >
               Criar conta
             </Button>
