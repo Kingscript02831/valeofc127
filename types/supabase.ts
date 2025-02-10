@@ -1,3 +1,4 @@
+
 export type Database = {
   public: {
     Tables: {
@@ -52,6 +53,18 @@ export type Database = {
           updated_at: string
           version: number | null
           weather_api_key: string | null
+        };
+      };
+      notifications: {
+        Row: {
+          id: string;
+          user_id: string;
+          title: string;
+          message: string;
+          type: "news" | "comment" | "like" | "follow";
+          reference_id: string | null;
+          read: boolean;
+          created_at: string;
         };
       };
     };

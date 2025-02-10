@@ -5,6 +5,7 @@ import { useSiteConfig } from "../hooks/useSiteConfig";
 import { supabase } from "../integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
 
 const BottomNav = () => {
   const location = useLocation();
@@ -27,6 +28,24 @@ const BottomNav = () => {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Fetch unread notifications count
+  const { data: unreadCount } = useQuery({
+    queryKey: ["unreadNotifications"],
+    queryFn: async () => {
+      if (!session) return 0;
+      
+      const { count, error } = await supabase
+        .from("notifications")
+        .select("*", { count: 'exact', head: true })
+        .eq("read", false);
+
+      if (error) throw error;
+      return count || 0;
+    },
+    enabled: !!session,
+    refetchInterval: 30000, // Refetch every 30 seconds
+  });
 
   const handleNavigation = (path: string, e: React.MouseEvent) => {
     e.preventDefault();
@@ -65,10 +84,15 @@ const BottomNav = () => {
           <a
             href="/notifications"
             onClick={(e) => handleNavigation("/notifications", e)}
-            className={`flex flex-col items-center p-1`}
+            className={`flex flex-col items-center p-1 relative`}
             style={{ color: isActive("/notifications") ? iconColor : textColor }}
           >
             <Bell className="h-5 w-5" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                {unreadCount}
+              </span>
+            )}
             <span className="text-xs">Notificações</span>
           </a>
 

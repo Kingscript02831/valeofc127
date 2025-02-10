@@ -18,7 +18,23 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { LogOut, Trash2, User, AtSign, Grid, Settings, Edit, Key, MapPin } from "lucide-react";
+import {
+  LogOut,
+  User,
+  AtSign,
+  Grid,
+  Settings,
+  Key,
+  MapPin,
+  Mail,
+  Phone,
+  Calendar,
+  Globe,
+  Image,
+} from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import BottomNav from "../components/BottomNav";
 
 const profileSchema = z.object({
@@ -29,6 +45,8 @@ const profileSchema = z.object({
   address: z.string().min(5, "Endereço deve ter pelo menos 5 caracteres"),
   avatar_url: z.string().url("URL inválida").optional(),
   username: z.string().min(2, "Username deve ter pelo menos 2 caracteres"),
+  bio: z.string().optional(),
+  website: z.string().url("URL inválida").optional().or(z.literal("")),
 });
 
 export default function Profile() {
@@ -37,7 +55,6 @@ export default function Profile() {
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
-  const [selectedOption, setSelectedOption] = useState<'profile' | 'password' | 'address'>('profile');
 
   // Check for authentication status
   useEffect(() => {
@@ -68,6 +85,8 @@ export default function Profile() {
       address: "",
       avatar_url: "",
       username: "",
+      bio: "",
+      website: "",
     },
   });
 
@@ -84,12 +103,8 @@ export default function Profile() {
         .eq("id", session.user.id)
         .maybeSingle();
 
-      if (error) {
-        console.error("Error fetching profile:", error);
-        throw error;
-      }
+      if (error) throw error;
 
-      // If no profile exists, create one
       if (!data) {
         const { data: newProfile, error: createError } = await supabase
           .from("profiles")
@@ -110,12 +125,10 @@ export default function Profile() {
       return data;
     },
     enabled: !isLoading,
-    retry: 1,
   });
 
   useEffect(() => {
     if (profile) {
-      console.log("Setting form values with profile:", profile);
       form.reset({
         ...profile,
         birth_date: profile.birth_date ? format(new Date(profile.birth_date), "yyyy-MM-dd") : "",
@@ -210,15 +223,10 @@ export default function Profile() {
 
   return (
     <div className="container max-w-2xl mx-auto p-4 pb-20">
-      {/* Header with settings and logout */}
+      {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-2">
-          {profile?.username && (
-            <h1 className="text-xl font-semibold flex items-center gap-1">
-              <AtSign className="h-5 w-5" />
-              {profile.username}
-            </h1>
-          )}
+          <h1 className="text-2xl font-semibold">Perfil</h1>
         </div>
         <div className="flex gap-2">
           <Button
@@ -238,96 +246,119 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* Profile Info Section */}
-      <div className="grid grid-cols-3 gap-8 mb-8">
-        {/* Profile Picture */}
-        <div className="flex justify-center">
-          <div className="relative">
-            {profile?.avatar_url ? (
-              <img
-                src={profile.avatar_url}
-                alt="Avatar"
-                className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
-              />
-            ) : (
-              <div className="w-24 h-24 rounded-full bg-secondary flex items-center justify-center border-2 border-gray-200">
-                <User className="w-12 h-12 text-muted-foreground" />
+      {/* Profile Content */}
+      <div className="space-y-6">
+        {/* Profile Header */}
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                {profile?.avatar_url ? (
+                  <img
+                    src={profile.avatar_url}
+                    alt="Avatar"
+                    className="w-20 h-20 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center">
+                    <User className="w-10 h-10 text-muted-foreground" />
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </div>
-
-        {/* Profile Info */}
-        <div className="col-span-2">
-          <div className="flex flex-col">
-            <h2 className="text-xl font-semibold mb-1">{profile?.name || "Nome não definido"}</h2>
-            <p className="text-muted-foreground text-sm mb-2">{profile?.email}</p>
-            <p className="text-muted-foreground text-sm">{profile?.phone || "Telefone não definido"}</p>
-            <p className="text-muted-foreground text-sm">{profile?.address || "Endereço não definido"}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Settings Modal */}
-      {isEditing && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50">
-          <div className="fixed inset-x-0 top-[50%] translate-y-[-50%] p-4 max-w-2xl mx-auto">
-            <div className="bg-card rounded-lg shadow-lg p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-semibold">Configurações</h2>
-                <Button variant="ghost" size="icon" onClick={() => setIsEditing(false)}>
-                  <Settings className="h-5 w-5" />
-                </Button>
+              <div>
+                <h2 className="text-xl font-semibold">{profile?.name}</h2>
+                {profile?.username && (
+                  <p className="text-muted-foreground flex items-center gap-1">
+                    <AtSign className="h-4 w-4" />
+                    {profile.username}
+                  </p>
+                )}
+                {profile?.bio && (
+                  <p className="text-sm mt-1">{profile.bio}</p>
+                )}
               </div>
+            </div>
+          </CardContent>
+        </Card>
 
-              {/* Settings Options */}
-              <div className="flex flex-col gap-2 mb-6">
-                <Button
-                  variant={selectedOption === 'profile' ? 'default' : 'outline'}
-                  onClick={() => setSelectedOption('profile')}
-                  className="justify-start"
-                >
-                  <Edit className="mr-2 h-4 w-4" />
-                  Editar Perfil
-                </Button>
-                <Button
-                  variant={selectedOption === 'password' ? 'default' : 'outline'}
-                  onClick={() => {
-                    setSelectedOption('password');
-                    handlePasswordReset();
-                  }}
-                  className="justify-start"
-                >
-                  <Key className="mr-2 h-4 w-4" />
-                  Redefinir Senha
-                </Button>
-                <Button
-                  variant={selectedOption === 'address' ? 'default' : 'outline'}
-                  onClick={() => setSelectedOption('address')}
-                  className="justify-start"
-                >
-                  <MapPin className="mr-2 h-4 w-4" />
-                  Adicionar Endereço
-                </Button>
-              </div>
+        {/* Tabs */}
+        <Tabs defaultValue="info" className="w-full">
+          <TabsList className="w-full">
+            <TabsTrigger value="info" className="flex-1">Informações</TabsTrigger>
+            <TabsTrigger value="settings" className="flex-1">Configurações</TabsTrigger>
+          </TabsList>
 
-              {selectedOption === 'profile' && (
-                <Form {...form}>
-                  <form onSubmit={form.handleSubmit((data) => updateProfile.mutate(data))} className="space-y-4">
+          <TabsContent value="info">
+            <Card>
+              <CardHeader>
+                <CardTitle>Informações Pessoais</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-muted-foreground" />
+                  <span>{profile?.email}</span>
+                </div>
+                {profile?.phone && (
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    <span>{profile.phone}</span>
+                  </div>
+                )}
+                {profile?.birth_date && (
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <span>{format(new Date(profile.birth_date), "dd/MM/yyyy")}</span>
+                  </div>
+                )}
+                {profile?.address && (
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <span>{profile.address}</span>
+                  </div>
+                )}
+                {profile?.website && (
+                  <div className="flex items-center gap-2">
+                    <Globe className="h-4 w-4 text-muted-foreground" />
+                    <a href={profile.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                      {profile.website}
+                    </a>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="settings">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit((data) => updateProfile.mutate(data))} className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Foto de Perfil</CardTitle>
+                  </CardHeader>
+                  <CardContent>
                     <FormField
                       control={form.control}
                       name="avatar_url"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>URL da Foto de Perfil</FormLabel>
                           <FormControl>
-                            <Input placeholder="https://exemplo.com/foto.jpg" {...field} />
+                            <div className="flex items-center gap-4">
+                              <Input placeholder="URL da imagem" {...field} />
+                              <Image className="h-5 w-5 text-muted-foreground" />
+                            </div>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
+                  </CardContent>
+                </Card>
 
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Informações Básicas</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
                     <FormField
                       control={form.control}
                       name="name"
@@ -347,7 +378,7 @@ export default function Profile() {
                       name="username"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Username</FormLabel>
+                          <FormLabel>Nome de usuário</FormLabel>
                           <FormControl>
                             <Input placeholder="seu_username" {...field} />
                           </FormControl>
@@ -358,12 +389,47 @@ export default function Profile() {
 
                     <FormField
                       control={form.control}
+                      name="bio"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Biografia</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Conte um pouco sobre você" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="website"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Website</FormLabel>
+                          <FormControl>
+                            <Input placeholder="https://seu-site.com" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Contato</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <FormField
+                      control={form.control}
                       name="email"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Email</FormLabel>
                           <FormControl>
-                            <Input type="email" placeholder="seu@email.com" {...field} />
+                            <Input type="email" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -377,13 +443,20 @@ export default function Profile() {
                         <FormItem>
                           <FormLabel>Telefone</FormLabel>
                           <FormControl>
-                            <Input type="tel" placeholder="(00) 00000-0000" {...field} />
+                            <Input type="tel" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
+                  </CardContent>
+                </Card>
 
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Outras Informações</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
                     <FormField
                       control={form.control}
                       name="birth_date"
@@ -398,45 +471,59 @@ export default function Profile() {
                       )}
                     />
 
-                    <Button
-                      type="submit"
-                      className="w-full"
-                      disabled={updateProfile.isPending}
-                    >
-                      {updateProfile.isPending ? "Salvando..." : "Salvar alterações"}
-                    </Button>
-                  </form>
-                </Form>
-              )}
+                    <FormField
+                      control={form.control}
+                      name="address"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Endereço</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </CardContent>
+                </Card>
 
-              {selectedOption === 'address' && (
-                <div className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="address"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Endereço Completo</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Rua, número, bairro, cidade, estado" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Segurança</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handlePasswordReset}
+                      className="w-full"
+                    >
+                      <Key className="mr-2 h-4 w-4" />
+                      Alterar Senha
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                <div className="flex justify-end gap-4">
                   <Button
                     type="button"
-                    onClick={form.handleSubmit((data) => updateProfile.mutate(data))}
-                    className="w-full"
+                    variant="outline"
+                    onClick={() => setIsEditing(false)}
                   >
-                    Salvar Endereço
+                    Cancelar
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={updateProfile.isPending}
+                  >
+                    {updateProfile.isPending ? "Salvando..." : "Salvar alterações"}
                   </Button>
                 </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+              </form>
+            </Form>
+          </TabsContent>
+        </Tabs>
+      </div>
 
       <BottomNav />
     </div>
