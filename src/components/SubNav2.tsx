@@ -1,3 +1,4 @@
+
 import { Link, useLocation } from "react-router-dom";
 import { useSiteConfig } from "../hooks/useSiteConfig";
 
@@ -6,9 +7,9 @@ const SubNav2 = () => {
   const location = useLocation();
 
   const links = [
-    { path: "/admin/noticias", label: "Gerenciar Notícias" },
-    { path: "/admin/eventos", label: "Gerenciar Eventos" },
-    { path: "/admin/lugares", label: "Gerenciar Lugares" },
+    { path: "/cores/noticias", label: "Gerenciar Notícias" },
+    { path: "/cores/eventos", label: "Gerenciar Eventos" },
+    { path: "/cores/lugares", label: "Gerenciar Lugares" },
   ];
 
   if (isLoading) {
