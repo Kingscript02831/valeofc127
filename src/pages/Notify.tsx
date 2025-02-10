@@ -6,12 +6,12 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "../integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import Navbar from "@/components/Navbar";
-import SubNav from "@/components/SubNav";
-import BottomNav from "@/components/BottomNav";
+import Navbar from "../components/Navbar";
+import SubNav from "../components/SubNav";
+import BottomNav from "../components/BottomNav";
 
 interface Notification {
   id: string;

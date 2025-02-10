@@ -1,117 +1,24 @@
-import { Home, Bell, User, MessageCircle } from "lucide-react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useSiteConfig } from "../hooks/useSiteConfig";
-import { supabase } from "../integrations/supabase/client";
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
-import { useQuery } from "@tanstack/react-query";
+
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { Home, Bell, User } from 'lucide-react';
 
 const BottomNav = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const { data: config } = useSiteConfig();
-  const [session, setSession] = useState<any>(null);
-
-  useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  // Fetch unread notifications count
-  const { data: unreadCount } = useQuery({
-    queryKey: ["unreadNotifications"],
-    queryFn: async () => {
-      if (!session) return 0;
-      
-      const { count, error } = await supabase
-        .from("notifications")
-        .select("*", { count: 'exact', head: true })
-        .eq("read", false);
-
-      if (error) throw error;
-      return count || 0;
-    },
-    enabled: !!session,
-    refetchInterval: 30000,
-  });
-
-  const handleNavigation = (path: string, e: React.MouseEvent) => {
-    e.preventDefault();
-    if (!session && (path === "/notify" || path === "/chat")) {
-      toast.error("Você precisa fazer login para acessar esta área");
-      navigate("/login");
-      return;
-    }
-    navigate(path);
-  };
-
-  const isActive = (path: string) => {
-    return location.pathname === path;
-  };
-
-  const navStyle = {
-    background: `linear-gradient(to right, ${config?.bottom_nav_primary_color || '#1A1F2C'}, ${config?.bottom_nav_secondary_color || '#D6BCFA'})`,
-  };
-
-  const iconColor = config?.bottom_nav_icon_color || '#FFFFFF';
-  const textColor = config?.bottom_nav_text_color || '#FFFFFF';
-
   return (
-    <nav className="fixed bottom-0 left-0 right-0 border-t border-gray-200 py-1 md:hidden" style={navStyle}>
+    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t py-2 md:hidden">
       <div className="container mx-auto px-4">
         <div className="flex justify-around items-center">
-          <Link
-            to="/"
-            className={`flex flex-col items-center p-1`}
-            style={{ color: isActive("/") ? iconColor : textColor }}
-          >
+          <Link to="/" className="flex flex-col items-center">
             <Home className="h-5 w-5" />
-            <span className="text-xs">Início</span>
+            <span className="text-xs mt-1">Início</span>
           </Link>
-
-          <a
-            href="/chat"
-            onClick={(e) => handleNavigation("/chat", e)}
-            className={`flex flex-col items-center p-1`}
-            style={{ color: isActive("/chat") ? iconColor : textColor }}
-          >
-            <MessageCircle className="h-5 w-5" />
-            <span className="text-xs">Chat</span>
-          </a>
-
-          <a
-            href="/notify"
-            onClick={(e) => handleNavigation("/notify", e)}
-            className={`flex flex-col items-center p-1 relative`}
-            style={{ color: isActive("/notify") ? iconColor : textColor }}
-          >
+          <Link to="/notify" className="flex flex-col items-center">
             <Bell className="h-5 w-5" />
-            {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                {unreadCount}
-              </span>
-            )}
-            <span className="text-xs">Notificações</span>
-          </a>
-
-          <Link
-            to={session ? "/perfil" : "/login"}
-            className={`flex flex-col items-center p-1`}
-            style={{ color: isActive("/perfil") || isActive("/login") ? iconColor : textColor }}
-          >
+            <span className="text-xs mt-1">Notificações</span>
+          </Link>
+          <Link to="/profile" className="flex flex-col items-center">
             <User className="h-5 w-5" />
-            <span className="text-xs">Eu</span>
+            <span className="text-xs mt-1">Perfil</span>
           </Link>
         </div>
       </div>
