@@ -27,8 +27,8 @@ const Navbar = () => {
     return (
       <nav className="w-full fixed top-0 z-50 h-16 bg-gray-800">
         <div className="max-w-screen-2xl mx-auto px-4">
-          <div className="flex justify-between items-center h-16">
-            <span className="text-white">Vale Notícias</span>
+          <div className="flex overflow-x-auto scrollbar-hide items-center h-16 gap-x-4">
+            <span className="text-white whitespace-nowrap">Vale Notícias</span>
           </div>
         </div>
       </nav>
@@ -42,10 +42,10 @@ const Navbar = () => {
            borderColor: `${config?.primary_color}20`
          }}>
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex overflow-x-auto scrollbar-hide justify-between items-center h-16 gap-x-4">
           <a 
             href="/" 
-            className="flex items-center space-x-2 transform transition duration-300 hover:scale-105"
+            className="flex items-center space-x-2 transform transition duration-300 hover:scale-105 whitespace-nowrap"
           >
             {config.navbar_logo_type === 'image' && config.navbar_logo_image ? (
               <img 
@@ -58,7 +58,7 @@ const Navbar = () => {
               />
             ) : (
               <span 
-                className="text-3xl font-bold tracking-tighter px-6 py-3 rounded-full"
+                className="text-3xl font-bold tracking-tighter px-6 py-3 rounded-full whitespace-nowrap"
                 style={{ 
                   color: config.text_color,
                   backgroundColor: `${config.primary_color}20`
@@ -69,7 +69,7 @@ const Navbar = () => {
             )}
           </a>
 
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-3 whitespace-nowrap">
             {config.navbar_social_facebook && (
               <a
                 href={config.navbar_social_facebook}
