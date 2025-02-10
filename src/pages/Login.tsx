@@ -133,7 +133,7 @@ const Login = () => {
       toast({
         variant: "destructive",
         title: "Erro",
-        description: "Falha ao enviar email de redefiniç��o de senha. Tente novamente.",
+        description: "Falha ao enviar email de redefiniç����o de senha. Tente novamente.",
       });
     } finally {
       setLoading(false);
@@ -224,8 +224,8 @@ const Login = () => {
                     </FormLabel>
                     <FormControl>
                       <Input 
+                        type="email"
                         placeholder="seu@email.com" 
-                        autoComplete="email"
                         {...field}
                         className="bg-[#2A3942] border-none focus:ring-[#00A884] text-white h-12"
                       />
@@ -248,7 +248,6 @@ const Login = () => {
                       <Input 
                         type="password" 
                         placeholder="******" 
-                        autoComplete="new-password"
                         {...field}
                         className="bg-[#2A3942] border-none focus:ring-[#00A884] text-white h-12"
                       />
@@ -271,7 +270,6 @@ const Login = () => {
                       <Input 
                         type="password" 
                         placeholder="******" 
-                        autoComplete="new-password"
                         {...field}
                         className="bg-[#2A3942] border-none focus:ring-[#00A884] text-white h-12"
                       />
