@@ -5,6 +5,7 @@ import { supabase } from "../integrations/supabase/client";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { useToast } from "../components/ui/use-toast";
+import { useSiteConfig } from "../hooks/useSiteConfig";
 
 const SignUp = () => {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ const SignUp = () => {
   const [phone, setPhone] = useState("");
   const [birthDate, setBirthDate] = useState("");
   const [loading, setLoading] = useState(false);
+  const { data: config, isLoading: configLoading } = useSiteConfig();
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,36 +66,116 @@ const SignUp = () => {
     }
   };
 
+  if (configLoading || !config) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="w-full max-w-md p-8 bg-white/90 backdrop-blur-md rounded-xl shadow-xl">
+          <div className="animate-pulse space-y-4">
+            <div className="h-8 bg-gray-200 rounded w-3/4 mx-auto" />
+            <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto" />
+            <div className="space-y-3">
+              <div className="h-10 bg-gray-200 rounded" />
+              <div className="h-10 bg-gray-200 rounded" />
+              <div className="h-10 bg-gray-200 rounded" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#111B21] p-6">
-      <div className="w-full max-w-md bg-[#202C33]/90 backdrop-blur-md p-8 rounded-xl shadow-xl border border-white/10">
+    <div 
+      className="min-h-screen flex items-center justify-center p-6"
+      style={{ 
+        background: `linear-gradient(to right, ${config.navbar_color}, ${config.primary_color})`
+      }}
+    >
+      <div className="w-full max-w-md bg-white/90 backdrop-blur-md p-8 rounded-xl shadow-xl border border-white/10">
         <div className="text-center space-y-3">
-          <h1 className="text-3xl font-bold text-white">Criar Conta</h1>
-          <p className="text-gray-400">Preencha todos os campos abaixo para se registrar</p>
+          <h1 
+            className="text-3xl font-bold"
+            style={{ color: config.primary_color }}
+          >
+            Inscreva-se
+          </h1>
+          <p className="text-gray-600">Preencha todos os campos abaixo para se registrar</p>
         </div>
 
         <form onSubmit={handleSignUp} className="space-y-5 mt-6">
-          <InputField label="Nome Completo" id="name" type="text" value={name} setValue={setName} placeholder="Seu nome completo" />
-          <InputField label="Nome de Usuário" id="username" type="text" value={username} setValue={setUsername} placeholder="@seunome" />
-          <InputField label="Email" id="email" type="email" value={email} setValue={setEmail} placeholder="seu@email.com" />
-          <InputField label="Telefone" id="phone" type="tel" value={phone} setValue={setPhone} placeholder="(00) 00000-0000" />
-          <InputField label="Data de Nascimento" id="birthDate" type="date" value={birthDate} setValue={setBirthDate} />
-          <InputField label="Senha" id="password" type="password" value={password} setValue={setPassword} placeholder="******" />
+          <InputField 
+            label="Nome Completo" 
+            id="name" 
+            type="text" 
+            value={name} 
+            setValue={setName} 
+            placeholder="Seu nome completo"
+            config={config}
+          />
+          <InputField 
+            label="Nome de Usuário" 
+            id="username" 
+            type="text" 
+            value={username} 
+            setValue={setUsername} 
+            placeholder="@seunome"
+            config={config}
+          />
+          <InputField 
+            label="Email" 
+            id="email" 
+            type="email" 
+            value={email} 
+            setValue={setEmail} 
+            placeholder="seu@email.com"
+            config={config}
+          />
+          <InputField 
+            label="Telefone" 
+            id="phone" 
+            type="tel" 
+            value={phone} 
+            setValue={setPhone} 
+            placeholder="(00) 00000-0000"
+            config={config}
+          />
+          <InputField 
+            label="Data de Nascimento" 
+            id="birthDate" 
+            type="date" 
+            value={birthDate} 
+            setValue={setBirthDate}
+            config={config}
+          />
+          <InputField 
+            label="Senha" 
+            id="password" 
+            type="password" 
+            value={password} 
+            setValue={setPassword} 
+            placeholder="******"
+            config={config}
+          />
 
           <Button
             type="submit"
-            className="w-full h-12 bg-green-500 hover:bg-green-400 text-white font-medium rounded-lg transition duration-300 shadow-md"
+            className="w-full h-12 font-medium rounded-lg transition duration-300 shadow-md text-white"
+            style={{ 
+              background: config.primary_color,
+              borderColor: config.primary_color
+            }}
             disabled={loading}
           >
             {loading ? "Criando conta..." : "Criar conta"}
           </Button>
 
-          <p className="text-center text-sm text-gray-400">
+          <p className="text-center text-sm text-gray-600">
             Já possui uma conta?{" "}
             <Button
               variant="link"
-              className="p-0 text-green-400 hover:text-green-300 transition"
+              className="p-0 transition"
               onClick={() => navigate("/login")}
+              style={{ color: config.primary_color }}
             >
               Fazer login
             </Button>
@@ -104,9 +186,13 @@ const SignUp = () => {
   );
 };
 
-const InputField = ({ label, id, type, value, setValue, placeholder = "" }) => (
+const InputField = ({ label, id, type, value, setValue, placeholder = "", config }) => (
   <div>
-    <label htmlFor={id} className="text-sm font-medium text-gray-300">
+    <label 
+      htmlFor={id} 
+      className="text-sm font-medium"
+      style={{ color: config.primary_color }}
+    >
       {label}
     </label>
     <Input
@@ -116,7 +202,7 @@ const InputField = ({ label, id, type, value, setValue, placeholder = "" }) => (
       value={value}
       onChange={(e) => setValue(e.target.value)}
       required
-      className="bg-[#2A3942] border-[#37454F] text-white placeholder-gray-400"
+      className="bg-white/50 border-gray-200"
     />
   </div>
 );
