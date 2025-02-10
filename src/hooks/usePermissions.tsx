@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 
-type PermissionType = 'admin_places' | 'admin_events' | 'admin_stores' | 'admin_news' | 'admin_categories';
+export type PermissionType = 'admin_places' | 'admin_events' | 'admin_stores' | 'admin_news' | 'admin_categories';
 
 export const usePermissions = () => {
   const [isLoading, setIsLoading] = useState(true);

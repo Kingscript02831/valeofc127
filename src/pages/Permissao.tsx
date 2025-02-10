@@ -11,11 +11,12 @@ import {
 } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
+import { PermissionType } from '@/hooks/usePermissions';
 
 type Permission = {
   id: string;
   user_id: string;
-  permission: string;
+  permission: PermissionType;
 };
 
 type Profile = {
@@ -26,14 +27,14 @@ type Profile = {
 
 type UserPermission = {
   profile: Profile;
-  permissions: string[];
+  permissions: PermissionType[];
 };
 
 const Permissao = () => {
   const [users, setUsers] = useState<UserPermission[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const permissionTypes = [
+  const permissionTypes: PermissionType[] = [
     'admin_places',
     'admin_events',
     'admin_stores',
@@ -47,21 +48,18 @@ const Permissao = () => {
 
   const fetchUsers = async () => {
     try {
-      // Buscar todos os perfis
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('*');
 
       if (profilesError) throw profilesError;
 
-      // Buscar todas as permissões
       const { data: permissions, error: permissionsError } = await supabase
         .from('user_permissions')
         .select('*');
 
       if (permissionsError) throw permissionsError;
 
-      // Combinar os dados
       const usersWithPermissions = profiles.map((profile: Profile) => ({
         profile,
         permissions: permissions
@@ -78,7 +76,7 @@ const Permissao = () => {
     }
   };
 
-  const togglePermission = async (userId: string, permission: string, currentValue: boolean) => {
+  const togglePermission = async (userId: string, permission: PermissionType, currentValue: boolean) => {
     try {
       if (currentValue) {
         // Remover permissão
