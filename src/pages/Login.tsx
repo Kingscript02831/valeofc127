@@ -5,6 +5,7 @@ import { supabase } from "../integrations/supabase/client";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { useToast } from "../components/ui/use-toast";
+import { useSiteConfig } from "../hooks/useSiteConfig";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -12,6 +13,7 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const { data: config, isLoading: configLoading } = useSiteConfig();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,17 +39,49 @@ const Login = () => {
     }
   };
 
+  if (configLoading || !config) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="w-full max-w-md p-8 bg-white/90 backdrop-blur-md rounded-xl shadow-xl">
+          <div className="animate-pulse space-y-4">
+            <div className="h-8 bg-gray-200 rounded w-3/4 mx-auto" />
+            <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto" />
+            <div className="space-y-3">
+              <div className="h-10 bg-gray-200 rounded" />
+              <div className="h-10 bg-gray-200 rounded" />
+              <div className="h-10 bg-gray-200 rounded" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#111B21] p-6">
-      <div className="w-full max-w-md bg-[#202C33]/90 backdrop-blur-md p-8 rounded-xl shadow-xl border border-white/10">
+    <div 
+      className="min-h-screen flex items-center justify-center p-6"
+      style={{ 
+        background: `linear-gradient(to right, ${config.navbar_color}, ${config.primary_color})`
+      }}
+    >
+      <div className="w-full max-w-md bg-white/90 backdrop-blur-md p-8 rounded-xl shadow-xl border border-white/10">
         <div className="text-center space-y-3">
-          <h1 className="text-3xl font-bold text-white">Bem-vindo</h1>
-          <p className="text-gray-400">Entre com suas credenciais para acessar</p>
+          <h1 
+            className="text-3xl font-bold"
+            style={{ color: config.primary_color }}
+          >
+            Bem-vindo
+          </h1>
+          <p className="text-gray-600">Entre com suas credenciais para acessar</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6 mt-6">
           <div>
-            <label htmlFor="email" className="text-sm font-medium text-gray-300">
+            <label 
+              htmlFor="email" 
+              className="text-sm font-medium"
+              style={{ color: config.primary_color }}
+            >
               Email
             </label>
             <Input
@@ -57,12 +91,16 @@ const Login = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="bg-[#2A3942] border-[#37454F] text-white placeholder-gray-400"
+              className="bg-white/50 border-gray-200"
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="text-sm font-medium text-gray-300">
+            <label 
+              htmlFor="password" 
+              className="text-sm font-medium"
+              style={{ color: config.primary_color }}
+            >
               Senha
             </label>
             <Input
@@ -72,12 +110,13 @@ const Login = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="bg-[#2A3942] border-[#37454F] text-white placeholder-gray-400"
+              className="bg-white/50 border-gray-200"
             />
             <Button
               variant="link"
-              className="p-0 text-sm text-green-400 hover:text-green-300 transition"
+              className="p-0 text-sm transition"
               onClick={() => navigate("/reset-password")}
+              style={{ color: config.primary_color }}
             >
               Esqueceu sua senha?
             </Button>
@@ -85,18 +124,23 @@ const Login = () => {
 
           <Button
             type="submit"
-            className="w-full h-12 bg-green-500 hover:bg-green-400 text-white font-medium rounded-lg transition duration-300 shadow-md"
+            className="w-full h-12 font-medium rounded-lg transition duration-300 shadow-md text-white"
+            style={{ 
+              background: config.primary_color,
+              borderColor: config.primary_color
+            }}
             disabled={loading}
           >
             {loading ? "Entrando..." : "Entrar"}
           </Button>
 
-          <p className="text-center text-sm text-gray-400">
+          <p className="text-center text-sm text-gray-600">
             Não possui uma conta?{" "}
             <Button
               variant="link"
-              className="p-0 text-green-400 hover:text-green-300 transition"
+              className="p-0 transition"
               onClick={() => navigate("/signup")}
+              style={{ color: config.primary_color }}
             >
               Criar conta
             </Button>
