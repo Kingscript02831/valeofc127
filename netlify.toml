@@ -1,10 +1,12 @@
 [build]
-  command = "npm run build" # Comando para build do projeto
-  publish = "dist"          # Diretório onde os arquivos de build estão
-  functions = "functions"   # Diretório das funções serverless (opcional)
+  command = "npm install --legacy-peer-deps && npm run build"
+  publish = "dist"
+  functions = "functions"  # Remova se não usar serverless functions
 
 [dev]
-  framework = "vite"        # Define o framework usado para desenvolvimento
+  framework = "vite"
+  target = "static"
+  port = 5173
 
 [[redirects]]
   from = "/*"
