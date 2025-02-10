@@ -1,15 +1,10 @@
 [build]
-  # Comando para instalar dependências e gerar o build
-  command = "npm install --legacy-peer-deps && npm run build"
-  # Diretório de saída do build
-  publish = "dist"  # Certifique-se de que 'dist' é o diretório correto do seu build
-  # Funções serverless (remova se não estiver utilizando)
-  functions = "my_functions"  
+  command = "npm run build" # Comando para build do projeto
+  publish = "dist"          # Diretório onde os arquivos de build estão
+  functions = "functions"   # Diretório das funções serverless (opcional)
 
 [dev]
-  framework = "vite"
-  target = "static"
-  port = 5173
+  framework = "vite"        # Define o framework usado para desenvolvimento
 
 [[redirects]]
   from = "/*"
