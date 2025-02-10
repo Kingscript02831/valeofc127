@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "../../integrations/supabase/client";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { Search, Plus, Trash2 } from "lucide-react";
@@ -16,7 +16,7 @@ interface Category {
 
 interface InstagramMedia {
   url: string;
-  type: 'post' | 'video';
+  type: "post" | "video";
 }
 
 interface News {
