@@ -55,7 +55,7 @@ const SubNav2 = () => {
             <Link
               key={link.path}
               to={link.path}
-              className={`text-white hover:opacity-80 transition-opacity ${
+              className={`text-white hover:opacity-80 transition-all transform hover:-translate-x-1 duration-200 ${
                 location.pathname === link.path ? "border-b-2" : ""
               }`}
             >
