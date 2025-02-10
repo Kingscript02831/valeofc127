@@ -133,7 +133,7 @@ const Login = () => {
       toast({
         variant: "destructive",
         title: "Erro",
-        description: "Falha ao enviar email de redefinição de senha. Tente novamente.",
+        description: "Falha ao enviar email de redefiniç��o de senha. Tente novamente.",
       });
     } finally {
       setLoading(false);
@@ -219,7 +219,7 @@ const Login = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="flex items-center gap-2 text-gray-300">
-                      <User className="h-4 w-4" />
+                      <AtSign className="h-4 w-4" />
                       Email
                     </FormLabel>
                     <FormControl>
@@ -309,7 +309,7 @@ const Login = () => {
                   <FormItem>
                     <FormLabel className="flex items-center gap-2 text-gray-300">
                       <AtSign className="h-4 w-4" />
-                      Username
+                      Nome do usuário
                     </FormLabel>
                     <FormControl>
                       <Input 
