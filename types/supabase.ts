@@ -1,4 +1,3 @@
-
 export type Json =
   | string
   | number
@@ -61,6 +60,8 @@ export type Database = {
           updated_at: string
           version: number | null
           weather_api_key: string | null
+          login_text_color: string
+          signup_text_color: string
         }
       }
       events: {

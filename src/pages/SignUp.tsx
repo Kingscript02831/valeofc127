@@ -95,7 +95,7 @@ const SignUp = () => {
         <div className="text-center space-y-3">
           <h1 
             className="text-3xl font-bold"
-            style={{ color: config.primary_color }}
+            style={{ color: config.signup_text_color }}
           >
             Inscreva-se
           </h1>

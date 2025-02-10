@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -64,7 +63,9 @@ const Admin = () => {
     location_state: null,
     location_country: null,
     weather_api_key: null,
-    version: 1
+    version: 1,
+    login_text_color: "#1A1F2C",
+    signup_text_color: "#1A1F2C"
   });
 
   useEffect(() => {
@@ -587,6 +588,47 @@ const Admin = () => {
           </TabsContent>
 
           <TabsContent value="general" className="bg-white rounded-lg shadow p-6 space-y-6">
+            <div>
+              <h2 className="text-xl font-semibold mb-4">Cores dos Textos de Autenticação</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <Label htmlFor="login_text_color">Cor do Texto "Conecte-se"</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="login_text_color"
+                      type="color"
+                      value={config.login_text_color}
+                      onChange={(e) => setConfig({ ...config, login_text_color: e.target.value })}
+                      className="w-20"
+                    />
+                    <Input
+                      type="text"
+                      value={config.login_text_color}
+                      onChange={(e) => setConfig({ ...config, login_text_color: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="signup_text_color">Cor do Texto "Inscreva-se"</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="signup_text_color"
+                      type="color"
+                      value={config.signup_text_color}
+                      onChange={(e) => setConfig({ ...config, signup_text_color: e.target.value })}
+                      className="w-20"
+                    />
+                    <Input
+                      type="text"
+                      value={config.signup_text_color}
+                      onChange={(e) => setConfig({ ...config, signup_text_color: e.target.value })}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div>
               <h2 className="text-xl font-semibold mb-4">Configurações Meta Tags</h2>
               <div className="space-y-4">

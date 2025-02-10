@@ -571,6 +571,7 @@ export type Database = {
           location_lat: number | null
           location_lng: number | null
           location_state: string | null
+          login_text_color: string | null
           meta_author: string | null
           meta_description: string | null
           meta_image: string | null
@@ -584,6 +585,7 @@ export type Database = {
           navigation_links: Json | null
           primary_color: string
           secondary_color: string
+          signup_text_color: string | null
           text_color: string
           theme_name: string
           updated_at: string
@@ -622,6 +624,7 @@ export type Database = {
           location_lat?: number | null
           location_lng?: number | null
           location_state?: string | null
+          login_text_color?: string | null
           meta_author?: string | null
           meta_description?: string | null
           meta_image?: string | null
@@ -635,6 +638,7 @@ export type Database = {
           navigation_links?: Json | null
           primary_color?: string
           secondary_color?: string
+          signup_text_color?: string | null
           text_color?: string
           theme_name?: string
           updated_at?: string
@@ -673,6 +677,7 @@ export type Database = {
           location_lat?: number | null
           location_lng?: number | null
           location_state?: string | null
+          login_text_color?: string | null
           meta_author?: string | null
           meta_description?: string | null
           meta_image?: string | null
@@ -686,6 +691,7 @@ export type Database = {
           navigation_links?: Json | null
           primary_color?: string
           secondary_color?: string
+          signup_text_color?: string | null
           text_color?: string
           theme_name?: string
           updated_at?: string

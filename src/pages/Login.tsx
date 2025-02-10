@@ -68,7 +68,7 @@ const Login = () => {
         <div className="text-center space-y-3">
           <h1 
             className="text-3xl font-bold"
-            style={{ color: config.primary_color }}
+            style={{ color: config.login_text_color }}
           >
             Conecte-se
           </h1>
