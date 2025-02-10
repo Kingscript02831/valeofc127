@@ -10,6 +10,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import type { Database } from "@/integrations/supabase/types";
+import { useNotifications } from "@/hooks/useNotifications";
 
 type News = Database['public']['Tables']['news']['Row'] & {
   categories: Database['public']['Tables']['categories']['Row'] | null;
@@ -23,6 +24,9 @@ interface InstagramMedia {
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
+  // Inicializa o sistema de notificações
+  useNotifications();
 
   const { data: categories = [] } = useQuery<Category[]>({
     queryKey: ['categories', 'news'],
