@@ -1,7 +1,7 @@
 
 import { Home, Bell, User } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useSiteConfig } from "../hooks/useSiteConfig";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { supabase } from "../integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
