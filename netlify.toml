@@ -4,7 +4,7 @@
   # Diretório de saída do build
   publish = "dist"  # Certifique-se de que 'dist' é o diretório correto do seu build
   # Funções serverless (remova se não estiver utilizando)
-  functions = "functions"  
+  functions = "my_functions"  
 
 [dev]
   framework = "vite"
