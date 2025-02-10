@@ -79,7 +79,6 @@ const App: React.FC = () => {
               <Route path="/signup" element={<SignUp />} />
               <Route path="/perfil" element={<Profile />} />
               <Route path="/config" element={<Config />} />
-              <Route path="/permissao" element={<Permissao />} />
               <Route path="/admin" element={<Admin />}>
                 <Route
                   path="lugares"
@@ -118,6 +117,14 @@ const App: React.FC = () => {
                   element={
                     <ProtectedRoute permissionType="admin_categories">
                       <AdminCategories />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="permissoes"
+                  element={
+                    <ProtectedRoute permissionType="admin_categories">
+                      <Permissao />
                     </ProtectedRoute>
                   }
                 />
