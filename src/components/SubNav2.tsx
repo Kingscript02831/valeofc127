@@ -25,12 +25,12 @@ const SubNav2 = () => {
     return (
       <nav className="w-full border-b mt-16 bg-gray-800">
         <div className="max-w-screen-2xl mx-auto px-4">
-          <div className="flex justify-center space-x-8 py-2">
+          <div className="flex overflow-x-auto scrollbar-hide py-2 gap-x-8">
             {links.map((link) => (
               <Link
                 key={link.path}
                 to={link.path}
-                className="text-white hover:opacity-80 transition-opacity"
+                className="text-white hover:opacity-80 transition-opacity whitespace-nowrap"
               >
                 {link.label}
               </Link>
@@ -50,12 +50,12 @@ const SubNav2 = () => {
       }}
     >
       <div className="max-w-screen-2xl mx-auto px-4">
-        <div className="flex justify-center space-x-8 py-2">
+        <div className="flex overflow-x-auto scrollbar-hide py-2 gap-x-8">
           {links.map((link) => (
             <Link
               key={link.path}
               to={link.path}
-              className={`text-white hover:opacity-80 transition-all transform hover:-translate-x-1 duration-200 ${
+              className={`text-white hover:opacity-80 transition-all transform hover:-translate-x-1 duration-200 whitespace-nowrap ${
                 location.pathname === link.path ? "border-b-2" : ""
               }`}
             >
@@ -69,4 +69,3 @@ const SubNav2 = () => {
 };
 
 export default SubNav2;
-
