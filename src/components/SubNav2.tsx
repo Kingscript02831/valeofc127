@@ -7,12 +7,12 @@ const SubNav2 = () => {
   const location = useLocation();
 
   const links = [
-    { path: "/admin/noticias", label: "Gerenciar Notícias" },
-    { path: "/admin/eventos", label: "Gerenciar Eventos" },
-    { path: "/admin/lugares", label: "Gerenciar Lugares" },
-    { path: "/admin/lojas", label: "Gerenciar Lojas" },
-    { path: "/admin/categorias", label: "Gerenciar Categorias" },
-    { path: "/admin/config", label: "Configurações" },
+    { path: "/admin/noticias", label: "Notícias" },
+    { path: "/admin/eventos", label: "Eventos" },
+    { path: "/admin/lugares", label: "Lugares" },
+    { path: "/admin/lojas", label: "Lojas" },
+    { path: "/admin/categorias", label: "Categorias" },
+    { path: "/config", label: "Configurações" },
   ];
 
   if (isLoading) {
