@@ -7,9 +7,12 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { supabase } from "../../src/integrations/supabase/client";
+import { supabase } from "../integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import Navbar from "../components/Navbar";
+import SubNav from "../components/SubNav";
+import BottomNav from "../components/BottomNav";
 
 interface Notification {
   id: string;
@@ -120,113 +123,123 @@ const Notify = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p>Carregando...</p>
-      </div>
+      <>
+        <Navbar />
+        <SubNav />
+        <div className="flex items-center justify-center min-h-screen">
+          <p>Carregando...</p>
+        </div>
+        <BottomNav />
+      </>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-4 md:p-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
-        <div className="flex items-center gap-3">
-          <Bell className="h-8 w-8 text-primary" />
-          <h1 className="text-2xl font-bold">Notificações</h1>
-          <Badge variant="secondary" className="ml-2">
-            {notifications.filter(n => !n.read).length} não lidas
-          </Badge>
-        </div>
-        <Button 
-          onClick={markAllAsRead} 
-          variant="outline" 
-          className="w-full md:w-auto"
-        >
-          Marcar todas como lidas
-        </Button>
-      </div>
-
-      <div className="space-y-3">
-        {notifications.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">
-            Nenhuma notificação encontrada
+    <>
+      <Navbar />
+      <SubNav />
+      <div className="max-w-4xl mx-auto p-4 md:p-6 mb-20">
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+          <div className="flex items-center gap-3">
+            <Bell className="h-8 w-8 text-primary" />
+            <h1 className="text-2xl font-bold">Notificações</h1>
+            <Badge variant="secondary" className="ml-2">
+              {notifications.filter(n => !n.read).length} não lidas
+            </Badge>
           </div>
-        ) : (
-          notifications.map((notification) => (
-            <div
-              key={notification.id}
-              className={cn(
-                "group flex flex-col p-4 rounded-lg border transition-all",
-                "hover:shadow-md cursor-pointer",
-                notification.read 
-                  ? "bg-muted/50 border-transparent"
-                  : "bg-background border-primary/20 shadow-sm"
-              )}
-              onClick={() => markAsRead(notification.id)}
-            >
-              <div className="flex items-start gap-4">
-                <div className="mt-1">
-                  {getNotificationIcon(notification.type)}
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Badge
-                      variant={notification.read ? "outline" : "default"}
-                      className={cn(
-                        "text-xs font-medium",
-                        notification.type === 'event' && "bg-blue-500/20 text-blue-900",
-                        notification.type === 'news' && "bg-green-500/20 text-green-900"
+          <Button 
+            onClick={markAllAsRead} 
+            variant="outline" 
+            className="w-full md:w-auto"
+          >
+            Marcar todas como lidas
+          </Button>
+        </div>
+
+        <div className="space-y-3">
+          {notifications.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              Nenhuma notificação encontrada
+            </div>
+          ) : (
+            notifications.map((notification) => (
+              <div
+                key={notification.id}
+                className={cn(
+                  "group flex flex-col p-4 rounded-lg border transition-all",
+                  "hover:shadow-md cursor-pointer",
+                  notification.read 
+                    ? "bg-muted/50 border-transparent"
+                    : "bg-background border-primary/20 shadow-sm"
+                )}
+                onClick={() => markAsRead(notification.id)}
+              >
+                <div className="flex items-start gap-4">
+                  <div className="mt-1">
+                    {getNotificationIcon(notification.type)}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Badge
+                        variant={notification.read ? "outline" : "default"}
+                        className={cn(
+                          "text-xs font-medium",
+                          notification.type === 'event' && "bg-blue-500/20 text-blue-900",
+                          notification.type === 'news' && "bg-green-500/20 text-green-900"
+                        )}
+                      >
+                        {notification.type === 'event' ? 'Evento' : 'Notícia'}
+                      </Badge>
+                      {!notification.read && (
+                        <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
                       )}
-                    >
-                      {notification.type === 'event' ? 'Evento' : 'Notícia'}
-                    </Badge>
-                    {!notification.read && (
-                      <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+                    </div>
+
+                    <h3 className={cn(
+                      "font-semibold mb-1",
+                      !notification.read && "text-primary"
+                    )}>
+                      {notification.title}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      {notification.message}
+                    </p>
+
+                    {notification.reference_id && (
+                      <Button
+                        variant="link"
+                        className="h-auto p-0 mt-2 text-sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          markAsRead(notification.id);
+                        }}
+                      >
+                        Ver detalhes
+                        <ChevronRight className="ml-1 h-4 w-4" />
+                      </Button>
                     )}
                   </div>
 
-                  <h3 className={cn(
-                    "font-semibold mb-1",
-                    !notification.read && "text-primary"
-                  )}>
-                    {notification.title}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    {notification.message}
-                  </p>
-
-                  {notification.reference_id && (
-                    <Button
-                      variant="link"
-                      className="h-auto p-0 mt-2 text-sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        markAsRead(notification.id);
-                      }}
-                    >
-                      Ver detalhes
-                      <ChevronRight className="ml-1 h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-
-                <div className="flex flex-col items-end min-w-[120px]">
-                  <span className="text-xs text-muted-foreground">
-                    {format(new Date(notification.created_at), "dd MMM yyyy 'às' HH:mm", { locale: ptBR })}
-                  </span>
-                  <div className="mt-2">
-                    {notification.read ? (
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                    ) : (
-                      <Clock className="h-4 w-4 text-yellow-500" />
-                    )}
+                  <div className="flex flex-col items-end min-w-[120px]">
+                    <span className="text-xs text-muted-foreground">
+                      {format(new Date(notification.created_at), "dd MMM yyyy 'às' HH:mm", { locale: ptBR })}
+                    </span>
+                    <div className="mt-2">
+                      {notification.read ? (
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <Clock className="h-4 w-4 text-yellow-500" />
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))
-        )}
+            ))
+          )}
+        </div>
       </div>
-    </div>
+      <BottomNav />
+    </>
   );
 };
 

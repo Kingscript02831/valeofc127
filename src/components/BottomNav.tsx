@@ -48,7 +48,7 @@ const BottomNav = () => {
 
   const handleNavigation = (path: string, e: React.MouseEvent) => {
     e.preventDefault();
-    if (!session && (path === "/notifications" || path === "/chat")) {
+    if (!session && (path === "/notify" || path === "/chat")) {
       toast.error("Você precisa fazer login para acessar esta área");
       navigate("/login");
       return;
@@ -80,7 +80,6 @@ const BottomNav = () => {
             <span className="text-xs">Início</span>
           </Link>
 
-          {/* Novo botão de chat */}
           <a
             href="/chat"
             onClick={(e) => handleNavigation("/chat", e)}
@@ -92,10 +91,10 @@ const BottomNav = () => {
           </a>
 
           <a
-            href="/notifications"
-            onClick={(e) => handleNavigation("/notifications", e)}
+            href="/notify"
+            onClick={(e) => handleNavigation("/notify", e)}
             className={`flex flex-col items-center p-1 relative`}
-            style={{ color: isActive("/notifications") ? iconColor : textColor }}
+            style={{ color: isActive("/notify") ? iconColor : textColor }}
           >
             <Bell className="h-5 w-5" />
             {unreadCount > 0 && (
