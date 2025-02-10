@@ -1,3 +1,4 @@
+
 import { Link, useLocation } from "react-router-dom";
 import { useSiteConfig } from "../hooks/useSiteConfig";
 
@@ -9,6 +10,9 @@ const SubNav2 = () => {
     { path: "/admin/noticias", label: "Gerenciar Notícias" },
     { path: "/admin/eventos", label: "Gerenciar Eventos" },
     { path: "/admin/lugares", label: "Gerenciar Lugares" },
+    { path: "/admin/lojas", label: "Gerenciar Lojas" },
+    { path: "/admin/categorias", label: "Gerenciar Categorias" },
+    { path: "/admin/config", label: "Configurações" },
   ];
 
   if (isLoading) {
