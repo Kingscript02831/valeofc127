@@ -67,6 +67,25 @@ export type Database = {
           created_at: string;
         };
       };
+      profiles: {
+        Row: {
+          id: string;
+          email: string | null;
+          name: string;
+          username: string | null;
+          phone: string | null;
+          birth_date: string | null;
+          street: string | null;
+          house_number: string | null;
+          city: string | null;
+          postal_code: string | null;
+          avatar_url: string | null;
+          bio: string | null;
+          website: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+      };
     };
   };
 };

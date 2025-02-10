@@ -106,27 +106,9 @@ export default function Profile() {
         .from("profiles")
         .select("*")
         .eq("id", session.user.id)
-        .maybeSingle();
+        .single();
 
       if (error) throw error;
-
-      if (!data) {
-        const { data: newProfile, error: createError } = await supabase
-          .from("profiles")
-          .insert([
-            {
-              id: session.user.id,
-              email: session.user.email,
-              name: session.user.email?.split('@')[0] || 'User',
-            }
-          ])
-          .select()
-          .single();
-
-        if (createError) throw createError;
-        return newProfile;
-      }
-
       return data;
     },
     enabled: !isLoading,
