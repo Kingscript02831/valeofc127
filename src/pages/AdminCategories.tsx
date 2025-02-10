@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/components/ui/use-toast";
@@ -247,3 +248,4 @@ const AdminCategories = () => {
 };
 
 export default AdminCategories;
+
