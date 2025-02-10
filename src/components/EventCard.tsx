@@ -1,4 +1,3 @@
-
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Calendar, ChevronDown, ChevronUp, Clock, MapPin, ChevronLeft, ChevronRight, X, Timer, ExternalLink, Ticket, Youtube } from "lucide-react";
@@ -7,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import type { Database } from '@/integrations/supabase/types';
 
 type SiteConfig = Database['public']['Tables']['site_configuration']['Row'];
@@ -16,6 +16,7 @@ interface EventCardProps {
   description: string;
   eventDate: string;
   eventTime: string;
+  endTime: string;
   image?: string;
   images?: string[];
   location?: string;
@@ -37,6 +38,7 @@ const EventCard = ({
   description,
   eventDate,
   eventTime,
+  endTime,
   image,
   images = [],
   location,
@@ -53,6 +55,7 @@ const EventCard = ({
   const [isImageFullscreen, setIsImageFullscreen] = useState(false);
   const [countdown, setCountdown] = useState({ days: 0, hrs: 0, mins: 0, secs: 0, isExpired: false });
   const [config, setConfig] = useState<SiteConfig | null>(null);
+  const [eventStatus, setEventStatus] = useState<'not_started' | 'in_progress' | 'ended'>('not_started');
 
   const date = parseISO(eventDate);
   const formattedDate = format(date, "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
@@ -87,30 +90,50 @@ const EventCard = ({
           return;
         }
 
-        const [hours, minutes] = eventTime.split(':').map(Number);
-        const targetDate = new Date(date);
-        targetDate.setHours(hours, minutes, 0, 0);
+        const [startHours, startMinutes] = eventTime.split(':').map(Number);
+        const [endHours, endMinutes] = endTime.split(':').map(Number);
+        
+        const startDate = new Date(date);
+        startDate.setHours(startHours, startMinutes, 0, 0);
+        
+        const endDate = new Date(date);
+        endDate.setHours(endHours, endMinutes, 0, 0);
         
         const now = new Date();
-        const difference = targetDate.getTime() - now.getTime();
 
-        if (difference <= 0) {
+        // Verifica o status do evento
+        if (now < startDate) {
+          setEventStatus('not_started');
+        } else if (now >= startDate && now <= endDate) {
+          setEventStatus('in_progress');
+          if (eventStatus !== 'in_progress') {
+            toast.info("O evento começou!");
+          }
+        } else {
+          setEventStatus('ended');
+          if (eventStatus !== 'ended') {
+            toast.info("O evento terminou!");
+          }
           setCountdown({ days: 0, hrs: 0, mins: 0, secs: 0, isExpired: true });
           return;
         }
 
-        const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-        const totalHours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const totalMinutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+        // Se o evento não começou, mostra contagem regressiva para o início
+        if (eventStatus === 'not_started') {
+          const difference = startDate.getTime() - now.getTime();
+          const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+          const totalHours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          const totalMinutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+          const seconds = Math.floor((difference % (1000 * 60)) / 1000);
 
-        setCountdown({
-          days,
-          hrs: totalHours,
-          mins: totalMinutes,
-          secs: seconds,
-          isExpired: false
-        });
+          setCountdown({
+            days,
+            hrs: totalHours,
+            mins: totalMinutes,
+            secs: seconds,
+            isExpired: false
+          });
+        }
       } catch (error) {
         console.error('Error calculating countdown:', error);
         setCountdown({ days: 0, hrs: 0, mins: 0, secs: 0, isExpired: true });
@@ -121,7 +144,7 @@ const EventCard = ({
     const timer = setInterval(calculateTimeLeft, 1000);
 
     return () => clearInterval(timer);
-  }, [eventDate, eventTime, date]);
+  }, [eventDate, eventTime, endTime, date, eventStatus]);
 
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
@@ -178,7 +201,7 @@ const EventCard = ({
             </div>
             <div className="flex items-center gap-1">
               <Clock className="h-3 w-3" />
-              <span>{eventTime}</span>
+              <span>{eventTime} - {endTime}</span>
             </div>
             {location && (
               <div className="flex items-center gap-1">
@@ -231,8 +254,10 @@ const EventCard = ({
           </div>
 
           <div className="mb-3">
-            {countdown.isExpired ? (
-              <div className="text-red-500 text-xs font-medium">Evento já aconteceu</div>
+            {eventStatus === 'ended' ? (
+              <div className="text-red-500 text-xs font-medium">Evento já terminou</div>
+            ) : eventStatus === 'in_progress' ? (
+              <div className="text-green-500 text-xs font-medium">Evento em andamento</div>
             ) : (
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-1 mb-1">

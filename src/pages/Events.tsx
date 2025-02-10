@@ -49,7 +49,7 @@ const Events = () => {
             background_color
           )
         `)
-        .order("event_date", { ascending: true });
+        .order("created_at", { ascending: false }); // Alterado para mostrar os mais recentes primeiro
 
       if (searchTerm) {
         query = query.ilike("title", `%${searchTerm}%`);
@@ -128,6 +128,7 @@ const Events = () => {
                 description={event.description}
                 eventDate={event.event_date.split('T')[0]}
                 eventTime={event.event_time}
+                endTime={event.end_time} // Novo campo
                 image={event.image}
                 images={event.images}
                 location={event.location}
@@ -172,3 +173,4 @@ const LoadingSkeleton = () => (
 );
 
 export default Events;
+
