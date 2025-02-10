@@ -17,6 +17,14 @@ const SignUp = () => {
   const [birthDate, setBirthDate] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const validatePassword = (password: string) => {
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    
+    return hasLowerCase && hasUpperCase && hasNumber;
+  };
+
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -24,6 +32,15 @@ const SignUp = () => {
       toast({
         title: "Erro ao criar conta",
         description: "Por favor, preencha todos os campos",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!validatePassword(password)) {
+      toast({
+        title: "Senha inválida",
+        description: "A senha deve conter pelo menos uma letra minúscula, uma letra maiúscula e um número",
         variant: "destructive",
       });
       return;
@@ -78,7 +95,17 @@ const SignUp = () => {
           <InputField label="Email" id="email" type="email" value={email} setValue={setEmail} placeholder="seu@email.com" />
           <InputField label="Telefone" id="phone" type="tel" value={phone} setValue={setPhone} placeholder="(00) 00000-0000" />
           <InputField label="Data de Nascimento" id="birthDate" type="date" value={birthDate} setValue={setBirthDate} />
-          <InputField label="Senha" id="password" type="password" value={password} setValue={setPassword} placeholder="******" />
+          <div>
+            <InputField label="Senha" id="password" type="password" value={password} setValue={setPassword} placeholder="******" />
+            <p className="mt-2 text-sm text-gray-400">
+              A senha deve conter pelo menos:
+              <ul className="list-disc list-inside mt-1">
+                <li>Uma letra minúscula</li>
+                <li>Uma letra maiúscula</li>
+                <li>Um número</li>
+              </ul>
+            </p>
+          </div>
 
           <Button
             type="submit"
