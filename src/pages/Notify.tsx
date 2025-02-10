@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bell, CheckCircle, Clock, ChevronRight, Calendar, Newspaper, Trash2 } from "lucide-react";
@@ -51,7 +52,7 @@ const Notify = () => {
   }, [navigate]);
 
   // Fetch notifications
-  const { data: notifications = [] } = useQuery({
+  const { data: notifications = [], refetch } = useQuery({
     queryKey: ["notifications"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -72,15 +73,22 @@ const Notify = () => {
         .delete()
         .eq("id", id);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error deleting notification:", error);
+        throw error;
+      }
 
       // Update local cache
       queryClient.setQueryData<Notification[]>(["notifications"], (old) =>
         old?.filter((n) => n.id !== id)
       );
 
+      // Also invalidate the unreadNotifications query
+      queryClient.invalidateQueries({ queryKey: ["unreadNotifications"] });
+
       toast.success("Notificação excluída com sucesso");
     } catch (error: any) {
+      console.error("Error in deleteNotification:", error);
       toast.error("Erro ao excluir notificação");
     }
   };
@@ -98,6 +106,9 @@ const Notify = () => {
       queryClient.setQueryData<Notification[]>(["notifications"], (old) =>
         old?.map((n) => (n.id === id ? { ...n, read: true } : n))
       );
+
+      // Also invalidate the unreadNotifications query
+      queryClient.invalidateQueries({ queryKey: ["unreadNotifications"] });
 
       // Navigate if there's a reference_id
       const notification = notifications.find(n => n.id === id);
@@ -126,6 +137,9 @@ const Notify = () => {
       queryClient.setQueryData<Notification[]>(["notifications"], (old) =>
         old?.map((n) => ({ ...n, read: true }))
       );
+
+      // Also invalidate the unreadNotifications query
+      queryClient.invalidateQueries({ queryKey: ["unreadNotifications"] });
 
       toast.success("Todas as notificações foram marcadas como lidas");
     } catch (error: any) {
