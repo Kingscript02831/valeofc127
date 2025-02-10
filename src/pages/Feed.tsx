@@ -4,21 +4,22 @@ import Navbar from "@/components/Navbar";
 import SubNav from "@/components/SubNav";
 import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
-import NewsCard from "@/components/NewsCard";
+import PostCard from "@/components/PostCard";
+import CreatePostDialog from "@/components/CreatePostDialog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-const Index = () => {
-  const { data: news = [], isLoading } = useQuery({
-    queryKey: ['news'],
+const Feed = () => {
+  const { data: posts = [], isLoading } = useQuery({
+    queryKey: ['posts'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('news')
+        .from('posts')
         .select('*')
         .order('created_at', { ascending: false });
       
       if (error) {
-        console.error('Error fetching news:', error);
+        console.error('Error fetching posts:', error);
         throw error;
       }
       
@@ -32,17 +33,20 @@ const Index = () => {
       <SubNav />
       <main className="flex-1 container mx-auto py-8 px-4">
         <div className="flex flex-col gap-8 max-w-xl mx-auto">
-          <h1 className="text-3xl font-bold">Notícias</h1>
+          <div className="flex items-center justify-between">
+            <h1 className="text-3xl font-bold">Feed</h1>
+            <CreatePostDialog />
+          </div>
           
           {isLoading ? (
-            <p className="text-center py-8">Carregando notícias...</p>
-          ) : news.length === 0 ? (
+            <p className="text-center py-8">Carregando posts...</p>
+          ) : posts.length === 0 ? (
             <p className="text-center py-8 text-gray-500">
-              Nenhuma notícia encontrada.
+              Nenhum post encontrado. Seja o primeiro a postar!
             </p>
           ) : (
-            news.map((item) => (
-              <NewsCard key={item.id} news={item} />
+            posts.map((post) => (
+              <PostCard key={post.id} post={post} />
             ))
           )}
         </div>
@@ -53,4 +57,4 @@ const Index = () => {
   );
 };
 
-export default Index;
+export default Feed;
