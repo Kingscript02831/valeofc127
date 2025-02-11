@@ -70,7 +70,7 @@ const AdminEvents = () => {
         return;
       }
 
-      // Se category_id estiver vazio, defina como null
+      // Garantir que o user_id seja definido corretamente
       const finalEventData = {
         ...eventData,
         user_id: user.id,
@@ -108,9 +108,10 @@ const AdminEvents = () => {
         return;
       }
 
-      // Se category_id estiver vazio, defina como null
+      // Garantir que o user_id seja mantido durante a edição
       const finalEventData = {
         ...eventData,
+        user_id: user.id,
         category_id: eventData.category_id || null
       };
 
