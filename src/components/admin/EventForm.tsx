@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +29,7 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
     description: "",
     event_date: new Date().toISOString().split('T')[0],
     event_time: "00:00",
+    end_time: "23:59", // Definindo um valor padrão para end_time
     image: "",
     images: [],
     location: "",
@@ -40,7 +42,9 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
     whatsapp: "",
     category_id: "",
     button_color: "#9b87f5",
-    button_secondary_color: "#7E69AB"
+    button_secondary_color: "#7E69AB",
+    video_url: null,
+    user_id: null
   });
 
   useEffect(() => {
@@ -50,6 +54,7 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
         description: initialData.description || "",
         event_date: initialData.event_date ? new Date(initialData.event_date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
         event_time: initialData.event_time || "00:00",
+        end_time: initialData.end_time || "23:59", // Usando o valor existente ou o padrão
         image: initialData.image || "",
         images: initialData.images || [],
         location: initialData.location || "",
@@ -61,8 +66,10 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
         website: initialData.website || "",
         whatsapp: initialData.whatsapp || "",
         category_id: initialData.category_id || "",
-        button_color: initialData.button_color || "#000000",
-        button_secondary_color: initialData.button_secondary_color || "#000000"
+        button_color: initialData.button_color || "#9b87f5",
+        button_secondary_color: initialData.button_secondary_color || "#7E69AB",
+        video_url: initialData.video_url || null,
+        user_id: initialData.user_id || null
       });
     }
   }, [initialData]);
@@ -116,7 +123,7 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <Label htmlFor="event_date">Data do Evento</Label>
           <Input
@@ -128,12 +135,22 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
         </div>
         
         <div>
-          <Label htmlFor="event_time">Horário do Evento</Label>
+          <Label htmlFor="event_time">Horário de Início</Label>
           <Input
             id="event_time"
             type="time"
             value={eventData.event_time}
             onChange={(e) => setEventData({ ...eventData, event_time: e.target.value })}
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="end_time">Horário de Término</Label>
+          <Input
+            id="end_time"
+            type="time"
+            value={eventData.end_time}
+            onChange={(e) => setEventData({ ...eventData, end_time: e.target.value })}
           />
         </div>
       </div>
@@ -142,7 +159,7 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
         <Label htmlFor="location">Local</Label>
         <Input
           id="location"
-          value={eventData.location}
+          value={eventData.location || ""}
           onChange={(e) => setEventData({ ...eventData, location: e.target.value })}
           placeholder="Local do evento"
         />
@@ -152,7 +169,7 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
         <Label htmlFor="maps_url">Link do Google Maps</Label>
         <Input
           id="maps_url"
-          value={eventData.maps_url}
+          value={eventData.maps_url || ""}
           onChange={(e) => setEventData({ ...eventData, maps_url: e.target.value })}
           placeholder="https://maps.google.com/..."
         />
@@ -162,7 +179,7 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
         <Label htmlFor="entrance_fee">Preço da Entrada</Label>
         <Input
           id="entrance_fee"
-          value={eventData.entrance_fee}
+          value={eventData.entrance_fee || ""}
           onChange={(e) => setEventData({ ...eventData, entrance_fee: e.target.value })}
           placeholder="Gratuito ou valor da entrada"
         />
@@ -172,7 +189,7 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
         <Label htmlFor="image">Link da Imagem Principal</Label>
         <Input
           id="image"
-          value={eventData.image}
+          value={eventData.image || ""}
           onChange={(e) => setEventData({ ...eventData, image: e.target.value })}
           placeholder="https://exemplo.com/imagem.jpg"
         />
@@ -202,12 +219,12 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
             <Input
               id="button_color"
               type="color"
-              value={eventData.button_color}
+              value={eventData.button_color || "#9b87f5"}
               onChange={(e) => setEventData({ ...eventData, button_color: e.target.value })}
               className="w-16"
             />
             <Input
-              value={eventData.button_color}
+              value={eventData.button_color || "#9b87f5"}
               onChange={(e) => setEventData({ ...eventData, button_color: e.target.value })}
               placeholder="#000000"
             />
@@ -220,19 +237,16 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
             <Input
               id="button_secondary_color"
               type="color"
-              value={eventData.button_secondary_color}
+              value={eventData.button_secondary_color || "#7E69AB"}
               onChange={(e) => setEventData({ ...eventData, button_secondary_color: e.target.value })}
               className="w-16"
             />
             <Input
-              value={eventData.button_secondary_color}
+              value={eventData.button_secondary_color || "#7E69AB"}
               onChange={(e) => setEventData({ ...eventData, button_secondary_color: e.target.value })}
               placeholder="#000000"
             />
           </div>
-          <p className="text-sm text-gray-500 mt-1">
-            Se definida, criará um efeito gradiente com a cor principal
-          </p>
         </div>
       </div>
 
