@@ -60,35 +60,19 @@ const Permissao = () => {
   const ensureSuperAdminPermissions = async () => {
     try {
       // Primeiro, procura o usuário pelo email
-      let { data: profiles, error: profileError } = await supabase
+      const { data: profiles, error: profileError } = await supabase
         .from('profiles')
         .select('id')
         .eq('email', SUPER_ADMIN_EMAIL)
         .single();
 
-      // Se o usuário não existir, cria ele
-      if (!profiles) {
-        const { data: newProfile, error: createError } = await supabase
-          .from('profiles')
-          .insert({
-            email: SUPER_ADMIN_EMAIL,
-            name: 'Super Admin',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          })
-          .select('id')
-          .single();
-
-        if (createError) {
-          console.error('Error creating super admin profile:', createError);
-          return;
-        }
-
-        profiles = newProfile;
+      if (profileError) {
+        console.error('Error finding super admin profile:', profileError);
+        return;
       }
 
-      if (profileError && !profiles) {
-        console.error('Error finding/creating super admin profile:', profileError);
+      if (!profiles) {
+        console.error('Super admin profile not found');
         return;
       }
 
@@ -114,7 +98,6 @@ const Permissao = () => {
       }
 
       toast.success('Permissões de super admin configuradas com sucesso');
-      fetchUsers(); // Atualiza a lista de usuários após as mudanças
     } catch (error) {
       console.error('Error in ensureSuperAdminPermissions:', error);
       toast.error('Erro ao configurar permissões de super admin');

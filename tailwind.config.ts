@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -26,16 +25,16 @@ export default {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "#1A1F2C", // Dark Purple from Supabase config
-          foreground: "#FFFFFF",
+          DEFAULT: "#1a365d",
+          foreground: "#ffffff",
         },
         secondary: {
-          DEFAULT: "#D6BCFA", // Light Purple from Supabase config
-          foreground: "#1A1F2C",
+          DEFAULT: "#f7fafc",
+          foreground: "#1a365d",
         },
         accent: {
-          DEFAULT: "#9b87f5", // Primary Purple from Supabase config
-          foreground: "#1A1F2C",
+          DEFAULT: "#fbbf24",
+          foreground: "#1a365d",
         },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
@@ -45,17 +44,6 @@ export default {
           DEFAULT: "hsl(var(--muted))",
           foreground: "hsl(var(--muted-foreground))",
         },
-        button: {
-          primary: "#9b87f5", // Primary button color from Supabase
-          secondary: "#7E69AB", // Secondary button color from Supabase
-        },
-        navbar: "#D6BCFA", // Navbar color from Supabase
-        footer: {
-          primary: "#1A1F2C", // Footer primary color from Supabase
-          secondary: "#D6BCFA", // Footer secondary color from Supabase
-          text: "#FFFFFF", // Footer text color from Supabase
-        },
-        text: "#1A1F2C", // Text color from Supabase
       },
       fontFamily: {
         sans: ["Inter", "sans-serif"],

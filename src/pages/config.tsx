@@ -10,22 +10,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import { updateMetaTags } from "../utils/updateMetaTags";
 import Navbar2 from "../components/Navbar2";
 import SubNav2 from "../components/SubNav2";
-import { usePermissions } from "../hooks/usePermissions";
-import { useNavigate } from "react-router-dom";
 
 type SiteConfig = Database['public']['Tables']['site_configuration']['Row'];
 
 const Admin = () => {
-  const { isLoading, hasPermission } = usePermissions();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!isLoading && !hasPermission('admin_news')) {
-      toast.error("Você não tem permissão para acessar esta página");
-      navigate('/');
-    }
-  }, [isLoading, hasPermission, navigate]);
-
   const [config, setConfig] = useState<SiteConfig>({
     id: "",
     theme_name: "light",
@@ -85,31 +73,18 @@ const Admin = () => {
   }, []);
 
   const fetchConfiguration = async () => {
-    try {
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError || !sessionData.session) {
-        toast.error("Sessão expirada. Por favor, faça login novamente.");
-        navigate('/login');
-        return;
-      }
+    const { data, error } = await supabase
+      .from("site_configuration")
+      .select("*")
+      .single();
 
-      const { data, error } = await supabase
-        .from("site_configuration")
-        .select("*")
-        .single();
-
-      if (error) {
-        toast.error("Erro ao carregar configurações");
-        return;
-      }
-
-      if (data) {
-        setConfig(data);
-      }
-    } catch (error) {
-      console.error("Erro ao buscar configurações:", error);
+    if (error) {
       toast.error("Erro ao carregar configurações");
+      return;
+    }
+
+    if (data) {
+      setConfig(data);
     }
   };
 
@@ -147,18 +122,6 @@ const Admin = () => {
       );
     }
   }, [config]);
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
-  if (!hasPermission('admin_news')) {
-    return null;
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">
