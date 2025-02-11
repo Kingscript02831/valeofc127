@@ -246,3 +246,4 @@ export const StoreForm = ({ initialData, onSubmit, onCancel }: StoreFormProps) =
     </form>
   );
 };
+
