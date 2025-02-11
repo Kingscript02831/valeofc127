@@ -1,30 +1,22 @@
 
-import type { Database } from "../types/supabase";
+import type { Database } from "../integrations/supabase/types";
 
 export type Store = Database["public"]["Tables"]["stores"]["Row"];
 
-export interface StoreFormData extends Partial<Store> {
+export interface StoreFormData {
   name: string;
-  address: string;
   description: string;
-  maps_url?: string;
-  owner_name?: string;
-  phone?: string;
-  whatsapp?: string;
-  website?: string;
-  image?: string;
-  entrance_fee?: string;
-  opening_hours?: {
-    monday?: string;
-    tuesday?: string;
-    wednesday?: string;
-    thursday?: string;
-    friday?: string;
-    saturday?: string;
-    sunday?: string;
-  };
+  address: string;
+  owner_name?: string | null;
+  opening_hours?: string | null;
+  entrance_fee?: string | null;
+  maps_url?: string | null;
+  phone?: string | null;
+  whatsapp?: string | null;
+  website?: string | null;
+  image?: string | null;
   social_media?: {
     facebook?: string;
     instagram?: string;
-  };
+  } | null;
 }
