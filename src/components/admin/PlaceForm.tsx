@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -11,12 +12,12 @@ type Category = Database['public']['Tables']['categories']['Row'];
 
 interface PlaceFormProps {
   initialData?: Place;
-  categories?: Category[];
+  categories: Category[];
   onSubmit: (data: PlaceFormData) => void;
   onCancel: () => void;
 }
 
-export const PlaceForm = ({ initialData, categories = [], onSubmit, onCancel }: PlaceFormProps) => {
+export const PlaceForm = ({ initialData, categories, onSubmit, onCancel }: PlaceFormProps) => {
   const [formData, setFormData] = useState<PlaceFormData>({
     name: "",
     description: "",
@@ -50,7 +51,7 @@ export const PlaceForm = ({ initialData, categories = [], onSubmit, onCancel }: 
         whatsapp: initialData.whatsapp,
         website: initialData.website,
         image: initialData.image,
-        category_id: initialData.category_id || "",
+        category_id: initialData.category_id,
         social_media: initialData.social_media || {
           facebook: "",
           instagram: "",
@@ -80,7 +81,7 @@ export const PlaceForm = ({ initialData, categories = [], onSubmit, onCancel }: 
         <div className="space-y-2">
           <Label htmlFor="category">Categoria</Label>
           <Select
-            value={formData.category_id}
+            value={formData.category_id || ""}
             onValueChange={(value) => setFormData(prev => ({ ...prev, category_id: value }))}
           >
             <SelectTrigger>
@@ -94,16 +95,6 @@ export const PlaceForm = ({ initialData, categories = [], onSubmit, onCancel }: 
               ))}
             </SelectContent>
           </Select>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="address">Endereço *</Label>
-          <Input
-            id="address"
-            name="address"
-            value={formData.address}
-            onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
-            required
-          />
         </div>
         <div className="space-y-2 col-span-2">
           <Label htmlFor="description">Descrição *</Label>

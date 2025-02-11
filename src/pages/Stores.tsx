@@ -1,6 +1,7 @@
+
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Phone, Globe, MapPin, Clock, User2, Facebook, Instagram, MessageCircle, Search, ChevronDown, ChevronUp, DollarSign } from "lucide-react";
+import { Phone, Globe, MapPin, Clock, User2, Facebook, Instagram, MessageCircle, Search, DollarSign } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
@@ -8,7 +9,6 @@ import SubNav from "@/components/SubNav";
 import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 
 type Store = Database["public"]["Tables"]["stores"]["Row"];
 type Category = Database["public"]["Tables"]["categories"]["Row"];
@@ -16,7 +16,6 @@ type Category = Database["public"]["Tables"]["categories"]["Row"];
 const Stores = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [expandedDescriptions, setExpandedDescriptions] = useState<string[]>([]);
 
   useEffect(() => {
     document.title = "Lojas | Vale Notícias";
@@ -56,14 +55,6 @@ const Stores = () => {
       return data;
     },
   });
-
-  const toggleDescription = (id: string) => {
-    setExpandedDescriptions(prev => 
-      prev.includes(id) 
-        ? prev.filter(itemId => itemId !== id)
-        : [...prev, id]
-    );
-  };
 
   return (
     <div className="min-h-screen flex flex-col pb-[72px] md:pb-0">
@@ -141,31 +132,11 @@ const Stores = () => {
                   <h2 className="text-xl font-semibold">{store.name}</h2>
                   
                   {store.description && (
-                    <div>
-                      <p className={`text-gray-600 text-sm ${!expandedDescriptions.includes(store.id) ? 'line-clamp-3' : ''}`}>
-                        {store.description}
-                      </p>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="mt-2"
-                        onClick={() => toggleDescription(store.id)}
-                      >
-                        {expandedDescriptions.includes(store.id) ? (
-                          <>
-                            Ver menos
-                            <ChevronUp className="ml-2 h-4 w-4" />
-                          </>
-                        ) : (
-                          <>
-                            Ver mais
-                            <ChevronDown className="ml-2 h-4 w-4" />
-                          </>
-                        )}
-                      </Button>
-                    </div>
+                    <p className="text-gray-600 text-sm line-clamp-3">
+                      {store.description}
+                    </p>
                   )}
-                  
+
                   <div className="space-y-2">
                     {store.address && (
                       <div className="flex items-center gap-2 text-sm">

@@ -1,22 +1,18 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { StoreFormData, Store } from "../../types/stores";
-import type { Database } from "@/integrations/supabase/types";
-
-type Category = Database['public']['Tables']['categories']['Row'];
 
 interface StoreFormProps {
   initialData?: Store;
-  categories?: Category[];
   onSubmit: (data: StoreFormData) => void;
   onCancel: () => void;
 }
 
-export const StoreForm = ({ initialData, categories = [], onSubmit, onCancel }: StoreFormProps) => {
+export const StoreForm = ({ initialData, onSubmit, onCancel }: StoreFormProps) => {
   const [formData, setFormData] = useState<StoreFormData>({
     name: "",
     description: "",
@@ -32,7 +28,6 @@ export const StoreForm = ({ initialData, categories = [], onSubmit, onCancel }: 
     whatsapp: "",
     website: "",
     image: "",
-    category_id: "",
     social_media: {
       facebook: "",
       instagram: "",
@@ -49,14 +44,13 @@ export const StoreForm = ({ initialData, categories = [], onSubmit, onCancel }: 
         state: initialData.state || "",
         postal_code: initialData.postal_code || "",
         owner_name: initialData.owner_name || "",
-        opening_hours: initialData.opening_hours || "",
+        opening_hours: initialData.opening_hours as string || "",
         entrance_fee: initialData.entrance_fee || "",
         maps_url: initialData.maps_url || "",
         phone: initialData.phone || "",
         whatsapp: initialData.whatsapp || "",
         website: initialData.website || "",
         image: initialData.image || "",
-        category_id: initialData.category_id || "",
         social_media: initialData.social_media || {
           facebook: "",
           instagram: "",
@@ -82,24 +76,6 @@ export const StoreForm = ({ initialData, categories = [], onSubmit, onCancel }: 
             onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
             required
           />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="category">Categoria</Label>
-          <Select
-            value={formData.category_id}
-            onValueChange={(value) => setFormData(prev => ({ ...prev, category_id: value }))}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione uma categoria" />
-            </SelectTrigger>
-            <SelectContent>
-              {categories.map((category) => (
-                <SelectItem key={category.id} value={category.id}>
-                  {category.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
         <div className="space-y-2">
           <Label htmlFor="address">Endereço *</Label>
@@ -270,3 +246,4 @@ export const StoreForm = ({ initialData, categories = [], onSubmit, onCancel }: 
     </form>
   );
 };
+

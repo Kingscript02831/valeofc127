@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Phone, Globe, MapPin, Clock, Ticket, User2, Facebook, Instagram, MessageCircle, Search, ChevronDown, ChevronUp } from "lucide-react";
@@ -165,7 +166,7 @@ const Places = () => {
                       </Button>
                     </div>
                   )}
-                  
+
                   <div className="space-y-2">
                     {place.address && (
                       <div className="flex items-center gap-2 text-sm">
