@@ -70,11 +70,21 @@ const AdminEvents = () => {
         return;
       }
 
+      // Se category_id estiver vazio, defina como null
+      const finalEventData = {
+        ...eventData,
+        user_id: user.id,
+        category_id: eventData.category_id || null
+      };
+
       const { error } = await supabase
         .from("events")
-        .insert({ ...eventData, user_id: user.id });
+        .insert(finalEventData);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error details:", error);
+        throw error;
+      }
 
       toast.success("Evento adicionado com sucesso!");
       fetchEvents();
@@ -91,9 +101,22 @@ const AdminEvents = () => {
         return;
       }
 
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast.error("Você precisa estar logado para realizar esta ação.");
+        return;
+      }
+
+      // Se category_id estiver vazio, defina como null
+      const finalEventData = {
+        ...eventData,
+        category_id: eventData.category_id || null
+      };
+
       const { error } = await supabase
         .from("events")
-        .update(eventData)
+        .update(finalEventData)
         .eq("id", editingEvent.id);
 
       if (error) throw error;
