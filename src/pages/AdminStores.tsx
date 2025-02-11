@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Edit, Trash, Plus, Search } from "lucide-react";
@@ -45,15 +44,7 @@ const AdminStores = () => {
     website: "",
     image: "",
     entrance_fee: "",
-    opening_hours: {
-      monday: "",
-      tuesday: "",
-      wednesday: "",
-      thursday: "",
-      friday: "",
-      saturday: "",
-      sunday: "",
-    },
+    opening_hours: "",
     social_media: {
       facebook: "",
       instagram: "",
@@ -84,16 +75,7 @@ const AdminStores = () => {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    if (name.startsWith("opening_hours.")) {
-      const day = name.split(".")[1];
-      setFormData((prev) => ({
-        ...prev,
-        opening_hours: {
-          ...(prev.opening_hours as any),
-          [day]: value,
-        },
-      }));
-    } else if (name.startsWith("social_media.")) {
+    if (name.startsWith("social_media.")) {
       const socialMedia = name.split(".")[1];
       setFormData((prev) => ({
         ...prev,
@@ -120,15 +102,7 @@ const AdminStores = () => {
       website: "",
       image: "",
       entrance_fee: "",
-      opening_hours: {
-        monday: "",
-        tuesday: "",
-        wednesday: "",
-        thursday: "",
-        friday: "",
-        saturday: "",
-        sunday: "",
-      },
+      opening_hours: "",
       social_media: {
         facebook: "",
         instagram: "",
@@ -243,15 +217,7 @@ const AdminStores = () => {
       website: store.website || "",
       image: store.image || "",
       entrance_fee: store.entrance_fee || "",
-      opening_hours: store.opening_hours || {
-        monday: "",
-        tuesday: "",
-        wednesday: "",
-        thursday: "",
-        friday: "",
-        saturday: "",
-        sunday: "",
-      },
+      opening_hours: store.opening_hours || "",
       social_media: store.social_media || { facebook: "", instagram: "" },
     });
     setIsAddEditDialogOpen(true);
@@ -329,6 +295,18 @@ const AdminStores = () => {
                   />
                 </div>
                 <div className="space-y-2">
+                  <label htmlFor="opening_hours" className="text-sm font-medium">
+                    Horário de Funcionamento
+                  </label>
+                  <Input
+                    id="opening_hours"
+                    name="opening_hours"
+                    value={formData.opening_hours || ""}
+                    onChange={handleInputChange}
+                    placeholder="Ex: Segunda a Sexta 9h às 18h"
+                  />
+                </div>
+                <div className="space-y-2">
                   <label htmlFor="entrance_fee" className="text-sm font-medium">
                     Valor da Entrada
                   </label>
@@ -394,35 +372,6 @@ const AdminStores = () => {
                     value={formData.image || ""}
                     onChange={handleInputChange}
                   />
-                </div>
-
-                {/* Horário de Funcionamento */}
-                <div className="col-span-2">
-                  <h3 className="text-sm font-medium mb-2">Horário de Funcionamento</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    {["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"].map((day) => (
-                      <div key={day} className="space-y-2">
-                        <label
-                          htmlFor={`opening_hours.${day}`}
-                          className="text-sm font-medium capitalize"
-                        >
-                          {day === "monday" ? "Segunda" :
-                           day === "tuesday" ? "Terça" :
-                           day === "wednesday" ? "Quarta" :
-                           day === "thursday" ? "Quinta" :
-                           day === "friday" ? "Sexta" :
-                           day === "saturday" ? "Sábado" : "Domingo"}
-                        </label>
-                        <Input
-                          id={`opening_hours.${day}`}
-                          name={`opening_hours.${day}`}
-                          value={(formData.opening_hours as any)?.[day] || ""}
-                          onChange={handleInputChange}
-                          placeholder="Ex: 09:00 - 18:00"
-                        />
-                      </div>
-                    ))}
-                  </div>
                 </div>
 
                 {/* Redes Sociais */}
