@@ -18,56 +18,71 @@ const AdminEvents = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [searchEventTerm, setSearchEventTerm] = useState("");
 
-  const fetchCategories = async () => {
-    const { data, error } = await supabase
-      .from("categories")
-      .select("*")
-      .eq("page_type", "events");
-
-    if (error) {
-      toast.error("Erro ao carregar categorias");
-      return;
-    }
-
-    if (data) {
-      setCategories(data);
-    }
-  };
-
-  const fetchEvents = async () => {
-    let query = supabase
-      .from("events")
-      .select("*")
-      .order("event_date", { ascending: true });
-
-    if (searchEventTerm) {
-      query = query.ilike("title", `%${searchEventTerm}%`);
-    }
-
-    const { data, error } = await query;
-
-    if (error) {
-      toast.error("Erro ao carregar eventos");
-      return;
-    }
-
-    if (data) {
-      setEvents(data);
-    }
-  };
-
   useEffect(() => {
     fetchCategories();
     fetchEvents();
   }, [searchEventTerm]);
 
-  const handleEventSubmit = async (eventData: Omit<Event, 'id' | 'created_at' | 'updated_at'>) => {
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("categories")
+        .select("*")
+        .eq("page_type", "events");
+
+      if (error) {
+        console.error("Error fetching categories:", error);
+        toast.error("Erro ao carregar categorias");
+        return;
+      }
+
+      if (data) {
+        setCategories(data);
+      }
+    } catch (error) {
+      console.error("Error in fetchCategories:", error);
+      toast.error("Erro ao carregar categorias");
+    }
+  };
+
+  const fetchEvents = async () => {
+    try {
+      let query = supabase
+        .from("events")
+        .select("*")
+        .order("event_date", { ascending: true });
+
+      if (searchEventTerm) {
+        query = query.ilike("title", `%${searchEventTerm}%`);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error("Error fetching events:", error);
+        toast.error("Erro ao carregar eventos");
+        return;
+      }
+
+      if (data) {
+        setEvents(data);
+      }
+    } catch (error) {
+      console.error("Error in fetchEvents:", error);
+      toast.error("Erro ao carregar eventos");
+    }
+  };
+
+  const handleEventSubmit = async (eventData: Omit<Event, 'id' | 'created_at'>) => {
     try {
       const { error } = await supabase
         .from("events")
         .insert(eventData);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error adding event:", error);
+        throw error;
+      }
 
       toast.success("Evento adicionado com sucesso!");
       fetchEvents();
@@ -77,7 +92,7 @@ const AdminEvents = () => {
     }
   };
 
-  const handleEventEdit = async (eventData: Omit<Event, 'id' | 'created_at' | 'updated_at'>) => {
+  const handleEventEdit = async (eventData: Omit<Event, 'id' | 'created_at'>) => {
     try {
       if (!editingEvent?.id) {
         toast.error("ID do evento não encontrado");
@@ -89,7 +104,10 @@ const AdminEvents = () => {
         .update(eventData)
         .eq("id", editingEvent.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error updating event:", error);
+        throw error;
+      }
 
       toast.success("Evento atualizado com sucesso!");
       setEditingEvent(null);
@@ -107,12 +125,16 @@ const AdminEvents = () => {
         .delete()
         .eq("id", id);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error deleting event:", error);
+        throw error;
+      }
 
       toast.success("Evento removido com sucesso!");
       fetchEvents();
     } catch (error: any) {
-      toast.error("Erro ao remover evento");
+      console.error("Error deleting event:", error);
+      toast.error("Erro ao remover evento: " + error.message);
     }
   };
 
