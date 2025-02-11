@@ -30,6 +30,12 @@ import {
   Calendar,
   Globe,
   Image,
+  PenSquare,
+  BookUser,
+  Contact,
+  Building,
+  Home,
+  Shield,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -237,386 +243,430 @@ export default function Profile() {
   }
 
   return (
-    <div className="container max-w-2xl mx-auto p-4 pb-20">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-2">
-          <h1 className="text-2xl font-semibold">Perfil</h1>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsEditing(!isEditing)}
-          >
-            <Settings className="h-5 w-5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleLogout}
-          >
-            <LogOut className="h-5 w-5" />
-          </Button>
-        </div>
-      </div>
-
-      {/* Profile Content */}
-      <div className="space-y-6">
-        {/* Profile Header */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                {profile?.avatar_url ? (
-                  <img
-                    src={profile.avatar_url}
-                    alt="Avatar"
-                    className="w-20 h-20 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center">
-                    <User className="w-10 h-10 text-muted-foreground" />
-                  </div>
-                )}
-              </div>
-              <div>
-                <h2 className="text-xl font-semibold">{profile?.name}</h2>
-                {profile?.username && (
-                  <p className="text-muted-foreground flex items-center gap-1">
-                    <AtSign className="h-4 w-4" />
-                    {profile.username}
-                  </p>
-                )}
-                {profile?.bio && (
-                  <p className="text-sm mt-1">{profile.bio}</p>
-                )}
-              </div>
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 to-primary/10">
+      <div className="container max-w-4xl mx-auto p-4 pb-20 pt-8">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-full bg-primary/10">
+              <BookUser className="h-6 w-6 text-primary" />
             </div>
-          </CardContent>
-        </Card>
+            <h1 className="text-2xl font-semibold text-gray-800">Perfil</h1>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsEditing(!isEditing)}
+              className="hover:bg-primary/10"
+            >
+              <PenSquare className="h-5 w-5 text-primary" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleLogout}
+              className="hover:bg-red-100"
+            >
+              <LogOut className="h-5 w-5 text-red-500" />
+            </Button>
+          </div>
+        </div>
 
-        {/* Tabs */}
-        <Tabs defaultValue="info" className="w-full">
-          <TabsList className="w-full">
-            <TabsTrigger value="info" className="flex-1">Informações</TabsTrigger>
-            <TabsTrigger value="settings" className="flex-1">Configurações</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="info">
-            <Card>
-              <CardHeader>
-                <CardTitle>Informações Pessoais</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span>{profile?.email}</span>
+        {/* Profile Content */}
+        <div className="space-y-6">
+          {/* Profile Header Card */}
+          <Card className="border-none shadow-lg bg-white/80 backdrop-blur-sm">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-6">
+                <div className="relative group">
+                  {profile?.avatar_url ? (
+                    <div className="w-24 h-24 rounded-full overflow-hidden ring-2 ring-primary/20">
+                      <img
+                        src={profile.avatar_url}
+                        alt="Avatar"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-24 h-24 rounded-full bg-primary/10 ring-2 ring-primary/20 flex items-center justify-center">
+                      <User className="w-12 h-12 text-primary/40" />
+                    </div>
+                  )}
                 </div>
-                {profile?.username && (
-                  <div className="flex items-center gap-2">
-                    <AtSign className="h-4 w-4 text-muted-foreground" />
-                    <span>{profile.username}</span>
-                  </div>
-                )}
-                {profile?.phone && (
-                  <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4 text-muted-foreground" />
-                    <span>{profile.phone}</span>
-                  </div>
-                )}
-                {profile?.birth_date && (
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span>{format(new Date(profile.birth_date), "dd/MM/yyyy")}</span>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                <div className="space-y-2">
+                  <h2 className="text-2xl font-semibold text-gray-800">{profile?.name}</h2>
+                  {profile?.username && (
+                    <p className="text-primary/80 flex items-center gap-1 text-sm">
+                      <AtSign className="h-4 w-4" />
+                      {profile.username}
+                    </p>
+                  )}
+                  {profile?.bio && (
+                    <p className="text-sm text-gray-600">{profile.bio}</p>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-            <Card className="mt-4">
-              <CardHeader>
-                <CardTitle>Endereço</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {profile?.street && (
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <span>Rua: {profile.street}</span>
-                  </div>
-                )}
-                {profile?.house_number && (
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <span>Número: {profile.house_number}</span>
-                  </div>
-                )}
-                {profile?.city && (
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <span>Cidade: {profile.city}</span>
-                  </div>
-                )}
-                {profile?.postal_code && (
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <span>CEP: {profile.postal_code}</span>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+          {/* Tabs */}
+          <Tabs defaultValue="info" className="w-full">
+            <TabsList className="w-full bg-white/80 backdrop-blur-sm">
+              <TabsTrigger value="info" className="flex-1 gap-2">
+                <Grid className="h-4 w-4" /> Informações
+              </TabsTrigger>
+              <TabsTrigger value="settings" className="flex-1 gap-2">
+                <Settings className="h-4 w-4" /> Configurações
+              </TabsTrigger>
+            </TabsList>
 
-            {profile?.website && (
-              <Card className="mt-4">
-                <CardContent className="pt-6">
-                  <div className="flex items-center gap-2">
-                    <Globe className="h-4 w-4 text-muted-foreground" />
-                    <a href={profile.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                      {profile.website}
-                    </a>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-
-          <TabsContent value="settings">
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit((data) => updateProfile.mutate(data))} className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Foto de Perfil</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <FormField
-                      control={form.control}
-                      name="avatar_url"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormControl>
-                            <div className="flex items-center gap-4">
-                              <Input placeholder="URL da imagem" {...field} />
-                              <Image className="h-5 w-5 text-muted-foreground" />
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Informações Básicas</CardTitle>
+            <TabsContent value="info">
+              <div className="grid gap-6">
+                {/* Personal Info Card */}
+                <Card className="border-none shadow-lg bg-white/80 backdrop-blur-sm">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex gap-2 items-center text-primary">
+                      <Contact className="h-5 w-5" />
+                      Informações Pessoais
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Nome</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Seu nome" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="username"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Nome de usuário</FormLabel>
-                          <FormControl>
-                            <Input placeholder="seu_username" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="bio"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Biografia</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Conte um pouco sobre você" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="website"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Website</FormLabel>
-                          <FormControl>
-                            <Input placeholder="https://seu-site.com" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    {profile?.email && (
+                      <div className="flex items-center gap-3 text-gray-600">
+                        <Mail className="h-4 w-4 text-primary/60" />
+                        <span>{profile.email}</span>
+                      </div>
+                    )}
+                    {profile?.phone && (
+                      <div className="flex items-center gap-3 text-gray-600">
+                        <Phone className="h-4 w-4 text-primary/60" />
+                        <span>{profile.phone}</span>
+                      </div>
+                    )}
+                    {profile?.birth_date && (
+                      <div className="flex items-center gap-3 text-gray-600">
+                        <Calendar className="h-4 w-4 text-primary/60" />
+                        <span>{format(new Date(profile.birth_date), "dd/MM/yyyy")}</span>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Contato</CardTitle>
+                {/* Address Card */}
+                <Card className="border-none shadow-lg bg-white/80 backdrop-blur-sm">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex gap-2 items-center text-primary">
+                      <Building className="h-5 w-5" />
+                      Endereço
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Email</FormLabel>
-                          <FormControl>
-                            <Input type="email" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="phone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Telefone</FormLabel>
-                          <FormControl>
-                            <Input type="tel" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="birth_date"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Data de Nascimento</FormLabel>
-                          <FormControl>
-                            <Input type="date" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    {profile?.street && (
+                      <div className="flex items-center gap-3 text-gray-600">
+                        <Home className="h-4 w-4 text-primary/60" />
+                        <span>Rua: {profile.street}</span>
+                      </div>
+                    )}
+                    {profile?.house_number && (
+                      <div className="flex items-center gap-3 text-gray-600">
+                        <MapPin className="h-4 w-4 text-primary/60" />
+                        <span>Número: {profile.house_number}</span>
+                      </div>
+                    )}
+                    {profile?.city && (
+                      <div className="flex items-center gap-3 text-gray-600">
+                        <Building className="h-4 w-5 text-primary/60" />
+                        <span>Cidade: {profile.city}</span>
+                      </div>
+                    )}
+                    {profile?.postal_code && (
+                      <div className="flex items-center gap-3 text-gray-600">
+                        <MapPin className="h-4 w-4 text-primary/60" />
+                        <span>CEP: {profile.postal_code}</span>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Endereço</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="street"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Rua</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                {/* Website Card */}
+                {profile?.website && (
+                  <Card className="border-none shadow-lg bg-white/80 backdrop-blur-sm">
+                    <CardContent className="pt-6">
+                      <div className="flex items-center gap-3 text-gray-600">
+                        <Globe className="h-4 w-4 text-primary/60" />
+                        <a
+                          href={profile.website}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline"
+                        >
+                          {profile.website}
+                        </a>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </TabsContent>
 
-                    <FormField
-                      control={form.control}
-                      name="house_number"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Número</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+            <TabsContent value="settings">
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit((data) => updateProfile.mutate(data))} className="space-y-6">
+                  {/* Avatar Settings */}
+                  <Card className="border-none shadow-lg bg-white/80 backdrop-blur-sm">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-lg flex gap-2 items-center text-primary">
+                        <Image className="h-5 w-5" />
+                        Foto de Perfil
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <FormField
+                        control={form.control}
+                        name="avatar_url"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormControl>
+                              <Input placeholder="URL da imagem" className="bg-white" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </CardContent>
+                  </Card>
 
-                    <FormField
-                      control={form.control}
-                      name="city"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Cidade</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                  {/* Basic Info Settings */}
+                  <Card className="border-none shadow-lg bg-white/80 backdrop-blur-sm">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-lg flex gap-2 items-center text-primary">
+                        <BookUser className="h-5 w-5" />
+                        Informações Básicas
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <FormField
+                        control={form.control}
+                        name="name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Nome</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Seu nome" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                    <FormField
-                      control={form.control}
-                      name="postal_code"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>CEP</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </CardContent>
-                </Card>
+                      <FormField
+                        control={form.control}
+                        name="username"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Nome de usuário</FormLabel>
+                            <FormControl>
+                              <Input placeholder="seu_username" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Segurança</CardTitle>
-                  </CardHeader>
-                  <CardContent>
+                      <FormField
+                        control={form.control}
+                        name="bio"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Biografia</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Conte um pouco sobre você" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="website"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Website</FormLabel>
+                            <FormControl>
+                              <Input placeholder="https://seu-site.com" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </CardContent>
+                  </Card>
+
+                  {/* Contact Settings */}
+                  <Card className="border-none shadow-lg bg-white/80 backdrop-blur-sm">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-lg flex gap-2 items-center text-primary">
+                        <Contact className="h-5 w-5" />
+                        Contato
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <FormField
+                        control={form.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email</FormLabel>
+                            <FormControl>
+                              <Input type="email" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="phone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Telefone</FormLabel>
+                            <FormControl>
+                              <Input type="tel" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="birth_date"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Data de Nascimento</FormLabel>
+                            <FormControl>
+                              <Input type="date" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </CardContent>
+                  </Card>
+
+                  {/* Address Settings */}
+                  <Card className="border-none shadow-lg bg-white/80 backdrop-blur-sm">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-lg flex gap-2 items-center text-primary">
+                        <Building className="h-5 w-5" />
+                        Endereço
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <FormField
+                        control={form.control}
+                        name="street"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Rua</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="house_number"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Número</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="city"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Cidade</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="postal_code"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>CEP</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </CardContent>
+                  </Card>
+
+                  {/* Security Settings */}
+                  <Card className="border-none shadow-lg bg-white/80 backdrop-blur-sm">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-lg flex gap-2 items-center text-primary">
+                        <Shield className="h-5 w-5" />
+                        Segurança
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={handlePasswordReset}
+                        className="w-full bg-white hover:bg-primary/5"
+                      >
+                        <Key className="mr-2 h-4 w-4" />
+                        Alterar Senha
+                      </Button>
+                    </CardContent>
+                  </Card>
+
+                  <div className="flex justify-end gap-4">
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={handlePasswordReset}
-                      className="w-full"
+                      onClick={() => setIsEditing(false)}
+                      className="bg-white hover:bg-primary/5"
                     >
-                      <Key className="mr-2 h-4 w-4" />
-                      Alterar Senha
+                      Cancelar
                     </Button>
-                  </CardContent>
-                </Card>
-
-                <div className="flex justify-end gap-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setIsEditing(false)}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={updateProfile.isPending}
-                  >
-                    {updateProfile.isPending ? "Salvando..." : "Salvar alterações"}
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </TabsContent>
-        </Tabs>
+                    <Button
+                      type="submit"
+                      disabled={updateProfile.isPending}
+                      className="bg-primary hover:bg-primary/90"
+                    >
+                      {updateProfile.isPending ? "Salvando..." : "Salvar alterações"}
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
 
       <BottomNav />
