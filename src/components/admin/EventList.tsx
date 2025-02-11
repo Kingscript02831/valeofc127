@@ -78,22 +78,6 @@ export const EventList = ({
             {event.location && (
               <p className="text-sm text-gray-500">Local: {event.location}</p>
             )}
-            {event.image && (
-              <p className="text-sm text-gray-500">Imagem: {event.image}</p>
-            )}
-            {event.button_color && (
-              <div className="flex items-center gap-2 mt-2">
-                <span className="text-sm text-gray-500">Cor do botão:</span>
-                <div 
-                  className="w-6 h-6 rounded border"
-                  style={{ 
-                    background: event.button_secondary_color 
-                      ? `linear-gradient(to right, ${event.button_color}, ${event.button_secondary_color})`
-                      : event.button_color 
-                  }}
-                />
-              </div>
-            )}
           </div>
         ))}
         {events.length === 0 && (
