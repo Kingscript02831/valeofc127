@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Search } from "lucide-react";
@@ -22,7 +23,7 @@ const Events = () => {
     document.title = "Eventos | Vale Notícias";
   }, []);
 
-  const { data: categories } = useQuery({
+  const { data: categories, isLoading: isCategoriesLoading } = useQuery({
     queryKey: ["categories", "events"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -33,9 +34,10 @@ const Events = () => {
       if (error) throw error;
       return data;
     },
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
-  const { data: events, isLoading } = useQuery({
+  const { data: events, isLoading: isEventsLoading } = useQuery({
     queryKey: ["events", searchTerm, selectedCategory],
     queryFn: async () => {
       let query = supabase
@@ -48,7 +50,7 @@ const Events = () => {
             background_color
           )
         `)
-        .order("created_at", { ascending: false }); // Alterado para mostrar os mais recentes primeiro
+        .order("created_at", { ascending: false });
 
       if (searchTerm) {
         query = query.ilike("title", `%${searchTerm}%`);
@@ -62,7 +64,10 @@ const Events = () => {
       if (error) throw error;
       return data;
     },
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
+
+  const isLoading = isCategoriesLoading || isEventsLoading;
 
   return (
     <div className="min-h-screen flex flex-col pb-[72px] md:pb-0">
@@ -125,9 +130,9 @@ const Events = () => {
                 key={event.id}
                 title={event.title}
                 description={event.description}
-                eventDate={event.event_date.split('T')[0]}
+                eventDate={event.event_date}
                 eventTime={event.event_time}
-                endTime={event.end_time} // Novo campo
+                endTime={event.end_time}
                 image={event.image}
                 images={event.images}
                 location={event.location}

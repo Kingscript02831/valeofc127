@@ -1,23 +1,11 @@
 
 import { Mail, MapPin, Phone, Clock, Facebook, Instagram } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "../integrations/supabase/client";
+import { useSiteConfig } from "../hooks/useSiteConfig";
 
 const Footer = () => {
-  const { data: config } = useQuery({
-    queryKey: ['site_configuration'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('site_configuration')
-        .select('*')
-        .single();
-      
-      if (error) throw error;
-      return data;
-    }
-  });
+  const { data: config, isLoading } = useSiteConfig();
 
-  if (!config) return null;
+  if (isLoading || !config) return null;
 
   const footerStyle = {
     background: `linear-gradient(to right, ${config.footer_primary_color}, ${config.footer_secondary_color})`,
