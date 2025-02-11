@@ -9,6 +9,7 @@ import SubNav from "../components/SubNav";
 import Footer from "../components/Footer";
 import BottomNav from "../components/BottomNav";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 type Place = Database["public"]["Tables"]["places"]["Row"];
 type Category = Database["public"]["Tables"]["categories"]["Row"];
@@ -16,10 +17,21 @@ type Category = Database["public"]["Tables"]["categories"]["Row"];
 const Places = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [expandedDescriptions, setExpandedDescriptions] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     document.title = "Lugares | Vale Notícias";
   }, []);
+
+  const toggleDescription = (id: string) => {
+    const newExpanded = new Set(expandedDescriptions);
+    if (newExpanded.has(id)) {
+      newExpanded.delete(id);
+    } else {
+      newExpanded.add(id);
+    }
+    setExpandedDescriptions(newExpanded);
+  };
 
   const { data: categories } = useQuery({
     queryKey: ["categories-places"],
@@ -75,7 +87,6 @@ const Places = () => {
           </div>
         </div>
 
-        {/* Categories Section */}
         <div className="flex gap-2 overflow-x-auto pb-4 mb-6 scrollbar-hide">
           <button
             onClick={() => setSelectedCategory(null)}
@@ -132,9 +143,18 @@ const Places = () => {
                   <h2 className="text-xl font-semibold">{place.name}</h2>
                   
                   {place.description && (
-                    <p className="text-gray-600 text-sm line-clamp-3">
-                      {place.description}
-                    </p>
+                    <div>
+                      <p className={`text-gray-600 text-sm ${!expandedDescriptions.has(place.id) ? "line-clamp-3" : ""}`}>
+                        {place.description}
+                      </p>
+                      <Button
+                        variant="link"
+                        className="p-0 h-auto text-sm text-blue-600 hover:text-blue-800"
+                        onClick={() => toggleDescription(place.id)}
+                      >
+                        {expandedDescriptions.has(place.id) ? "Ver menos" : "Ver mais"}
+                      </Button>
+                    </div>
                   )}
 
                   <div className="space-y-2">
