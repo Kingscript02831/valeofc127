@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -22,7 +21,6 @@ import {
   LogOut,
   User,
   AtSign,
-  Grid,
   Settings,
   Key,
   MapPin,
@@ -31,30 +29,29 @@ import {
   Calendar,
   Globe,
   Image,
-  PenSquare,
   BookUser,
   Contact,
   Building,
   Home,
   Shield,
+  Trash2,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Separator } from "../components/ui/separator";
 import BottomNav from "../components/BottomNav";
 import type { ProfileUpdateData } from "../types/profile";
 
 const profileSchema = z.object({
-  name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
-  email: z.string().email("Email inválido"),
-  phone: z.string().min(10, "Telefone deve ter pelo menos 10 dígitos"),
-  birth_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida"),
-  street: z.string().min(3, "Rua deve ter pelo menos 3 caracteres"),
-  house_number: z.string().min(1, "Número da casa é obrigatório"),
-  city: z.string().min(2, "Cidade deve ter pelo menos 2 caracteres"),
-  postal_code: z.string().min(8, "CEP deve ter 8 dígitos"),
+  name: z.string().optional(),
+  email: z.string().email("Email inválido").optional(),
+  phone: z.string().optional(),
+  birth_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida").optional(),
+  street: z.string().optional(),
+  house_number: z.string().optional(),
+  city: z.string().optional(),
+  postal_code: z.string().optional(),
   avatar_url: z.string().url("URL inválida").optional(),
-  username: z.string().min(2, "Username deve ter pelo menos 2 caracteres"),
+  username: z.string().optional(),
   bio: z.string().optional(),
   website: z.string().url("URL inválida").optional().or(z.literal("")),
   basic_info_updated_at: z.string().optional(),
@@ -65,7 +62,6 @@ export default function Profile() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(true);
-  const [isEditing, setIsEditing] = useState(false);
 
   // Check for authentication status
   useEffect(() => {
@@ -132,41 +128,29 @@ export default function Profile() {
     }
   }, [profile, form]);
 
-  // Update profile mutation with 30-day check
+  // Update profile mutation with 30-day check for username and phone
   const updateProfile = useMutation({
     mutationFn: async (values: z.infer<typeof profileSchema>) => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Não autenticado");
 
-      // Check if basic info is being updated
-      const isUpdatingBasicInfo = 
-        values.name !== profile?.name ||
+      // Check if username or phone is being updated
+      const isUpdatingRestricted = 
         values.username !== profile?.username ||
-        values.phone !== profile?.phone ||
-        values.birth_date !== profile?.birth_date;
+        values.phone !== profile?.phone;
 
-      if (isUpdatingBasicInfo) {
-        // Get the last update time
-        const { data: profileData } = await supabase
-          .from("profiles")
-          .select("basic_info_updated_at")
-          .eq("id", session.user.id)
-          .single();
+      if (isUpdatingRestricted) {
+        // Check if enough time has passed
+        const { data: canUpdate, error: checkError } = await supabase
+          .rpc('can_update_basic_info', { profile_id: session.user.id });
 
-        if (profileData) {
-          const lastUpdate = new Date(profileData.basic_info_updated_at);
-          const daysSinceLastUpdate = Math.floor((Date.now() - lastUpdate.getTime()) / (1000 * 60 * 60 * 24));
-
-          if (daysSinceLastUpdate < 30) {
-            throw new Error(`Você só pode alterar suas informações básicas após 30 dias da última atualização. Dias restantes: ${30 - daysSinceLastUpdate}`);
-          }
+        if (checkError) throw checkError;
+        if (!canUpdate) {
+          throw new Error("Você só pode alterar seu @ ou telefone após 30 dias da última atualização.");
         }
 
-        // If we're here, it's been more than 30 days, so update the timestamp
-        values = {
-          ...values,
-          basic_info_updated_at: new Date().toISOString(),
-        };
+        // Update the last basic info update timestamp
+        values.basic_info_updated_at = new Date().toISOString();
       }
 
       const { error } = await supabase
@@ -178,14 +162,12 @@ export default function Profile() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["profile"] });
-      setIsEditing(false);
       toast({
         title: "Perfil atualizado",
         description: "Suas informações foram atualizadas com sucesso",
       });
     },
-    onError: (error) => {
-      console.error("Error updating profile:", error);
+    onError: (error: Error) => {
       toast({
         title: "Erro ao atualizar perfil",
         description: error.message,
@@ -194,43 +176,39 @@ export default function Profile() {
     },
   });
 
-  const handleLogout = async () => {
+  const handleAccountDeletion = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Não autenticado");
+
+      const { error } = await supabase
+        .rpc('schedule_account_deletion', { user_id: session.user.id });
+
       if (error) throw error;
+
+      toast({
+        title: "Conta programada para exclusão",
+        description: "Sua conta será excluída em 30 dias. Você pode cancelar este processo fazendo login novamente.",
+      });
+      
+      await supabase.auth.signOut();
       navigate("/login");
     } catch (error: any) {
-      console.error("Error during logout:", error);
       toast({
-        title: "Erro ao sair",
+        title: "Erro ao programar exclusão da conta",
         description: error.message,
         variant: "destructive",
       });
     }
   };
 
-  const handlePasswordReset = async () => {
+  const handleLogout = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user.email) {
-        toast({
-          title: "Erro",
-          description: "Email não encontrado",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const { error } = await supabase.auth.resetPasswordForEmail(session.user.email);
-      if (error) throw error;
-
-      toast({
-        title: "Email enviado",
-        description: "Verifique seu email para redefinir sua senha",
-      });
+      await supabase.auth.signOut();
+      navigate("/login");
     } catch (error: any) {
       toast({
-        title: "Erro ao redefinir senha",
+        title: "Erro ao sair",
         description: error.message,
         variant: "destructive",
       });
@@ -246,32 +224,32 @@ export default function Profile() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 to-primary/10">
+    <div className="min-h-screen bg-gray-50">
       <div className="container max-w-4xl mx-auto p-4 pb-20 pt-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-full bg-primary/10">
-              <BookUser className="h-6 w-6 text-primary" />
-            </div>
-            <h1 className="text-2xl font-semibold text-gray-800">Perfil</h1>
+            <h1 className="text-2xl font-semibold text-gray-900">
+              {profile?.username ? `@${profile.username}` : 'Perfil'}
+            </h1>
           </div>
           <div className="flex gap-2">
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setIsEditing(!isEditing)}
-              className="hover:bg-primary/10"
+              onClick={() => navigate("/settings")}
+              className="hover:bg-gray-100"
             >
-              <PenSquare className="h-5 w-5 text-primary" />
+              <Settings className="h-5 w-5 text-gray-600" />
             </Button>
             <Button
-              variant="ghost"
-              size="icon"
+              variant="destructive"
+              size="sm"
               onClick={handleLogout}
-              className="hover:bg-red-100"
+              className="bg-red-500 hover:bg-red-600 text-white"
             >
-              <LogOut className="h-5 w-5 text-red-500" />
+              <LogOut className="h-4 w-4 mr-2" />
+              Sair
             </Button>
           </div>
         </div>
@@ -279,12 +257,12 @@ export default function Profile() {
         {/* Profile Content */}
         <div className="space-y-6">
           {/* Profile Header Card */}
-          <Card className="border-none shadow-lg bg-white/80 backdrop-blur-sm">
+          <Card className="border-none shadow-lg bg-white">
             <CardContent className="pt-6">
               <div className="flex items-center gap-6">
                 <div className="relative group">
                   {profile?.avatar_url ? (
-                    <div className="w-24 h-24 rounded-full overflow-hidden ring-2 ring-primary/20">
+                    <div className="w-24 h-24 rounded-full overflow-hidden ring-2 ring-gray-200">
                       <img
                         src={profile.avatar_url}
                         alt="Avatar"
@@ -292,15 +270,15 @@ export default function Profile() {
                       />
                     </div>
                   ) : (
-                    <div className="w-24 h-24 rounded-full bg-primary/10 ring-2 ring-primary/20 flex items-center justify-center">
-                      <User className="w-12 h-12 text-primary/40" />
+                    <div className="w-24 h-24 rounded-full bg-gray-100 ring-2 ring-gray-200 flex items-center justify-center">
+                      <User className="w-12 h-12 text-gray-400" />
                     </div>
                   )}
                 </div>
                 <div className="space-y-2">
-                  <h2 className="text-2xl font-semibold text-gray-800">{profile?.name}</h2>
+                  <h2 className="text-2xl font-semibold text-gray-900">{profile?.name}</h2>
                   {profile?.username && (
-                    <p className="text-primary/80 flex items-center gap-1 text-sm">
+                    <p className="text-gray-600 flex items-center gap-1 text-sm">
                       <AtSign className="h-4 w-4" />
                       {profile.username}
                     </p>
@@ -315,41 +293,40 @@ export default function Profile() {
 
           {/* Tabs */}
           <Tabs defaultValue="info" className="w-full">
-            <TabsList className="w-full bg-white/80 backdrop-blur-sm">
-              <TabsTrigger value="info" className="flex-1 gap-2">
-                <Grid className="h-4 w-4" /> Informações
+            <TabsList className="w-full bg-white">
+              <TabsTrigger value="info" className="flex-1">
+                Informações
               </TabsTrigger>
-              <TabsTrigger value="settings" className="flex-1 gap-2">
-                <Settings className="h-4 w-4" /> Configurações
+              <TabsTrigger value="settings" className="flex-1">
+                Configurações
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="info">
               <div className="grid gap-6">
                 {/* Personal Info Card */}
-                <Card className="border-none shadow-lg bg-white/80 backdrop-blur-sm">
+                <Card className="border-none shadow-lg bg-white">
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-lg flex gap-2 items-center text-primary">
-                      <Contact className="h-5 w-5" />
+                    <CardTitle className="text-lg text-gray-900">
                       Informações Pessoais
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     {profile?.email && (
                       <div className="flex items-center gap-3 text-gray-600">
-                        <Mail className="h-4 w-4 text-primary/60" />
+                        <Mail className="h-4 w-4" />
                         <span>{profile.email}</span>
                       </div>
                     )}
                     {profile?.phone && (
                       <div className="flex items-center gap-3 text-gray-600">
-                        <Phone className="h-4 w-4 text-primary/60" />
+                        <Phone className="h-4 w-4" />
                         <span>{profile.phone}</span>
                       </div>
                     )}
                     {profile?.birth_date && (
                       <div className="flex items-center gap-3 text-gray-600">
-                        <Calendar className="h-4 w-4 text-primary/60" />
+                        <Calendar className="h-4 w-4" />
                         <span>{format(new Date(profile.birth_date), "dd/MM/yyyy")}</span>
                       </div>
                     )}
@@ -357,35 +334,34 @@ export default function Profile() {
                 </Card>
 
                 {/* Address Card */}
-                <Card className="border-none shadow-lg bg-white/80 backdrop-blur-sm">
+                <Card className="border-none shadow-lg bg-white">
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-lg flex gap-2 items-center text-primary">
-                      <Building className="h-5 w-5" />
+                    <CardTitle className="text-lg text-gray-900">
                       Endereço
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     {profile?.street && (
                       <div className="flex items-center gap-3 text-gray-600">
-                        <Home className="h-4 w-4 text-primary/60" />
+                        <Home className="h-4 w-4" />
                         <span>Rua: {profile.street}</span>
                       </div>
                     )}
                     {profile?.house_number && (
                       <div className="flex items-center gap-3 text-gray-600">
-                        <MapPin className="h-4 w-4 text-primary/60" />
+                        <MapPin className="h-4 w-4" />
                         <span>Número: {profile.house_number}</span>
                       </div>
                     )}
                     {profile?.city && (
                       <div className="flex items-center gap-3 text-gray-600">
-                        <Building className="h-4 w-5 text-primary/60" />
+                        <Building className="h-4 w-4" />
                         <span>Cidade: {profile.city}</span>
                       </div>
                     )}
                     {profile?.postal_code && (
                       <div className="flex items-center gap-3 text-gray-600">
-                        <MapPin className="h-4 w-4 text-primary/60" />
+                        <MapPin className="h-4 w-4" />
                         <span>CEP: {profile.postal_code}</span>
                       </div>
                     )}
@@ -394,15 +370,15 @@ export default function Profile() {
 
                 {/* Website Card */}
                 {profile?.website && (
-                  <Card className="border-none shadow-lg bg-white/80 backdrop-blur-sm">
+                  <Card className="border-none shadow-lg bg-white">
                     <CardContent className="pt-6">
                       <div className="flex items-center gap-3 text-gray-600">
-                        <Globe className="h-4 w-4 text-primary/60" />
+                        <Globe className="h-4 w-4" />
                         <a
                           href={profile.website}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-primary hover:underline"
+                          className="text-blue-600 hover:underline"
                         >
                           {profile.website}
                         </a>
@@ -417,10 +393,9 @@ export default function Profile() {
               <Form {...form}>
                 <form onSubmit={form.handleSubmit((data) => updateProfile.mutate(data))} className="space-y-6">
                   {/* Avatar Settings */}
-                  <Card className="border-none shadow-lg bg-white/80 backdrop-blur-sm">
+                  <Card className="border-none shadow-lg bg-white">
                     <CardHeader className="pb-3">
-                      <CardTitle className="text-lg flex gap-2 items-center text-primary">
-                        <Image className="h-5 w-5" />
+                      <CardTitle className="text-lg text-gray-900">
                         Foto de Perfil
                       </CardTitle>
                     </CardHeader>
@@ -430,8 +405,9 @@ export default function Profile() {
                         name="avatar_url"
                         render={({ field }) => (
                           <FormItem>
+                            <FormLabel>URL da imagem</FormLabel>
                             <FormControl>
-                              <Input placeholder="URL da imagem" className="bg-white" {...field} />
+                              <Input placeholder="URL da imagem" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -441,10 +417,9 @@ export default function Profile() {
                   </Card>
 
                   {/* Basic Info Settings */}
-                  <Card className="border-none shadow-lg bg-white/80 backdrop-blur-sm">
+                  <Card className="border-none shadow-lg bg-white">
                     <CardHeader className="pb-3">
-                      <CardTitle className="text-lg flex gap-2 items-center text-primary">
-                        <BookUser className="h-5 w-5" />
+                      <CardTitle className="text-lg text-gray-900">
                         Informações Básicas
                       </CardTitle>
                     </CardHeader>
@@ -508,10 +483,9 @@ export default function Profile() {
                   </Card>
 
                   {/* Contact Settings */}
-                  <Card className="border-none shadow-lg bg-white/80 backdrop-blur-sm">
+                  <Card className="border-none shadow-lg bg-white">
                     <CardHeader className="pb-3">
-                      <CardTitle className="text-lg flex gap-2 items-center text-primary">
-                        <Contact className="h-5 w-5" />
+                      <CardTitle className="text-lg text-gray-900">
                         Contato
                       </CardTitle>
                     </CardHeader>
@@ -561,10 +535,9 @@ export default function Profile() {
                   </Card>
 
                   {/* Address Settings */}
-                  <Card className="border-none shadow-lg bg-white/80 backdrop-blur-sm">
+                  <Card className="border-none shadow-lg bg-white">
                     <CardHeader className="pb-3">
-                      <CardTitle className="text-lg flex gap-2 items-center text-primary">
-                        <Building className="h-5 w-5" />
+                      <CardTitle className="text-lg text-gray-900">
                         Endereço
                       </CardTitle>
                     </CardHeader>
@@ -627,42 +600,23 @@ export default function Profile() {
                     </CardContent>
                   </Card>
 
-                  {/* Security Settings */}
-                  <Card className="border-none shadow-lg bg-white/80 backdrop-blur-sm">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-lg flex gap-2 items-center text-primary">
-                        <Shield className="h-5 w-5" />
-                        Segurança
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={handlePasswordReset}
-                        className="w-full bg-white hover:bg-primary/5"
-                      >
-                        <Key className="mr-2 h-4 w-4" />
-                        Alterar Senha
-                      </Button>
-                    </CardContent>
-                  </Card>
-
-                  <div className="flex justify-end gap-4">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setIsEditing(false)}
-                      className="bg-white hover:bg-primary/5"
-                    >
-                      Cancelar
-                    </Button>
+                  <div className="space-y-4">
                     <Button
                       type="submit"
                       disabled={updateProfile.isPending}
-                      className="bg-primary hover:bg-primary/90"
+                      className="w-full bg-gray-900 hover:bg-gray-800 text-white"
                     >
                       {updateProfile.isPending ? "Salvando..." : "Salvar alterações"}
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      onClick={handleAccountDeletion}
+                      className="w-full"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Excluir conta
                     </Button>
                   </div>
                 </form>

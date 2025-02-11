@@ -348,9 +348,11 @@ export type Database = {
           full_name: string | null
           house_number: string | null
           id: string
+          last_basic_info_update: string | null
           name: string | null
           phone: string | null
           postal_code: string | null
+          scheduled_deletion_date: string | null
           street: string | null
           updated_at: string | null
           username: string | null
@@ -367,9 +369,11 @@ export type Database = {
           full_name?: string | null
           house_number?: string | null
           id: string
+          last_basic_info_update?: string | null
           name?: string | null
           phone?: string | null
           postal_code?: string | null
+          scheduled_deletion_date?: string | null
           street?: string | null
           updated_at?: string | null
           username?: string | null
@@ -386,9 +390,11 @@ export type Database = {
           full_name?: string | null
           house_number?: string | null
           id?: string
+          last_basic_info_update?: string | null
           name?: string | null
           phone?: string | null
           postal_code?: string | null
+          scheduled_deletion_date?: string | null
           street?: string | null
           updated_at?: string | null
           username?: string | null
@@ -688,12 +694,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_update_basic_info: {
+        Args: {
+          profile_id: string
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           user_id: string
           role: Database["public"]["Enums"]["app_role"]
         }
         Returns: boolean
+      }
+      schedule_account_deletion: {
+        Args: {
+          user_id: string
+        }
+        Returns: undefined
       }
     }
     Enums: {
