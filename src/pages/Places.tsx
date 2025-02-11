@@ -2,12 +2,12 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Phone, Globe, MapPin, Clock, Ticket, User2, Facebook, Instagram, MessageCircle, Search } from "lucide-react";
-import type { Database } from "../integrations/supabase/types";
-import { supabase } from "../integrations/supabase/client";
-import Navbar from "../components/Navbar";
-import SubNav from "../components/SubNav";
-import Footer from "../components/Footer";
-import BottomNav from "../components/BottomNav";
+import type { Database } from "@/integrations/supabase/types";
+import { supabase } from "@/integrations/supabase/client";
+import Navbar from "@/components/Navbar";
+import SubNav from "@/components/SubNav";
+import Footer from "@/components/Footer";
+import BottomNav from "@/components/BottomNav";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
