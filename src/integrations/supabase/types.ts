@@ -55,6 +55,7 @@ export type Database = {
       }
       events: {
         Row: {
+          additional_photos: string[] | null
           button_color: string | null
           button_secondary_color: string | null
           category_id: string | null
@@ -81,6 +82,7 @@ export type Database = {
           whatsapp: string | null
         }
         Insert: {
+          additional_photos?: string[] | null
           button_color?: string | null
           button_secondary_color?: string | null
           category_id?: string | null
@@ -107,6 +109,7 @@ export type Database = {
           whatsapp?: string | null
         }
         Update: {
+          additional_photos?: string[] | null
           button_color?: string | null
           button_secondary_color?: string | null
           category_id?: string | null
