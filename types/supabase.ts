@@ -1,4 +1,3 @@
-
 export type Json =
   | string
   | number
@@ -63,6 +62,13 @@ export type Database = {
           weather_api_key: string | null
           login_text_color: string
           signup_text_color: string
+          admin_sidebar_color: string
+          admin_header_color: string
+          admin_text_color: string
+          admin_accent_color: string
+          admin_background_color: string
+          admin_card_color: string
+          admin_hover_color: string
         }
       }
       events: {

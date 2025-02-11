@@ -278,6 +278,13 @@ export type Database = {
       }
       site_configuration: {
         Row: {
+          admin_accent_color: string | null
+          admin_background_color: string | null
+          admin_card_color: string | null
+          admin_header_color: string | null
+          admin_hover_color: string | null
+          admin_sidebar_color: string | null
+          admin_text_color: string | null
           background_color: string | null
           bottom_nav_icon_color: string | null
           bottom_nav_primary_color: string | null
@@ -331,6 +338,13 @@ export type Database = {
           weather_api_key: string | null
         }
         Insert: {
+          admin_accent_color?: string | null
+          admin_background_color?: string | null
+          admin_card_color?: string | null
+          admin_header_color?: string | null
+          admin_hover_color?: string | null
+          admin_sidebar_color?: string | null
+          admin_text_color?: string | null
           background_color?: string | null
           bottom_nav_icon_color?: string | null
           bottom_nav_primary_color?: string | null
@@ -384,6 +398,13 @@ export type Database = {
           weather_api_key?: string | null
         }
         Update: {
+          admin_accent_color?: string | null
+          admin_background_color?: string | null
+          admin_card_color?: string | null
+          admin_header_color?: string | null
+          admin_hover_color?: string | null
+          admin_sidebar_color?: string | null
+          admin_text_color?: string | null
           background_color?: string | null
           bottom_nav_icon_color?: string | null
           bottom_nav_primary_color?: string | null
