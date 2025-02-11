@@ -58,9 +58,14 @@ export type Database = {
           images: string[] | null
           location: string | null
           maps_url: string | null
+          owner_name: string | null
+          phone: string | null
+          social_media: Json | null
           title: string
           user_id: string | null
           video_url: string | null
+          website: string | null
+          whatsapp: string | null
         }
         Insert: {
           button_color?: string | null
@@ -77,9 +82,14 @@ export type Database = {
           images?: string[] | null
           location?: string | null
           maps_url?: string | null
+          owner_name?: string | null
+          phone?: string | null
+          social_media?: Json | null
           title: string
           user_id?: string | null
           video_url?: string | null
+          website?: string | null
+          whatsapp?: string | null
         }
         Update: {
           button_color?: string | null
@@ -96,9 +106,14 @@ export type Database = {
           images?: string[] | null
           location?: string | null
           maps_url?: string | null
+          owner_name?: string | null
+          phone?: string | null
+          social_media?: Json | null
           title?: string
           user_id?: string | null
           video_url?: string | null
+          website?: string | null
+          whatsapp?: string | null
         }
         Relationships: [
           {
