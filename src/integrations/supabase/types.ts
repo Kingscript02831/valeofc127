@@ -237,7 +237,7 @@ export type Database = {
         Row: {
           address: string
           category_id: string | null
-          city: string
+          city: string | null
           created_at: string | null
           description: string
           entrance_fee: string | null
@@ -253,7 +253,7 @@ export type Database = {
           phone: string | null
           postal_code: string | null
           social_media: Json | null
-          state: string
+          state: string | null
           user_id: string | null
           website: string | null
           whatsapp: string | null
@@ -261,7 +261,7 @@ export type Database = {
         Insert: {
           address: string
           category_id?: string | null
-          city: string
+          city?: string | null
           created_at?: string | null
           description: string
           entrance_fee?: string | null
@@ -277,7 +277,7 @@ export type Database = {
           phone?: string | null
           postal_code?: string | null
           social_media?: Json | null
-          state: string
+          state?: string | null
           user_id?: string | null
           website?: string | null
           whatsapp?: string | null
@@ -285,7 +285,7 @@ export type Database = {
         Update: {
           address?: string
           category_id?: string | null
-          city?: string
+          city?: string | null
           created_at?: string | null
           description?: string
           entrance_fee?: string | null
@@ -301,7 +301,7 @@ export type Database = {
           phone?: string | null
           postal_code?: string | null
           social_media?: Json | null
-          state?: string
+          state?: string | null
           user_id?: string | null
           website?: string | null
           whatsapp?: string | null
