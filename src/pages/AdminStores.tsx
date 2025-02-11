@@ -44,6 +44,16 @@ const AdminStores = () => {
     whatsapp: "",
     website: "",
     image: "",
+    entrance_fee: "",
+    opening_hours: {
+      monday: "",
+      tuesday: "",
+      wednesday: "",
+      thursday: "",
+      friday: "",
+      saturday: "",
+      sunday: "",
+    },
     social_media: {
       facebook: "",
       instagram: "",
@@ -74,7 +84,16 @@ const AdminStores = () => {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    if (name.startsWith("social_media.")) {
+    if (name.startsWith("opening_hours.")) {
+      const day = name.split(".")[1];
+      setFormData((prev) => ({
+        ...prev,
+        opening_hours: {
+          ...(prev.opening_hours as any),
+          [day]: value,
+        },
+      }));
+    } else if (name.startsWith("social_media.")) {
       const socialMedia = name.split(".")[1];
       setFormData((prev) => ({
         ...prev,
@@ -100,6 +119,16 @@ const AdminStores = () => {
       whatsapp: "",
       website: "",
       image: "",
+      entrance_fee: "",
+      opening_hours: {
+        monday: "",
+        tuesday: "",
+        wednesday: "",
+        thursday: "",
+        friday: "",
+        saturday: "",
+        sunday: "",
+      },
       social_media: {
         facebook: "",
         instagram: "",
@@ -137,10 +166,10 @@ const AdminStores = () => {
         });
       } else {
         // Add new store - ensure required fields are present
-        if (!formData.name || !formData.address) {
+        if (!formData.name || !formData.address || !formData.description) {
           toast({
             title: "Erro ao salvar a loja",
-            description: "Nome e endereço são obrigatórios.",
+            description: "Nome, endereço e descrição são obrigatórios.",
             variant: "destructive",
           });
           return;
@@ -205,7 +234,7 @@ const AdminStores = () => {
     setSelectedStore(store);
     setFormData({
       name: store.name,
-      description: store.description || "",
+      description: store.description,
       address: store.address,
       maps_url: store.maps_url || "",
       owner_name: store.owner_name || "",
@@ -213,6 +242,16 @@ const AdminStores = () => {
       whatsapp: store.whatsapp || "",
       website: store.website || "",
       image: store.image || "",
+      entrance_fee: store.entrance_fee || "",
+      opening_hours: store.opening_hours || {
+        monday: "",
+        tuesday: "",
+        wednesday: "",
+        thursday: "",
+        friday: "",
+        saturday: "",
+        sunday: "",
+      },
       social_media: store.social_media || { facebook: "", instagram: "" },
     });
     setIsAddEditDialogOpen(true);
@@ -234,7 +273,7 @@ const AdminStores = () => {
               Adicionar Loja
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
                 {selectedStore ? "Editar Loja" : "Adicionar Nova Loja"}
@@ -249,7 +288,7 @@ const AdminStores = () => {
                   <Input
                     id="name"
                     name="name"
-                    value={formData.name || ""}
+                    value={formData.name}
                     onChange={handleInputChange}
                     required
                   />
@@ -261,20 +300,21 @@ const AdminStores = () => {
                   <Input
                     id="address"
                     name="address"
-                    value={formData.address || ""}
+                    value={formData.address}
                     onChange={handleInputChange}
                     required
                   />
                 </div>
                 <div className="space-y-2 col-span-2">
                   <label htmlFor="description" className="text-sm font-medium">
-                    Descrição
+                    Descrição *
                   </label>
                   <Textarea
                     id="description"
                     name="description"
-                    value={formData.description || ""}
+                    value={formData.description}
                     onChange={handleInputChange}
+                    required
                   />
                 </div>
                 <div className="space-y-2">
@@ -286,6 +326,18 @@ const AdminStores = () => {
                     name="owner_name"
                     value={formData.owner_name || ""}
                     onChange={handleInputChange}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="entrance_fee" className="text-sm font-medium">
+                    Valor da Entrada
+                  </label>
+                  <Input
+                    id="entrance_fee"
+                    name="entrance_fee"
+                    value={formData.entrance_fee || ""}
+                    onChange={handleInputChange}
+                    placeholder="Ex: R$ 20,00"
                   />
                 </div>
                 <div className="space-y-2">
@@ -343,6 +395,37 @@ const AdminStores = () => {
                     onChange={handleInputChange}
                   />
                 </div>
+
+                {/* Horário de Funcionamento */}
+                <div className="col-span-2">
+                  <h3 className="text-sm font-medium mb-2">Horário de Funcionamento</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    {["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"].map((day) => (
+                      <div key={day} className="space-y-2">
+                        <label
+                          htmlFor={`opening_hours.${day}`}
+                          className="text-sm font-medium capitalize"
+                        >
+                          {day === "monday" ? "Segunda" :
+                           day === "tuesday" ? "Terça" :
+                           day === "wednesday" ? "Quarta" :
+                           day === "thursday" ? "Quinta" :
+                           day === "friday" ? "Sexta" :
+                           day === "saturday" ? "Sábado" : "Domingo"}
+                        </label>
+                        <Input
+                          id={`opening_hours.${day}`}
+                          name={`opening_hours.${day}`}
+                          value={(formData.opening_hours as any)?.[day] || ""}
+                          onChange={handleInputChange}
+                          placeholder="Ex: 09:00 - 18:00"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Redes Sociais */}
                 <div className="space-y-2">
                   <label
                     htmlFor="social_media.facebook"

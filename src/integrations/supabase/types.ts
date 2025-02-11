@@ -473,6 +473,7 @@ export type Database = {
           city: string | null
           created_at: string | null
           description: string
+          entrance_fee: string | null
           id: string
           image: string | null
           images: string[] | null
@@ -496,6 +497,7 @@ export type Database = {
           city?: string | null
           created_at?: string | null
           description: string
+          entrance_fee?: string | null
           id?: string
           image?: string | null
           images?: string[] | null
@@ -519,6 +521,7 @@ export type Database = {
           city?: string | null
           created_at?: string | null
           description?: string
+          entrance_fee?: string | null
           id?: string
           image?: string | null
           images?: string[] | null

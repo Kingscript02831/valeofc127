@@ -13,6 +13,16 @@ export interface StoreFormData extends Partial<Store> {
   whatsapp?: string;
   website?: string;
   image?: string;
+  entrance_fee?: string;
+  opening_hours?: {
+    monday?: string;
+    tuesday?: string;
+    wednesday?: string;
+    thursday?: string;
+    friday?: string;
+    saturday?: string;
+    sunday?: string;
+  };
   social_media?: {
     facebook?: string;
     instagram?: string;
