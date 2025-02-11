@@ -99,7 +99,9 @@ const SignUp = () => {
           >
             Inscreva-se
           </h1>
-          <p className="text-gray-600">Preencha todos os campos abaixo para se registrar</p>
+          <p style={{ color: config.signup_text_color }}>
+            Preencha todos os campos abaixo para se registrar
+          </p>
         </div>
 
         <form onSubmit={handleSignUp} className="space-y-5 mt-6">
@@ -169,7 +171,7 @@ const SignUp = () => {
             {loading ? "Criando conta..." : "Criar conta"}
           </Button>
 
-          <p className="text-center text-sm text-gray-600">
+          <p className="text-center text-sm" style={{ color: config.signup_text_color }}>
             Já possui uma conta?{" "}
             <Button
               variant="link"
@@ -190,7 +192,7 @@ const InputField = ({ label, id, type, value, setValue, placeholder = "", config
   <div>
     <label 
       htmlFor={id} 
-      className="text-sm font-medium"
+      className="text-sm font-medium block mb-1"
       style={{ color: config.signup_text_color }}
     >
       {label}
@@ -203,6 +205,7 @@ const InputField = ({ label, id, type, value, setValue, placeholder = "", config
       onChange={(e) => setValue(e.target.value)}
       required
       className="bg-white/50 border-gray-200"
+      style={{ color: config.signup_text_color }}
     />
   </div>
 );
