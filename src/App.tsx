@@ -6,7 +6,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
-import zapIndex from "./pages/zapIndex";
 import Events from "./pages/Events";
 import Places from "./pages/Places";
 import Stores from "./pages/Stores";
@@ -20,10 +19,13 @@ import AdminEvents from "./pages/AdminEvents";
 import AdminStores from "./pages/AdminStores";
 import AdminNews from "./pages/AdminNews";
 import AdminCategories from "./pages/AdminCategories";
+import Profile from "./pages/Profile";
+
+import zapIndex from "./pages/zapIndex";
 import Conversas from "./pages/Conversas";
 import Status from "./pages/Status";
 import Navbarchat from "./components/Navbarchat";
-import Profile from "./pages/Profile";
+
 
 import NotFound from "./pages/NotFound";
 
@@ -56,7 +58,7 @@ const App: React.FC = () => {
           <Route path="/zapindex" element={<zapIndex />} />
           <Route path="/conversas" element={<Conversas />} />
           <Route path="/status" element={<Status />} />
-          <Route path="*" element={<NotFound />} />
+        
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
