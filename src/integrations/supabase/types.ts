@@ -775,6 +775,33 @@ export type Database = {
           },
         ]
       }
+      user_permissions: {
+        Row: {
+          created_at: string | null
+          granted_by: string | null
+          id: string
+          permission: Database["public"]["Enums"]["permission_type"]
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          granted_by?: string | null
+          id?: string
+          permission: Database["public"]["Enums"]["permission_type"]
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          granted_by?: string | null
+          id?: string
+          permission?: Database["public"]["Enums"]["permission_type"]
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -804,6 +831,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      has_permission: {
+        Args: {
+          user_id: string
+          required_permission: Database["public"]["Enums"]["permission_type"]
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -816,6 +850,12 @@ export type Database = {
       app_role: "admin" | "user"
       page_type: "events" | "places" | "stores"
       page_type_enum: "events" | "places" | "stores" | "news"
+      permission_type:
+        | "admin_places"
+        | "admin_events"
+        | "admin_stores"
+        | "admin_news"
+        | "admin_categories"
     }
     CompositeTypes: {
       [_ in never]: never
