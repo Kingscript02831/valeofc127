@@ -29,7 +29,6 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
     description: "",
     event_date: new Date().toISOString().split('T')[0],
     event_time: "00:00",
-    end_time: "00:00",
     image: "",
     images: [],
     location: "",
@@ -40,11 +39,9 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
     social_media: null,
     website: "",
     whatsapp: "",
-    category_id: null,
+    category_id: "",
     button_color: "#9b87f5",
-    button_secondary_color: "#7E69AB",
-    video_url: null,
-    user_id: null
+    button_secondary_color: "#7E69AB"
   });
 
   useEffect(() => {
@@ -54,7 +51,6 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
         description: initialData.description || "",
         event_date: initialData.event_date ? new Date(initialData.event_date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
         event_time: initialData.event_time || "00:00",
-        end_time: initialData.end_time || "00:00",
         image: initialData.image || "",
         images: initialData.images || [],
         location: initialData.location || "",
@@ -65,11 +61,9 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
         social_media: initialData.social_media || null,
         website: initialData.website || "",
         whatsapp: initialData.whatsapp || "",
-        category_id: initialData.category_id || null,
-        button_color: initialData.button_color || "#9b87f5",
-        button_secondary_color: initialData.button_secondary_color || "#7E69AB",
-        video_url: initialData.video_url || null,
-        user_id: initialData.user_id || null
+        category_id: initialData.category_id || "",
+        button_color: initialData.button_color || "#000000",
+        button_secondary_color: initialData.button_secondary_color || "#000000"
       });
     }
   }, [initialData]);
@@ -96,14 +90,14 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
       <div>
         <Label htmlFor="category">Categoria</Label>
         <Select
-          value={eventData.category_id || ""}
-          onValueChange={(value) => setEventData({ ...eventData, category_id: value || null })}
+          value={eventData.category_id || "none"}
+          onValueChange={(value) => setEventData({ ...eventData, category_id: value === "none" ? "" : value })}
         >
           <SelectTrigger>
             <SelectValue placeholder="Selecione uma categoria" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Sem categoria</SelectItem>
+            <SelectItem value="none">Sem categoria</SelectItem>
             {categories.map((category) => (
               <SelectItem key={category.id} value={category.id}>
                 {category.name}
@@ -141,16 +135,6 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
             type="time"
             value={eventData.event_time}
             onChange={(e) => setEventData({ ...eventData, event_time: e.target.value })}
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="end_time">Horário de Término</Label>
-          <Input
-            id="end_time"
-            type="time"
-            value={eventData.end_time}
-            onChange={(e) => setEventData({ ...eventData, end_time: e.target.value })}
           />
         </div>
       </div>
