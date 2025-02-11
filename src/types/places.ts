@@ -15,7 +15,6 @@ export interface PlaceFormData {
   whatsapp?: string | null;
   website?: string | null;
   image?: string | null;
-  category_id?: string | null;
   social_media?: {
     facebook?: string;
     instagram?: string;
