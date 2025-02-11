@@ -10,7 +10,7 @@ import BottomNav from "../components/BottomNav";
 import { supabase } from "../integrations/supabase/client";
 import { Skeleton } from "../components/ui/skeleton";
 import { Input } from "../components/ui/input";
-import type { Database } from "../../types/supabase";
+import type { Database } from "@/integrations/supabase/types";
 
 type Event = Database["public"]["Tables"]["events"]["Row"];
 type Category = Database["public"]["Tables"]["categories"]["Row"];
@@ -50,7 +50,7 @@ const Events = () => {
             background_color
           )
         `)
-        .order("created_at", { ascending: false });
+        .order("event_date", { ascending: true });
 
       if (searchTerm) {
         query = query.ilike("title", `%${searchTerm}%`);
