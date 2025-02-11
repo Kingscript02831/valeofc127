@@ -1,12 +1,13 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "../integrations/supabase/client";
-import type { Database } from "@/integrations/supabase/types";
+import type { Database } from "../integrations/supabase/types";
 import { toast } from "sonner";
 import EventCard from "../components/EventCard";
 import Navbar from "../components/Navbar";
 import SubNav from "../components/SubNav";
 import BottomNav from "../components/BottomNav";
+import Footer from "../components/Footer";
 
 type Event = Database['public']['Tables']['events']['Row'];
 type Category = Database['public']['Tables']['categories']['Row'];
@@ -61,22 +62,23 @@ export default function Events() {
 
   if (loading) {
     return (
-      <>
+      <div className="min-h-screen flex flex-col">
         <Navbar />
         <SubNav />
-        <div className="flex justify-center items-center min-h-screen">
+        <div className="flex justify-center items-center flex-1">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
         </div>
+        <Footer />
         <BottomNav />
-      </>
+      </div>
     );
   }
 
   return (
-    <>
+    <div className="min-h-screen flex flex-col pb-[72px] md:pb-0">
       <Navbar />
       <SubNav />
-      <div className="container mx-auto px-4 py-8 mb-16">
+      <main className="flex-1 container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-8">Eventos</h1>
         
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -115,8 +117,9 @@ export default function Events() {
             </div>
           )}
         </div>
-      </div>
+      </main>
+      <Footer />
       <BottomNav />
-    </>
+    </div>
   );
 }
