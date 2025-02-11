@@ -1,10 +1,11 @@
+
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Calendar, ChevronDown, ChevronUp, Clock, MapPin, ChevronLeft, ChevronRight, X, Timer, ExternalLink, Ticket, Youtube } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card } from "./ui/card";
+import { Button } from "./ui/button";
 import { useState, useEffect } from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "../lib/utils";
 import { supabase } from "../integrations/supabase/client";
 import { toast } from "sonner";
 import type { Database } from "../../types/supabase";
