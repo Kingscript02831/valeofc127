@@ -17,27 +17,14 @@ export const PlaceForm = ({ initialData, onSubmit, onCancel }: PlaceFormProps) =
     name: "",
     description: "",
     address: "",
-    city: "",
-    state: "",
-    postal_code: "",
+    owner_name: "",
+    opening_hours: "",
+    entrance_fee: "",
+    maps_url: "",
     phone: "",
+    whatsapp: "",
     website: "",
     image: "",
-    images: [],
-    opening_hours: {
-      monday: "",
-      tuesday: "",
-      wednesday: "",
-      thursday: "",
-      friday: "",
-      saturday: "",
-      sunday: "",
-    },
-    category_id: null,
-    owner_name: "",
-    entrance_fee: "",
-    whatsapp: "",
-    maps_url: "",
     social_media: {
       facebook: "",
       instagram: "",
@@ -50,27 +37,14 @@ export const PlaceForm = ({ initialData, onSubmit, onCancel }: PlaceFormProps) =
         name: initialData.name,
         description: initialData.description,
         address: initialData.address,
-        city: initialData.city,
-        state: initialData.state,
-        postal_code: initialData.postal_code,
+        owner_name: initialData.owner_name,
+        opening_hours: initialData.opening_hours as string,
+        entrance_fee: initialData.entrance_fee,
+        maps_url: initialData.maps_url,
         phone: initialData.phone,
+        whatsapp: initialData.whatsapp,
         website: initialData.website,
         image: initialData.image,
-        images: initialData.images,
-        opening_hours: initialData.opening_hours || {
-          monday: "",
-          tuesday: "",
-          wednesday: "",
-          thursday: "",
-          friday: "",
-          saturday: "",
-          sunday: "",
-        },
-        category_id: initialData.category_id,
-        owner_name: initialData.owner_name,
-        entrance_fee: initialData.entrance_fee,
-        whatsapp: initialData.whatsapp,
-        maps_url: initialData.maps_url,
         social_media: initialData.social_media || {
           facebook: "",
           instagram: "",
@@ -107,26 +81,6 @@ export const PlaceForm = ({ initialData, onSubmit, onCancel }: PlaceFormProps) =
             required
           />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="city">Cidade *</Label>
-          <Input
-            id="city"
-            name="city"
-            value={formData.city}
-            onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
-            required
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="state">Estado *</Label>
-          <Input
-            id="state"
-            name="state"
-            value={formData.state}
-            onChange={(e) => setFormData(prev => ({ ...prev, state: e.target.value }))}
-            required
-          />
-        </div>
         <div className="space-y-2 col-span-2">
           <Label htmlFor="description">Descrição *</Label>
           <Textarea
@@ -144,6 +98,16 @@ export const PlaceForm = ({ initialData, onSubmit, onCancel }: PlaceFormProps) =
             name="owner_name"
             value={formData.owner_name || ""}
             onChange={(e) => setFormData(prev => ({ ...prev, owner_name: e.target.value }))}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="opening_hours">Horário de Funcionamento</Label>
+          <Input
+            id="opening_hours"
+            name="opening_hours"
+            value={formData.opening_hours || ""}
+            onChange={(e) => setFormData(prev => ({ ...prev, opening_hours: e.target.value }))}
+            placeholder="Ex: Segunda a Sexta 9h às 18h"
           />
         </div>
         <div className="space-y-2">
@@ -200,38 +164,6 @@ export const PlaceForm = ({ initialData, onSubmit, onCancel }: PlaceFormProps) =
             value={formData.image || ""}
             onChange={(e) => setFormData(prev => ({ ...prev, image: e.target.value }))}
           />
-        </div>
-
-        {/* Horário de Funcionamento */}
-        <div className="col-span-2">
-          <Label>Horário de Funcionamento</Label>
-          <div className="grid grid-cols-2 gap-4 mt-2">
-            {["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"].map((day) => (
-              <div key={day} className="space-y-2">
-                <Label htmlFor={`opening_hours.${day}`} className="capitalize">
-                  {day === "monday" ? "Segunda" :
-                   day === "tuesday" ? "Terça" :
-                   day === "wednesday" ? "Quarta" :
-                   day === "thursday" ? "Quinta" :
-                   day === "friday" ? "Sexta" :
-                   day === "saturday" ? "Sábado" : "Domingo"}
-                </Label>
-                <Input
-                  id={`opening_hours.${day}`}
-                  name={`opening_hours.${day}`}
-                  value={(formData.opening_hours as any)?.[day] || ""}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    opening_hours: {
-                      ...prev.opening_hours,
-                      [day]: e.target.value
-                    }
-                  }))}
-                  placeholder="Ex: 09:00 - 18:00"
-                />
-              </div>
-            ))}
-          </div>
         </div>
 
         {/* Redes Sociais */}
