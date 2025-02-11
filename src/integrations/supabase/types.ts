@@ -188,6 +188,51 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          created_at: string | null
+          id: string
+          message: string
+          publication_category: string | null
+          publication_date: string | null
+          publication_description: string | null
+          publication_title: string | null
+          read: boolean | null
+          reference_id: string | null
+          title: string
+          type: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message: string
+          publication_category?: string | null
+          publication_date?: string | null
+          publication_description?: string | null
+          publication_title?: string | null
+          read?: boolean | null
+          reference_id?: string | null
+          title: string
+          type: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message?: string
+          publication_category?: string | null
+          publication_date?: string | null
+          publication_description?: string | null
+          publication_title?: string | null
+          read?: boolean | null
+          reference_id?: string | null
+          title?: string
+          type?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       places: {
         Row: {
           address: string
@@ -195,18 +240,23 @@ export type Database = {
           city: string
           created_at: string | null
           description: string
+          entrance_fee: string | null
           id: string
           image: string | null
           images: string[] | null
           latitude: number | null
           longitude: number | null
+          maps_url: string | null
           name: string
           opening_hours: Json | null
+          owner_name: string | null
           phone: string | null
           postal_code: string | null
+          social_media: Json | null
           state: string
           user_id: string | null
           website: string | null
+          whatsapp: string | null
         }
         Insert: {
           address: string
@@ -214,18 +264,23 @@ export type Database = {
           city: string
           created_at?: string | null
           description: string
+          entrance_fee?: string | null
           id?: string
           image?: string | null
           images?: string[] | null
           latitude?: number | null
           longitude?: number | null
+          maps_url?: string | null
           name: string
           opening_hours?: Json | null
+          owner_name?: string | null
           phone?: string | null
           postal_code?: string | null
+          social_media?: Json | null
           state: string
           user_id?: string | null
           website?: string | null
+          whatsapp?: string | null
         }
         Update: {
           address?: string
@@ -233,18 +288,23 @@ export type Database = {
           city?: string
           created_at?: string | null
           description?: string
+          entrance_fee?: string | null
           id?: string
           image?: string | null
           images?: string[] | null
           latitude?: number | null
           longitude?: number | null
+          maps_url?: string | null
           name?: string
           opening_hours?: Json | null
+          owner_name?: string | null
           phone?: string | null
           postal_code?: string | null
+          social_media?: Json | null
           state?: string
           user_id?: string | null
           website?: string | null
+          whatsapp?: string | null
         }
         Relationships: [
           {
@@ -259,27 +319,60 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          basic_info_updated_at: string | null
+          bio: string | null
+          birth_date: string | null
+          city: string | null
           created_at: string | null
+          email: string | null
           full_name: string | null
+          house_number: string | null
           id: string
+          name: string | null
+          phone: string | null
+          postal_code: string | null
+          street: string | null
           updated_at: string | null
           username: string | null
+          website: string | null
         }
         Insert: {
           avatar_url?: string | null
+          basic_info_updated_at?: string | null
+          bio?: string | null
+          birth_date?: string | null
+          city?: string | null
           created_at?: string | null
+          email?: string | null
           full_name?: string | null
+          house_number?: string | null
           id: string
+          name?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          street?: string | null
           updated_at?: string | null
           username?: string | null
+          website?: string | null
         }
         Update: {
           avatar_url?: string | null
+          basic_info_updated_at?: string | null
+          bio?: string | null
+          birth_date?: string | null
+          city?: string | null
           created_at?: string | null
+          email?: string | null
           full_name?: string | null
+          house_number?: string | null
           id?: string
+          name?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          street?: string | null
           updated_at?: string | null
           username?: string | null
+          website?: string | null
         }
         Relationships: []
       }

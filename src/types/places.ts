@@ -19,4 +19,12 @@ export interface PlaceFormData {
   opening_hours?: any | null;
   category_id?: string | null;
   user_id?: string | null;
+  owner_name?: string | null;
+  entrance_fee?: string | null;
+  whatsapp?: string | null;
+  maps_url?: string | null;
+  social_media?: {
+    facebook?: string;
+    instagram?: string;
+  } | null;
 }
