@@ -43,6 +43,8 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
     user_id: null
   });
 
+  const [newImageUrl, setNewImageUrl] = useState("");
+
   useEffect(() => {
     if (initialData) {
       setEventData({
@@ -51,6 +53,23 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
       });
     }
   }, [initialData]);
+
+  const handleAddImage = () => {
+    if (newImageUrl && !eventData.images?.includes(newImageUrl)) {
+      setEventData({
+        ...eventData,
+        images: [...(eventData.images || []), newImageUrl]
+      });
+      setNewImageUrl("");
+    }
+  };
+
+  const handleRemoveImage = (imageUrl: string) => {
+    setEventData({
+      ...eventData,
+      images: eventData.images?.filter(url => url !== imageUrl) || []
+    });
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -122,6 +141,54 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
       </div>
 
       <div>
+        <Label htmlFor="image">Imagem Principal</Label>
+        <Input
+          id="image"
+          value={eventData.image || ""}
+          onChange={(e) => setEventData({ ...eventData, image: e.target.value })}
+          placeholder="URL da imagem principal"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label>Imagens Adicionais</Label>
+        <div className="flex gap-2">
+          <Input
+            value={newImageUrl}
+            onChange={(e) => setNewImageUrl(e.target.value)}
+            placeholder="URL da imagem"
+          />
+          <Button type="button" onClick={handleAddImage}>
+            Adicionar
+          </Button>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          {eventData.images?.map((url, index) => (
+            <div key={index} className="flex items-center gap-2">
+              <Input value={url} disabled />
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={() => handleRemoveImage(url)}
+              >
+                Remover
+              </Button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <Label htmlFor="video_url">Link do Vídeo</Label>
+        <Input
+          id="video_url"
+          value={eventData.video_url || ""}
+          onChange={(e) => setEventData({ ...eventData, video_url: e.target.value })}
+          placeholder="URL do vídeo (YouTube, Vimeo, etc.)"
+        />
+      </div>
+
+      <div>
         <Label htmlFor="location">Local</Label>
         <Input
           id="location"
@@ -160,13 +227,25 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
         />
       </div>
 
-      <div>
-        <Label htmlFor="image">Imagem Principal</Label>
-        <Input
-          id="image"
-          value={eventData.image || ""}
-          onChange={(e) => setEventData({ ...eventData, image: e.target.value })}
-        />
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="button_color">Cor do Botão</Label>
+          <Input
+            id="button_color"
+            type="color"
+            value={eventData.button_color || "#9b87f5"}
+            onChange={(e) => setEventData({ ...eventData, button_color: e.target.value })}
+          />
+        </div>
+        <div>
+          <Label htmlFor="button_secondary_color">Cor Secundária do Botão</Label>
+          <Input
+            id="button_secondary_color"
+            type="color"
+            value={eventData.button_secondary_color || "#7E69AB"}
+            onChange={(e) => setEventData({ ...eventData, button_secondary_color: e.target.value })}
+          />
+        </div>
       </div>
 
       <div className="flex gap-2">
