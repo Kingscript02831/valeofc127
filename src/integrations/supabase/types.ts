@@ -470,7 +470,7 @@ export type Database = {
         Row: {
           address: string
           category_id: string | null
-          city: string | null
+          city: string
           created_at: string | null
           description: string
           id: string
@@ -478,22 +478,18 @@ export type Database = {
           images: string[] | null
           latitude: number | null
           longitude: number | null
-          maps_url: string | null
           name: string
           opening_hours: Json | null
-          owner_name: string | null
           phone: string | null
           postal_code: string | null
-          social_media: Json | null
-          state: string | null
+          state: string
           user_id: string | null
           website: string | null
-          whatsapp: string | null
         }
         Insert: {
           address: string
           category_id?: string | null
-          city?: string | null
+          city: string
           created_at?: string | null
           description: string
           id?: string
@@ -501,22 +497,18 @@ export type Database = {
           images?: string[] | null
           latitude?: number | null
           longitude?: number | null
-          maps_url?: string | null
           name: string
           opening_hours?: Json | null
-          owner_name?: string | null
           phone?: string | null
           postal_code?: string | null
-          social_media?: Json | null
-          state?: string | null
+          state: string
           user_id?: string | null
           website?: string | null
-          whatsapp?: string | null
         }
         Update: {
           address?: string
           category_id?: string | null
-          city?: string | null
+          city?: string
           created_at?: string | null
           description?: string
           id?: string
@@ -524,17 +516,13 @@ export type Database = {
           images?: string[] | null
           latitude?: number | null
           longitude?: number | null
-          maps_url?: string | null
           name?: string
           opening_hours?: Json | null
-          owner_name?: string | null
           phone?: string | null
           postal_code?: string | null
-          social_media?: Json | null
-          state?: string | null
+          state?: string
           user_id?: string | null
           website?: string | null
-          whatsapp?: string | null
         }
         Relationships: [
           {
