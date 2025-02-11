@@ -12,86 +12,44 @@ export type Database = {
       categories: {
         Row: {
           background_color: string | null
-          created_at: string
+          created_at: string | null
+          description: string | null
           id: string
           name: string
-          page_type: Database["public"]["Enums"]["page_type_enum"]
-          parent_id: string | null
-          slug: string
-          updated_at: string
+          page_type: string
+          slug: string | null
+          updated_at: string | null
         }
         Insert: {
           background_color?: string | null
-          created_at?: string
+          created_at?: string | null
+          description?: string | null
           id?: string
           name: string
-          page_type?: Database["public"]["Enums"]["page_type_enum"]
-          parent_id?: string | null
-          slug: string
-          updated_at?: string
+          page_type: string
+          slug?: string | null
+          updated_at?: string | null
         }
         Update: {
           background_color?: string | null
-          created_at?: string
+          created_at?: string | null
+          description?: string | null
           id?: string
           name?: string
-          page_type?: Database["public"]["Enums"]["page_type_enum"]
-          parent_id?: string | null
-          slug?: string
-          updated_at?: string
+          page_type?: string
+          slug?: string | null
+          updated_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "categories_parent_id_fkey"
-            columns: ["parent_id"]
-            isOneToOne: false
-            referencedRelation: "categories"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      comments: {
-        Row: {
-          content: string
-          created_at: string
-          id: string
-          post_id: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          content: string
-          created_at?: string
-          id?: string
-          post_id: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          content?: string
-          created_at?: string
-          id?: string
-          post_id?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "comments_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "posts"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       events: {
         Row: {
           button_color: string | null
           button_secondary_color: string | null
           category_id: string | null
-          created_at: string
+          created_at: string | null
           description: string
+          end_time: string
           entrance_fee: string | null
           event_date: string
           event_time: string
@@ -104,7 +62,8 @@ export type Database = {
           phone: string | null
           social_media: Json | null
           title: string
-          updated_at: string
+          user_id: string | null
+          video_url: string | null
           website: string | null
           whatsapp: string | null
         }
@@ -112,8 +71,9 @@ export type Database = {
           button_color?: string | null
           button_secondary_color?: string | null
           category_id?: string | null
-          created_at?: string
+          created_at?: string | null
           description: string
+          end_time: string
           entrance_fee?: string | null
           event_date: string
           event_time: string
@@ -126,7 +86,8 @@ export type Database = {
           phone?: string | null
           social_media?: Json | null
           title: string
-          updated_at?: string
+          user_id?: string | null
+          video_url?: string | null
           website?: string | null
           whatsapp?: string | null
         }
@@ -134,8 +95,9 @@ export type Database = {
           button_color?: string | null
           button_secondary_color?: string | null
           category_id?: string | null
-          created_at?: string
+          created_at?: string | null
           description?: string
+          end_time?: string
           entrance_fee?: string | null
           event_date?: string
           event_time?: string
@@ -148,7 +110,8 @@ export type Database = {
           phone?: string | null
           social_media?: Json | null
           title?: string
-          updated_at?: string
+          user_id?: string | null
+          video_url?: string | null
           website?: string | null
           whatsapp?: string | null
         }
@@ -162,134 +125,53 @@ export type Database = {
           },
         ]
       }
-      facebook_users: {
-        Row: {
-          created_at: string | null
-          email: string | null
-          facebook_id: string
-          id: number
-          name: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          email?: string | null
-          facebook_id: string
-          id?: never
-          name?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          email?: string | null
-          facebook_id?: string
-          id?: never
-          name?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      followers: {
-        Row: {
-          created_at: string
-          follower_id: string | null
-          following_id: string | null
-          id: string
-        }
-        Insert: {
-          created_at?: string
-          follower_id?: string | null
-          following_id?: string | null
-          id?: string
-        }
-        Update: {
-          created_at?: string
-          follower_id?: string | null
-          following_id?: string | null
-          id?: string
-        }
-        Relationships: []
-      }
-      likes: {
-        Row: {
-          created_at: string
-          id: string
-          post_id: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          post_id: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          post_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "likes_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "posts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       news: {
         Row: {
           button_color: string | null
+          button_secondary_color: string | null
           category_id: string | null
           content: string
-          created_at: string
+          created_at: string | null
           date: string
           id: string
           image: string | null
-          images: string[] | null
           instagram_media: Json | null
           title: string
-          updated_at: string
+          updated_at: string | null
+          user_id: string | null
           video: string | null
         }
         Insert: {
           button_color?: string | null
+          button_secondary_color?: string | null
           category_id?: string | null
           content: string
-          created_at?: string
+          created_at?: string | null
           date?: string
           id?: string
           image?: string | null
-          images?: string[] | null
           instagram_media?: Json | null
           title: string
-          updated_at?: string
+          updated_at?: string | null
+          user_id?: string | null
           video?: string | null
         }
         Update: {
           button_color?: string | null
+          button_secondary_color?: string | null
           category_id?: string | null
           content?: string
-          created_at?: string
+          created_at?: string | null
           date?: string
           id?: string
           image?: string | null
-          images?: string[] | null
           instagram_media?: Json | null
           title?: string
-          updated_at?: string
+          updated_at?: string | null
+          user_id?: string | null
           video?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "fk_news_category"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "categories"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "news_category_id_fkey"
             columns: ["category_id"]
@@ -299,147 +181,63 @@ export type Database = {
           },
         ]
       }
-      notifications: {
-        Row: {
-          created_at: string
-          id: string
-          message: string
-          publication_category: string | null
-          publication_date: string | null
-          publication_description: string | null
-          publication_title: string | null
-          read: boolean | null
-          reference_id: string | null
-          title: string
-          type: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          message: string
-          publication_category?: string | null
-          publication_date?: string | null
-          publication_description?: string | null
-          publication_title?: string | null
-          read?: boolean | null
-          reference_id?: string | null
-          title: string
-          type: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          message?: string
-          publication_category?: string | null
-          publication_date?: string | null
-          publication_description?: string | null
-          publication_title?: string | null
-          read?: boolean | null
-          reference_id?: string | null
-          title?: string
-          type?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fk_user"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "notifications_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      page_permissions: {
-        Row: {
-          created_at: string
-          id: string
-          page_path: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          page_path: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          page_path?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       places: {
         Row: {
           address: string
           category_id: string | null
-          created_at: string
-          description: string | null
-          entrance_fee: string | null
+          city: string
+          created_at: string | null
+          description: string
           id: string
           image: string | null
           images: string[] | null
-          maps_url: string | null
+          latitude: number | null
+          longitude: number | null
           name: string
-          opening_hours: string | null
-          owner_name: string | null
+          opening_hours: Json | null
           phone: string | null
-          social_media: Json | null
-          updated_at: string
+          postal_code: string | null
+          state: string
+          user_id: string | null
           website: string | null
-          whatsapp: string | null
         }
         Insert: {
           address: string
           category_id?: string | null
-          created_at?: string
-          description?: string | null
-          entrance_fee?: string | null
+          city: string
+          created_at?: string | null
+          description: string
           id?: string
           image?: string | null
           images?: string[] | null
-          maps_url?: string | null
+          latitude?: number | null
+          longitude?: number | null
           name: string
-          opening_hours?: string | null
-          owner_name?: string | null
+          opening_hours?: Json | null
           phone?: string | null
-          social_media?: Json | null
-          updated_at?: string
+          postal_code?: string | null
+          state: string
+          user_id?: string | null
           website?: string | null
-          whatsapp?: string | null
         }
         Update: {
           address?: string
           category_id?: string | null
-          created_at?: string
-          description?: string | null
-          entrance_fee?: string | null
+          city?: string
+          created_at?: string | null
+          description?: string
           id?: string
           image?: string | null
           images?: string[] | null
-          maps_url?: string | null
+          latitude?: number | null
+          longitude?: number | null
           name?: string
-          opening_hours?: string | null
-          owner_name?: string | null
+          opening_hours?: Json | null
           phone?: string | null
-          social_media?: Json | null
-          updated_at?: string
+          postal_code?: string | null
+          state?: string
+          user_id?: string | null
           website?: string | null
-          whatsapp?: string | null
         }
         Relationships: [
           {
@@ -451,103 +249,50 @@ export type Database = {
           },
         ]
       }
-      posts: {
-        Row: {
-          caption: string | null
-          created_at: string
-          id: string
-          image_url: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          caption?: string | null
-          created_at?: string
-          id?: string
-          image_url: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          caption?: string | null
-          created_at?: string
-          id?: string
-          image_url?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       profiles: {
         Row: {
-          address: string | null
           avatar_url: string | null
-          basic_info_updated_at: string | null
-          bio: string | null
-          birth_date: string | null
-          city: string | null
-          created_at: string
-          email: string | null
-          house_number: string | null
+          created_at: string | null
+          full_name: string | null
           id: string
-          name: string
-          phone: string | null
-          postal_code: string | null
-          street: string | null
-          updated_at: string
+          updated_at: string | null
           username: string | null
-          website: string | null
         }
         Insert: {
-          address?: string | null
           avatar_url?: string | null
-          basic_info_updated_at?: string | null
-          bio?: string | null
-          birth_date?: string | null
-          city?: string | null
-          created_at?: string
-          email?: string | null
-          house_number?: string | null
+          created_at?: string | null
+          full_name?: string | null
           id: string
-          name: string
-          phone?: string | null
-          postal_code?: string | null
-          street?: string | null
-          updated_at?: string
+          updated_at?: string | null
           username?: string | null
-          website?: string | null
         }
         Update: {
-          address?: string | null
           avatar_url?: string | null
-          basic_info_updated_at?: string | null
-          bio?: string | null
-          birth_date?: string | null
-          city?: string | null
-          created_at?: string
-          email?: string | null
-          house_number?: string | null
+          created_at?: string | null
+          full_name?: string | null
           id?: string
-          name?: string
-          phone?: string | null
-          postal_code?: string | null
-          street?: string | null
-          updated_at?: string
+          updated_at?: string | null
           username?: string | null
-          website?: string | null
         }
         Relationships: []
       }
       site_configuration: {
         Row: {
-          background_color: string
-          bottom_nav_icon_color: string
-          bottom_nav_primary_color: string
-          bottom_nav_secondary_color: string
-          bottom_nav_text_color: string
-          button_primary_color: string
-          button_secondary_color: string
-          created_at: string
+          admin_accent_color: string | null
+          admin_background_color: string | null
+          admin_card_color: string | null
+          admin_header_color: string | null
+          admin_hover_color: string | null
+          admin_sidebar_color: string | null
+          admin_text_color: string | null
+          background_color: string | null
+          bottom_nav_icon_color: string | null
+          bottom_nav_primary_color: string | null
+          bottom_nav_secondary_color: string | null
+          bottom_nav_text_color: string | null
+          button_primary_color: string | null
+          button_secondary_color: string | null
+          created_at: string | null
           enable_dark_mode: boolean | null
           enable_weather: boolean | null
           font_size: string | null
@@ -556,12 +301,12 @@ export type Database = {
           footer_contact_email: string | null
           footer_contact_phone: string | null
           footer_copyright_text: string | null
-          footer_primary_color: string
+          footer_primary_color: string | null
           footer_schedule: string | null
-          footer_secondary_color: string
+          footer_secondary_color: string | null
           footer_social_facebook: string | null
           footer_social_instagram: string | null
-          footer_text_color: string
+          footer_text_color: string | null
           header_alerts: Json | null
           high_contrast: boolean | null
           id: string
@@ -576,31 +321,38 @@ export type Database = {
           meta_description: string | null
           meta_image: string | null
           meta_title: string | null
-          navbar_color: string
+          navbar_color: string | null
           navbar_logo_image: string | null
           navbar_logo_text: string | null
-          navbar_logo_type: string
+          navbar_logo_type: string | null
           navbar_social_facebook: string | null
           navbar_social_instagram: string | null
           navigation_links: Json | null
-          primary_color: string
-          secondary_color: string
+          primary_color: string | null
+          secondary_color: string | null
           signup_text_color: string | null
-          text_color: string
-          theme_name: string
-          updated_at: string
+          text_color: string | null
+          theme_name: string | null
+          updated_at: string | null
           version: number | null
           weather_api_key: string | null
         }
         Insert: {
-          background_color?: string
-          bottom_nav_icon_color?: string
-          bottom_nav_primary_color?: string
-          bottom_nav_secondary_color?: string
-          bottom_nav_text_color?: string
-          button_primary_color?: string
-          button_secondary_color?: string
-          created_at?: string
+          admin_accent_color?: string | null
+          admin_background_color?: string | null
+          admin_card_color?: string | null
+          admin_header_color?: string | null
+          admin_hover_color?: string | null
+          admin_sidebar_color?: string | null
+          admin_text_color?: string | null
+          background_color?: string | null
+          bottom_nav_icon_color?: string | null
+          bottom_nav_primary_color?: string | null
+          bottom_nav_secondary_color?: string | null
+          bottom_nav_text_color?: string | null
+          button_primary_color?: string | null
+          button_secondary_color?: string | null
+          created_at?: string | null
           enable_dark_mode?: boolean | null
           enable_weather?: boolean | null
           font_size?: string | null
@@ -609,12 +361,12 @@ export type Database = {
           footer_contact_email?: string | null
           footer_contact_phone?: string | null
           footer_copyright_text?: string | null
-          footer_primary_color?: string
+          footer_primary_color?: string | null
           footer_schedule?: string | null
-          footer_secondary_color?: string
+          footer_secondary_color?: string | null
           footer_social_facebook?: string | null
           footer_social_instagram?: string | null
-          footer_text_color?: string
+          footer_text_color?: string | null
           header_alerts?: Json | null
           high_contrast?: boolean | null
           id?: string
@@ -629,31 +381,38 @@ export type Database = {
           meta_description?: string | null
           meta_image?: string | null
           meta_title?: string | null
-          navbar_color?: string
+          navbar_color?: string | null
           navbar_logo_image?: string | null
           navbar_logo_text?: string | null
-          navbar_logo_type?: string
+          navbar_logo_type?: string | null
           navbar_social_facebook?: string | null
           navbar_social_instagram?: string | null
           navigation_links?: Json | null
-          primary_color?: string
-          secondary_color?: string
+          primary_color?: string | null
+          secondary_color?: string | null
           signup_text_color?: string | null
-          text_color?: string
-          theme_name?: string
-          updated_at?: string
+          text_color?: string | null
+          theme_name?: string | null
+          updated_at?: string | null
           version?: number | null
           weather_api_key?: string | null
         }
         Update: {
-          background_color?: string
-          bottom_nav_icon_color?: string
-          bottom_nav_primary_color?: string
-          bottom_nav_secondary_color?: string
-          bottom_nav_text_color?: string
-          button_primary_color?: string
-          button_secondary_color?: string
-          created_at?: string
+          admin_accent_color?: string | null
+          admin_background_color?: string | null
+          admin_card_color?: string | null
+          admin_header_color?: string | null
+          admin_hover_color?: string | null
+          admin_sidebar_color?: string | null
+          admin_text_color?: string | null
+          background_color?: string | null
+          bottom_nav_icon_color?: string | null
+          bottom_nav_primary_color?: string | null
+          bottom_nav_secondary_color?: string | null
+          bottom_nav_text_color?: string | null
+          button_primary_color?: string | null
+          button_secondary_color?: string | null
+          created_at?: string | null
           enable_dark_mode?: boolean | null
           enable_weather?: boolean | null
           font_size?: string | null
@@ -662,12 +421,12 @@ export type Database = {
           footer_contact_email?: string | null
           footer_contact_phone?: string | null
           footer_copyright_text?: string | null
-          footer_primary_color?: string
+          footer_primary_color?: string | null
           footer_schedule?: string | null
-          footer_secondary_color?: string
+          footer_secondary_color?: string | null
           footer_social_facebook?: string | null
           footer_social_instagram?: string | null
-          footer_text_color?: string
+          footer_text_color?: string | null
           header_alerts?: Json | null
           high_contrast?: boolean | null
           id?: string
@@ -682,19 +441,19 @@ export type Database = {
           meta_description?: string | null
           meta_image?: string | null
           meta_title?: string | null
-          navbar_color?: string
+          navbar_color?: string | null
           navbar_logo_image?: string | null
           navbar_logo_text?: string | null
-          navbar_logo_type?: string
+          navbar_logo_type?: string | null
           navbar_social_facebook?: string | null
           navbar_social_instagram?: string | null
           navigation_links?: Json | null
-          primary_color?: string
-          secondary_color?: string
+          primary_color?: string | null
+          secondary_color?: string | null
           signup_text_color?: string | null
-          text_color?: string
-          theme_name?: string
-          updated_at?: string
+          text_color?: string | null
+          theme_name?: string | null
+          updated_at?: string | null
           version?: number | null
           weather_api_key?: string | null
         }
@@ -704,68 +463,61 @@ export type Database = {
         Row: {
           address: string
           category_id: string | null
-          created_at: string
-          description: string | null
-          entrance_fee: string | null
+          city: string
+          created_at: string | null
+          description: string
           id: string
           image: string | null
           images: string[] | null
-          maps_url: string | null
+          latitude: number | null
+          longitude: number | null
           name: string
-          opening_hours: string | null
-          owner_name: string | null
+          opening_hours: Json | null
           phone: string | null
-          social_media: Json | null
-          updated_at: string
+          postal_code: string | null
+          state: string
+          user_id: string | null
           website: string | null
-          whatsapp: string | null
         }
         Insert: {
           address: string
           category_id?: string | null
-          created_at?: string
-          description?: string | null
-          entrance_fee?: string | null
+          city: string
+          created_at?: string | null
+          description: string
           id?: string
           image?: string | null
           images?: string[] | null
-          maps_url?: string | null
+          latitude?: number | null
+          longitude?: number | null
           name: string
-          opening_hours?: string | null
-          owner_name?: string | null
+          opening_hours?: Json | null
           phone?: string | null
-          social_media?: Json | null
-          updated_at?: string
+          postal_code?: string | null
+          state: string
+          user_id?: string | null
           website?: string | null
-          whatsapp?: string | null
         }
         Update: {
           address?: string
           category_id?: string | null
-          created_at?: string
-          description?: string | null
-          entrance_fee?: string | null
+          city?: string
+          created_at?: string | null
+          description?: string
           id?: string
           image?: string | null
           images?: string[] | null
-          maps_url?: string | null
+          latitude?: number | null
+          longitude?: number | null
           name?: string
-          opening_hours?: string | null
-          owner_name?: string | null
+          opening_hours?: Json | null
           phone?: string | null
-          social_media?: Json | null
-          updated_at?: string
+          postal_code?: string | null
+          state?: string
+          user_id?: string | null
           website?: string | null
-          whatsapp?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "fk_store_category"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "categories"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "stores_category_id_fkey"
             columns: ["category_id"]
@@ -777,24 +529,21 @@ export type Database = {
       }
       user_roles: {
         Row: {
-          created_at: string
+          created_at: string | null
           id: string
           role: Database["public"]["Enums"]["app_role"]
-          updated_at: string
           user_id: string
         }
         Insert: {
-          created_at?: string
+          created_at?: string | null
           id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          updated_at?: string
+          role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Update: {
-          created_at?: string
+          created_at?: string | null
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
-          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -806,16 +555,14 @@ export type Database = {
     Functions: {
       has_role: {
         Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id?: string
+          user_id: string
+          role: Database["public"]["Enums"]["app_role"]
         }
         Returns: boolean
       }
     }
     Enums: {
-      app_role: "admin" | "user"
-      page_type: "events" | "places" | "stores"
-      page_type_enum: "events" | "places" | "stores" | "news"
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
