@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Events from "./pages/Events";
 import Places from "./pages/Places";
@@ -21,45 +21,8 @@ import AdminNews from "./pages/AdminNews";
 import AdminCategories from "./pages/AdminCategories";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
-import Permissao from "./pages/Permissao";
-import { usePermissions } from "./hooks/usePermissions";
-import { supabase } from "./integrations/supabase/client";
 
 const queryClient = new QueryClient();
-
-interface ProtectedRouteProps {
-  permissionType: "admin_places" | "admin_events" | "admin_stores" | "admin_news" | "admin_categories";
-  children: React.ReactNode;
-}
-
-const ProtectedRoute = ({ permissionType, children }: ProtectedRouteProps) => {
-  const { hasPermission, isLoading } = usePermissions();
-
-  if (isLoading) {
-    return <div>Carregando...</div>;
-  }
-
-  if (!hasPermission(permissionType)) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="text-center p-8 bg-white rounded-lg shadow-md">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">Acesso Negado</h1>
-          <p className="text-gray-600 mb-4">
-            Você não tem permissão para acessar esta página.
-          </p>
-          <button
-            onClick={() => window.history.back()}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-          >
-            Voltar
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  return <>{children}</>;
-};
 
 const App: React.FC = () => {
   return (
@@ -80,54 +43,11 @@ const App: React.FC = () => {
               <Route path="/perfil" element={<Profile />} />
               <Route path="/config" element={<Config />} />
               <Route path="/admin" element={<Admin />}>
-                <Route
-                  path="lugares"
-                  element={
-                    <ProtectedRoute permissionType="admin_places">
-                      <AdminPlaces />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="eventos"
-                  element={
-                    <ProtectedRoute permissionType="admin_events">
-                      <AdminEvents />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="lojas"
-                  element={
-                    <ProtectedRoute permissionType="admin_stores">
-                      <AdminStores />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="noticias"
-                  element={
-                    <ProtectedRoute permissionType="admin_news">
-                      <AdminNews />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="categorias"
-                  element={
-                    <ProtectedRoute permissionType="admin_categories">
-                      <AdminCategories />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="permissoes"
-                  element={
-                    <ProtectedRoute permissionType="admin_categories">
-                      <Permissao />
-                    </ProtectedRoute>
-                  }
-                />
+                <Route path="lugares" element={<AdminPlaces />} />
+                <Route path="eventos" element={<AdminEvents />} />
+                <Route path="lojas" element={<AdminStores />} />
+                <Route path="noticias" element={<AdminNews />} />
+                <Route path="categorias" element={<AdminCategories />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>

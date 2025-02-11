@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -83,21 +84,9 @@ const AdminNews = () => {
   const handleNewsSubmit = async () => {
     try {
       if (!newNews.title || !newNews.content) {
-        toast.error("Preencha os campos obrigatórios (título e conteúdo)");
+        toast.error("Preencha os campos obrigatórios");
         return;
       }
-
-      // Validate instagram_media if present
-      if (newNews.instagram_media && Array.isArray(newNews.instagram_media)) {
-        for (const media of newNews.instagram_media) {
-          if (!media.url || !media.type) {
-            toast.error("Preencha todos os campos da mídia do Instagram");
-            return;
-          }
-        }
-      }
-
-      console.log('Submitting news:', newNews); // Debug log
 
       const { data, error } = await supabase.from("news").insert([
         {
@@ -106,10 +95,7 @@ const AdminNews = () => {
         },
       ]);
 
-      if (error) {
-        console.error('Supabase error:', error); // Debug log
-        throw error;
-      }
+      if (error) throw error;
 
       toast.success("Notícia adicionada com sucesso!");
       setNewNews({
@@ -123,8 +109,8 @@ const AdminNews = () => {
       });
       fetchNews();
     } catch (error) {
-      console.error("Error details:", error); // Debug log
-      toast.error("Erro ao adicionar notícia. Por favor, tente novamente.");
+      console.error("Error adding news:", error);
+      toast.error("Erro ao adicionar notícia");
     }
   };
 
@@ -501,3 +487,4 @@ const AdminNews = () => {
 };
 
 export default AdminNews;
+
