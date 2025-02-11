@@ -16,7 +16,15 @@ export interface PlaceFormData {
   website?: string | null;
   image?: string | null;
   images?: string[] | null;
-  opening_hours?: any | null;
+  opening_hours?: {
+    monday?: string;
+    tuesday?: string;
+    wednesday?: string;
+    thursday?: string;
+    friday?: string;
+    saturday?: string;
+    sunday?: string;
+  } | null;
   category_id?: string | null;
   user_id?: string | null;
   owner_name?: string | null;
