@@ -1,43 +1,16 @@
 
-import { useState } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../integrations/supabase/client";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { useToast } from "../components/ui/use-toast";
 import { useSiteConfig } from "../hooks/useSiteConfig";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
   const { data: config, isLoading: configLoading } = useSiteConfig();
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
-
-      navigate("/perfil");
-    } catch (error: any) {
-      toast({
-        title: "Erro ao fazer login",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    // Automatically redirect to profile page
+    navigate("/perfil");
+  }, [navigate]);
 
   if (configLoading || !config) {
     return (
@@ -57,102 +30,8 @@ const Login = () => {
     );
   }
 
-  return (
-    <div 
-      className="min-h-screen flex items-center justify-center p-6"
-      style={{ 
-        background: `linear-gradient(to right, ${config.navbar_color}, ${config.primary_color})`
-      }}
-    >
-      <div className="w-full max-w-md bg-white/90 backdrop-blur-md p-8 rounded-xl shadow-xl border border-white/10">
-        <div className="text-center space-y-3">
-          <h1 
-            className="text-3xl font-bold"
-            style={{ color: config.login_text_color }}
-          >
-            Conecte-se
-          </h1>
-          <p style={{ color: config.login_text_color }}>
-            Entre com suas credenciais para acessar
-          </p>
-        </div>
-
-        <form onSubmit={handleLogin} className="space-y-6 mt-6">
-          <div>
-            <label 
-              htmlFor="email" 
-              className="text-sm font-medium block mb-1"
-              style={{ color: config.login_text_color }}
-            >
-              Email
-            </label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="seu@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="bg-white/50 border-gray-200"
-              style={{ color: config.login_text_color }}
-            />
-          </div>
-
-          <div>
-            <label 
-              htmlFor="password" 
-              className="text-sm font-medium block mb-1"
-              style={{ color: config.login_text_color }}
-            >
-              Senha
-            </label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="******"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="bg-white/50 border-gray-200"
-              style={{ color: config.login_text_color }}
-            />
-            <Button
-              variant="link"
-              className="p-0 text-sm transition mt-1"
-              onClick={() => navigate("/reset-password")}
-              style={{ color: config.login_text_color }}
-            >
-              Esqueceu sua senha?
-            </Button>
-          </div>
-
-          <Button
-            type="submit"
-            className="w-full h-12 font-medium rounded-lg transition duration-300 shadow-md text-white"
-            style={{ 
-              background: config.primary_color,
-              borderColor: config.primary_color
-            }}
-            disabled={loading}
-          >
-            {loading ? "Entrando..." : "Entrar"}
-          </Button>
-
-          <p className="text-center text-sm" style={{ color: config.login_text_color }}>
-            Não possui uma conta?{" "}
-            <Button
-              variant="link"
-              className="p-0 transition"
-              onClick={() => navigate("/signup")}
-              style={{ color: config.primary_color }}
-            >
-              Criar conta
-            </Button>
-          </p>
-        </form>
-      </div>
-    </div>
-  );
+  return null;
 };
 
 export default Login;
+

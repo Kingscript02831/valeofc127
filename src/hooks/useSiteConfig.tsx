@@ -43,13 +43,6 @@ export function useSiteConfig() {
 
   const updateConfig = async (newConfig: Partial<SiteConfig>) => {
     try {
-      console.log("Checking authentication...");
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast.error("Você precisa estar logado para fazer alterações");
-        return false;
-      }
-
       console.log("Updating configuration with:", newConfig);
       const { error } = await supabase
         .from("site_configuration")
@@ -60,11 +53,7 @@ export function useSiteConfig() {
 
       if (error) {
         console.error("Error updating site configuration:", error);
-        if (error.message.includes("row level security")) {
-          toast.error("Você não tem permissão para atualizar as configurações");
-        } else {
-          toast.error("Erro ao atualizar configurações: " + error.message);
-        }
+        toast.error("Erro ao atualizar configurações: " + error.message);
         return false;
       }
 
@@ -86,3 +75,4 @@ export function useSiteConfig() {
     updateConfig
   };
 }
+
