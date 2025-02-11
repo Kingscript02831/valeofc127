@@ -1,6 +1,6 @@
 
 import { Share2, Facebook, Instagram } from "lucide-react";
-import { Button } from "./ui/button";
+import { Button } from "../components/ui/button";
 import { useSiteConfig } from "../hooks/useSiteConfig";
 
 const Navbar = () => {
@@ -36,13 +36,11 @@ const Navbar = () => {
   }
 
   return (
-    <nav 
-      className="w-full fixed top-0 z-50 shadow-md"
-      style={{ 
-        background: `linear-gradient(to right, ${config.navbar_color}, ${config.primary_color})`,
-        borderColor: `${config.primary_color}20`
-      }}
-    >
+    <nav className="w-full fixed top-0 z-50 shadow-md"
+         style={{ 
+           background: `linear-gradient(to right, ${config?.navbar_color}, ${config?.primary_color})`,
+           borderColor: `${config?.primary_color}20`
+         }}>
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex overflow-x-auto scrollbar-hide justify-between items-center h-16 gap-x-4">
           <a 
@@ -54,7 +52,9 @@ const Navbar = () => {
                 src={config.navbar_logo_image} 
                 alt="Logo" 
                 className="h-12 w-12 rounded-full object-cover border-2 transition-transform duration-300 hover:scale-110"
-                style={{ borderColor: config.text_color }}
+                style={{ 
+                  borderColor: config.text_color,
+                }}
               />
             ) : (
               <span 
@@ -76,7 +76,9 @@ const Navbar = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="transition-all duration-300 ease-out hover:scale-110 p-2 rounded-full hover:bg-primary/20"
-                style={{ color: config.text_color }}
+                style={{ 
+                  color: config.text_color,
+                }}
                 aria-label="Facebook"
               >
                 <Facebook className="h-6 w-6" strokeWidth={2.5} />
@@ -89,7 +91,9 @@ const Navbar = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="transition-all duration-300 ease-out hover:scale-110 p-2 rounded-full hover:bg-primary/20"
-                style={{ color: config.text_color }}
+                style={{ 
+                  color: config.text_color,
+                }}
                 aria-label="Instagram"
               >
                 <Instagram className="h-6 w-6" strokeWidth={2.5} />
@@ -101,7 +105,9 @@ const Navbar = () => {
               size="icon"
               onClick={handleShare}
               className="transition-all duration-300 ease-out hover:scale-110 rounded-full p-2 hover:bg-primary/20"
-              style={{ color: config.text_color }}
+              style={{ 
+                color: config.text_color,
+              }}
               aria-label="Compartilhar"
             >
               <Share2 className="h-6 w-6" strokeWidth={2.5} />

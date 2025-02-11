@@ -62,13 +62,6 @@ export type Database = {
           weather_api_key: string | null
           login_text_color: string
           signup_text_color: string
-          admin_sidebar_color: string
-          admin_header_color: string
-          admin_text_color: string
-          admin_accent_color: string
-          admin_background_color: string
-          admin_card_color: string
-          admin_hover_color: string
         }
       }
       events: {
@@ -89,11 +82,6 @@ export type Database = {
           image?: string;
           images?: string[];
           category_id?: string;
-          owner_name?: string;
-          phone?: string;
-          social_media?: Json;
-          website?: string;
-          whatsapp?: string;
         }
       }
       categories: {
@@ -101,22 +89,6 @@ export type Database = {
           id: string;
           name: string;
           background_color?: string;
-          page_type: string;
-        }
-      }
-      news: {
-        Row: {
-          id: string;
-          title: string;
-          content: string;
-          date: string;
-          created_at: string;
-          category_id?: string;
-          button_color?: string;
-          button_secondary_color?: string;
-          image?: string;
-          video?: string;
-          instagram_media?: Json;
         }
       }
     }

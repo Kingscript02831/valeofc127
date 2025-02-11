@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Search } from "lucide-react";
@@ -10,7 +9,7 @@ import BottomNav from "../components/BottomNav";
 import { supabase } from "../integrations/supabase/client";
 import { Skeleton } from "../components/ui/skeleton";
 import { Input } from "../components/ui/input";
-import type { Database } from "@/integrations/supabase/types";
+import type { Database } from "../../types/supabase";
 
 type Event = Database["public"]["Tables"]["events"]["Row"];
 type Category = Database["public"]["Tables"]["categories"]["Row"];
@@ -23,7 +22,7 @@ const Events = () => {
     document.title = "Eventos | Vale Notícias";
   }, []);
 
-  const { data: categories, isLoading: isCategoriesLoading } = useQuery({
+  const { data: categories } = useQuery({
     queryKey: ["categories", "events"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -34,10 +33,9 @@ const Events = () => {
       if (error) throw error;
       return data;
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
-  const { data: events, isLoading: isEventsLoading } = useQuery({
+  const { data: events, isLoading } = useQuery({
     queryKey: ["events", searchTerm, selectedCategory],
     queryFn: async () => {
       let query = supabase
@@ -50,7 +48,7 @@ const Events = () => {
             background_color
           )
         `)
-        .order("event_date", { ascending: true });
+        .order("created_at", { ascending: false }); // Alterado para mostrar os mais recentes primeiro
 
       if (searchTerm) {
         query = query.ilike("title", `%${searchTerm}%`);
@@ -64,10 +62,7 @@ const Events = () => {
       if (error) throw error;
       return data;
     },
-    staleTime: 1000 * 60 * 5, // 5 minutes
   });
-
-  const isLoading = isCategoriesLoading || isEventsLoading;
 
   return (
     <div className="min-h-screen flex flex-col pb-[72px] md:pb-0">
@@ -130,9 +125,9 @@ const Events = () => {
                 key={event.id}
                 title={event.title}
                 description={event.description}
-                eventDate={event.event_date}
+                eventDate={event.event_date.split('T')[0]}
                 eventTime={event.event_time}
-                endTime={event.end_time}
+                endTime={event.end_time} // Novo campo
                 image={event.image}
                 images={event.images}
                 location={event.location}
