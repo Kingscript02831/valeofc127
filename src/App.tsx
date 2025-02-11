@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
+import zapIndex from "./pages/zapIndex";
 import Events from "./pages/Events";
 import Places from "./pages/Places";
 import Stores from "./pages/Stores";
@@ -19,7 +20,11 @@ import AdminEvents from "./pages/AdminEvents";
 import AdminStores from "./pages/AdminStores";
 import AdminNews from "./pages/AdminNews";
 import AdminCategories from "./pages/AdminCategories";
+import Conversas from "./pages/Conversas";
+import Status from "./pages/Status";
+import Navbarchat from "./components/Navbarchat";
 import Profile from "./pages/Profile";
+
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -43,11 +48,15 @@ const App: React.FC = () => {
               <Route path="/perfil" element={<Profile />} />
               <Route path="/config" element={<Config />} />
               <Route path="/admin" element={<Admin />}>
-                <Route path="lugares" element={<AdminPlaces />} />
-                <Route path="eventos" element={<AdminEvents />} />
-                <Route path="lojas" element={<AdminStores />} />
-                <Route path="noticias" element={<AdminNews />} />
-                <Route path="categorias" element={<AdminCategories />} />
+              <Route path="lugares" element={<AdminPlaces />} />
+              <Route path="eventos" element={<AdminEvents />} />
+              <Route path="lojas" element={<AdminStores />} />
+              <Route path="noticias" element={<AdminNews />} />
+              <Route path="categorias" element={<AdminCategories />} />
+          <Route path="/zapindex" element={<zapIndex />} />
+          <Route path="/conversas" element={<Conversas />} />
+          <Route path="/status" element={<Status />} />
+          <Route path="*" element={<NotFound />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
