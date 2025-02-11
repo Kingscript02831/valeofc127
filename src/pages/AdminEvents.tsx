@@ -1,10 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "../integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { EventForm } from "../components/admin/EventForm";
 import { EventList } from "../components/admin/EventList";
