@@ -1,18 +1,22 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { PlaceFormData, Place } from "../../types/places";
+import type { Database } from "@/integrations/supabase/types";
+
+type Category = Database['public']['Tables']['categories']['Row'];
 
 interface PlaceFormProps {
   initialData?: Place;
+  categories?: Category[];
   onSubmit: (data: PlaceFormData) => void;
   onCancel: () => void;
 }
 
-export const PlaceForm = ({ initialData, onSubmit, onCancel }: PlaceFormProps) => {
+export const PlaceForm = ({ initialData, categories = [], onSubmit, onCancel }: PlaceFormProps) => {
   const [formData, setFormData] = useState<PlaceFormData>({
     name: "",
     description: "",
@@ -25,6 +29,7 @@ export const PlaceForm = ({ initialData, onSubmit, onCancel }: PlaceFormProps) =
     whatsapp: "",
     website: "",
     image: "",
+    category_id: "",
     social_media: {
       facebook: "",
       instagram: "",
@@ -45,6 +50,7 @@ export const PlaceForm = ({ initialData, onSubmit, onCancel }: PlaceFormProps) =
         whatsapp: initialData.whatsapp,
         website: initialData.website,
         image: initialData.image,
+        category_id: initialData.category_id || "",
         social_media: initialData.social_media || {
           facebook: "",
           instagram: "",
@@ -70,6 +76,24 @@ export const PlaceForm = ({ initialData, onSubmit, onCancel }: PlaceFormProps) =
             onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
             required
           />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="category">Categoria</Label>
+          <Select
+            value={formData.category_id}
+            onValueChange={(value) => setFormData(prev => ({ ...prev, category_id: value }))}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione uma categoria" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map((category) => (
+                <SelectItem key={category.id} value={category.id}>
+                  {category.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <div className="space-y-2">
           <Label htmlFor="address">Endereço *</Label>
