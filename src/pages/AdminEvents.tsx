@@ -63,9 +63,16 @@ const AdminEvents = () => {
 
   const handleEventSubmit = async (eventData: Omit<Event, 'id' | 'created_at' | 'updated_at'>) => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast.error("Você precisa estar logado para realizar esta ação.");
+        return;
+      }
+
       const { error } = await supabase
         .from("events")
-        .insert(eventData);
+        .insert({ ...eventData, user_id: user.id });
 
       if (error) throw error;
 

@@ -122,6 +122,17 @@ const AdminStores = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Erro ao salvar a loja",
+          description: "Você precisa estar logado para realizar esta ação.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       if (selectedStore) {
         // Update existing store
         const { error } = await supabase
@@ -145,7 +156,9 @@ const AdminStores = () => {
           return;
         }
 
-        const { error } = await supabase.from("stores").insert(formData);
+        const { error } = await supabase
+          .from("stores")
+          .insert({ ...formData, user_id: user.id });
 
         if (error) throw error;
         toast({

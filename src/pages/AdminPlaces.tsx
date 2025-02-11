@@ -123,6 +123,17 @@ const AdminPlaces = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Erro ao salvar o local",
+          description: "Você precisa estar logado para realizar esta ação.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       if (selectedPlace) {
         // Update existing place
         const { error } = await supabase
@@ -146,7 +157,9 @@ const AdminPlaces = () => {
           return;
         }
 
-        const { error } = await supabase.from("places").insert(formData);
+        const { error } = await supabase
+          .from("places")
+          .insert({ ...formData, user_id: user.id });
 
         if (error) throw error;
         toast({
