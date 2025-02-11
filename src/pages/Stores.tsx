@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Phone, Globe, MapPin, Clock, User2, Facebook, Instagram, MessageCircle, Search } from "lucide-react";
+import { Phone, Globe, MapPin, Clock, User2, Facebook, Instagram, MessageCircle, Search, DollarSign } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
@@ -156,6 +156,13 @@ const Stores = () => {
                       <div className="flex items-center gap-2 text-sm">
                         <Clock className="w-4 h-4 text-gray-500" />
                         <span>{store.opening_hours}</span>
+                      </div>
+                    )}
+
+                    {store.entrance_fee && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <DollarSign className="w-4 h-4 text-gray-500" />
+                        <span>{store.entrance_fee}</span>
                       </div>
                     )}
                   </div>
