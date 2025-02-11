@@ -27,7 +27,7 @@ export type Database = {
           description?: string | null
           id?: string
           name: string
-          page_type: string
+          page_type?: string
           parent_id?: string | null
           slug?: string | null
           updated_at?: string | null

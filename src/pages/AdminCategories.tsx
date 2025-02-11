@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/components/ui/use-toast";
@@ -27,12 +28,13 @@ const generateSlug = (name: string): string => {
 
 const AdminCategories = () => {
   const { toast } = useToast();
-  const [newCategory, setNewCategory] = useState<Omit<Category, "id" | "created_at">>({
+  const [newCategory, setNewCategory] = useState<Partial<Category>>({
     name: "",
     background_color: "#000000",
     page_type: "events",
     parent_id: null,
     slug: "",
+    description: "",
     updated_at: new Date().toISOString()
   });
 
@@ -79,7 +81,7 @@ const AdminCategories = () => {
           toast({
             variant: "destructive",
             title: "Erro ao adicionar categoria",
-            description: "Já existe uma categoria com este nome. Por favor, escolha outro nome.",
+            description: "Já existe uma categoria com este nome ou slug. Por favor, escolha outro nome.",
           });
         } else {
           console.error("Error details:", error);
@@ -103,6 +105,7 @@ const AdminCategories = () => {
         page_type: "events",
         parent_id: null,
         slug: "",
+        description: "",
         updated_at: new Date().toISOString()
       });
 
@@ -160,6 +163,16 @@ const AdminCategories = () => {
           </div>
 
           <div>
+            <Label htmlFor="description">Descrição</Label>
+            <Input
+              id="description"
+              value={newCategory.description}
+              onChange={(e) => setNewCategory({ ...newCategory, description: e.target.value })}
+              placeholder="Digite uma descrição para a categoria"
+            />
+          </div>
+
+          <div>
             <Label htmlFor="page_type">Tipo de Página</Label>
             <Select
               value={newCategory.page_type}
@@ -185,12 +198,12 @@ const AdminCategories = () => {
               <Input
                 id="background_color"
                 type="color"
-                value={newCategory.background_color}
+                value={newCategory.background_color || "#000000"}
                 onChange={(e) => setNewCategory({ ...newCategory, background_color: e.target.value })}
                 className="w-16"
               />
               <Input
-                value={newCategory.background_color}
+                value={newCategory.background_color || "#000000"}
                 onChange={(e) => setNewCategory({ ...newCategory, background_color: e.target.value })}
                 placeholder="#000000"
               />
@@ -214,7 +227,7 @@ const AdminCategories = () => {
               <div className="flex items-center gap-4">
                 <div
                   className="w-6 h-6 rounded"
-                  style={{ backgroundColor: category.background_color }}
+                  style={{ backgroundColor: category.background_color || "#000000" }}
                 />
                 <div>
                   <p className="font-medium">{category.name}</p>
@@ -224,6 +237,9 @@ const AdminCategories = () => {
                     {category.page_type === "stores" && "Lojas"}
                     {category.page_type === "news" && "Notícias"}
                   </p>
+                  {category.description && (
+                    <p className="text-sm text-gray-500">{category.description}</p>
+                  )}
                 </div>
               </div>
               <Button
