@@ -25,13 +25,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "../components/ui/alert-dialog";
-
-type Store = Database["public"]["Tables"]["stores"]["Row"];
-
-interface FormData extends Partial<Store> {
-  name: string;
-  address: string;
-}
+import type { Store, StoreFormData } from "../types/stores";
 
 const AdminStores = () => {
   const { toast } = useToast();
@@ -40,14 +34,11 @@ const AdminStores = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedStore, setSelectedStore] = useState<Store | null>(null);
   const [isAddEditDialogOpen, setIsAddEditDialogOpen] = useState(false);
-
-  // Form state
-  const [formData, setFormData] = useState<FormData>({
+  const [formData, setFormData] = useState<StoreFormData>({
     name: "",
     address: "",
     description: "",
     maps_url: "",
-    opening_hours: "",
     owner_name: "",
     phone: "",
     whatsapp: "",
@@ -104,7 +95,6 @@ const AdminStores = () => {
       address: "",
       description: "",
       maps_url: "",
-      opening_hours: "",
       owner_name: "",
       phone: "",
       whatsapp: "",
@@ -218,7 +208,6 @@ const AdminStores = () => {
       description: store.description || "",
       address: store.address,
       maps_url: store.maps_url || "",
-      opening_hours: store.opening_hours || "",
       owner_name: store.owner_name || "",
       phone: store.phone || "",
       whatsapp: store.whatsapp || "",
@@ -296,17 +285,6 @@ const AdminStores = () => {
                     id="owner_name"
                     name="owner_name"
                     value={formData.owner_name || ""}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="opening_hours" className="text-sm font-medium">
-                    Horário de Funcionamento
-                  </label>
-                  <Input
-                    id="opening_hours"
-                    name="opening_hours"
-                    value={formData.opening_hours || ""}
                     onChange={handleInputChange}
                   />
                 </div>
