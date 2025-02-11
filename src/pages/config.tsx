@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import { updateMetaTags } from "../utils/updateMetaTags";
 import Navbar2 from "../components/Navbar2";
 import SubNav2 from "../components/SubNav2";
+import { useSiteConfig } from "../hooks/useSiteConfig";
 
 type SiteConfig = Database['public']['Tables']['site_configuration']['Row'];
 
@@ -68,48 +69,13 @@ const Admin = () => {
     signup_text_color: "#1A1F2C"
   });
 
+  const { data: siteConfig, updateConfig } = useSiteConfig();
+
   useEffect(() => {
-    fetchConfiguration();
-  }, []);
-
-  const fetchConfiguration = async () => {
-    const { data, error } = await supabase
-      .from("site_configuration")
-      .select("*")
-      .single();
-
-    if (error) {
-      toast.error("Erro ao carregar configurações");
-      return;
+    if (siteConfig) {
+      setConfig(siteConfig);
     }
-
-    if (data) {
-      setConfig(data);
-    }
-  };
-
-  const handleConfigUpdate = async () => {
-    try {
-      const { error } = await supabase
-        .from("site_configuration")
-        .update(config)
-        .eq("id", config.id);
-
-      if (error) throw error;
-
-      // Update meta tags after successful database update
-      updateMetaTags(
-        config.meta_title,
-        config.meta_description,
-        config.meta_author,
-        config.meta_image
-      );
-
-      toast.success("Configurações atualizadas com sucesso!");
-    } catch (error: any) {
-      toast.error("Erro ao atualizar configurações");
-    }
-  };
+  }, [siteConfig]);
 
   useEffect(() => {
     if (config) {
@@ -122,6 +88,19 @@ const Admin = () => {
       );
     }
   }, [config]);
+
+  const handleConfigUpdate = async () => {
+    const success = await updateConfig(config);
+    if (success) {
+      // Update meta tags after successful database update
+      updateMetaTags(
+        config.meta_title,
+        config.meta_description,
+        config.meta_author,
+        config.meta_image
+      );
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
