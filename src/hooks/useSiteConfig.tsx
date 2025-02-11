@@ -14,8 +14,15 @@ export function useSiteConfig() {
         .select("*")
         .maybeSingle();
       
-      if (error) throw error;
-      if (!data) throw new Error("No site configuration found");
+      if (error) {
+        console.error("Error fetching site configuration:", error);
+        throw error;
+      }
+      
+      if (!data) {
+        console.error("No site configuration found");
+        throw new Error("No site configuration found");
+      }
       
       return data;
     },
