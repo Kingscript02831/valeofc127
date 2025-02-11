@@ -20,13 +20,6 @@ import AdminStores from "./pages/AdminStores";
 import AdminNews from "./pages/AdminNews";
 import AdminCategories from "./pages/AdminCategories";
 import Profile from "./pages/Profile";
-
-import zapIndex from "./pages/zapIndex";
-import Conversas from "./pages/Conversas";
-import Status from "./pages/Status";
-import Navbarchat from "./components/Navbarchat";
-
-
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -55,10 +48,7 @@ const App: React.FC = () => {
               <Route path="lojas" element={<AdminStores />} />
               <Route path="noticias" element={<AdminNews />} />
               <Route path="categorias" element={<AdminCategories />} />
-          <Route path="/zapindex" element={<zapIndex />} />
-          <Route path="/conversas" element={<Conversas />} />
-          <Route path="/status" element={<Status />} />
-        
+          
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
