@@ -17,6 +17,9 @@ export const StoreForm = ({ initialData, onSubmit, onCancel }: StoreFormProps) =
     name: "",
     description: "",
     address: "",
+    city: "",
+    state: "",
+    postal_code: "",
     owner_name: "",
     opening_hours: "",
     entrance_fee: "",
@@ -37,14 +40,17 @@ export const StoreForm = ({ initialData, onSubmit, onCancel }: StoreFormProps) =
         name: initialData.name,
         description: initialData.description,
         address: initialData.address,
-        owner_name: initialData.owner_name,
-        opening_hours: initialData.opening_hours as string,
-        entrance_fee: initialData.entrance_fee,
-        maps_url: initialData.maps_url,
-        phone: initialData.phone,
-        whatsapp: initialData.whatsapp,
-        website: initialData.website,
-        image: initialData.image,
+        city: initialData.city || "",
+        state: initialData.state || "",
+        postal_code: initialData.postal_code || "",
+        owner_name: initialData.owner_name || "",
+        opening_hours: initialData.opening_hours as string || "",
+        entrance_fee: initialData.entrance_fee || "",
+        maps_url: initialData.maps_url || "",
+        phone: initialData.phone || "",
+        whatsapp: initialData.whatsapp || "",
+        website: initialData.website || "",
+        image: initialData.image || "",
         social_media: initialData.social_media || {
           facebook: "",
           instagram: "",
@@ -79,6 +85,33 @@ export const StoreForm = ({ initialData, onSubmit, onCancel }: StoreFormProps) =
             value={formData.address}
             onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
             required
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="city">Cidade</Label>
+          <Input
+            id="city"
+            name="city"
+            value={formData.city || ""}
+            onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="state">Estado</Label>
+          <Input
+            id="state"
+            name="state"
+            value={formData.state || ""}
+            onChange={(e) => setFormData(prev => ({ ...prev, state: e.target.value }))}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="postal_code">CEP</Label>
+          <Input
+            id="postal_code"
+            name="postal_code"
+            value={formData.postal_code || ""}
+            onChange={(e) => setFormData(prev => ({ ...prev, postal_code: e.target.value }))}
           />
         </div>
         <div className="space-y-2 col-span-2">
