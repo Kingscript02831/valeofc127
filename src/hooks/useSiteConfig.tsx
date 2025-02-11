@@ -63,27 +63,54 @@ export function useSiteConfig() {
   return useQuery({
     queryKey: ['site-configuration'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First try to get the configuration
+      const { data: existingConfig, error: fetchError } = await supabase
         .from("site_configuration")
         .select("*")
         .limit(1)
         .maybeSingle();
-      
-      if (error) {
-        console.error("Error fetching site configuration:", error);
-        return defaultConfig;
+
+      if (fetchError) {
+        console.error("Error fetching site configuration:", fetchError);
+        
+        // If there's an error, try to create a default configuration
+        const { data: insertedConfig, error: insertError } = await supabase
+          .from("site_configuration")
+          .insert([defaultConfig])
+          .select()
+          .single();
+
+        if (insertError) {
+          console.error("Error creating default configuration:", insertError);
+          return defaultConfig;
+        }
+
+        return insertedConfig || defaultConfig;
       }
-      
-      if (!data) {
-        console.warn("No site configuration found, using default values");
-        return defaultConfig;
+
+      if (!existingConfig) {
+        console.warn("No site configuration found, creating default...");
+        
+        // If no configuration exists, create one
+        const { data: insertedConfig, error: insertError } = await supabase
+          .from("site_configuration")
+          .insert([defaultConfig])
+          .select()
+          .single();
+
+        if (insertError) {
+          console.error("Error creating default configuration:", insertError);
+          return defaultConfig;
+        }
+
+        return insertedConfig || defaultConfig;
       }
-      
-      return data;
+
+      return existingConfig;
     },
     staleTime: Infinity,
     gcTime: Infinity,
-    retry: 2,
+    retry: 3,
     initialData: defaultConfig
   });
 }
