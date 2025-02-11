@@ -17,6 +17,7 @@ export type Database = {
           id: string
           name: string
           page_type: string
+          parent_id: string | null
           slug: string | null
           updated_at: string | null
         }
@@ -27,6 +28,7 @@ export type Database = {
           id?: string
           name: string
           page_type: string
+          parent_id?: string | null
           slug?: string | null
           updated_at?: string | null
         }
@@ -37,10 +39,19 @@ export type Database = {
           id?: string
           name?: string
           page_type?: string
+          parent_id?: string | null
           slug?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       events: {
         Row: {
