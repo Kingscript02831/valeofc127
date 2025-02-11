@@ -6,8 +6,8 @@ import { Search } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
-import { EventForm } from "../components/admin/EventForm";
-import { EventList } from "../components/admin/EventList";
+import { EventForm } from "@/components/admin/EventForm";
+import { EventList } from "@/components/admin/EventList";
 
 type Event = Database['public']['Tables']['events']['Row'];
 type Category = Database['public']['Tables']['categories']['Row'];
@@ -61,7 +61,7 @@ const AdminEvents = () => {
     fetchEvents();
   }, [searchEventTerm]);
 
-  const handleEventSubmit = async (eventData: Omit<Event, 'id' | 'created_at'>) => {
+  const handleEventSubmit = async (eventData: Omit<Event, 'id' | 'created_at' | 'updated_at'>) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
@@ -84,7 +84,7 @@ const AdminEvents = () => {
     }
   };
 
-  const handleEventEdit = async (eventData: Omit<Event, 'id' | 'created_at'>) => {
+  const handleEventEdit = async (eventData: Omit<Event, 'id' | 'created_at' | 'updated_at'>) => {
     try {
       if (!editingEvent?.id) {
         toast.error("ID do evento não encontrado");
