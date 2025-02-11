@@ -69,10 +69,12 @@ export type Database = {
           images: string[] | null
           location: string | null
           maps_url: string | null
+          numero_whatsapp_events: string | null
           owner_name: string | null
           phone: string | null
           social_media: Json | null
           title: string
+          url_maps_events: string | null
           user_id: string | null
           video_url: string | null
           website: string | null
@@ -93,10 +95,12 @@ export type Database = {
           images?: string[] | null
           location?: string | null
           maps_url?: string | null
+          numero_whatsapp_events?: string | null
           owner_name?: string | null
           phone?: string | null
           social_media?: Json | null
           title: string
+          url_maps_events?: string | null
           user_id?: string | null
           video_url?: string | null
           website?: string | null
@@ -117,10 +121,12 @@ export type Database = {
           images?: string[] | null
           location?: string | null
           maps_url?: string | null
+          numero_whatsapp_events?: string | null
           owner_name?: string | null
           phone?: string | null
           social_media?: Json | null
           title?: string
+          url_maps_events?: string | null
           user_id?: string | null
           video_url?: string | null
           website?: string | null

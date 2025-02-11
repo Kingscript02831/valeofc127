@@ -28,6 +28,8 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
     images: [],
     location: "",
     maps_url: "",
+    url_maps_events: "",
+    numero_whatsapp_events: "",
     entrance_fee: "",
     video_url: "",
     button_color: "#9b87f5",
@@ -125,6 +127,27 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
           id="location"
           value={eventData.location || ""}
           onChange={(e) => setEventData({ ...eventData, location: e.target.value })}
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="url_maps_events">Link do Google Maps do Evento</Label>
+        <Input
+          id="url_maps_events"
+          type="url"
+          value={eventData.url_maps_events || ""}
+          onChange={(e) => setEventData({ ...eventData, url_maps_events: e.target.value })}
+          placeholder="https://maps.google.com/..."
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="numero_whatsapp_events">WhatsApp do Evento</Label>
+        <Input
+          id="numero_whatsapp_events"
+          value={eventData.numero_whatsapp_events || ""}
+          onChange={(e) => setEventData({ ...eventData, numero_whatsapp_events: e.target.value })}
+          placeholder="+55 (11) 99999-9999"
         />
       </div>
 

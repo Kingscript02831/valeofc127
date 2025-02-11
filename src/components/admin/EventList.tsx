@@ -1,7 +1,7 @@
 
 import { Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import type { Database } from "@/integrations/supabase/types";
 
 type Event = Database['public']['Tables']['events']['Row'];
@@ -16,46 +16,72 @@ interface EventListProps {
   onDelete: (id: string) => void;
 }
 
-export const EventList = ({ 
-  events, 
+export const EventList = ({
+  events,
   categories,
-  searchTerm, 
-  onSearchChange, 
-  onEdit, 
-  onDelete 
+  searchTerm,
+  onSearchChange,
+  onEdit,
+  onDelete,
 }: EventListProps) => {
+  const getCategoryName = (categoryId: string | null) => {
+    if (!categoryId) return "Sem categoria";
+    const category = categories.find((cat) => cat.id === categoryId);
+    return category ? category.name : "Categoria não encontrada";
+  };
+
+  const formatDateTime = (date: string, time: string) => {
+    const eventDate = new Date(date);
+    const formattedDate = eventDate.toLocaleDateString("pt-BR");
+    return `${formattedDate} às ${time}`;
+  };
+
   return (
-    <div>
-      <div className="flex items-center gap-4 mb-6">
-        <h2 className="text-xl font-semibold">Lista de Eventos</h2>
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 h-4 w-4" />
-          <Input
-            type="search"
-            placeholder="Buscar eventos..."
-            className="pl-8"
-            value={searchTerm}
-            onChange={(e) => onSearchChange(e.target.value)}
-          />
-        </div>
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <Search className="w-5 h-5 text-gray-500" />
+        <Input
+          type="text"
+          placeholder="Buscar eventos..."
+          value={searchTerm}
+          onChange={(e) => onSearchChange(e.target.value)}
+          className="flex-1"
+        />
       </div>
 
       <div className="space-y-4">
         {events.map((event) => (
-          <div key={event.id} className="bg-gray-50 rounded-lg p-6">
-            <div className="flex justify-between items-start mb-4">
+          <div
+            key={event.id}
+            className="bg-gray-50 p-4 rounded-lg shadow-sm space-y-2"
+          >
+            <div className="flex justify-between items-start">
               <div>
                 <h3 className="text-lg font-semibold">{event.title}</h3>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-sm text-gray-500">
-                    {new Date(event.event_date).toLocaleDateString()} às {event.event_time}
-                  </span>
-                  {event.category_id && (
-                    <span className="text-sm bg-purple-100 text-purple-800 px-2 py-0.5 rounded">
-                      {categories.find(c => c.id === event.category_id)?.name}
-                    </span>
-                  )}
-                </div>
+                <p className="text-sm text-gray-600">
+                  {formatDateTime(event.event_date, event.event_time)}
+                </p>
+                <p className="text-sm text-gray-600">
+                  Categoria: {getCategoryName(event.category_id)}
+                </p>
+                {event.location && (
+                  <p className="text-sm text-gray-600">Local: {event.location}</p>
+                )}
+                {event.url_maps_events && (
+                  <a 
+                    href={event.url_maps_events} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-sm text-blue-600 hover:underline"
+                  >
+                    Ver no Google Maps
+                  </a>
+                )}
+                {event.numero_whatsapp_events && (
+                  <p className="text-sm text-gray-600">
+                    WhatsApp do Evento: {event.numero_whatsapp_events}
+                  </p>
+                )}
               </div>
               <div className="flex gap-2">
                 <Button
@@ -74,16 +100,11 @@ export const EventList = ({
                 </Button>
               </div>
             </div>
-            <p className="text-gray-600 mb-2">{event.description}</p>
-            {event.location && (
-              <p className="text-sm text-gray-500">Local: {event.location}</p>
-            )}
           </div>
         ))}
+
         {events.length === 0 && (
-          <p className="text-gray-500 text-center py-8">
-            Nenhum evento encontrado.
-          </p>
+          <p className="text-center text-gray-500">Nenhum evento encontrado.</p>
         )}
       </div>
     </div>
