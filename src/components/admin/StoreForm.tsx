@@ -11,7 +11,7 @@ type Category = Database['public']['Tables']['categories']['Row'];
 
 interface StoreFormProps {
   initialData?: Store;
-  categories?: Category[];
+  categories: Category[];
   onSubmit: (data: StoreFormData) => void;
   onCancel: () => void;
 }
@@ -32,6 +32,7 @@ export const StoreForm = ({ initialData, categories = [], onSubmit, onCancel }: 
     whatsapp: "",
     website: "",
     image: "",
+    video: "",
     category_id: "",
     social_media: {
       facebook: "",
@@ -56,8 +57,9 @@ export const StoreForm = ({ initialData, categories = [], onSubmit, onCancel }: 
         whatsapp: initialData.whatsapp || "",
         website: initialData.website || "",
         image: initialData.image || "",
+        video: initialData.video || "",
         category_id: initialData.category_id || "",
-        social_media: initialData.social_media || {
+        social_media: initialData.social_media as { facebook?: string; instagram?: string } || {
           facebook: "",
           instagram: "",
         },
@@ -86,7 +88,7 @@ export const StoreForm = ({ initialData, categories = [], onSubmit, onCancel }: 
         <div className="space-y-2">
           <Label htmlFor="category">Categoria</Label>
           <Select
-            value={formData.category_id}
+            value={formData.category_id || ""}
             onValueChange={(value) => setFormData(prev => ({ ...prev, category_id: value }))}
           >
             <SelectTrigger>
@@ -100,6 +102,35 @@ export const StoreForm = ({ initialData, categories = [], onSubmit, onCancel }: 
               ))}
             </SelectContent>
           </Select>
+        </div>
+        <div className="space-y-2 col-span-2">
+          <Label htmlFor="description">Descrição *</Label>
+          <Textarea
+            id="description"
+            name="description"
+            value={formData.description}
+            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+            required
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="image">URL da Imagem</Label>
+          <Input
+            id="image"
+            name="image"
+            value={formData.image || ""}
+            onChange={(e) => setFormData(prev => ({ ...prev, image: e.target.value }))}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="video">URL do Vídeo</Label>
+          <Input
+            id="video"
+            name="video"
+            value={formData.video || ""}
+            onChange={(e) => setFormData(prev => ({ ...prev, video: e.target.value }))}
+            placeholder="Ex: URL do YouTube ou Vimeo"
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="address">Endereço *</Label>
@@ -136,16 +167,6 @@ export const StoreForm = ({ initialData, categories = [], onSubmit, onCancel }: 
             name="postal_code"
             value={formData.postal_code || ""}
             onChange={(e) => setFormData(prev => ({ ...prev, postal_code: e.target.value }))}
-          />
-        </div>
-        <div className="space-y-2 col-span-2">
-          <Label htmlFor="description">Descrição *</Label>
-          <Textarea
-            id="description"
-            name="description"
-            value={formData.description}
-            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-            required
           />
         </div>
         <div className="space-y-2">
@@ -213,17 +234,6 @@ export const StoreForm = ({ initialData, categories = [], onSubmit, onCancel }: 
             onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))}
           />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="image">URL da Imagem</Label>
-          <Input
-            id="image"
-            name="image"
-            value={formData.image || ""}
-            onChange={(e) => setFormData(prev => ({ ...prev, image: e.target.value }))}
-          />
-        </div>
-
-        {/* Redes Sociais */}
         <div className="space-y-2">
           <Label htmlFor="social_media.facebook">Facebook</Label>
           <Input

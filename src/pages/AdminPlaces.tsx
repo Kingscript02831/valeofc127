@@ -25,6 +25,9 @@ import {
 } from "../components/ui/alert-dialog";
 import { PlaceForm } from "../components/admin/PlaceForm";
 import type { Place, PlaceFormData } from "../types/places";
+import type { Database } from "@/integrations/supabase/types";
+
+type Category = Database['public']['Tables']['categories']['Row'];
 
 const AdminPlaces = () => {
   const { toast } = useToast();
@@ -41,6 +44,21 @@ const AdminPlaces = () => {
       const { data, error } = await supabase
         .from("places")
         .select("*")
+        .order("name");
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Fetch categories
+  const { data: categories } = useQuery({
+    queryKey: ["categories-places"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("categories")
+        .select("*")
+        .eq('page_type', 'places')
         .order("name");
 
       if (error) throw error;
@@ -159,6 +177,7 @@ const AdminPlaces = () => {
             </DialogHeader>
             <PlaceForm
               initialData={selectedPlace || undefined}
+              categories={categories || []}
               onSubmit={handleSubmit}
               onCancel={() => setIsAddEditDialogOpen(false)}
             />

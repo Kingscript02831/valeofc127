@@ -11,7 +11,7 @@ type Category = Database['public']['Tables']['categories']['Row'];
 
 interface PlaceFormProps {
   initialData?: Place;
-  categories?: Category[];
+  categories: Category[];
   onSubmit: (data: PlaceFormData) => void;
   onCancel: () => void;
 }
@@ -29,6 +29,7 @@ export const PlaceForm = ({ initialData, categories = [], onSubmit, onCancel }: 
     whatsapp: "",
     website: "",
     image: "",
+    video: "",
     category_id: "",
     social_media: {
       facebook: "",
@@ -42,16 +43,17 @@ export const PlaceForm = ({ initialData, categories = [], onSubmit, onCancel }: 
         name: initialData.name,
         description: initialData.description,
         address: initialData.address,
-        owner_name: initialData.owner_name,
-        opening_hours: initialData.opening_hours as string,
-        entrance_fee: initialData.entrance_fee,
-        maps_url: initialData.maps_url,
-        phone: initialData.phone,
-        whatsapp: initialData.whatsapp,
-        website: initialData.website,
-        image: initialData.image,
+        owner_name: initialData.owner_name || "",
+        opening_hours: initialData.opening_hours || "",
+        entrance_fee: initialData.entrance_fee || "",
+        maps_url: initialData.maps_url || "",
+        phone: initialData.phone || "",
+        whatsapp: initialData.whatsapp || "",
+        website: initialData.website || "",
+        image: initialData.image || "",
+        video: initialData.video || "",
         category_id: initialData.category_id || "",
-        social_media: initialData.social_media || {
+        social_media: initialData.social_media as { facebook?: string; instagram?: string } || {
           facebook: "",
           instagram: "",
         },
@@ -80,7 +82,7 @@ export const PlaceForm = ({ initialData, categories = [], onSubmit, onCancel }: 
         <div className="space-y-2">
           <Label htmlFor="category">Categoria</Label>
           <Select
-            value={formData.category_id}
+            value={formData.category_id || ""}
             onValueChange={(value) => setFormData(prev => ({ ...prev, category_id: value }))}
           >
             <SelectTrigger>
@@ -95,16 +97,6 @@ export const PlaceForm = ({ initialData, categories = [], onSubmit, onCancel }: 
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="address">Endereço *</Label>
-          <Input
-            id="address"
-            name="address"
-            value={formData.address}
-            onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
-            required
-          />
-        </div>
         <div className="space-y-2 col-span-2">
           <Label htmlFor="description">Descrição *</Label>
           <Textarea
@@ -113,6 +105,25 @@ export const PlaceForm = ({ initialData, categories = [], onSubmit, onCancel }: 
             value={formData.description}
             onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
             required
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="image">URL da Imagem</Label>
+          <Input
+            id="image"
+            name="image"
+            value={formData.image || ""}
+            onChange={(e) => setFormData(prev => ({ ...prev, image: e.target.value }))}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="video">URL do Vídeo</Label>
+          <Input
+            id="video"
+            name="video"
+            value={formData.video || ""}
+            onChange={(e) => setFormData(prev => ({ ...prev, video: e.target.value }))}
+            placeholder="Ex: URL do YouTube ou Vimeo"
           />
         </div>
         <div className="space-y-2">
@@ -180,17 +191,6 @@ export const PlaceForm = ({ initialData, categories = [], onSubmit, onCancel }: 
             onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))}
           />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="image">URL da Imagem</Label>
-          <Input
-            id="image"
-            name="image"
-            value={formData.image || ""}
-            onChange={(e) => setFormData(prev => ({ ...prev, image: e.target.value }))}
-          />
-        </div>
-
-        {/* Redes Sociais */}
         <div className="space-y-2">
           <Label htmlFor="social_media.facebook">Facebook</Label>
           <Input

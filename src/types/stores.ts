@@ -18,6 +18,7 @@ export interface StoreFormData {
   whatsapp?: string | null;
   website?: string | null;
   image?: string | null;
+  video?: string | null;
   category_id?: string | null;
   images?: string[] | null;
   latitude?: number | null;
