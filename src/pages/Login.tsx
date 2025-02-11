@@ -72,16 +72,14 @@ const Login = () => {
           >
             Conecte-se
           </h1>
-          <p style={{ color: config.login_text_color }}>
-            Entre com suas credenciais para acessar
-          </p>
+          <p className="text-gray-600">Entre com suas credenciais para acessar</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6 mt-6">
           <div>
             <label 
               htmlFor="email" 
-              className="text-sm font-medium block mb-1"
+              className="text-sm font-medium"
               style={{ color: config.login_text_color }}
             >
               Email
@@ -94,14 +92,13 @@ const Login = () => {
               onChange={(e) => setEmail(e.target.value)}
               required
               className="bg-white/50 border-gray-200"
-              style={{ color: config.login_text_color }}
             />
           </div>
 
           <div>
             <label 
               htmlFor="password" 
-              className="text-sm font-medium block mb-1"
+              className="text-sm font-medium"
               style={{ color: config.login_text_color }}
             >
               Senha
@@ -114,11 +111,10 @@ const Login = () => {
               onChange={(e) => setPassword(e.target.value)}
               required
               className="bg-white/50 border-gray-200"
-              style={{ color: config.login_text_color }}
             />
             <Button
               variant="link"
-              className="p-0 text-sm transition mt-1"
+              className="p-0 text-sm transition"
               onClick={() => navigate("/reset-password")}
               style={{ color: config.login_text_color }}
             >
@@ -138,13 +134,13 @@ const Login = () => {
             {loading ? "Entrando..." : "Entrar"}
           </Button>
 
-          <p className="text-center text-sm" style={{ color: config.login_text_color }}>
+          <p className="text-center text-sm text-gray-600">
             Não possui uma conta?{" "}
             <Button
               variant="link"
               className="p-0 transition"
               onClick={() => navigate("/signup")}
-              style={{ color: config.primary_color }}
+              style={{ color: config.login_text_color }}
             >
               Criar conta
             </Button>
