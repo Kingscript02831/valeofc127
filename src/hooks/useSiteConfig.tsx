@@ -12,10 +12,13 @@ export function useSiteConfig() {
       const { data, error } = await supabase
         .from("site_configuration")
         .select("*")
-        .maybeSingle();
+        .limit(1)
+        .single();
       
-      if (error) throw error;
-      if (!data) throw new Error("No site configuration found");
+      if (error) {
+        console.error("Error fetching site configuration:", error);
+        throw error;
+      }
       
       return data;
     },
