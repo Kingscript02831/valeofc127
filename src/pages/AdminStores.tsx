@@ -25,7 +25,6 @@ import {
   AlertDialogTitle,
 } from "../components/ui/alert-dialog";
 import type { Store, StoreFormData } from "../types/stores";
-import { StoreForm } from "../components/StoreForm";
 
 const AdminStores = () => {
   const { toast } = useToast();
@@ -70,21 +69,6 @@ const AdminStores = () => {
   const filteredStores = stores?.filter((store) =>
     store.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  // Add categories query
-  const { data: categories } = useQuery({
-    queryKey: ["categories-stores"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("categories")
-        .select("*")
-        .eq('page_type', 'stores')
-        .order("name");
-
-      if (error) throw error;
-      return data;
-    },
-  });
 
   // Handle form input changes
   const handleInputChange = (
@@ -255,18 +239,187 @@ const AdminStores = () => {
               Adicionar Loja
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
                 {selectedStore ? "Editar Loja" : "Adicionar Nova Loja"}
               </DialogTitle>
             </DialogHeader>
-            <StoreForm
-              initialData={selectedStore || undefined}
-              categories={categories || []}
-              onSubmit={handleSubmit}
-              onCancel={() => setIsAddEditDialogOpen(false)}
-            />
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label htmlFor="name" className="text-sm font-medium">
+                    Nome *
+                  </label>
+                  <Input
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="address" className="text-sm font-medium">
+                    Endereço *
+                  </label>
+                  <Input
+                    id="address"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+                <div className="space-y-2 col-span-2">
+                  <label htmlFor="description" className="text-sm font-medium">
+                    Descrição *
+                  </label>
+                  <Textarea
+                    id="description"
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="owner_name" className="text-sm font-medium">
+                    Nome do Proprietário
+                  </label>
+                  <Input
+                    id="owner_name"
+                    name="owner_name"
+                    value={formData.owner_name || ""}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="opening_hours" className="text-sm font-medium">
+                    Horário de Funcionamento
+                  </label>
+                  <Input
+                    id="opening_hours"
+                    name="opening_hours"
+                    value={formData.opening_hours || ""}
+                    onChange={handleInputChange}
+                    placeholder="Ex: Segunda a Sexta 9h às 18h"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="entrance_fee" className="text-sm font-medium">
+                    Valor da Entrada
+                  </label>
+                  <Input
+                    id="entrance_fee"
+                    name="entrance_fee"
+                    value={formData.entrance_fee || ""}
+                    onChange={handleInputChange}
+                    placeholder="Ex: R$ 20,00"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="maps_url" className="text-sm font-medium">
+                    Link do Google Maps
+                  </label>
+                  <Input
+                    id="maps_url"
+                    name="maps_url"
+                    value={formData.maps_url || ""}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="phone" className="text-sm font-medium">
+                    Telefone
+                  </label>
+                  <Input
+                    id="phone"
+                    name="phone"
+                    value={formData.phone || ""}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="whatsapp" className="text-sm font-medium">
+                    WhatsApp
+                  </label>
+                  <Input
+                    id="whatsapp"
+                    name="whatsapp"
+                    value={formData.whatsapp || ""}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="website" className="text-sm font-medium">
+                    Website
+                  </label>
+                  <Input
+                    id="website"
+                    name="website"
+                    value={formData.website || ""}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="image" className="text-sm font-medium">
+                    URL da Imagem
+                  </label>
+                  <Input
+                    id="image"
+                    name="image"
+                    value={formData.image || ""}
+                    onChange={handleInputChange}
+                  />
+                </div>
+
+                {/* Redes Sociais */}
+                <div className="space-y-2">
+                  <label
+                    htmlFor="social_media.facebook"
+                    className="text-sm font-medium"
+                  >
+                    Facebook
+                  </label>
+                  <Input
+                    id="social_media.facebook"
+                    name="social_media.facebook"
+                    value={(formData.social_media as any)?.facebook || ""}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label
+                    htmlFor="social_media.instagram"
+                    className="text-sm font-medium"
+                  >
+                    Instagram
+                  </label>
+                  <Input
+                    id="social_media.instagram"
+                    name="social_media.instagram"
+                    value={(formData.social_media as any)?.instagram || ""}
+                    onChange={handleInputChange}
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setIsAddEditDialogOpen(false);
+                    resetForm();
+                  }}
+                >
+                  Cancelar
+                </Button>
+                <Button type="submit">
+                  {selectedStore ? "Salvar" : "Adicionar"}
+                </Button>
+              </div>
+            </form>
           </DialogContent>
         </Dialog>
       </div>
