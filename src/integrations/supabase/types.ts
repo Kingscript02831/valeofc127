@@ -574,7 +574,7 @@ export type Database = {
           longitude: number | null
           maps_url: string | null
           name: string
-          opening_hours: Json | null
+          opening_hours: string | null
           owner_name: string | null
           phone: string | null
           postal_code: string | null
@@ -598,7 +598,7 @@ export type Database = {
           longitude?: number | null
           maps_url?: string | null
           name: string
-          opening_hours?: Json | null
+          opening_hours?: string | null
           owner_name?: string | null
           phone?: string | null
           postal_code?: string | null
@@ -622,7 +622,7 @@ export type Database = {
           longitude?: number | null
           maps_url?: string | null
           name?: string
-          opening_hours?: Json | null
+          opening_hours?: string | null
           owner_name?: string | null
           phone?: string | null
           postal_code?: string | null
