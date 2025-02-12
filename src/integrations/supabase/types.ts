@@ -80,6 +80,56 @@ export type Database = {
           },
         ]
       }
+      chat_participants: {
+        Row: {
+          chat_id: string | null
+          created_at: string | null
+          id: string
+          last_read_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          chat_id?: string | null
+          created_at?: string | null
+          id?: string
+          last_read_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          chat_id?: string | null
+          created_at?: string | null
+          id?: string
+          last_read_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_participants_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chats: {
+        Row: {
+          created_at: string | null
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       events: {
         Row: {
           additional_photos: string[] | null
@@ -175,6 +225,41 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          chat_id: string | null
+          content: string
+          created_at: string | null
+          id: string
+          read: boolean | null
+          sender_id: string | null
+        }
+        Insert: {
+          chat_id?: string | null
+          content: string
+          created_at?: string | null
+          id?: string
+          read?: boolean | null
+          sender_id?: string | null
+        }
+        Update: {
+          chat_id?: string | null
+          content?: string
+          created_at?: string | null
+          id?: string
+          read?: boolean | null
+          sender_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "chats"
             referencedColumns: ["id"]
           },
         ]
