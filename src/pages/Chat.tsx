@@ -56,7 +56,7 @@ export default function Chat() {
             *,
             profile:profiles(username, avatar_url, name, online_status, last_seen)
           ),
-          messages!messages_chat_id_fkey(*)
+          messages:messages_chat_id_fkey(*)
         `)
         .order("updated_at", { ascending: false });
 

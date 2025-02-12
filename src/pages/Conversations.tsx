@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../integrations/supabase/client";
@@ -79,9 +78,9 @@ export default function Conversations() {
             *,
             profile:profiles(username, avatar_url, name, online_status, last_seen)
           ),
-          messages!messages_chat_id_fkey(*)
+          messages:messages_chat_id_fkey(*)
         `)
-        .order('messages!messages_chat_id_fkey(created_at)', { ascending: false });
+        .order('messages.created_at', { ascending: false });
 
       if (chatsError) {
         toast.error("Erro ao carregar conversas");
