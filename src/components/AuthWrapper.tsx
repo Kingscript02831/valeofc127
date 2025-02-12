@@ -8,28 +8,69 @@ const AuthWrapper = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
 
   useEffect(() => {
-    // Add cache control headers
+    // Adiciona headers de controle de cache
     if (typeof window !== "undefined") {
-      window.history.pushState(null, "", window.location.href);
-      window.onpopstate = function () {
-        window.history.pushState(null, "", window.location.href);
+      // Previne cache no navegador
+      window.onpageshow = function(event) {
+        if (event.persisted) {
+          // Se a página foi carregada do cache do navegador (botão voltar)
+          window.location.href = "/";
+        }
       };
+
+      // Força o não-cache para páginas sensíveis
+      if (document.location.pathname !== "/") {
+        // Adiciona headers de cache-control
+        const meta = document.createElement('meta');
+        meta.httpEquiv = 'Cache-Control';
+        meta.content = 'no-cache, no-store, must-revalidate';
+        document.getElementsByTagName('head')[0].appendChild(meta);
+
+        // Adiciona headers de pragma e expires
+        const pragmaMeta = document.createElement('meta');
+        pragmaMeta.httpEquiv = 'Pragma';
+        pragmaMeta.content = 'no-cache';
+        document.getElementsByTagName('head')[0].appendChild(pragmaMeta);
+
+        const expiresMeta = document.createElement('meta');
+        expiresMeta.httpEquiv = 'Expires';
+        expiresMeta.content = '0';
+        document.getElementsByTagName('head')[0].appendChild(expiresMeta);
+      }
     }
 
-    // Listen for auth state changes
+    // Escuta mudanças no estado de autenticação
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (event === "SIGNED_OUT") {
-          // Clear cache
+          // Limpa o cache do histórico
           if (typeof window !== "undefined") {
+            // Remove entradas do histórico
             window.history.replaceState(null, "", "/");
-            navigate("/", { replace: true });
+            
+            // Força redirecionamento para a página inicial
+            navigate("/", { 
+              replace: true,
+              state: { 
+                fromLogout: true,
+                timestamp: Date.now() 
+              } 
+            });
+
+            // Limpa qualquer cache de sessão
+            sessionStorage.clear();
+            
+            // Adiciona um listener temporário para o evento popstate
+            const handlePopState = () => {
+              window.location.href = "/";
+              window.removeEventListener('popstate', handlePopState);
+            };
+            window.addEventListener('popstate', handlePopState);
           }
         }
       }
     );
 
-    // Cleanup subscription
     return () => {
       subscription.unsubscribe();
     };
