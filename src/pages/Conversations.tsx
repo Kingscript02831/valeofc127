@@ -54,58 +54,87 @@ export default function Conversations() {
           ),
           messages:messages(*)
         `)
-        .order("updated_at", { ascending: false });
+        .order('messages.created_at', { foreignTable: 'messages', ascending: false });
 
       if (chatsError) throw chatsError;
 
       // Se não houver chats, criar alguns exemplos
       if (!chatsData || chatsData.length === 0) {
-        return [
+        const mockChats: Chat[] = [
           {
             id: '1',
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
-            participants: [
-              {
-                user_id: 'exemplo1',
-                profile: {
-                  name: 'João Silva',
-                  avatar_url: null
-                }
+            participants: [{
+              id: '1',
+              chat_id: '1',
+              user_id: 'exemplo1',
+              created_at: new Date().toISOString(),
+              last_read_at: new Date().toISOString(),
+              profile: {
+                name: 'João Silva',
+                avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=João'
               }
-            ],
-            messages: [
-              {
-                id: '1',
-                content: 'Olá, tudo bem?',
-                created_at: new Date().toISOString(),
-                sender_id: 'exemplo1'
-              }
-            ]
+            }],
+            messages: [{
+              id: '1',
+              chat_id: '1',
+              content: 'Olá! Como posso te ajudar hoje?',
+              created_at: new Date().toISOString(),
+              sender_id: 'exemplo1',
+              read: false
+            }]
           },
           {
             id: '2',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            participants: [
-              {
-                user_id: 'exemplo2',
-                profile: {
-                  name: 'Maria Santos',
-                  avatar_url: null
-                }
+            created_at: new Date(Date.now() - 3600000).toISOString(),
+            updated_at: new Date(Date.now() - 3600000).toISOString(),
+            participants: [{
+              id: '2',
+              chat_id: '2',
+              user_id: 'exemplo2',
+              created_at: new Date().toISOString(),
+              last_read_at: new Date().toISOString(),
+              profile: {
+                name: 'Maria Santos',
+                avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Maria'
               }
-            ],
-            messages: [
-              {
-                id: '2',
-                content: 'Bom dia! Como você está?',
-                created_at: new Date().toISOString(),
-                sender_id: 'exemplo2'
+            }],
+            messages: [{
+              id: '2',
+              chat_id: '2',
+              content: 'Bom dia! Preciso de informações sobre os horários.',
+              created_at: new Date(Date.now() - 3600000).toISOString(),
+              sender_id: 'exemplo2',
+              read: true
+            }]
+          },
+          {
+            id: '3',
+            created_at: new Date(Date.now() - 7200000).toISOString(),
+            updated_at: new Date(Date.now() - 7200000).toISOString(),
+            participants: [{
+              id: '3',
+              chat_id: '3',
+              user_id: 'exemplo3',
+              created_at: new Date().toISOString(),
+              last_read_at: new Date().toISOString(),
+              profile: {
+                name: 'Carlos Oliveira',
+                avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Carlos'
               }
-            ]
+            }],
+            messages: [{
+              id: '3',
+              chat_id: '3',
+              content: 'Oi, gostaria de saber mais sobre os eventos.',
+              created_at: new Date(Date.now() - 7200000).toISOString(),
+              sender_id: 'exemplo3',
+              read: true
+            }]
           }
         ];
+        return mockChats;
       }
 
       return chatsData as Chat[];
@@ -181,6 +210,7 @@ export default function Conversations() {
         {filteredChats?.map((chat) => {
           const otherParticipant = getOtherParticipant(chat);
           const lastMessage = chat.messages?.[0];
+
           return (
             <div
               key={chat.id}
@@ -225,6 +255,12 @@ export default function Conversations() {
             </div>
           );
         })}
+
+        {filteredChats?.length === 0 && searchQuery && (
+          <div className="px-4 py-8 text-center text-gray-400">
+            Nenhum usuário encontrado com "{searchQuery}"
+          </div>
+        )}
       </div>
       <BottomNav />
     </div>

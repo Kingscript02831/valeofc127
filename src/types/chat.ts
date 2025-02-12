@@ -13,7 +13,7 @@ export interface Chat {
   created_at: string;
   updated_at: string;
   participants: ChatParticipant[];
-  last_message?: Message;
+  messages: Message[];
 }
 
 export interface ChatParticipant {
