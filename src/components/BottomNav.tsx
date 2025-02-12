@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
+import { Button } from "./ui/button";
 
 const BottomNav = () => {
   const location = useLocation();
@@ -46,12 +47,21 @@ const BottomNav = () => {
 
   const handleNavigation = (path: string, e: React.MouseEvent) => {
     e.preventDefault();
-    if (!session && (path === "/notify" || path === "/chat")) {
+    if (!session && (path === "/notify" || path === "/conversations")) {
       toast.error("Você precisa fazer login para acessar esta área");
       navigate("/login");
       return;
     }
     navigate(path);
+  };
+
+  const handleSearchClick = () => {
+    if (!session) {
+      toast.error("Você precisa fazer login para acessar esta área");
+      navigate("/login");
+      return;
+    }
+    navigate("/chat", { state: { isSearchOpen: true } });
   };
 
   const isActive = (path: string) => {
@@ -79,9 +89,9 @@ const BottomNav = () => {
           </Link>
 
           <button
-            onClick={(e) => handleNavigation("/chat", e)}
+            onClick={(e) => handleNavigation("/conversations", e)}
             className={`flex flex-col items-center p-1`}
-            style={{ color: isActive("/chat") ? iconColor : textColor }}
+            style={{ color: isActive("/conversations") ? iconColor : textColor }}
           >
             <MessageCircle className="h-5 w-5" />
             <span className="text-xs">Chat</span>
