@@ -1,15 +1,21 @@
+
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Send, Search, ArrowLeft, MoreVertical, Phone } from "lucide-react";
+import { 
+  Send, 
+  ArrowLeft, 
+  MoreVertical, 
+  Phone,
+  Smile,
+  Paperclip,
+  Mic
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import type { Message, Chat, ChatParticipant } from "@/types/chat";
-import Navbar4 from "@/components/Navbar4";
-import SubNav4 from "@/components/SubNav4";
-import BottomNav from "@/components/BottomNav";
 
 export default function Chat() {
   const { toast } = useToast();
@@ -21,8 +27,6 @@ export default function Chat() {
     location.state?.selectedChat || null
   );
   const [newMessage, setNewMessage] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isSearchOpen, setIsSearchOpen] = useState(location.state?.isSearchOpen || false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -36,24 +40,6 @@ export default function Chat() {
     };
     checkAuth();
   }, [navigate]);
-
-  const { data: searchResults } = useQuery({
-    queryKey: ["searchUsers", searchQuery],
-    queryFn: async () => {
-      if (!searchQuery) return [];
-      
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, username, name, avatar_url, bio")
-        .ilike("username", `%${searchQuery}%`)
-        .neq("id", currentUserId)
-        .limit(10);
-
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!searchQuery && !!currentUserId,
-  });
 
   const { data: chats } = useQuery({
     queryKey: ["chats"],
@@ -90,29 +76,6 @@ export default function Chat() {
       return data as Message[];
     },
     enabled: !!selectedChat,
-  });
-
-  const startChat = useMutation({
-    mutationFn: async (userId: string) => {
-      const { data, error } = await supabase
-        .rpc("create_private_chat", { other_user_id: userId });
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: (chatId) => {
-      setSelectedChat(chatId);
-      setIsSearchOpen(false);
-      setSearchQuery("");
-      queryClient.invalidateQueries({ queryKey: ["chats"] });
-    },
-    onError: () => {
-      toast({
-        title: "Erro ao iniciar conversa",
-        description: "Tente novamente mais tarde",
-        variant: "destructive",
-      });
-    },
   });
 
   const sendMessage = useMutation({
@@ -191,26 +154,26 @@ export default function Chat() {
     }
   };
 
-  if (!selectedChat && !isSearchOpen) {
+  if (!selectedChat) {
     navigate("/conversations");
     return null;
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="flex flex-col h-screen bg-[#0B141A]">
       {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-[#202C33] px-4 py-2">
-        <div className="flex items-center justify-between">
+      <div className="bg-[#202C33] px-4 py-2 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Button 
+            variant="ghost" 
+            size="icon"
+            className="text-gray-400 hover:text-white"
+            onClick={() => navigate("/conversations")}
+          >
+            <ArrowLeft className="h-6 w-6" />
+          </Button>
           <div className="flex items-center gap-3">
-            <Button 
-              variant="ghost" 
-              size="icon"
-              className="text-gray-400 hover:text-white"
-              onClick={() => navigate("/conversations")}
-            >
-              <ArrowLeft className="h-6 w-6" />
-            </Button>
-            <div className="flex items-center gap-3">
+            <div className="relative">
               <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center overflow-hidden">
                 {otherParticipant?.avatar_url ? (
                   <img
@@ -224,117 +187,94 @@ export default function Chat() {
                   </span>
                 )}
               </div>
-              <div>
-                <h2 className="font-semibold text-white">
-                  {otherParticipant?.name || otherParticipant?.username || "Usuário"}
-                </h2>
-              </div>
+              <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[#202C33]" />
+            </div>
+            <div>
+              <h2 className="font-semibold text-white">
+                {otherParticipant?.name || otherParticipant?.username || "Usuário"}
+              </h2>
+              <p className="text-sm text-green-500">Online</p>
             </div>
           </div>
-          <div className="flex items-center gap-4 text-gray-400">
-            <Phone className="h-5 w-5" />
-            <MoreVertical 
-              className="h-5 w-5 cursor-pointer" 
-              onClick={() => navigate("/perfil")}
-            />
-          </div>
+        </div>
+        <div className="flex items-center gap-4 text-gray-400">
+          <Phone className="h-5 w-5" />
+          <MoreVertical className="h-5 w-5 cursor-pointer" />
         </div>
       </div>
 
-      <div className="container max-w-4xl mx-auto pb-20 pt-20">
-        <div className="relative h-[calc(100vh-160px)] bg-gray-900 rounded-lg overflow-hidden">
-          {isSearchOpen ? (
-            <div className="h-full p-4">
-              <Input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Procurar usuários..."
-                className="mb-4 bg-gray-800 border-gray-700 text-white"
-                autoFocus
-              />
-
-              <div className="space-y-2">
-                {searchResults?.map((user) => (
-                  <div
-                    key={user.id}
-                    onClick={() => startChat.mutate(user.id)}
-                    className="flex items-center gap-3 p-3 hover:bg-gray-800 rounded-lg cursor-pointer"
-                  >
-                    <div className="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden">
-                      {user.avatar_url ? (
-                        <img
-                          src={user.avatar_url}
-                          alt={user.name || "Avatar"}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <span className="text-lg">
-                          {user.name?.[0] || user.username?.[0] || "?"}
-                        </span>
-                      )}
-                    </div>
-                    <div>
-                      <h3 className="font-medium">
-                        {user.name || "Usuário"}
-                      </h3>
-                      {user.username && (
-                        <p className="text-sm text-gray-400">
-                          @{user.username}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {messages?.map((message) => (
+          <div
+            key={message.id}
+            className={`flex ${
+              message.sender_id === currentUserId
+                ? "justify-end"
+                : "justify-start"
+            }`}
+          >
+            <div
+              className={`max-w-[80%] p-3 rounded-lg ${
+                message.sender_id === currentUserId
+                  ? "bg-[#005C4B]"
+                  : "bg-[#202C33]"
+              }`}
+            >
+              <p className="break-words text-white">{message.content}</p>
             </div>
+          </div>
+        ))}
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Input */}
+      <form onSubmit={handleSendMessage} className="p-2 bg-[#202C33]">
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="text-gray-400 hover:text-white"
+          >
+            <Smile className="h-6 w-6" />
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="text-gray-400 hover:text-white"
+          >
+            <Paperclip className="h-6 w-6" />
+          </Button>
+          <Input
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            placeholder="Mensagem"
+            className="flex-1 bg-[#2A3942] border-none text-white placeholder-gray-400"
+          />
+          {newMessage.trim() ? (
+            <Button
+              type="submit"
+              variant="ghost"
+              size="icon"
+              className="text-gray-400 hover:text-white"
+              disabled={sendMessage.isPending}
+            >
+              <Send className="h-6 w-6" />
+            </Button>
           ) : (
-            <div className="h-full flex flex-col">
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {messages?.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex ${
-                      message.sender_id === currentUserId
-                        ? "justify-end"
-                        : "justify-start"
-                    }`}
-                  >
-                    <div
-                      className={`max-w-[80%] p-3 rounded-lg ${
-                        message.sender_id === currentUserId
-                          ? "bg-blue-600"
-                          : "bg-gray-700"
-                      }`}
-                    >
-                      <p className="break-words">{message.content}</p>
-                    </div>
-                  </div>
-                ))}
-                <div ref={messagesEndRef} />
-              </div>
-
-              <form onSubmit={handleSendMessage} className="p-4 border-t border-gray-800">
-                <div className="flex gap-2">
-                  <Input
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    placeholder="Digite sua mensagem..."
-                    className="flex-1 bg-gray-800 border-gray-700 text-white"
-                  />
-                  <Button
-                    type="submit"
-                    disabled={!newMessage.trim() || sendMessage.isPending}
-                    className="bg-blue-600 hover:bg-blue-700"
-                  >
-                    <Send className="h-5 w-5" />
-                  </Button>
-                </div>
-              </form>
-            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="text-gray-400 hover:text-white bg-green-500 hover:bg-green-600"
+            >
+              <Mic className="h-6 w-6 text-white" />
+            </Button>
           )}
         </div>
-      </div>
-      <BottomNav />
+      </form>
     </div>
   );
-};
+}
