@@ -9,6 +9,33 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_permissions: {
+        Row: {
+          granted_at: string | null
+          granted_by: string | null
+          id: string
+          is_active: boolean | null
+          permission: Database["public"]["Enums"]["admin_permission"]
+          user_id: string | null
+        }
+        Insert: {
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          permission: Database["public"]["Enums"]["admin_permission"]
+          user_id?: string | null
+        }
+        Update: {
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          permission?: Database["public"]["Enums"]["admin_permission"]
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           background_color: string | null
@@ -850,6 +877,13 @@ export type Database = {
         }
         Returns: string
       }
+      has_admin_permission: {
+        Args: {
+          user_id: string
+          required_permission: Database["public"]["Enums"]["admin_permission"]
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           user_id: string
@@ -865,6 +899,13 @@ export type Database = {
       }
     }
     Enums: {
+      admin_permission:
+        | "full_access"
+        | "places"
+        | "events"
+        | "stores"
+        | "news"
+        | "categories"
       app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
