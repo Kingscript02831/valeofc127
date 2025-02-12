@@ -22,23 +22,20 @@ import {
   User,
   AtSign,
   Settings,
-  Key,
   MapPin,
   Mail,
   Phone,
   Calendar,
   Globe,
-  Image,
-  BookUser,
-  Contact,
   Building,
   Home,
-  Shield,
   Trash2,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import BottomNav from "../components/BottomNav";
+import Navbar from "../components/Navbar";
+import SubNav from "../components/SubNav";
 import type { ProfileUpdateData } from "../types/profile";
 
 const profileSchema = z.object({
@@ -63,7 +60,7 @@ export default function Profile() {
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(true);
 
-  // Check for authentication status
+  // Check for authentication and scheduled deletion
   useEffect(() => {
     const checkSession = async () => {
       try {
@@ -72,6 +69,30 @@ export default function Profile() {
           navigate("/login");
           return;
         }
+
+        // Check if user had a scheduled deletion
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("scheduled_deletion_date")
+          .eq("id", session.user.id)
+          .single();
+
+        if (profile?.scheduled_deletion_date) {
+          // Cancel deletion and show welcome back message
+          const { error } = await supabase
+            .from("profiles")
+            .update({ scheduled_deletion_date: null })
+            .eq("id", session.user.id);
+
+          if (!error) {
+            toast({
+              title: "Bem-vindo de volta!",
+              description: "A exclusão da sua conta foi cancelada.",
+              duration: 5000,
+            });
+          }
+        }
+
         setIsLoading(false);
       } catch (error) {
         console.error("Error checking session:", error);
@@ -79,7 +100,7 @@ export default function Profile() {
       }
     };
     checkSession();
-  }, [navigate]);
+  }, [navigate, toast]);
 
   // Set up form with default values
   const form = useForm<z.infer<typeof profileSchema>>({
@@ -217,19 +238,21 @@ export default function Profile() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-black text-white">
         <p>Carregando...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container max-w-4xl mx-auto p-4 pb-20 pt-8">
+    <div className="min-h-screen bg-black text-white">
+      <Navbar />
+      <SubNav />
+      <div className="container max-w-4xl mx-auto p-4 pb-20 pt-28">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-semibold text-gray-900">
+            <h1 className="text-2xl font-semibold text-white">
               {profile?.username ? `@${profile.username}` : 'Perfil'}
             </h1>
           </div>
@@ -238,15 +261,15 @@ export default function Profile() {
               variant="ghost"
               size="icon"
               onClick={() => navigate("/settings")}
-              className="hover:bg-gray-100"
+              className="hover:bg-gray-800"
             >
-              <Settings className="h-5 w-5 text-gray-600" />
+              <Settings className="h-5 w-5 text-white" />
             </Button>
             <Button
               variant="destructive"
               size="sm"
               onClick={handleLogout}
-              className="bg-red-500 hover:bg-red-600 text-white"
+              className="bg-red-600 hover:bg-red-700 text-white"
             >
               <LogOut className="h-4 w-4 mr-2" />
               Sair
@@ -257,12 +280,12 @@ export default function Profile() {
         {/* Profile Content */}
         <div className="space-y-6">
           {/* Profile Header Card */}
-          <Card className="border-none shadow-lg bg-white">
+          <Card className="border-none bg-gray-900 shadow-xl">
             <CardContent className="pt-6">
               <div className="flex items-center gap-6">
                 <div className="relative group">
                   {profile?.avatar_url ? (
-                    <div className="w-24 h-24 rounded-full overflow-hidden ring-2 ring-gray-200">
+                    <div className="w-24 h-24 rounded-full overflow-hidden ring-2 ring-gray-700">
                       <img
                         src={profile.avatar_url}
                         alt="Avatar"
@@ -270,21 +293,21 @@ export default function Profile() {
                       />
                     </div>
                   ) : (
-                    <div className="w-24 h-24 rounded-full bg-gray-100 ring-2 ring-gray-200 flex items-center justify-center">
+                    <div className="w-24 h-24 rounded-full bg-gray-800 ring-2 ring-gray-700 flex items-center justify-center">
                       <User className="w-12 h-12 text-gray-400" />
                     </div>
                   )}
                 </div>
                 <div className="space-y-2">
-                  <h2 className="text-2xl font-semibold text-gray-900">{profile?.name}</h2>
+                  <h2 className="text-2xl font-semibold text-white">{profile?.name}</h2>
                   {profile?.username && (
-                    <p className="text-gray-600 flex items-center gap-1 text-sm">
+                    <p className="text-gray-400 flex items-center gap-1 text-sm">
                       <AtSign className="h-4 w-4" />
                       {profile.username}
                     </p>
                   )}
                   {profile?.bio && (
-                    <p className="text-sm text-gray-600">{profile.bio}</p>
+                    <p className="text-sm text-gray-400">{profile.bio}</p>
                   )}
                 </div>
               </div>
@@ -293,39 +316,39 @@ export default function Profile() {
 
           {/* Tabs */}
           <Tabs defaultValue="info" className="w-full">
-            <TabsList className="w-full bg-white">
-              <TabsTrigger value="info" className="flex-1">
+            <TabsList className="w-full bg-gray-900">
+              <TabsTrigger value="info" className="flex-1 text-white data-[state=active]:bg-gray-800">
                 Informações
               </TabsTrigger>
-              <TabsTrigger value="settings" className="flex-1">
+              <TabsTrigger value="settings" className="flex-1 text-white data-[state=active]:bg-gray-800">
                 Configurações
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="info">
               <div className="grid gap-6">
-                {/* Personal Info Card */}
-                <Card className="border-none shadow-lg bg-white">
+                {/* Cards with dark theme */}
+                <Card className="border-none bg-gray-900 shadow-xl">
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-lg text-gray-900">
+                    <CardTitle className="text-lg text-white">
                       Informações Pessoais
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     {profile?.email && (
-                      <div className="flex items-center gap-3 text-gray-600">
+                      <div className="flex items-center gap-3 text-gray-300">
                         <Mail className="h-4 w-4" />
                         <span>{profile.email}</span>
                       </div>
                     )}
                     {profile?.phone && (
-                      <div className="flex items-center gap-3 text-gray-600">
+                      <div className="flex items-center gap-3 text-gray-300">
                         <Phone className="h-4 w-4" />
                         <span>{profile.phone}</span>
                       </div>
                     )}
                     {profile?.birth_date && (
-                      <div className="flex items-center gap-3 text-gray-600">
+                      <div className="flex items-center gap-3 text-gray-300">
                         <Calendar className="h-4 w-4" />
                         <span>{format(new Date(profile.birth_date), "dd/MM/yyyy")}</span>
                       </div>
@@ -334,33 +357,33 @@ export default function Profile() {
                 </Card>
 
                 {/* Address Card */}
-                <Card className="border-none shadow-lg bg-white">
+                <Card className="border-none bg-gray-900 shadow-xl">
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-lg text-gray-900">
+                    <CardTitle className="text-lg text-white">
                       Endereço
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-4 text-gray-300">
                     {profile?.street && (
-                      <div className="flex items-center gap-3 text-gray-600">
+                      <div className="flex items-center gap-3 text-gray-300">
                         <Home className="h-4 w-4" />
                         <span>Rua: {profile.street}</span>
                       </div>
                     )}
                     {profile?.house_number && (
-                      <div className="flex items-center gap-3 text-gray-600">
+                      <div className="flex items-center gap-3 text-gray-300">
                         <MapPin className="h-4 w-4" />
                         <span>Número: {profile.house_number}</span>
                       </div>
                     )}
                     {profile?.city && (
-                      <div className="flex items-center gap-3 text-gray-600">
+                      <div className="flex items-center gap-3 text-gray-300">
                         <Building className="h-4 w-4" />
                         <span>Cidade: {profile.city}</span>
                       </div>
                     )}
                     {profile?.postal_code && (
-                      <div className="flex items-center gap-3 text-gray-600">
+                      <div className="flex items-center gap-3 text-gray-300">
                         <MapPin className="h-4 w-4" />
                         <span>CEP: {profile.postal_code}</span>
                       </div>
@@ -370,15 +393,15 @@ export default function Profile() {
 
                 {/* Website Card */}
                 {profile?.website && (
-                  <Card className="border-none shadow-lg bg-white">
+                  <Card className="border-none bg-gray-900 shadow-xl">
                     <CardContent className="pt-6">
-                      <div className="flex items-center gap-3 text-gray-600">
+                      <div className="flex items-center gap-3 text-gray-300">
                         <Globe className="h-4 w-4" />
                         <a
                           href={profile.website}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline"
+                          className="text-blue-400 hover:underline"
                         >
                           {profile.website}
                         </a>
@@ -392,14 +415,9 @@ export default function Profile() {
             <TabsContent value="settings">
               <Form {...form}>
                 <form onSubmit={form.handleSubmit((data) => updateProfile.mutate(data))} className="space-y-6">
-                  {/* Avatar Settings */}
-                  <Card className="border-none shadow-lg bg-white">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-lg text-gray-900">
-                        Foto de Perfil
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
+                  {/* Form fields with dark theme */}
+                  <Card className="border-none bg-gray-900 shadow-xl">
+                    <CardContent className="space-y-4 pt-6">
                       <FormField
                         control={form.control}
                         name="avatar_url"
@@ -416,10 +434,9 @@ export default function Profile() {
                     </CardContent>
                   </Card>
 
-                  {/* Basic Info Settings */}
-                  <Card className="border-none shadow-lg bg-white">
+                  <Card className="border-none bg-gray-900 shadow-xl">
                     <CardHeader className="pb-3">
-                      <CardTitle className="text-lg text-gray-900">
+                      <CardTitle className="text-lg text-white">
                         Informações Básicas
                       </CardTitle>
                     </CardHeader>
@@ -482,10 +499,9 @@ export default function Profile() {
                     </CardContent>
                   </Card>
 
-                  {/* Contact Settings */}
-                  <Card className="border-none shadow-lg bg-white">
+                  <Card className="border-none bg-gray-900 shadow-xl">
                     <CardHeader className="pb-3">
-                      <CardTitle className="text-lg text-gray-900">
+                      <CardTitle className="text-lg text-white">
                         Contato
                       </CardTitle>
                     </CardHeader>
@@ -534,10 +550,9 @@ export default function Profile() {
                     </CardContent>
                   </Card>
 
-                  {/* Address Settings */}
-                  <Card className="border-none shadow-lg bg-white">
+                  <Card className="border-none bg-gray-900 shadow-xl">
                     <CardHeader className="pb-3">
-                      <CardTitle className="text-lg text-gray-900">
+                      <CardTitle className="text-lg text-white">
                         Endereço
                       </CardTitle>
                     </CardHeader>
@@ -604,7 +619,7 @@ export default function Profile() {
                     <Button
                       type="submit"
                       disabled={updateProfile.isPending}
-                      className="w-full bg-gray-900 hover:bg-gray-800 text-white"
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                     >
                       {updateProfile.isPending ? "Salvando..." : "Salvar alterações"}
                     </Button>
@@ -613,7 +628,7 @@ export default function Profile() {
                       type="button"
                       variant="destructive"
                       onClick={handleAccountDeletion}
-                      className="w-full"
+                      className="w-full bg-red-600 hover:bg-red-700"
                     >
                       <Trash2 className="h-4 w-4 mr-2" />
                       Excluir conta
