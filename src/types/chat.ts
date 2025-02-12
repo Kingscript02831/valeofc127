@@ -8,14 +8,6 @@ export interface Message {
   read: boolean;
 }
 
-export interface Chat {
-  id: string;
-  created_at: string;
-  updated_at: string;
-  participants: ChatParticipant[];
-  messages: Message[];
-}
-
 export interface ChatParticipant {
   id: string;
   chat_id: string;
@@ -26,7 +18,16 @@ export interface ChatParticipant {
     username?: string;
     avatar_url?: string;
     name?: string;
+    bio?: string;
     online_status?: boolean;
     last_seen?: string;
   };
+}
+
+export interface Chat {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  participants: ChatParticipant[];
+  messages?: Message[];
 }
