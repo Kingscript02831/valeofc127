@@ -1,3 +1,4 @@
+
 import { Home, Bell, User, MessageCircle, Search } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
@@ -12,7 +13,6 @@ const BottomNav = () => {
   const navigate = useNavigate();
   const { data: config } = useSiteConfig();
   const [session, setSession] = useState<any>(null);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -47,7 +47,7 @@ const BottomNav = () => {
 
   const handleNavigation = (path: string, e: React.MouseEvent) => {
     e.preventDefault();
-    if (!session && (path === "/notify" || path === "/chat")) {
+    if (!session && (path === "/notify" || path === "/conversations")) {
       toast.error("Você precisa fazer login para acessar esta área");
       navigate("/login");
       return;
@@ -103,10 +103,10 @@ const BottomNav = () => {
             </Link>
 
             <a
-              href="/chat"
-              onClick={(e) => handleNavigation("/chat", e)}
+              href="/conversations"
+              onClick={(e) => handleNavigation("/conversations", e)}
               className={`flex flex-col items-center p-1`}
-              style={{ color: isActive("/chat") ? iconColor : textColor }}
+              style={{ color: isActive("/conversations") ? iconColor : textColor }}
             >
               <MessageCircle className="h-5 w-5" />
               <span className="text-xs">Chat</span>

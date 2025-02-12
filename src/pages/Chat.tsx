@@ -3,13 +3,13 @@ import { useEffect, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Send, ArrowLeft, Search, Plus } from "lucide-react";
+import { Send, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import type { Message, Chat, ChatParticipant } from "@/types/chat";
-import Navbar3 from "@/components/Navbar3";
-import SubNav3 from "@/components/SubNav3";
+import Navbar4 from "@/components/Navbar4";
+import SubNav4 from "@/components/SubNav4";
 import BottomNav from "@/components/BottomNav";
 
 export default function Chat() {
@@ -23,7 +23,7 @@ export default function Chat() {
   );
   const [newMessage, setNewMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(location.state?.isSearchOpen || false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -45,7 +45,7 @@ export default function Chat() {
       
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, username, name, avatar_url")
+        .select("id, username, name, avatar_url, bio")
         .ilike("username", `%${searchQuery}%`)
         .neq("id", currentUserId)
         .limit(10);
@@ -65,7 +65,7 @@ export default function Chat() {
           *,
           participants:chat_participants(
             *,
-            profile:profiles(username, avatar_url, name)
+            profile:profiles(username, avatar_url, name, bio)
           ),
           messages:messages(*)
         `)
@@ -173,9 +173,17 @@ export default function Chat() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  const getCurrentChat = () => {
+    if (!selectedChat || !chats) return null;
+    return chats.find(c => c.id === selectedChat);
+  };
+
   const getOtherParticipant = (chat: Chat) => {
     return (chat.participants as ChatParticipant[]).find(p => p.user_id !== currentUserId)?.profile;
   };
+
+  const currentChat = getCurrentChat();
+  const otherParticipant = currentChat ? getOtherParticipant(currentChat) : null;
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -184,107 +192,64 @@ export default function Chat() {
     }
   };
 
+  if (!selectedChat && !isSearchOpen) {
+    navigate("/conversations");
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-black text-white">
-      <Navbar3 />
-      <SubNav3 />
+      <Navbar4 user={otherParticipant} />
+      <SubNav4 bio={otherParticipant?.bio} />
+      
       <div className="container max-w-4xl mx-auto pb-20 pt-20">
         <div className="relative h-[calc(100vh-160px)] bg-gray-900 rounded-lg overflow-hidden">
-          {!selectedChat ? (
-            <div className="h-full">
-              <div className="flex items-center justify-between p-4 border-b border-gray-800">
-                <h2 className="text-xl font-semibold">Conversas</h2>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setIsSearchOpen(true)}
-                  className="hover:bg-gray-800"
-                >
-                  <Plus className="h-5 w-5" />
-                </Button>
-              </div>
+          {isSearchOpen ? (
+            <div className="h-full p-4">
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Procurar usuários..."
+                className="mb-4 bg-gray-800 border-gray-700 text-white"
+                autoFocus
+              />
 
-              {/* Lista de conversas */}
-              <div className="overflow-y-auto h-[calc(100%-64px)]">
-                {chats?.map((chat) => {
-                  const otherParticipant = getOtherParticipant(chat);
-                  const lastMessage = chat.messages?.[0];
-                  return (
-                    <div
-                      key={chat.id}
-                      onClick={() => setSelectedChat(chat.id)}
-                      className="p-4 hover:bg-gray-800 cursor-pointer border-b border-gray-800"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden">
-                          {otherParticipant?.avatar_url ? (
-                            <img
-                              src={otherParticipant.avatar_url}
-                              alt={otherParticipant.name || "Avatar"}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <span className="text-lg">
-                              {otherParticipant?.name?.[0] || "?"}
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="font-medium">
-                            {otherParticipant?.name || otherParticipant?.username || "Usuário"}
-                          </h3>
-                          {lastMessage && (
-                            <p className="text-sm text-gray-400 truncate">
-                              {lastMessage.content}
-                            </p>
-                          )}
-                        </div>
-                      </div>
+              <div className="space-y-2">
+                {searchResults?.map((user) => (
+                  <div
+                    key={user.id}
+                    onClick={() => startChat.mutate(user.id)}
+                    className="flex items-center gap-3 p-3 hover:bg-gray-800 rounded-lg cursor-pointer"
+                  >
+                    <div className="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden">
+                      {user.avatar_url ? (
+                        <img
+                          src={user.avatar_url}
+                          alt={user.name || "Avatar"}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-lg">
+                          {user.name?.[0] || user.username?.[0] || "?"}
+                        </span>
+                      )}
                     </div>
-                  );
-                })}
+                    <div>
+                      <h3 className="font-medium">
+                        {user.name || "Usuário"}
+                      </h3>
+                      {user.username && (
+                        <p className="text-sm text-gray-400">
+                          @{user.username}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           ) : (
             <div className="h-full flex flex-col">
-              {/* Cabeçalho do chat */}
-              <div className="flex items-center gap-4 p-4 border-b border-gray-800">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setSelectedChat(null)}
-                  className="hover:bg-gray-800"
-                >
-                  <ArrowLeft className="h-5 w-5" />
-                </Button>
-                {chats?.find(c => c.id === selectedChat)?.participants.map((participant) => {
-                  if (participant.user_id !== currentUserId) {
-                    return (
-                      <div key={participant.id} className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden">
-                          {participant.profile?.avatar_url ? (
-                            <img
-                              src={participant.profile.avatar_url}
-                              alt={participant.profile.name || "Avatar"}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <span className="text-lg">
-                              {participant.profile?.name?.[0] || "?"}
-                            </span>
-                          )}
-                        </div>
-                        <h2 className="text-lg font-semibold">
-                          {participant.profile?.name || participant.profile?.username || "Usuário"}
-                        </h2>
-                      </div>
-                    );
-                  }
-                  return null;
-                })}
-              </div>
-
-              {/* Mensagens */}
               <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 {messages?.map((message) => (
                   <div
@@ -309,7 +274,6 @@ export default function Chat() {
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* Input de mensagem */}
               <form onSubmit={handleSendMessage} className="p-4 border-t border-gray-800">
                 <div className="flex gap-2">
                   <Input
@@ -329,71 +293,9 @@ export default function Chat() {
               </form>
             </div>
           )}
-
-          {/* Modal de pesquisa */}
-          {isSearchOpen && (
-            <div className="absolute inset-0 bg-black/95 z-50">
-              <div className="p-4">
-                <div className="flex items-center gap-2 mb-4">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => {
-                      setIsSearchOpen(false);
-                      setSearchQuery("");
-                    }}
-                    className="hover:bg-gray-800"
-                  >
-                    <ArrowLeft className="h-5 w-5" />
-                  </Button>
-                  <Input
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Procurar usuários..."
-                    className="flex-1 bg-gray-800 border-gray-700 text-white"
-                    autoFocus
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  {searchResults?.map((user) => (
-                    <div
-                      key={user.id}
-                      onClick={() => startChat.mutate(user.id)}
-                      className="flex items-center gap-3 p-3 hover:bg-gray-800 rounded-lg cursor-pointer"
-                    >
-                      <div className="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden">
-                        {user.avatar_url ? (
-                          <img
-                            src={user.avatar_url}
-                            alt={user.name || "Avatar"}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <span className="text-lg">
-                            {user.name?.[0] || user.username?.[0] || "?"}
-                          </span>
-                        )}
-                      </div>
-                      <div>
-                        <h3 className="font-medium">
-                          {user.name || "Usuário"}
-                        </h3>
-                        {user.username && (
-                          <p className="text-sm text-gray-400">
-                            @{user.username}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
       <BottomNav />
     </div>
   );
-}
+};
