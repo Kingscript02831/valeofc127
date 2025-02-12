@@ -116,14 +116,6 @@ const Login = () => {
               className="bg-white/50 border-gray-200"
               style={{ color: config.login_text_color }}
             />
-            <Button
-              variant="link"
-              className="p-0 text-sm transition mt-1"
-              onClick={() => navigate("/reset-password")}
-              style={{ color: config.login_text_color }}
-            >
-              Esqueceu sua senha?
-            </Button>
           </div>
 
           <Button
@@ -136,6 +128,15 @@ const Login = () => {
             disabled={loading}
           >
             {loading ? "Entrando..." : "Entrar"}
+          </Button>
+
+          <Button
+            variant="link"
+            onClick={() => navigate("/reset-password")}
+            className="w-full mt-2 font-medium"
+            style={{ color: config.login_text_color }}
+          >
+            Esqueceu sua senha?
           </Button>
 
           <p className="text-center text-sm" style={{ color: config.login_text_color }}>
