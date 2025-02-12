@@ -80,102 +80,6 @@ export type Database = {
           },
         ]
       }
-      chat_configuration: {
-        Row: {
-          background_color: string | null
-          created_at: string
-          id: string
-          input_background_color: string | null
-          primary_color: string | null
-          received_message_color: string | null
-          secondary_color: string | null
-          sent_message_color: string | null
-          text_color: string | null
-          updated_at: string
-        }
-        Insert: {
-          background_color?: string | null
-          created_at?: string
-          id?: string
-          input_background_color?: string | null
-          primary_color?: string | null
-          received_message_color?: string | null
-          secondary_color?: string | null
-          sent_message_color?: string | null
-          text_color?: string | null
-          updated_at?: string
-        }
-        Update: {
-          background_color?: string | null
-          created_at?: string
-          id?: string
-          input_background_color?: string | null
-          primary_color?: string | null
-          received_message_color?: string | null
-          secondary_color?: string | null
-          sent_message_color?: string | null
-          text_color?: string | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      chat_participants: {
-        Row: {
-          chat_id: string
-          created_at: string
-          id: string
-          last_read_at: string
-          user_id: string
-        }
-        Insert: {
-          chat_id: string
-          created_at?: string
-          id?: string
-          last_read_at?: string
-          user_id: string
-        }
-        Update: {
-          chat_id?: string
-          created_at?: string
-          id?: string
-          last_read_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "chat_participants_chat_id_fkey"
-            columns: ["chat_id"]
-            isOneToOne: false
-            referencedRelation: "chats"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_chat_participants_profile"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      chats: {
-        Row: {
-          created_at: string
-          id: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       events: {
         Row: {
           additional_photos: string[] | null
@@ -271,48 +175,6 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "categories"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      messages: {
-        Row: {
-          chat_id: string
-          content: string
-          created_at: string
-          id: string
-          read: boolean
-          sender_id: string
-        }
-        Insert: {
-          chat_id: string
-          content: string
-          created_at?: string
-          id?: string
-          read?: boolean
-          sender_id: string
-        }
-        Update: {
-          chat_id?: string
-          content?: string
-          created_at?: string
-          id?: string
-          read?: boolean
-          sender_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "fk_chat_id"
-            columns: ["chat_id"]
-            isOneToOne: false
-            referencedRelation: "chats"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "messages_chat_id_fkey"
-            columns: ["chat_id"]
-            isOneToOne: false
-            referencedRelation: "chats"
             referencedColumns: ["id"]
           },
         ]
@@ -877,6 +739,36 @@ export type Database = {
         }
         Returns: string
       }
+      gtrgm_compress: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      gtrgm_decompress: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      gtrgm_in: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      gtrgm_options: {
+        Args: {
+          "": unknown
+        }
+        Returns: undefined
+      }
+      gtrgm_out: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
       has_admin_permission: {
         Args: {
           user_id: string
@@ -896,6 +788,22 @@ export type Database = {
           user_id: string
         }
         Returns: undefined
+      }
+      set_limit: {
+        Args: {
+          "": number
+        }
+        Returns: number
+      }
+      show_limit: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      show_trgm: {
+        Args: {
+          "": string
+        }
+        Returns: string[]
       }
     }
     Enums: {
