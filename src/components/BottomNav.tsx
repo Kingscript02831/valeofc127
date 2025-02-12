@@ -47,7 +47,7 @@ const BottomNav = () => {
 
   const handleNavigation = (path: string, e: React.MouseEvent) => {
     e.preventDefault();
-    if (!session && (path === "/notify" || path === "/conversations")) {
+    if (!session && (path === "/notify" || path === "/chat")) {
       toast.error("Você precisa fazer login para acessar esta área");
       navigate("/login");
       return;
@@ -89,9 +89,9 @@ const BottomNav = () => {
           </Link>
 
           <button
-            onClick={(e) => handleNavigation("/conversations", e)}
+            onClick={(e) => handleNavigation("/chat", e)}
             className={`flex flex-col items-center p-1`}
-            style={{ color: isActive("/conversations") ? iconColor : textColor }}
+            style={{ color: isActive("/chat") ? iconColor : textColor }}
           >
             <MessageCircle className="h-5 w-5" />
             <span className="text-xs">Chat</span>
