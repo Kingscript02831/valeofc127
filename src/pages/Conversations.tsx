@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,6 +6,8 @@ import { Search, MoreVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import BottomNav from "@/components/BottomNav";
+import Navbar from "@/components/Navbar";
+import SubNav3 from "@/components/SubNav3";
 import type { Chat, ChatParticipant } from "@/types/chat";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 
@@ -27,7 +28,6 @@ export default function Conversations() {
       }
       setCurrentUserId(session.user.id);
 
-      // Buscar o nome do usuário
       const { data: profile } = await supabase
         .from('profiles')
         .select('username, name')
@@ -58,7 +58,6 @@ export default function Conversations() {
 
       if (chatsError) throw chatsError;
 
-      // Se não houver chats, criar alguns exemplos
       if (!chatsData || chatsData.length === 0) {
         const mockChats: Chat[] = [
           {
@@ -154,51 +153,24 @@ export default function Conversations() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-[#202C33]">
-        <div className="flex items-center justify-between p-4">
-          <span className="text-xl font-bold">{username}</span>
-          <div className="flex items-center gap-4">
-            <MoreVertical 
-              className="h-6 w-6 text-gray-400 cursor-pointer" 
-              onClick={() => navigate("/perfil")}
-            />
-          </div>
-        </div>
-
-        {/* Search Bar */}
-        <div className="px-4 pb-2">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-            <Input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Pesquisar usuário"
-              className="w-full pl-12 pr-4 py-3 bg-[#202C33] border-none rounded-lg text-gray-200 placeholder-gray-400"
-            />
-          </div>
-        </div>
-
-        {/* Tabs */}
-        <div className="flex gap-2 px-4 pb-2 overflow-x-auto">
-          {["conversas", "status", "reels"].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-4 py-1 rounded-full text-sm ${
-                activeTab === tab
-                  ? "bg-[#00A884] text-white"
-                  : "bg-[#202C33] text-gray-400"
-              }`}
-            >
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
-            </button>
-          ))}
+      <Navbar />
+      <SubNav3 />
+      
+      {/* Search Bar */}
+      <div className="fixed top-[7.5rem] left-0 right-0 z-40 bg-[#202C33] px-4 py-2">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+          <Input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Pesquisar usuário"
+            className="w-full pl-12 pr-4 py-3 bg-[#202C33] border-none rounded-lg text-gray-200 placeholder-gray-400"
+          />
         </div>
       </div>
 
       {/* Chat List */}
-      <div className="pt-40 pb-20">
+      <div className="pt-48 pb-20">
         {/* Encryption Notice */}
         <div className="px-4 py-3 text-center text-sm text-gray-400 flex items-center justify-center gap-2">
           <span>
@@ -265,4 +237,4 @@ export default function Conversations() {
       <BottomNav />
     </div>
   );
-};
+}
