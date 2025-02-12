@@ -80,7 +80,7 @@ export default function Conversations() {
           ),
           messages:messages_chat_id_fkey(*)
         `)
-        .order('messages.created_at', { ascending: false });
+        .order('updated_at', { ascending: false });
 
       if (chatsError) {
         toast.error("Erro ao carregar conversas");

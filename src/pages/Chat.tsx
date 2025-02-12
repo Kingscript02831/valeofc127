@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -58,7 +57,7 @@ export default function Chat() {
           ),
           messages:messages_chat_id_fkey(*)
         `)
-        .order("updated_at", { ascending: false });
+        .order('updated_at', { ascending: false });
 
       if (chatsError) {
         toast({
