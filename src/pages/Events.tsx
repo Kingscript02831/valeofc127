@@ -8,9 +8,25 @@ import Navbar from "../components/Navbar";
 import SubNav from "../components/SubNav";
 import BottomNav from "../components/BottomNav";
 import Footer from "../components/Footer";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Event = Database['public']['Tables']['events']['Row'];
 type Category = Database['public']['Tables']['categories']['Row'];
+
+const LoadingEventCard = () => (
+  <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+    <Skeleton className="h-48 w-full" />
+    <div className="p-4 space-y-3">
+      <Skeleton className="h-6 w-3/4" />
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-1/2" />
+        <Skeleton className="h-4 w-1/3" />
+      </div>
+      <Skeleton className="h-20 w-full" />
+      <Skeleton className="h-8 w-full" />
+    </div>
+  </div>
+);
 
 export default function Events() {
   const [events, setEvents] = useState<Event[]>([]);
@@ -60,20 +76,6 @@ export default function Events() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <Navbar />
-        <SubNav />
-        <div className="flex justify-center items-center flex-1">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-        </div>
-        <Footer />
-        <BottomNav />
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen flex flex-col pb-[72px] md:pb-0">
       <Navbar />
@@ -82,36 +84,43 @@ export default function Events() {
         <h1 className="text-3xl font-bold mb-8">Eventos</h1>
         
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {events.map((event) => {
-            const category = categories.find(cat => cat.id === event.category_id);
-            
-            return (
-              <EventCard
-                key={event.id}
-                title={event.title}
-                description={event.description}
-                eventDate={event.event_date}
-                eventTime={event.event_time}
-                endTime={event.end_time}
-                image={event.image}
-                images={event.images || []}
-                location={event.location}
-                mapsUrl={event.url_maps_events}
-                entranceFee={event.entrance_fee}
-                createdAt={event.created_at}
-                buttonColor={event.button_color}
-                buttonSecondaryColor={event.button_secondary_color}
-                videoUrl={event.video_url}
-                category={category ? {
-                  id: category.id,
-                  name: category.name,
-                  background_color: category.background_color
-                } : null}
-              />
-            );
-          })}
+          {loading ? (
+            // Mostrar múltiplos skeletons durante o carregamento
+            Array(6).fill(0).map((_, index) => (
+              <LoadingEventCard key={index} />
+            ))
+          ) : (
+            events.map((event) => {
+              const category = categories.find(cat => cat.id === event.category_id);
+              
+              return (
+                <EventCard
+                  key={event.id}
+                  title={event.title}
+                  description={event.description}
+                  eventDate={event.event_date}
+                  eventTime={event.event_time}
+                  endTime={event.end_time}
+                  image={event.image}
+                  images={event.images || []}
+                  location={event.location}
+                  mapsUrl={event.url_maps_events}
+                  entranceFee={event.entrance_fee}
+                  createdAt={event.created_at}
+                  buttonColor={event.button_color}
+                  buttonSecondaryColor={event.button_secondary_color}
+                  videoUrl={event.video_url}
+                  category={category ? {
+                    id: category.id,
+                    name: category.name,
+                    background_color: category.background_color
+                  } : null}
+                />
+              );
+            })
+          )}
 
-          {events.length === 0 && (
+          {!loading && events.length === 0 && (
             <div className="col-span-full text-center py-8">
               <p className="text-gray-500">Nenhum evento encontrado.</p>
             </div>
