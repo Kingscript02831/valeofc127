@@ -15,7 +15,6 @@ export interface Profile {
   street?: string | null;
   house_number?: string | null;
   postal_code?: string | null;
-  name?: string | null;
   basic_info_updated_at?: string | null;
 }
 
@@ -32,6 +31,5 @@ export interface ProfileUpdateData {
   street?: string;
   house_number?: string;
   postal_code?: string;
-  name?: string;
   basic_info_updated_at?: string;
 }

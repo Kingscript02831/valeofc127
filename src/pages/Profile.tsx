@@ -1,11 +1,12 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "../integrations/supabase/client";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { useToast } from "../components/ui/use-toast";
 import {
   Form,
   FormControl,
@@ -13,7 +14,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
+} from "../components/ui/form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -31,11 +32,11 @@ import {
   Home,
   Trash2,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import BottomNav from "@/components/BottomNav";
-import Navbar from "@/components/Navbar";
-import SubNav from "@/components/SubNav";
-import type { ProfileUpdateData } from "@/types/profile";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import BottomNav from "../components/BottomNav";
+import Navbar from "../components/Navbar";
+import SubNav from "../components/SubNav";
+import type { ProfileUpdateData } from "../types/profile";
 
 const profileSchema = z.object({
   full_name: z.string().min(1, "Nome completo é obrigatório"),
@@ -332,6 +333,24 @@ export default function Profile() {
                   <CardContent className="space-y-4 pt-6">
                     <FormField
                       control={form.control}
+                      name="username"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-white">Username</FormLabel>
+                          <FormControl>
+                            <Input 
+                              {...field} 
+                              className="bg-transparent border-white text-white placeholder:text-gray-400"
+                              placeholder="Seu username"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
                       name="full_name"
                       render={({ field }) => (
                         <FormItem>
@@ -341,6 +360,42 @@ export default function Profile() {
                               {...field} 
                               className="bg-transparent border-white text-white placeholder:text-gray-400"
                               placeholder="Seu nome completo"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="bio"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-white">Bio</FormLabel>
+                          <FormControl>
+                            <Input 
+                              {...field} 
+                              className="bg-transparent border-white text-white placeholder:text-gray-400"
+                              placeholder="Sua biografia"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="website"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-white">Website</FormLabel>
+                          <FormControl>
+                            <Input 
+                              {...field} 
+                              className="bg-transparent border-white text-white placeholder:text-gray-400"
+                              placeholder="https://seu-site.com"
                             />
                           </FormControl>
                           <FormMessage />
@@ -378,6 +433,115 @@ export default function Profile() {
                               {...field} 
                               type="date"
                               className="bg-transparent border-white text-white"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-white">Email</FormLabel>
+                          <FormControl>
+                            <Input 
+                              {...field} 
+                              type="email"
+                              className="bg-transparent border-white text-white placeholder:text-gray-400"
+                              placeholder="seu@email.com"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="street"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-white">Rua</FormLabel>
+                          <FormControl>
+                            <Input 
+                              {...field} 
+                              className="bg-transparent border-white text-white placeholder:text-gray-400"
+                              placeholder="Nome da rua"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="house_number"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-white">Número</FormLabel>
+                          <FormControl>
+                            <Input 
+                              {...field} 
+                              className="bg-transparent border-white text-white placeholder:text-gray-400"
+                              placeholder="123"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="city"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-white">Cidade</FormLabel>
+                          <FormControl>
+                            <Input 
+                              {...field} 
+                              className="bg-transparent border-white text-white placeholder:text-gray-400"
+                              placeholder="Sua cidade"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="postal_code"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-white">CEP</FormLabel>
+                          <FormControl>
+                            <Input 
+                              {...field} 
+                              className="bg-transparent border-white text-white placeholder:text-gray-400"
+                              placeholder="00000-000"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="avatar_url"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-white">URL do Avatar</FormLabel>
+                          <FormControl>
+                            <Input 
+                              {...field} 
+                              className="bg-transparent border-white text-white placeholder:text-gray-400"
+                              placeholder="https://exemplo.com/avatar.jpg"
                             />
                           </FormControl>
                           <FormMessage />
