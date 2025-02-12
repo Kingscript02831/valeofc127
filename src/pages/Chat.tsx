@@ -10,7 +10,11 @@ import {
   Phone,
   Smile,
   Paperclip,
-  Mic
+  Mic,
+  Home,
+  Bell,
+  User,
+  MessageCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -162,45 +166,53 @@ export default function Chat() {
   return (
     <div className="flex flex-col h-screen bg-[#0B141A]">
       {/* Header */}
-      <div className="bg-[#202C33] px-4 py-2 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Button 
-            variant="ghost" 
-            size="icon"
-            className="text-gray-400 hover:text-white"
-            onClick={() => navigate("/conversations")}
-          >
-            <ArrowLeft className="h-6 w-6" />
-          </Button>
+      <div className="bg-gradient-to-r from-[#1A1F2C] to-[#9b87f5] px-4 py-2">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="relative">
-              <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center overflow-hidden">
-                {otherParticipant?.avatar_url ? (
-                  <img
-                    src={otherParticipant.avatar_url}
-                    alt={otherParticipant.name || "Avatar"}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <span className="text-lg text-white">
-                    {otherParticipant?.name?.[0] || "?"}
-                  </span>
-                )}
+            <Button 
+              variant="ghost" 
+              size="icon"
+              className="text-white hover:text-white/80"
+              onClick={() => navigate("/conversations")}
+            >
+              <ArrowLeft className="h-6 w-6" />
+            </Button>
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center overflow-hidden">
+                  {otherParticipant?.avatar_url ? (
+                    <img
+                      src={otherParticipant.avatar_url}
+                      alt={otherParticipant.name || "Avatar"}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-lg text-white">
+                      {otherParticipant?.name?.[0] || "?"}
+                    </span>
+                  )}
+                </div>
+                <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[#1A1F2C]" />
               </div>
-              <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[#202C33]" />
-            </div>
-            <div>
-              <h2 className="font-semibold text-white">
-                {otherParticipant?.name || otherParticipant?.username || "Usuário"}
-              </h2>
-              <p className="text-sm text-green-500">Online</p>
+              <div>
+                <h2 className="font-semibold text-white">
+                  {otherParticipant?.name || otherParticipant?.username || "Usuário"}
+                </h2>
+                <p className="text-sm text-green-500">Online</p>
+              </div>
             </div>
           </div>
+          <div className="flex items-center gap-4 text-white">
+            <Phone className="h-5 w-5" />
+            <MoreVertical className="h-5 w-5 cursor-pointer" />
+          </div>
         </div>
-        <div className="flex items-center gap-4 text-gray-400">
-          <Phone className="h-5 w-5" />
-          <MoreVertical className="h-5 w-5 cursor-pointer" />
-        </div>
+        {/* Bio Section */}
+        {otherParticipant?.bio && (
+          <div className="mt-2 px-14 text-sm text-white/80">
+            {otherParticipant.bio}
+          </div>
+        )}
       </div>
 
       {/* Messages */}
@@ -275,6 +287,46 @@ export default function Chat() {
           )}
         </div>
       </form>
+
+      {/* Bottom Navigation */}
+      <nav className="bg-gradient-to-r from-[#1A1F2C] to-[#9b87f5] py-2 border-t border-gray-700">
+        <div className="container mx-auto px-4">
+          <div className="flex justify-around items-center">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white hover:text-white/80"
+              onClick={() => navigate("/")}
+            >
+              <Home className="h-5 w-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white hover:text-white/80"
+              onClick={() => navigate("/conversations")}
+            >
+              <MessageCircle className="h-5 w-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white hover:text-white/80"
+              onClick={() => navigate("/notify")}
+            >
+              <Bell className="h-5 w-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white hover:text-white/80"
+              onClick={() => navigate("/perfil")}
+            >
+              <User className="h-5 w-5" />
+            </Button>
+          </div>
+        </div>
+      </nav>
     </div>
   );
 }
