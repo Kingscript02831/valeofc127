@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -79,17 +78,14 @@ export default function Chat() {
 
       if (error) {
         console.error('Messages fetch error:', error);
+        toast.error("Erro ao carregar mensagens. Por favor, tente novamente.");
         throw error;
       }
 
       return data as Message[];
     },
     enabled: !!selectedChat,
-    retry: 1,
-    onError: (error) => {
-      console.error('Messages query error:', error);
-      toast.error("Erro ao carregar mensagens. Por favor, tente novamente.");
-    }
+    retry: 1
   });
 
   const sendMessage = useMutation({
