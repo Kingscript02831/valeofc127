@@ -1,12 +1,11 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { supabase } from "../integrations/supabase/client";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { useToast } from "../components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/components/ui/use-toast";
 import {
   Form,
   FormControl,
@@ -14,7 +13,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "../components/ui/form";
+} from "@/components/ui/form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -32,11 +31,11 @@ import {
   Home,
   Trash2,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import BottomNav from "../components/BottomNav";
-import Navbar from "../components/Navbar";
-import SubNav from "../components/SubNav";
-import type { ProfileUpdateData } from "../types/profile";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import BottomNav from "@/components/BottomNav";
+import Navbar from "@/components/Navbar";
+import SubNav from "@/components/SubNav";
+import type { ProfileUpdateData } from "@/types/profile";
 
 const profileSchema = z.object({
   full_name: z.string().min(1, "Nome completo é obrigatório"),
@@ -61,7 +60,6 @@ export default function Profile() {
   const [isLoading, setIsLoading] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
 
-  // Set up form with default values
   const form = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
@@ -80,7 +78,6 @@ export default function Profile() {
     },
   });
 
-  // Check for authentication and scheduled deletion
   useEffect(() => {
     const checkSession = async () => {
       try {
@@ -90,15 +87,14 @@ export default function Profile() {
           return;
         }
 
-        // Check if user had a scheduled deletion
-        const { data: profile } = await supabase
+        const { data, error } = await supabase
           .from("profiles")
           .select("scheduled_deletion_date")
           .eq("id", session.user.id)
           .single();
 
-        if (profile?.scheduled_deletion_date) {
-          // Cancel deletion and show welcome back message
+        if (error) throw error;
+        if (data?.scheduled_deletion_date) {
           const { error } = await supabase
             .from("profiles")
             .update({ scheduled_deletion_date: null })
@@ -122,7 +118,6 @@ export default function Profile() {
     checkSession();
   }, [navigate, toast]);
 
-  // Fetch profile data
   const { data: profile, isLoading: isProfileLoading } = useQuery({
     queryKey: ["profile"],
     queryFn: async () => {
@@ -141,7 +136,6 @@ export default function Profile() {
     enabled: !isLoading,
   });
 
-  // Update form when profile data is loaded
   useEffect(() => {
     if (profile) {
       form.reset({
@@ -161,19 +155,16 @@ export default function Profile() {
     }
   }, [profile, form]);
 
-  // Update profile mutation
   const updateProfile = useMutation({
     mutationFn: async (values: z.infer<typeof profileSchema>) => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Não autenticado");
 
-      // Check if username or phone is being updated
       const isUpdatingRestricted = 
         values.username !== profile?.username ||
         values.phone !== profile?.phone;
 
       if (isUpdatingRestricted) {
-        // Check if enough time has passed
         const { data: canUpdate, error: checkError } = await supabase
           .rpc('can_update_basic_info', { profile_id: session.user.id });
 
@@ -182,7 +173,6 @@ export default function Profile() {
           throw new Error("Você só pode alterar seu @ ou telefone após 30 dias da última atualização.");
         }
 
-        // Update the last basic info update timestamp
         values.basic_info_updated_at = new Date().toISOString();
       }
 
@@ -261,7 +251,6 @@ export default function Profile() {
       <Navbar />
       <SubNav />
       <div className="container max-w-4xl mx-auto p-4 pb-20 pt-20">
-        {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-semibold text-white">
@@ -289,9 +278,7 @@ export default function Profile() {
           </div>
         </div>
 
-        {/* Profile Content */}
         <div className="space-y-4">
-          {/* Profile Header Card */}
           <Card className="border-none bg-gray-900 shadow-xl">
             <CardContent className="pt-6">
               <div className="flex items-center gap-6">

@@ -1,12 +1,13 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button } from "../components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Search, Facebook, Instagram, Share2 } from "lucide-react";
-import { Input } from "../components/ui/input";
-import BottomNav from "../components/BottomNav";
-import type { Chat, ChatParticipant } from "../types/chat";
+import { Input } from "@/components/ui/input";
+import BottomNav from "@/components/BottomNav";
+import type { Chat, ChatParticipant } from "@/types/chat";
 import { toast } from "sonner";
 
 export default function Conversations() {
