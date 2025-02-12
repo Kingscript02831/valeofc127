@@ -1,9 +1,8 @@
-
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Send, Search } from "lucide-react";
+import { Send, Search, ArrowLeft, MoreVertical, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
@@ -199,9 +198,49 @@ export default function Chat() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <Navbar4 user={otherParticipant} />
-      <SubNav4 bio={otherParticipant?.bio} />
-      
+      {/* Header */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-[#202C33] px-4 py-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              className="text-gray-400 hover:text-white"
+              onClick={() => navigate("/conversations")}
+            >
+              <ArrowLeft className="h-6 w-6" />
+            </Button>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center overflow-hidden">
+                {otherParticipant?.avatar_url ? (
+                  <img
+                    src={otherParticipant.avatar_url}
+                    alt={otherParticipant.name || "Avatar"}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-lg text-white">
+                    {otherParticipant?.name?.[0] || "?"}
+                  </span>
+                )}
+              </div>
+              <div>
+                <h2 className="font-semibold text-white">
+                  {otherParticipant?.name || otherParticipant?.username || "Usuário"}
+                </h2>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-4 text-gray-400">
+            <Phone className="h-5 w-5" />
+            <MoreVertical 
+              className="h-5 w-5 cursor-pointer" 
+              onClick={() => navigate("/perfil")}
+            />
+          </div>
+        </div>
+      </div>
+
       <div className="container max-w-4xl mx-auto pb-20 pt-20">
         <div className="relative h-[calc(100vh-160px)] bg-gray-900 rounded-lg overflow-hidden">
           {isSearchOpen ? (

@@ -1,4 +1,3 @@
-
 import { Home, Bell, User, MessageCircle, Search } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
@@ -76,67 +75,52 @@ const BottomNav = () => {
   const textColor = config?.bottom_nav_text_color || '#FFFFFF';
 
   return (
-    <>
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={handleSearchClick}
-        className="fixed bottom-20 right-4 p-3 rounded-full shadow-lg bounce z-50"
-        style={{ 
-          background: config?.primary_color,
-          color: '#FFFFFF'
-        }}
-      >
-        <Search className="h-6 w-6" />
-      </Button>
+    <nav className="fixed bottom-0 left-0 right-0 border-t border-gray-200 py-1 md:hidden" style={navStyle}>
+      <div className="container mx-auto px-4">
+        <div className="flex justify-around items-center">
+          <Link
+            to="/"
+            className={`flex flex-col items-center p-1`}
+            style={{ color: isActive("/") ? iconColor : textColor }}
+          >
+            <Home className="h-5 w-5" />
+            <span className="text-xs">Início</span>
+          </Link>
 
-      <nav className="fixed bottom-0 left-0 right-0 border-t border-gray-200 py-1 md:hidden" style={navStyle}>
-        <div className="container mx-auto px-4">
-          <div className="flex justify-around items-center">
-            <Link
-              to="/"
-              className={`flex flex-col items-center p-1`}
-              style={{ color: isActive("/") ? iconColor : textColor }}
-            >
-              <Home className="h-5 w-5" />
-              <span className="text-xs">Início</span>
-            </Link>
+          <button
+            onClick={(e) => handleNavigation("/conversations", e)}
+            className={`flex flex-col items-center p-1`}
+            style={{ color: isActive("/conversations") ? iconColor : textColor }}
+          >
+            <MessageCircle className="h-5 w-5" />
+            <span className="text-xs">Chat</span>
+          </button>
 
-            <button
-              onClick={(e) => handleNavigation("/conversations", e)}
-              className={`flex flex-col items-center p-1`}
-              style={{ color: isActive("/conversations") ? iconColor : textColor }}
-            >
-              <MessageCircle className="h-5 w-5" />
-              <span className="text-xs">Chat</span>
-            </button>
+          <button
+            onClick={(e) => handleNavigation("/notify", e)}
+            className={`flex flex-col items-center p-1 relative`}
+            style={{ color: isActive("/notify") ? iconColor : textColor }}
+          >
+            <Bell className="h-5 w-5" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                {unreadCount}
+              </span>
+            )}
+            <span className="text-xs">Notificações</span>
+          </button>
 
-            <button
-              onClick={(e) => handleNavigation("/notify", e)}
-              className={`flex flex-col items-center p-1 relative`}
-              style={{ color: isActive("/notify") ? iconColor : textColor }}
-            >
-              <Bell className="h-5 w-5" />
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                  {unreadCount}
-                </span>
-              )}
-              <span className="text-xs">Notificações</span>
-            </button>
-
-            <Link
-              to={session ? "/perfil" : "/login"}
-              className={`flex flex-col items-center p-1`}
-              style={{ color: isActive("/perfil") || isActive("/login") ? iconColor : textColor }}
-            >
-              <User className="h-5 w-5" />
-              <span className="text-xs">Eu</span>
-            </Link>
-          </div>
+          <Link
+            to={session ? "/perfil" : "/login"}
+            className={`flex flex-col items-center p-1`}
+            style={{ color: isActive("/perfil") || isActive("/login") ? iconColor : textColor }}
+          >
+            <User className="h-5 w-5" />
+            <span className="text-xs">Eu</span>
+          </Link>
         </div>
-      </nav>
-    </>
+      </div>
+    </nav>
   );
 };
 

@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Search, Camera, MoreVertical, Lock } from "lucide-react";
+import { Search, MoreVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import BottomNav from "@/components/BottomNav";
@@ -13,8 +13,9 @@ import { useSiteConfig } from "@/hooks/useSiteConfig";
 export default function Conversations() {
   const navigate = useNavigate();
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [username, setUsername] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeTab, setActiveTab] = useState("todas");
+  const [activeTab, setActiveTab] = useState("conversas");
   const { data: config } = useSiteConfig();
   
   useEffect(() => {
@@ -25,6 +26,17 @@ export default function Conversations() {
         return;
       }
       setCurrentUserId(session.user.id);
+
+      // Buscar o nome do usuário
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('username, name')
+        .eq('id', session.user.id)
+        .single();
+
+      if (profile) {
+        setUsername(profile.name || profile.username || 'Usuário');
+      }
     };
     checkAuth();
   }, [navigate]);
@@ -45,6 +57,57 @@ export default function Conversations() {
         .order("updated_at", { ascending: false });
 
       if (chatsError) throw chatsError;
+
+      // Se não houver chats, criar alguns exemplos
+      if (!chatsData || chatsData.length === 0) {
+        return [
+          {
+            id: '1',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            participants: [
+              {
+                user_id: 'exemplo1',
+                profile: {
+                  name: 'João Silva',
+                  avatar_url: null
+                }
+              }
+            ],
+            messages: [
+              {
+                id: '1',
+                content: 'Olá, tudo bem?',
+                created_at: new Date().toISOString(),
+                sender_id: 'exemplo1'
+              }
+            ]
+          },
+          {
+            id: '2',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            participants: [
+              {
+                user_id: 'exemplo2',
+                profile: {
+                  name: 'Maria Santos',
+                  avatar_url: null
+                }
+              }
+            ],
+            messages: [
+              {
+                id: '2',
+                content: 'Bom dia! Como você está?',
+                created_at: new Date().toISOString(),
+                sender_id: 'exemplo2'
+              }
+            ]
+          }
+        ];
+      }
+
       return chatsData as Chat[];
     },
     enabled: !!currentUserId,
@@ -65,11 +128,12 @@ export default function Conversations() {
       {/* Header */}
       <div className="fixed top-0 left-0 right-0 z-50 bg-[#202C33]">
         <div className="flex items-center justify-between p-4">
-          <span className="text-xl font-bold">WhatsApp</span>
+          <span className="text-xl font-bold">{username}</span>
           <div className="flex items-center gap-4">
-            <Camera className="h-6 w-6 text-gray-400" />
-            <Search className="h-6 w-6 text-gray-400" />
-            <MoreVertical className="h-6 w-6 text-gray-400" />
+            <MoreVertical 
+              className="h-6 w-6 text-gray-400 cursor-pointer" 
+              onClick={() => navigate("/perfil")}
+            />
           </div>
         </div>
 
@@ -80,7 +144,7 @@ export default function Conversations() {
             <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Pergunte à Meta AI ou pesquise"
+              placeholder="Pesquisar usuário"
               className="w-full pl-12 pr-4 py-3 bg-[#202C33] border-none rounded-lg text-gray-200 placeholder-gray-400"
             />
           </div>
@@ -88,7 +152,7 @@ export default function Conversations() {
 
         {/* Tabs */}
         <div className="flex gap-2 px-4 pb-2 overflow-x-auto">
-          {["todas", "não lidas", "favoritos", "grupos"].map((tab) => (
+          {["conversas", "status", "reels"].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -101,9 +165,6 @@ export default function Conversations() {
               {tab.charAt(0).toUpperCase() + tab.slice(1)}
             </button>
           ))}
-          <button className="px-4 py-1 rounded-full text-sm bg-[#202C33] text-gray-400">
-            <Plus className="h-4 w-4" />
-          </button>
         </div>
       </div>
 
@@ -111,7 +172,6 @@ export default function Conversations() {
       <div className="pt-40 pb-20">
         {/* Encryption Notice */}
         <div className="px-4 py-3 text-center text-sm text-gray-400 flex items-center justify-center gap-2">
-          <Lock className="h-4 w-4" />
           <span>
             Suas mensagens pessoais são protegidas com{" "}
             <span className="text-[#00A884]">criptografia de ponta a ponta</span>
