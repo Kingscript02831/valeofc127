@@ -18,11 +18,10 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import type { Message, Chat, ChatParticipant } from "@/types/chat";
 
 export default function Chat() {
-  const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
@@ -45,28 +44,29 @@ export default function Chat() {
     checkAuth();
   }, [navigate]);
 
-  const { data: chats } = useQuery({
-    queryKey: ["chats"],
+  const { data: currentChat, isLoading: isChatLoading } = useQuery({
+    queryKey: ["chat", selectedChat],
     queryFn: async () => {
-      const { data: chatsData, error: chatsError } = await supabase
+      if (!selectedChat) return null;
+      const { data: chatData, error: chatError } = await supabase
         .from("chats")
         .select(`
           *,
           participants:chat_participants(
             *,
-            profile:profiles(username, avatar_url, name, bio)
-          ),
-          messages:messages(*)
+            profile:profiles(username, avatar_url, name, bio, online_status, last_seen)
+          )
         `)
-        .order("updated_at", { ascending: false });
+        .eq("id", selectedChat)
+        .single();
 
-      if (chatsError) throw chatsError;
-      return chatsData as Chat[];
+      if (chatError) throw chatError;
+      return chatData as Chat;
     },
-    enabled: !!currentUserId,
+    enabled: !!selectedChat,
   });
 
-  const { data: messages } = useQuery({
+  const { data: messages, isLoading: isMessagesLoading } = useQuery({
     queryKey: ["messages", selectedChat],
     queryFn: async () => {
       if (!selectedChat) return [];
@@ -80,11 +80,14 @@ export default function Chat() {
       return data as Message[];
     },
     enabled: !!selectedChat,
+    refetchInterval: 3000, // Poll for new messages every 3 seconds
   });
 
   const sendMessage = useMutation({
     mutationFn: async (content: string) => {
-      if (!selectedChat || !currentUserId || !content.trim()) return;
+      if (!selectedChat || !currentUserId || !content.trim()) {
+        throw new Error("Missing required data");
+      }
 
       const { error } = await supabase
         .from("messages")
@@ -99,14 +102,12 @@ export default function Chat() {
     onSuccess: () => {
       setNewMessage("");
       queryClient.invalidateQueries({ queryKey: ["messages", selectedChat] });
+      // Also update the chats list to show latest message
       queryClient.invalidateQueries({ queryKey: ["chats"] });
     },
-    onError: () => {
-      toast({
-        title: "Erro ao enviar mensagem",
-        description: "Tente novamente mais tarde",
-        variant: "destructive",
-      });
+    onError: (error) => {
+      console.error("Error sending message:", error);
+      toast.error("Erro ao enviar mensagem. Tente novamente mais tarde.");
     },
   });
 
@@ -114,7 +115,7 @@ export default function Chat() {
     if (!selectedChat) return;
 
     const channel = supabase
-      .channel("messages")
+      .channel(`messages:${selectedChat}`)
       .on(
         "postgres_changes",
         {
@@ -139,19 +140,11 @@ export default function Chat() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const getCurrentChat = () => {
-    if (!selectedChat || !chats) return null;
-    return chats.find(c => c.id === selectedChat);
-  };
-
   const getOtherParticipant = (chat: Chat) => {
     return (chat.participants as ChatParticipant[]).find(p => p.user_id !== currentUserId)?.profile;
   };
 
-  const currentChat = getCurrentChat();
-  const otherParticipant = currentChat ? getOtherParticipant(currentChat) : null;
-
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newMessage.trim()) {
       sendMessage.mutate(newMessage);
@@ -162,6 +155,16 @@ export default function Chat() {
     navigate("/conversations");
     return null;
   }
+
+  if (isChatLoading || !currentChat) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-[#0B141A]">
+        <div className="text-white">Carregando...</div>
+      </div>
+    );
+  }
+
+  const otherParticipant = getOtherParticipant(currentChat);
 
   return (
     <div className="flex flex-col h-screen bg-[#0B141A]">
@@ -217,26 +220,32 @@ export default function Chat() {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages?.map((message) => (
-          <div
-            key={message.id}
-            className={`flex ${
-              message.sender_id === currentUserId
-                ? "justify-end"
-                : "justify-start"
-            }`}
-          >
+        {isMessagesLoading ? (
+          <div className="text-center text-white">Carregando mensagens...</div>
+        ) : messages?.length === 0 ? (
+          <div className="text-center text-white">Nenhuma mensagem ainda. Comece uma conversa!</div>
+        ) : (
+          messages?.map((message) => (
             <div
-              className={`max-w-[80%] p-3 rounded-lg ${
+              key={message.id}
+              className={`flex ${
                 message.sender_id === currentUserId
-                  ? "bg-[#005C4B]"
-                  : "bg-[#202C33]"
+                  ? "justify-end"
+                  : "justify-start"
               }`}
             >
-              <p className="break-words text-white">{message.content}</p>
+              <div
+                className={`max-w-[80%] p-3 rounded-lg ${
+                  message.sender_id === currentUserId
+                    ? "bg-[#005C4B]"
+                    : "bg-[#202C33]"
+                }`}
+              >
+                <p className="break-words text-white">{message.content}</p>
+              </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
         <div ref={messagesEndRef} />
       </div>
 

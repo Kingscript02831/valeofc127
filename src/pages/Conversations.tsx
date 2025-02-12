@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../integrations/supabase/client";
@@ -57,10 +58,11 @@ export default function Conversations() {
       }
     };
 
-    searchUsers();
+    const timeoutId = setTimeout(searchUsers, 300);
+    return () => clearTimeout(timeoutId);
   }, [searchQuery]);
 
-  const { data: chats } = useQuery({
+  const { data: chats, isLoading } = useQuery({
     queryKey: ["chats"],
     queryFn: async () => {
       const { data: chatsData, error: chatsError } = await supabase
@@ -73,7 +75,7 @@ export default function Conversations() {
           ),
           messages:messages(*)
         `)
-        .order('messages.created_at', { foreignTable: 'messages', ascending: false });
+        .order('updated_at', { ascending: false });
 
       if (chatsError) throw chatsError;
       return chatsData as Chat[];
@@ -92,9 +94,9 @@ export default function Conversations() {
       }
 
       if (chatId) {
-        // Refresh the chats list
         await queryClient.invalidateQueries({ queryKey: ["chats"] });
-        // Navigate to the chat
+        setIsSearching(false);
+        setSearchQuery("");
         navigate('/chat', { state: { selectedChat: chatId } });
       }
     } catch (error) {
@@ -190,53 +192,61 @@ export default function Conversations() {
 
       {/* Chat List */}
       <div className="flex-1 overflow-y-auto">
-        {chats?.map((chat) => {
-          const otherParticipant = getOtherParticipant(chat);
-          const lastMessage = chat.messages?.[0];
+        {isLoading ? (
+          <div className="p-4 text-center text-gray-400">Carregando conversas...</div>
+        ) : chats?.length === 0 ? (
+          <div className="p-4 text-center text-gray-400">
+            Nenhuma conversa ainda. Comece uma busca por usuários!
+          </div>
+        ) : (
+          chats?.map((chat) => {
+            const otherParticipant = getOtherParticipant(chat);
+            const lastMessage = chat.messages?.[0];
 
-          return (
-            <div
-              key={chat.id}
-              onClick={() => navigate("/chat", { state: { selectedChat: chat.id } })}
-              className="px-4 py-3 hover:bg-[#202C33] cursor-pointer"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden">
-                  {otherParticipant?.avatar_url ? (
-                    <img
-                      src={otherParticipant.avatar_url}
-                      alt={otherParticipant.name || "Avatar"}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-lg text-white">
-                      {otherParticipant?.name?.[0] || "?"}
-                    </span>
-                  )}
-                </div>
-                <div className="flex-1">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-medium text-white">
-                        {otherParticipant?.name || otherParticipant?.username || "Usuário"}
-                      </h3>
-                      {lastMessage && (
-                        <p className="text-sm text-gray-400 truncate">
-                          {lastMessage.content}
-                        </p>
-                      )}
-                    </div>
-                    {lastMessage && (
-                      <span className="text-xs text-gray-400">
-                        {formatTimestamp(lastMessage.created_at)}
+            return (
+              <div
+                key={chat.id}
+                onClick={() => navigate("/chat", { state: { selectedChat: chat.id } })}
+                className="px-4 py-3 hover:bg-[#202C33] cursor-pointer"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden">
+                    {otherParticipant?.avatar_url ? (
+                      <img
+                        src={otherParticipant.avatar_url}
+                        alt={otherParticipant.name || "Avatar"}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-lg text-white">
+                        {otherParticipant?.name?.[0] || "?"}
                       </span>
                     )}
                   </div>
+                  <div className="flex-1">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-medium text-white">
+                          {otherParticipant?.name || otherParticipant?.username || "Usuário"}
+                        </h3>
+                        {lastMessage && (
+                          <p className="text-sm text-gray-400 truncate">
+                            {lastMessage.content}
+                          </p>
+                        )}
+                      </div>
+                      {lastMessage && (
+                        <span className="text-xs text-gray-400">
+                          {formatTimestamp(lastMessage.created_at)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })
+        )}
       </div>
 
       {/* Search Overlay */}
@@ -269,8 +279,6 @@ export default function Conversations() {
                 key={user.id}
                 onClick={() => {
                   handleUserClick(user.id);
-                  setIsSearching(false);
-                  setSearchQuery("");
                 }}
                 className="flex items-center gap-3 p-3 hover:bg-gray-800 rounded-lg cursor-pointer"
               >
