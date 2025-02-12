@@ -2,11 +2,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "../integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { useSiteConfig } from "../hooks/useSiteConfig";
 
 const Navbar3 = () => {
   const navigate = useNavigate();
@@ -29,7 +29,7 @@ const Navbar3 = () => {
       }
     };
     fetchUser();
-  }, []);
+  });
 
   // Search users
   const { data: searchResults } = useQuery({
@@ -51,7 +51,6 @@ const Navbar3 = () => {
   });
 
   const handleUserClick = async (userId: string) => {
-    // Create or get existing chat
     const { data: chatId, error } = await supabase
       .rpc('create_private_chat', { other_user_id: userId });
 
@@ -76,32 +75,21 @@ const Navbar3 = () => {
     >
       <div className="max-w-screen-2xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          {/* Left side - Empty space for symmetry */}
-          <div className="w-10" />
+          {/* Left side - Username */}
+          <span 
+            className="text-xl font-semibold tracking-tighter px-4 py-1 rounded-full"
+            style={{ 
+              color: config?.text_color,
+              backgroundColor: `${config?.primary_color}20`
+            }}
+          >
+            {currentUser?.name || currentUser?.username || 'VALEOFC'}
+          </span>
 
-          {/* Center - Logo/Username */}
-          <div className="flex-1 flex flex-col items-center justify-center">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsSearching(!isSearching)}
-              className="p-2 hover:bg-primary/20 rounded-full mb-1 bounce"
-              style={{ color: config?.text_color }}
-            >
-              <Search className="h-6 w-6" strokeWidth={2.5} />
-            </Button>
-            <span 
-              className="text-2xl font-bold tracking-tighter px-6 py-2 rounded-full"
-              style={{ 
-                color: config?.text_color,
-                backgroundColor: `${config?.primary_color}20`
-              }}
-            >
-              {currentUser?.name || currentUser?.username || 'VALEOFC'}
-            </span>
-          </div>
+          {/* Center - Empty space */}
+          <div className="flex-1" />
 
-          {/* Right side - Empty space for symmetry */}
+          {/* Right side - Empty space */}
           <div className="w-10" />
         </div>
 
