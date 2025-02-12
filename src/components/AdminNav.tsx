@@ -7,7 +7,6 @@ const AdminNav = () => {
   const location = useLocation();
 
   const links = [
-    { path: "/admin/usuarios", label: "Usuários" },
     { path: "/admin/noticias", label: "Notícias" },
     { path: "/admin/eventos", label: "Eventos" },
     { path: "/admin/lugares", label: "Lugares" },
