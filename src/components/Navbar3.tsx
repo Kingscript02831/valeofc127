@@ -76,19 +76,20 @@ const Navbar3 = () => {
     >
       <div className="max-w-screen-2xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          {/* Left side - Search icon */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsSearching(!isSearching)}
-            className="p-2 hover:bg-primary/20 rounded-full"
-            style={{ color: config?.text_color }}
-          >
-            <Search className="h-6 w-6" strokeWidth={2.5} />
-          </Button>
+          {/* Left side - Empty space for symmetry */}
+          <div className="w-10" />
 
           {/* Center - Logo/Username */}
-          <div className="flex-1 flex justify-center">
+          <div className="flex-1 flex flex-col items-center justify-center">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsSearching(!isSearching)}
+              className="p-2 hover:bg-primary/20 rounded-full mb-1 bounce"
+              style={{ color: config?.text_color }}
+            >
+              <Search className="h-6 w-6" strokeWidth={2.5} />
+            </Button>
             <span 
               className="text-2xl font-bold tracking-tighter px-6 py-2 rounded-full"
               style={{ 
@@ -100,7 +101,7 @@ const Navbar3 = () => {
             </span>
           </div>
 
-          {/* Right side - Spacer for symmetry */}
+          {/* Right side - Empty space for symmetry */}
           <div className="w-10" />
         </div>
 
