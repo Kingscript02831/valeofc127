@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -86,7 +87,6 @@ export default function Conversations() {
 
       if (chatsError) {
         console.error('Chats fetch error:', chatsError);
-        toast.error("Erro ao carregar conversas. Por favor, tente novamente.");
         throw chatsError;
       }
 
@@ -94,7 +94,11 @@ export default function Conversations() {
       return chatsData as Chat[];
     },
     enabled: !!currentUserId,
-    retry: 1
+    retry: 1,
+    onError: (error) => {
+      console.error('Query error:', error);
+      toast.error("Erro ao carregar conversas. Por favor, tente novamente.");
+    }
   });
 
   const handleUserClick = async (userId: string) => {
@@ -166,6 +170,7 @@ export default function Conversations() {
 
   return (
     <div className="flex flex-col h-screen bg-black text-white pb-16">
+      {/* Header */}
       <div className="bg-gradient-to-r from-green-500 to-teal-500 p-4">
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-semibold text-white">{username}</h1>
@@ -196,6 +201,7 @@ export default function Conversations() {
         </div>
       </div>
 
+      {/* Tabs */}
       <div className="bg-[#202C33] flex text-center border-b border-gray-700">
         <button 
           onClick={() => setActiveTab('conversations')}
@@ -217,6 +223,7 @@ export default function Conversations() {
         </button>
       </div>
 
+      {/* Search Button */}
       <div className="absolute bottom-20 right-4 z-10">
         <Button 
           size="icon"
@@ -227,6 +234,7 @@ export default function Conversations() {
         </Button>
       </div>
 
+      {/* Chat List */}
       <div className="flex-1 overflow-y-auto">
         {chats?.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center p-4">
@@ -293,6 +301,7 @@ export default function Conversations() {
         )}
       </div>
 
+      {/* Search Overlay */}
       {isSearching && (
         <div className="absolute inset-0 bg-black/95 z-20">
           <div className="p-4 flex items-center gap-4">
@@ -360,6 +369,7 @@ export default function Conversations() {
         </div>
       )}
 
+      {/* Encryption Notice */}
       <div className="p-4 text-center text-sm text-gray-500 bg-black">
         Suas mensagens pessoais são protegidas com{" "}
         <span className="text-green-500">
@@ -367,6 +377,7 @@ export default function Conversations() {
         </span>
       </div>
 
+      {/* Bottom Navigation */}
       <BottomNav />
     </div>
   );
