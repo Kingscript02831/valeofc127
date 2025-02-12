@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../integrations/supabase/client";
@@ -70,7 +71,7 @@ export default function Conversations() {
           *,
           participants:chat_participants(
             *,
-            profile:profiles(username, avatar_url, name)
+            profile:profiles(username, avatar_url, name, online_status, last_seen)
           ),
           messages:messages(*)
         `)
