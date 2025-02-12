@@ -1,8 +1,7 @@
-
 import { Home, Bell, User, MessageCircle, Search } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useSiteConfig } from "../hooks/useSiteConfig";
-import { supabase } from "../integrations/supabase/client";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
@@ -16,12 +15,10 @@ const BottomNav = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   useEffect(() => {
-    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
     });
 
-    // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -31,7 +28,6 @@ const BottomNav = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Fetch unread notifications count
   const { data: unreadCount } = useQuery({
     queryKey: ["unreadNotifications"],
     queryFn: async () => {
@@ -59,6 +55,15 @@ const BottomNav = () => {
     navigate(path);
   };
 
+  const handleSearchClick = () => {
+    if (!session) {
+      toast.error("Você precisa fazer login para acessar esta área");
+      navigate("/login");
+      return;
+    }
+    navigate("/chat", { state: { isSearchOpen: true } });
+  };
+
   const isActive = (path: string) => {
     return location.pathname === path;
   };
@@ -72,11 +77,10 @@ const BottomNav = () => {
 
   return (
     <>
-      {/* Floating search button */}
       <Button
         variant="ghost"
         size="icon"
-        onClick={() => setIsSearchOpen(!isSearchOpen)}
+        onClick={handleSearchClick}
         className="fixed bottom-20 right-4 p-3 rounded-full shadow-lg bounce z-50"
         style={{ 
           background: config?.primary_color,
