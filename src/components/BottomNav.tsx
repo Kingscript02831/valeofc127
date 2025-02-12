@@ -102,18 +102,16 @@ const BottomNav = () => {
               <span className="text-xs">Início</span>
             </Link>
 
-            <a
-              href="/conversations"
+            <button
               onClick={(e) => handleNavigation("/conversations", e)}
               className={`flex flex-col items-center p-1`}
               style={{ color: isActive("/conversations") ? iconColor : textColor }}
             >
               <MessageCircle className="h-5 w-5" />
               <span className="text-xs">Chat</span>
-            </a>
+            </button>
 
-            <a
-              href="/notify"
+            <button
               onClick={(e) => handleNavigation("/notify", e)}
               className={`flex flex-col items-center p-1 relative`}
               style={{ color: isActive("/notify") ? iconColor : textColor }}
@@ -125,7 +123,7 @@ const BottomNav = () => {
                 </span>
               )}
               <span className="text-xs">Notificações</span>
-            </a>
+            </button>
 
             <Link
               to={session ? "/perfil" : "/login"}
