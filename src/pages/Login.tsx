@@ -131,6 +131,7 @@ const Login = () => {
           </Button>
 
           <Button
+            type="button"
             variant="link"
             onClick={() => navigate("/reset-password")}
             className="w-full mt-2 font-medium"
