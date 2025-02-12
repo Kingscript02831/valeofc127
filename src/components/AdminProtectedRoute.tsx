@@ -22,7 +22,7 @@ const AdminProtectedRoute = ({ children, requiredPermission }: AdminProtectedRou
     },
   });
 
-  const { data: hasPermission } = useQuery({
+  const { data: hasPermission, isLoading } = useQuery({
     queryKey: ["admin-permission", session?.user.id, requiredPermission],
     queryFn: async () => {
       if (!session?.user.id || !requiredPermission) return true;
@@ -35,17 +35,38 @@ const AdminProtectedRoute = ({ children, requiredPermission }: AdminProtectedRou
         }
       );
 
-      if (error) throw error;
+      if (error) {
+        console.error("Erro ao verificar permissão:", error);
+        return false;
+      }
+      
+      console.log("Resultado da verificação de permissão:", data);
       return data;
     },
     enabled: !!session?.user.id && !!requiredPermission,
+    initialData: !requiredPermission // Se não há permissão requerida, começa como true
   });
 
   if (!session) {
+    console.log("Sem sessão, redirecionando para login");
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  // Adiciona log para debug
+  console.log("Estado atual:", {
+    isLoading,
+    hasPermission,
+    requiredPermission,
+    userId: session.user.id
+  });
+
+  // Se está carregando e tem permissão requerida, espera
+  if (isLoading && requiredPermission) {
+    return <div>Verificando permissões...</div>;
+  }
+
   if (requiredPermission && !hasPermission) {
+    console.log("Sem permissão necessária, redirecionando para 404");
     return <Navigate to="/404" replace />;
   }
 
