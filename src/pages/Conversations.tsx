@@ -1,13 +1,14 @@
 
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button } from "../components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Search, Facebook, Instagram, Share2 } from "lucide-react";
-import { Input } from "../components/ui/input";
-import BottomNav from "../components/BottomNav";
-import type { Chat, ChatParticipant } from "../types/chat";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+import BottomNav from "@/components/BottomNav";
+import type { Chat, ChatParticipant } from "@/types/chat";
 
 export default function Conversations() {
   const navigate = useNavigate();
@@ -18,6 +19,7 @@ export default function Conversations() {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState("conversations");
   const [isSearching, setIsSearching] = useState(false);
+  const [isCreatingChat, setIsCreatingChat] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -48,6 +50,7 @@ export default function Conversations() {
           .from('profiles')
           .select('id, username, name, avatar_url')
           .or(`name.ilike.%${searchQuery}%,username.ilike.%${searchQuery}%`)
+          .neq('id', currentUserId) // Não mostrar o usuário atual
           .limit(10);
 
         if (!error && data) {
@@ -60,11 +63,13 @@ export default function Conversations() {
 
     const timeoutId = setTimeout(searchUsers, 300);
     return () => clearTimeout(timeoutId);
-  }, [searchQuery]);
+  }, [searchQuery, currentUserId]);
 
   const { data: chats, isLoading } = useQuery({
     queryKey: ["chats"],
     queryFn: async () => {
+      if (!currentUserId) return [];
+      
       const { data: chatsData, error: chatsError } = await supabase
         .from("chats")
         .select(`
@@ -77,30 +82,47 @@ export default function Conversations() {
         `)
         .order('updated_at', { ascending: false });
 
-      if (chatsError) throw chatsError;
+      if (chatsError) {
+        console.error("Error fetching chats:", chatsError);
+        return [];
+      }
       return chatsData as Chat[];
     },
     enabled: !!currentUserId,
+    staleTime: 3000,
+    cacheTime: 3600000,
   });
 
   const handleUserClick = async (userId: string) => {
     try {
+      setIsCreatingChat(true);
+      console.log("Creating chat with user:", userId);
+
       const { data: chatId, error: createChatError } = await supabase
         .rpc('create_private_chat', { other_user_id: userId });
 
       if (createChatError) {
         console.error('Error creating chat:', createChatError);
+        toast.error("Erro ao criar chat. Tente novamente.");
+        setIsCreatingChat(false);
         return;
       }
 
       if (chatId) {
+        console.log("Chat created, ID:", chatId);
         await queryClient.invalidateQueries({ queryKey: ["chats"] });
         setIsSearching(false);
         setSearchQuery("");
-        navigate('/chat', { state: { selectedChat: chatId } });
+        setIsCreatingChat(false);
+        navigate('/chat', { 
+          state: { selectedChat: chatId },
+          replace: true
+        });
       }
     } catch (error) {
       console.error('Error handling user click:', error);
+      toast.error("Erro ao criar chat. Tente novamente.");
+      setIsCreatingChat(false);
     }
   };
 
@@ -122,6 +144,13 @@ export default function Conversations() {
     } catch (err) {
       console.error("Error sharing:", err);
     }
+  };
+
+  const handleChatClick = (chatId: string) => {
+    navigate("/chat", { 
+      state: { selectedChat: chatId },
+      replace: true
+    });
   };
 
   return (
@@ -206,7 +235,7 @@ export default function Conversations() {
             return (
               <div
                 key={chat.id}
-                onClick={() => navigate("/chat", { state: { selectedChat: chat.id } })}
+                onClick={() => handleChatClick(chat.id)}
                 className="px-4 py-3 hover:bg-[#202C33] cursor-pointer"
               >
                 <div className="flex items-center gap-3">
@@ -277,10 +306,10 @@ export default function Conversations() {
             {searchResults.map((user) => (
               <div
                 key={user.id}
-                onClick={() => {
-                  handleUserClick(user.id);
-                }}
-                className="flex items-center gap-3 p-3 hover:bg-gray-800 rounded-lg cursor-pointer"
+                onClick={() => !isCreatingChat && handleUserClick(user.id)}
+                className={`flex items-center gap-3 p-3 hover:bg-gray-800 rounded-lg ${
+                  isCreatingChat ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                }`}
               >
                 <div className="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden">
                   {user.avatar_url ? (
@@ -297,6 +326,7 @@ export default function Conversations() {
                 </div>
                 <div>
                   <h3 className="font-medium text-white">{user.name || user.username}</h3>
+                  {isCreatingChat && <p className="text-sm text-gray-400">Criando chat...</p>}
                 </div>
               </div>
             ))}
