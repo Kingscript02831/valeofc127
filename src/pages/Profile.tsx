@@ -38,8 +38,8 @@ import SubNav from "../components/SubNav";
 import type { ProfileUpdateData } from "../types/profile";
 
 const profileSchema = z.object({
-  name: z.string().optional(),
-  email: z.string().email("Email inválido").optional(),
+  name: z.string().min(1, "Nome é obrigatório"),
+  email: z.string().email("Email inválido"),
   phone: z.string().optional(),
   birth_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida").optional(),
   street: z.string().optional(),
@@ -47,7 +47,7 @@ const profileSchema = z.object({
   city: z.string().optional(),
   postal_code: z.string().optional(),
   avatar_url: z.string().url("URL inválida").optional(),
-  username: z.string().optional(),
+  username: z.string().min(3, "Username deve ter pelo menos 3 caracteres"),
   bio: z.string().optional(),
   website: z.string().url("URL inválida").optional().or(z.literal("")),
   basic_info_updated_at: z.string().optional(),
@@ -59,6 +59,25 @@ export default function Profile() {
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
+
+  // Set up form with default values
+  const form = useForm<z.infer<typeof profileSchema>>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      birth_date: "",
+      street: "",
+      house_number: "",
+      city: "",
+      postal_code: "",
+      avatar_url: "",
+      username: "",
+      bio: "",
+      website: "",
+    },
+  });
 
   // Check for authentication and scheduled deletion
   useEffect(() => {
@@ -102,27 +121,8 @@ export default function Profile() {
     checkSession();
   }, [navigate, toast]);
 
-  // Set up form with default values
-  const form = useForm<z.infer<typeof profileSchema>>({
-    resolver: zodResolver(profileSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      phone: "",
-      birth_date: "",
-      street: "",
-      house_number: "",
-      city: "",
-      postal_code: "",
-      avatar_url: "",
-      username: "",
-      bio: "",
-      website: "",
-    },
-  });
-
   // Fetch profile data
-  const { data: profile } = useQuery({
+  const { data: profile, isLoading: isProfileLoading } = useQuery({
     queryKey: ["profile"],
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -132,7 +132,7 @@ export default function Profile() {
         .from("profiles")
         .select("*")
         .eq("id", session.user.id)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       return data;
@@ -140,16 +140,27 @@ export default function Profile() {
     enabled: !isLoading,
   });
 
+  // Update form when profile data is loaded
   useEffect(() => {
     if (profile) {
       form.reset({
-        ...profile,
+        name: profile.name || "",
+        email: profile.email || "",
+        phone: profile.phone || "",
         birth_date: profile.birth_date ? format(new Date(profile.birth_date), "yyyy-MM-dd") : "",
+        street: profile.street || "",
+        house_number: profile.house_number || "",
+        city: profile.city || "",
+        postal_code: profile.postal_code || "",
+        avatar_url: profile.avatar_url || "",
+        username: profile.username || "",
+        bio: profile.bio || "",
+        website: profile.website || "",
       });
     }
   }, [profile, form]);
 
-  // Update profile mutation with 30-day check for username and phone
+  // Update profile mutation
   const updateProfile = useMutation({
     mutationFn: async (values: z.infer<typeof profileSchema>) => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -236,7 +247,7 @@ export default function Profile() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || isProfileLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-black text-white">
         <p>Carregando...</p>
