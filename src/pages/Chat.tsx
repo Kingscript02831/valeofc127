@@ -176,12 +176,24 @@ export default function ChatPage() {
     if (!message.trim() || !selectedChat) return;
 
     try {
+      const currentUser = await supabase.auth.getUser();
+      const userId = currentUser?.data?.user?.id;
+
+      if (!userId) {
+        toast({
+          title: "Erro ao enviar mensagem",
+          description: "Usuário não autenticado",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from("messages")
         .insert({
           chat_id: selectedChat.id,
           content: message.trim(),
-          sender_id: (await supabase.auth.getUser()).data.user?.id
+          sender_id: userId
         });
 
       if (error) throw error;
