@@ -1,8 +1,8 @@
 
-import { Home, Bell, User, MessageCircle } from "lucide-react";
+import { Home, Bell, User, MessageCircle, Search } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
