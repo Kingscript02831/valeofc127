@@ -65,33 +65,6 @@ export type Database = {
           signup_text_color: string
         }
       }
-      events: {
-        Row: {
-          id: string;
-          title: string;
-          description: string;
-          event_date: string;
-          event_time: string;
-          end_time: string;
-          location?: string;
-          maps_url?: string;
-          entrance_fee?: string;
-          created_at: string;
-          button_color?: string;
-          button_secondary_color?: string;
-          video_url?: string;
-          image?: string;
-          images?: string[];
-          category_id?: string;
-        }
-      }
-      categories: {
-        Row: {
-          id: string;
-          name: string;
-          background_color?: string;
-        }
-      }
     }
   }
 }
