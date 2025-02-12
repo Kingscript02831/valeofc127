@@ -1,6 +1,7 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { MessageCircle, Send, Search } from "lucide-react";
+import { MessageCircle, Send, Search, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +11,9 @@ import Navbar from "@/components/Navbar";
 import BottomNav from "@/components/BottomNav";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useDebounce } from "@/hooks/use-debounce";
+import { ChatList } from "@/components/chat/ChatList";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface Message {
   id: string;
@@ -37,6 +41,7 @@ const Chat = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Profile[]>([]);
   const debouncedSearch = useDebounce(searchQuery, 300);
+  const [currentView, setCurrentView] = useState<"list" | "chat">("list");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -45,7 +50,6 @@ const Chat = () => {
         return;
       }
       setSession(session);
-      initializeChat(session.user.id);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -57,6 +61,61 @@ const Chat = () => {
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  useEffect(() => {
+    if (!chatId) return;
+
+    const fetchMessages = async () => {
+      const { data: messages, error } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('chat_id', chatId)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('Erro ao buscar mensagens:', error);
+        return;
+      }
+
+      setMessages(messages || []);
+
+      // Mark messages as read
+      await supabase
+        .from('messages')
+        .update({ read: true })
+        .eq('chat_id', chatId)
+        .eq('read', false)
+        .neq('sender_id', session?.user?.id);
+    };
+
+    fetchMessages();
+
+    const channel = supabase
+      .channel('public:messages')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `chat_id=eq.${chatId}`
+        },
+        (payload) => {
+          setMessages(current => [...current, payload.new as Message]);
+          if (payload.new.sender_id !== session?.user?.id) {
+            supabase
+              .from('messages')
+              .update({ read: true })
+              .eq('id', payload.new.id);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [chatId, session?.user?.id]);
 
   useEffect(() => {
     const searchUsers = async () => {
@@ -83,73 +142,6 @@ const Chat = () => {
     searchUsers();
   }, [debouncedSearch, session?.user?.id]);
 
-  const initializeChat = async (userId: string) => {
-    try {
-      const { data: existingChats } = await supabase
-        .from('chats')
-        .select('id')
-        .single();
-
-      let currentChatId;
-
-      if (existingChats) {
-        currentChatId = existingChats.id;
-      } else {
-        const { data: newChat } = await supabase
-          .from('chats')
-          .insert({})
-          .select()
-          .single();
-
-        if (newChat) {
-          currentChatId = newChat.id;
-          await supabase
-            .from('chat_participants')
-            .insert({
-              chat_id: currentChatId,
-              user_id: userId
-            });
-        }
-      }
-
-      if (currentChatId) {
-        setChatId(currentChatId);
-        const { data: initialMessages } = await supabase
-          .from('messages')
-          .select('*')
-          .eq('chat_id', currentChatId)
-          .order('created_at', { ascending: true });
-
-        if (initialMessages) {
-          setMessages(initialMessages);
-        }
-
-        const channel = supabase
-          .channel('public:messages')
-          .on(
-            'postgres_changes',
-            {
-              event: 'INSERT',
-              schema: 'public',
-              table: 'messages',
-              filter: `chat_id=eq.${currentChatId}`
-            },
-            (payload) => {
-              setMessages(current => [...current, payload.new as Message]);
-            }
-          )
-          .subscribe();
-
-        return () => {
-          supabase.removeChannel(channel);
-        };
-      }
-    } catch (error) {
-      console.error('Erro ao inicializar chat:', error);
-      toast.error('Erro ao carregar o chat');
-    }
-  };
-
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -173,6 +165,11 @@ const Chat = () => {
     }
   };
 
+  const handleSelectChat = (selectedChatId: string) => {
+    setChatId(selectedChatId);
+    setCurrentView("chat");
+  };
+
   const startChat = async (otherUserId: string) => {
     try {
       const { data, error } = await supabase.rpc('create_private_chat', {
@@ -184,6 +181,7 @@ const Chat = () => {
       setChatId(data);
       setIsSearchOpen(false);
       setSearchQuery("");
+      setCurrentView("chat");
     } catch (error) {
       console.error('Erro ao iniciar chat:', error);
       toast.error('Erro ao iniciar conversa');
@@ -199,8 +197,19 @@ const Chat = () => {
           <div className="p-4 border-b">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
+                {currentView === "chat" && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setCurrentView("list")}
+                  >
+                    <ArrowLeft className="h-5 w-5" />
+                  </Button>
+                )}
                 <MessageCircle className="h-5 w-5" />
-                <h1 className="text-lg font-semibold">Chat</h1>
+                <h1 className="text-lg font-semibold">
+                  {currentView === "list" ? "Conversas" : "Chat"}
+                </h1>
               </div>
               <Button
                 variant="ghost"
@@ -212,48 +221,54 @@ const Chat = () => {
             </div>
           </div>
 
-          <ScrollArea className="flex-1 p-4">
-            <div className="flex flex-col gap-4">
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex ${
-                    message.sender_id === session?.user?.id
-                      ? "justify-end"
-                      : "justify-start"
-                  }`}
-                >
-                  <div
-                    className={`max-w-[80%] rounded-lg p-3 ${
-                      message.sender_id === session?.user?.id
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted"
-                    }`}
-                  >
-                    <p className="text-sm">{message.content}</p>
-                    <span className="text-xs opacity-70">
-                      {new Date(message.created_at).toLocaleTimeString()}
-                    </span>
-                  </div>
+          {currentView === "list" ? (
+            <ChatList onSelectChat={handleSelectChat} selectedChatId={chatId} />
+          ) : (
+            <>
+              <ScrollArea className="flex-1 p-4">
+                <div className="flex flex-col gap-4">
+                  {messages.map((message) => (
+                    <div
+                      key={message.id}
+                      className={`flex ${
+                        message.sender_id === session?.user?.id
+                          ? "justify-end"
+                          : "justify-start"
+                      }`}
+                    >
+                      <div
+                        className={`max-w-[80%] rounded-lg p-3 ${
+                          message.sender_id === session?.user?.id
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted"
+                        }`}
+                      >
+                        <p className="text-sm">{message.content}</p>
+                        <span className="text-xs opacity-70">
+                          {new Date(message.created_at).toLocaleTimeString()}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </ScrollArea>
+              </ScrollArea>
 
-          <form onSubmit={handleSendMessage} className="p-4 border-t">
-            <div className="flex gap-2">
-              <Input
-                type="text"
-                placeholder="Digite sua mensagem..."
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                className="flex-1"
-              />
-              <Button type="submit" size="icon">
-                <Send className="h-4 w-4" />
-              </Button>
-            </div>
-          </form>
+              <form onSubmit={handleSendMessage} className="p-4 border-t">
+                <div className="flex gap-2">
+                  <Input
+                    type="text"
+                    placeholder="Digite sua mensagem..."
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    className="flex-1"
+                  />
+                  <Button type="submit" size="icon">
+                    <Send className="h-4 w-4" />
+                  </Button>
+                </div>
+              </form>
+            </>
+          )}
         </div>
       </main>
 
@@ -276,19 +291,12 @@ const Chat = () => {
                   onClick={() => startChat(profile.id)}
                 >
                   <div className="flex items-center gap-2">
-                    {profile.avatar_url ? (
-                      <img
-                        src={profile.avatar_url}
-                        alt={profile.username || profile.full_name}
-                        className="w-8 h-8 rounded-full"
-                      />
-                    ) : (
-                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                        <span className="text-sm font-medium">
-                          {(profile.username?.[0] || profile.full_name?.[0] || "?").toUpperCase()}
-                        </span>
-                      </div>
-                    )}
+                    <Avatar>
+                      <AvatarImage src={profile.avatar_url} />
+                      <AvatarFallback>
+                        {(profile.username?.[0] || profile.full_name?.[0] || "?").toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
                     <div>
                       <p className="font-medium">{profile.full_name}</p>
                       {profile.username && (
