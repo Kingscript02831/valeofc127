@@ -38,26 +38,39 @@ export const UserSearch = ({ onSelectUser, onClose }: UserSearchProps) => {
       try {
         setIsSearching(true);
 
-        // Primeiro, obter a localização do usuário
-        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject);
-        });
+        // Simulação de um usuário para teste
+        const demoUser: NearbyUser = {
+          id: "demo-user-id",
+          username: "demo_user",
+          full_name: "Usuário Demo",
+          avatar_url: "",
+          distance: 1500 // 1.5km
+        };
 
-        const { data: nearbyUsers, error } = await supabase.rpc('search_nearby_users', {
-          search_query: debouncedSearch,
-          user_lat: position.coords.latitude,
-          user_lng: position.coords.longitude,
-          radius_meters: 5000 // 5km de raio
-        });
-
-        if (error) throw error;
-        setUsers(nearbyUsers || []);
+        // Se a busca incluir "@", procura por username
+        if (debouncedSearch.includes("@")) {
+          const searchTerm = debouncedSearch.replace("@", "").toLowerCase();
+          // Adiciona o usuário demo se corresponder à busca
+          if ("demo_user".includes(searchTerm)) {
+            setUsers([demoUser]);
+          } else {
+            setUsers([]);
+          }
+        } else {
+          // Se a busca não incluir "@", procura por nome completo
+          const searchTerm = debouncedSearch.toLowerCase();
+          if ("usuário demo".includes(searchTerm)) {
+            setUsers([demoUser]);
+          } else {
+            setUsers([]);
+          }
+        }
 
       } catch (error: any) {
         console.error('Erro ao buscar usuários:', error);
         toast({
           title: "Erro ao buscar usuários",
-          description: "Verifique se permitiu o acesso à sua localização",
+          description: "Não foi possível completar a busca",
           variant: "destructive",
         });
       } finally {
@@ -70,6 +83,17 @@ export const UserSearch = ({ onSelectUser, onClose }: UserSearchProps) => {
 
   const startChat = async (userId: string) => {
     try {
+      // Para o usuário demo, simulamos a criação do chat
+      if (userId === "demo-user-id") {
+        onSelectUser("demo-chat-id");
+        onClose();
+        toast({
+          title: "Chat iniciado",
+          description: "Chat de demonstração criado com sucesso!",
+        });
+        return;
+      }
+
       const { data: chatId, error } = await supabase.rpc('create_private_chat', {
         other_user_id: userId
       });
@@ -92,7 +116,7 @@ export const UserSearch = ({ onSelectUser, onClose }: UserSearchProps) => {
     <div className="p-4 space-y-4">
       <div className="relative">
         <Input
-          placeholder="Buscar usuários próximos..."
+          placeholder="Digite @ para buscar por username..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="pl-10"
