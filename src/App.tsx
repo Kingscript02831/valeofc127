@@ -21,6 +21,7 @@ import AdminNews from "./pages/AdminNews";
 import AdminCategories from "./pages/AdminCategories";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
+import Chat from "./pages/Chat";
 
 const queryClient = new QueryClient();
 
@@ -41,14 +42,14 @@ const App: React.FC = () => {
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<SignUp />} />
               <Route path="/perfil" element={<Profile />} />
+              <Route path="/chat" element={<Chat />} />
               <Route path="/config" element={<Config />} />
               <Route path="/admin" element={<Admin />}>
-              <Route path="lugares" element={<AdminPlaces />} />
-              <Route path="eventos" element={<AdminEvents />} />
-              <Route path="lojas" element={<AdminStores />} />
-              <Route path="noticias" element={<AdminNews />} />
-              <Route path="categorias" element={<AdminCategories />} />
-          
+                <Route path="lugares" element={<AdminPlaces />} />
+                <Route path="eventos" element={<AdminEvents />} />
+                <Route path="lojas" element={<AdminStores />} />
+                <Route path="noticias" element={<AdminNews />} />
+                <Route path="categorias" element={<AdminCategories />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
