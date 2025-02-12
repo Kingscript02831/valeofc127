@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import type { Message, Chat, ChatParticipant } from "@/types/chat";
 import Navbar3 from "@/components/Navbar3";
-import SubNav from "@/components/SubNav";
+import SubNav3 from "@/components/SubNav3";
 import BottomNav from "@/components/BottomNav";
 
 export default function Chat() {
@@ -38,7 +37,6 @@ export default function Chat() {
     checkAuth();
   }, [navigate]);
 
-  // Search users
   const { data: searchResults } = useQuery({
     queryKey: ["searchUsers", searchQuery],
     queryFn: async () => {
@@ -57,7 +55,6 @@ export default function Chat() {
     enabled: !!searchQuery && !!currentUserId,
   });
 
-  // Fetch chats
   const { data: chats } = useQuery({
     queryKey: ["chats"],
     queryFn: async () => {
@@ -78,7 +75,6 @@ export default function Chat() {
     enabled: !!currentUserId,
   });
 
-  // Fetch messages for selected chat
   const { data: messages } = useQuery({
     queryKey: ["messages", selectedChat],
     queryFn: async () => {
@@ -95,7 +91,6 @@ export default function Chat() {
     enabled: !!selectedChat,
   });
 
-  // Start new chat mutation
   const startChat = useMutation({
     mutationFn: async (userId: string) => {
       const { data, error } = await supabase
@@ -119,7 +114,6 @@ export default function Chat() {
     },
   });
 
-  // Send message mutation
   const sendMessage = useMutation({
     mutationFn: async (content: string) => {
       if (!selectedChat || !currentUserId || !content.trim()) return;
@@ -148,7 +142,6 @@ export default function Chat() {
     },
   });
 
-  // Subscribe to new messages
   useEffect(() => {
     if (!selectedChat) return;
 
@@ -173,7 +166,6 @@ export default function Chat() {
     };
   }, [selectedChat, queryClient]);
 
-  // Auto scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -192,107 +184,48 @@ export default function Chat() {
   return (
     <div className="min-h-screen bg-black text-white">
       <Navbar3 />
-      <SubNav />
+      <SubNav3 />
       <div className="container max-w-4xl mx-auto p-4 pb-20 pt-20">
         <div className="grid grid-cols-1 gap-4">
           {!selectedChat ? (
-            <>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold">Conversas</h2>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsSearching(!isSearching)}
-                  className="hover:bg-gray-800"
-                >
-                  <Search className="h-4 w-4 mr-2" />
-                  Procurar usuários
-                </Button>
-              </div>
-
-              {isSearching ? (
-                <div className="space-y-4">
-                  <Input
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Procurar por @username..."
-                    className="bg-transparent border-white text-white"
-                  />
-                  {searchResults?.map((user) => (
-                    <div
-                      key={user.id}
-                      onClick={() => startChat.mutate(user.id)}
-                      className="p-4 bg-gray-900 rounded-lg cursor-pointer hover:bg-gray-800 transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center">
-                          {user.avatar_url ? (
-                            <img
-                              src={user.avatar_url}
-                              alt="Avatar"
-                              className="w-full h-full rounded-full object-cover"
-                            />
-                          ) : (
-                            <span className="text-lg">
-                              {user.name?.[0] || user.username?.[0] || "?"}
-                            </span>
-                          )}
-                        </div>
-                        <div>
-                          <h3 className="font-medium">
-                            {user.name || "Usuário"}
-                          </h3>
-                          {user.username && (
-                            <p className="text-sm text-gray-400">
-                              @{user.username}
-                            </p>
-                          )}
-                        </div>
+            <div className="space-y-2">
+              {chats?.map((chat) => {
+                const otherParticipant = getOtherParticipant(chat);
+                return (
+                  <div
+                    key={chat.id}
+                    onClick={() => setSelectedChat(chat.id)}
+                    className="p-4 bg-gray-900 rounded-lg cursor-pointer hover:bg-gray-800 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center">
+                        {otherParticipant?.avatar_url ? (
+                          <img
+                            src={otherParticipant.avatar_url}
+                            alt="Avatar"
+                            className="w-full h-full rounded-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-lg">
+                            {otherParticipant?.name?.[0] || "?"}
+                          </span>
+                        )}
+                      </div>
+                      <div>
+                        <h3 className="font-medium">
+                          {otherParticipant?.name || "Usuário"}
+                        </h3>
+                        {otherParticipant?.username && (
+                          <p className="text-sm text-gray-400">
+                            @{otherParticipant.username}
+                          </p>
+                        )}
                       </div>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {chats?.map((chat) => {
-                    const otherParticipant = getOtherParticipant(chat);
-                    return (
-                      <div
-                        key={chat.id}
-                        onClick={() => setSelectedChat(chat.id)}
-                        className="p-4 bg-gray-900 rounded-lg cursor-pointer hover:bg-gray-800 transition-colors"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center">
-                            {otherParticipant?.avatar_url ? (
-                              <img
-                                src={otherParticipant.avatar_url}
-                                alt="Avatar"
-                                className="w-full h-full rounded-full object-cover"
-                              />
-                            ) : (
-                              <span className="text-lg">
-                                {otherParticipant?.name?.[0] || "?"}
-                              </span>
-                            )}
-                          </div>
-                          <div>
-                            <h3 className="font-medium">
-                              {otherParticipant?.name || "Usuário"}
-                            </h3>
-                            {otherParticipant?.username && (
-                              <p className="text-sm text-gray-400">
-                                @{otherParticipant.username}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </>
+                  </div>
+                );
+              })}
+            </div>
           ) : (
             <div className="h-[calc(100vh-200px)] flex flex-col">
               <div className="flex items-center gap-4 mb-4">
