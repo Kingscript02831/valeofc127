@@ -51,9 +51,9 @@ export default function Chat() {
         .from("chats")
         .select(`
           *,
-          participants:chat_participants(
-            *,
-            profile:profiles(username, avatar_url, name, online_status, last_seen)
+          participants:chat_participants!inner(
+            user_id,
+            profile:profiles!inner(username, avatar_url, name, online_status, last_seen)
           ),
           messages:messages_chat_id_fkey(*)
         `)

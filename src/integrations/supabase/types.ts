@@ -122,6 +122,13 @@ export type Database = {
             referencedRelation: "chats"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fk_chat_participants_profile"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       chats: {
