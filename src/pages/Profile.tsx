@@ -39,13 +39,14 @@ import type { ProfileUpdateData } from "../types/profile";
 
 const profileSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
+  full_name: z.string().min(1, "Nome completo é obrigatório"),
   email: z.string().email("Email inválido"),
-  phone: z.string().optional(),
-  birth_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida").optional(),
-  street: z.string().optional(),
-  house_number: z.string().optional(),
-  city: z.string().optional(),
-  postal_code: z.string().optional(),
+  phone: z.string().min(1, "Telefone é obrigatório"),
+  birth_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida"),
+  street: z.string().min(1, "Rua é obrigatória"),
+  house_number: z.string().min(1, "Número é obrigatório"),
+  city: z.string().min(1, "Cidade é obrigatória"),
+  postal_code: z.string().min(1, "CEP é obrigatório"),
   avatar_url: z.string().url("URL inválida").optional(),
   username: z.string().min(3, "Username deve ter pelo menos 3 caracteres"),
   bio: z.string().optional(),
@@ -65,6 +66,7 @@ export default function Profile() {
     resolver: zodResolver(profileSchema),
     defaultValues: {
       name: "",
+      full_name: "",
       email: "",
       phone: "",
       birth_date: "",
@@ -145,6 +147,7 @@ export default function Profile() {
     if (profile) {
       form.reset({
         name: profile.name || "",
+        full_name: profile.full_name || "",
         email: profile.email || "",
         phone: profile.phone || "",
         birth_date: profile.birth_date ? format(new Date(profile.birth_date), "yyyy-MM-dd") : "",
@@ -341,6 +344,24 @@ export default function Profile() {
                               {...field} 
                               className="bg-transparent border-white text-white placeholder:text-gray-400"
                               placeholder="Seu nome"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="full_name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-white">Nome completo</FormLabel>
+                          <FormControl>
+                            <Input 
+                              {...field} 
+                              className="bg-transparent border-white text-white placeholder:text-gray-400"
+                              placeholder="Seu nome completo"
                             />
                           </FormControl>
                           <FormMessage />
