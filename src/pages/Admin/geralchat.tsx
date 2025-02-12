@@ -12,7 +12,7 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger
-} from "@/components/ui/";
+} from "@/components/ui";
 import { toast } from "@/components/ui/use-toast";
 
 interface ColorConfig {
@@ -46,7 +46,6 @@ export default function GeralChat() {
   };
 
   const handleSave = () => {
-    // Aqui você pode implementar a lógica para salvar as cores
     localStorage.setItem('chatColors', JSON.stringify(colors));
     toast({
       title: "Configurações salvas",

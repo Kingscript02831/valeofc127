@@ -12,6 +12,7 @@ const SubNav2 = () => {
     { path: "/admin/lugares", label: "Lugares" },
     { path: "/admin/lojas", label: "Lojas" },
     { path: "/admin/categorias", label: "Categorias" },
+    { path: "/admin/geralchat", label: "Chat" },
     { path: "/config", label: "Configurações" },
   ];
 
