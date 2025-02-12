@@ -1,15 +1,16 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "../components/ui/button";
 import { Search, Facebook, Instagram, Share2 } from "lucide-react";
 import { Input } from "../components/ui/input";
+import BottomNav from "../components/BottomNav";
 import type { Chat, ChatParticipant } from "../types/chat";
 
 export default function Conversations() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [username, setUsername] = useState<string>("");
@@ -81,11 +82,23 @@ export default function Conversations() {
   });
 
   const handleUserClick = async (userId: string) => {
-    const { data: chatId, error } = await supabase
-      .rpc('create_private_chat', { other_user_id: userId });
+    try {
+      const { data: chatId, error: createChatError } = await supabase
+        .rpc('create_private_chat', { other_user_id: userId });
 
-    if (!error && chatId) {
-      navigate('/chat', { state: { selectedChat: chatId } });
+      if (createChatError) {
+        console.error('Error creating chat:', createChatError);
+        return;
+      }
+
+      if (chatId) {
+        // Refresh the chats list
+        await queryClient.invalidateQueries({ queryKey: ["chats"] });
+        // Navigate to the chat
+        navigate('/chat', { state: { selectedChat: chatId } });
+      }
+    } catch (error) {
+      console.error('Error handling user click:', error);
     }
   };
 
@@ -110,7 +123,7 @@ export default function Conversations() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-black text-white">
+    <div className="flex flex-col h-screen bg-black text-white pb-16">
       {/* Header */}
       <div className="bg-gradient-to-r from-green-500 to-teal-500 p-4">
         <div className="flex items-center justify-between">
@@ -175,6 +188,57 @@ export default function Conversations() {
         </Button>
       </div>
 
+      {/* Chat List */}
+      <div className="flex-1 overflow-y-auto">
+        {chats?.map((chat) => {
+          const otherParticipant = getOtherParticipant(chat);
+          const lastMessage = chat.messages?.[0];
+
+          return (
+            <div
+              key={chat.id}
+              onClick={() => navigate("/chat", { state: { selectedChat: chat.id } })}
+              className="px-4 py-3 hover:bg-[#202C33] cursor-pointer"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden">
+                  {otherParticipant?.avatar_url ? (
+                    <img
+                      src={otherParticipant.avatar_url}
+                      alt={otherParticipant.name || "Avatar"}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-lg text-white">
+                      {otherParticipant?.name?.[0] || "?"}
+                    </span>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-medium text-white">
+                        {otherParticipant?.name || otherParticipant?.username || "Usuário"}
+                      </h3>
+                      {lastMessage && (
+                        <p className="text-sm text-gray-400 truncate">
+                          {lastMessage.content}
+                        </p>
+                      )}
+                    </div>
+                    {lastMessage && (
+                      <span className="text-xs text-gray-400">
+                        {formatTimestamp(lastMessage.created_at)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
       {/* Search Overlay */}
       {isSearching && (
         <div className="absolute inset-0 bg-black/95 z-20">
@@ -232,57 +296,6 @@ export default function Conversations() {
         </div>
       )}
 
-      {/* Chat List */}
-      <div className="flex-1 overflow-y-auto">
-        {chats?.map((chat) => {
-          const otherParticipant = getOtherParticipant(chat);
-          const lastMessage = chat.messages?.[0];
-
-          return (
-            <div
-              key={chat.id}
-              onClick={() => navigate("/chat", { state: { selectedChat: chat.id } })}
-              className="px-4 py-3 hover:bg-[#202C33] cursor-pointer"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden">
-                  {otherParticipant?.avatar_url ? (
-                    <img
-                      src={otherParticipant.avatar_url}
-                      alt={otherParticipant.name || "Avatar"}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-lg text-white">
-                      {otherParticipant?.name?.[0] || "?"}
-                    </span>
-                  )}
-                </div>
-                <div className="flex-1">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-medium text-white">
-                        {otherParticipant?.name || otherParticipant?.username || "Usuário"}
-                      </h3>
-                      {lastMessage && (
-                        <p className="text-sm text-gray-400 truncate">
-                          {lastMessage.content}
-                        </p>
-                      )}
-                    </div>
-                    {lastMessage && (
-                      <span className="text-xs text-gray-400">
-                        {formatTimestamp(lastMessage.created_at)}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
       {/* Encryption Notice */}
       <div className="p-4 text-center text-sm text-gray-500 bg-black">
         Suas mensagens pessoais são protegidas com{" "}
@@ -290,6 +303,9 @@ export default function Conversations() {
           criptografia de ponta a ponta
         </span>
       </div>
+
+      {/* Bottom Navigation */}
+      <BottomNav />
     </div>
   );
 }
