@@ -1,6 +1,6 @@
 
 import { useEffect, useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Send, ArrowLeft, Search } from "lucide-react";
@@ -8,16 +8,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import type { Message, Chat, ChatParticipant } from "@/types/chat";
-import Navbar from "@/components/Navbar";
+import Navbar3 from "@/components/Navbar3";
 import SubNav from "@/components/SubNav";
 import BottomNav from "@/components/BottomNav";
 
 export default function Chat() {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [selectedChat, setSelectedChat] = useState<string | null>(null);
+  const [selectedChat, setSelectedChat] = useState<string | null>(
+    location.state?.selectedChat || null
+  );
   const [newMessage, setNewMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
@@ -188,7 +191,7 @@ export default function Chat() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <Navbar />
+      <Navbar3 />
       <SubNav />
       <div className="container max-w-4xl mx-auto p-4 pb-20 pt-20">
         <div className="grid grid-cols-1 gap-4">
