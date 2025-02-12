@@ -1,14 +1,12 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "../integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
+import { Button } from "../components/ui/button";
 import { Search, Facebook, Instagram, Share2 } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
-import BottomNav from "@/components/BottomNav";
-import type { Chat, ChatParticipant } from "@/types/chat";
+import { Input } from "../components/ui/input";
+import BottomNav from "../components/BottomNav";
+import type { Chat, ChatParticipant } from "../types/chat";
 
 export default function Conversations() {
   const navigate = useNavigate();
@@ -19,7 +17,6 @@ export default function Conversations() {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState("conversations");
   const [isSearching, setIsSearching] = useState(false);
-  const [isCreatingChat, setIsCreatingChat] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -50,7 +47,6 @@ export default function Conversations() {
           .from('profiles')
           .select('id, username, name, avatar_url')
           .or(`name.ilike.%${searchQuery}%,username.ilike.%${searchQuery}%`)
-          .neq('id', currentUserId) // Não mostrar o usuário atual
           .limit(10);
 
         if (!error && data) {
@@ -61,15 +57,12 @@ export default function Conversations() {
       }
     };
 
-    const timeoutId = setTimeout(searchUsers, 300);
-    return () => clearTimeout(timeoutId);
-  }, [searchQuery, currentUserId]);
+    searchUsers();
+  }, [searchQuery]);
 
-  const { data: chats, isLoading } = useQuery({
+  const { data: chats } = useQuery({
     queryKey: ["chats"],
     queryFn: async () => {
-      if (!currentUserId) return [];
-      
       const { data: chatsData, error: chatsError } = await supabase
         .from("chats")
         .select(`
@@ -80,49 +73,32 @@ export default function Conversations() {
           ),
           messages:messages(*)
         `)
-        .order('updated_at', { ascending: false });
+        .order('messages.created_at', { foreignTable: 'messages', ascending: false });
 
-      if (chatsError) {
-        console.error("Error fetching chats:", chatsError);
-        return [];
-      }
+      if (chatsError) throw chatsError;
       return chatsData as Chat[];
     },
     enabled: !!currentUserId,
-    staleTime: 3000,
-    cacheTime: 3600000,
   });
 
   const handleUserClick = async (userId: string) => {
     try {
-      setIsCreatingChat(true);
-      console.log("Creating chat with user:", userId);
-
       const { data: chatId, error: createChatError } = await supabase
         .rpc('create_private_chat', { other_user_id: userId });
 
       if (createChatError) {
         console.error('Error creating chat:', createChatError);
-        toast.error("Erro ao criar chat. Tente novamente.");
-        setIsCreatingChat(false);
         return;
       }
 
       if (chatId) {
-        console.log("Chat created, ID:", chatId);
+        // Refresh the chats list
         await queryClient.invalidateQueries({ queryKey: ["chats"] });
-        setIsSearching(false);
-        setSearchQuery("");
-        setIsCreatingChat(false);
-        navigate('/chat', { 
-          state: { selectedChat: chatId },
-          replace: true
-        });
+        // Navigate to the chat
+        navigate('/chat', { state: { selectedChat: chatId } });
       }
     } catch (error) {
       console.error('Error handling user click:', error);
-      toast.error("Erro ao criar chat. Tente novamente.");
-      setIsCreatingChat(false);
     }
   };
 
@@ -144,13 +120,6 @@ export default function Conversations() {
     } catch (err) {
       console.error("Error sharing:", err);
     }
-  };
-
-  const handleChatClick = (chatId: string) => {
-    navigate("/chat", { 
-      state: { selectedChat: chatId },
-      replace: true
-    });
   };
 
   return (
@@ -221,61 +190,53 @@ export default function Conversations() {
 
       {/* Chat List */}
       <div className="flex-1 overflow-y-auto">
-        {isLoading ? (
-          <div className="p-4 text-center text-gray-400">Carregando conversas...</div>
-        ) : chats?.length === 0 ? (
-          <div className="p-4 text-center text-gray-400">
-            Nenhuma conversa ainda. Comece uma busca por usuários!
-          </div>
-        ) : (
-          chats?.map((chat) => {
-            const otherParticipant = getOtherParticipant(chat);
-            const lastMessage = chat.messages?.[0];
+        {chats?.map((chat) => {
+          const otherParticipant = getOtherParticipant(chat);
+          const lastMessage = chat.messages?.[0];
 
-            return (
-              <div
-                key={chat.id}
-                onClick={() => handleChatClick(chat.id)}
-                className="px-4 py-3 hover:bg-[#202C33] cursor-pointer"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden">
-                    {otherParticipant?.avatar_url ? (
-                      <img
-                        src={otherParticipant.avatar_url}
-                        alt={otherParticipant.name || "Avatar"}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-lg text-white">
-                        {otherParticipant?.name?.[0] || "?"}
+          return (
+            <div
+              key={chat.id}
+              onClick={() => navigate("/chat", { state: { selectedChat: chat.id } })}
+              className="px-4 py-3 hover:bg-[#202C33] cursor-pointer"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden">
+                  {otherParticipant?.avatar_url ? (
+                    <img
+                      src={otherParticipant.avatar_url}
+                      alt={otherParticipant.name || "Avatar"}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-lg text-white">
+                      {otherParticipant?.name?.[0] || "?"}
+                    </span>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-medium text-white">
+                        {otherParticipant?.name || otherParticipant?.username || "Usuário"}
+                      </h3>
+                      {lastMessage && (
+                        <p className="text-sm text-gray-400 truncate">
+                          {lastMessage.content}
+                        </p>
+                      )}
+                    </div>
+                    {lastMessage && (
+                      <span className="text-xs text-gray-400">
+                        {formatTimestamp(lastMessage.created_at)}
                       </span>
                     )}
                   </div>
-                  <div className="flex-1">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-medium text-white">
-                          {otherParticipant?.name || otherParticipant?.username || "Usuário"}
-                        </h3>
-                        {lastMessage && (
-                          <p className="text-sm text-gray-400 truncate">
-                            {lastMessage.content}
-                          </p>
-                        )}
-                      </div>
-                      {lastMessage && (
-                        <span className="text-xs text-gray-400">
-                          {formatTimestamp(lastMessage.created_at)}
-                        </span>
-                      )}
-                    </div>
-                  </div>
                 </div>
               </div>
-            );
-          })
-        )}
+            </div>
+          );
+        })}
       </div>
 
       {/* Search Overlay */}
@@ -306,10 +267,12 @@ export default function Conversations() {
             {searchResults.map((user) => (
               <div
                 key={user.id}
-                onClick={() => !isCreatingChat && handleUserClick(user.id)}
-                className={`flex items-center gap-3 p-3 hover:bg-gray-800 rounded-lg ${
-                  isCreatingChat ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-                }`}
+                onClick={() => {
+                  handleUserClick(user.id);
+                  setIsSearching(false);
+                  setSearchQuery("");
+                }}
+                className="flex items-center gap-3 p-3 hover:bg-gray-800 rounded-lg cursor-pointer"
               >
                 <div className="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden">
                   {user.avatar_url ? (
@@ -326,7 +289,6 @@ export default function Conversations() {
                 </div>
                 <div>
                   <h3 className="font-medium text-white">{user.name || user.username}</h3>
-                  {isCreatingChat && <p className="text-sm text-gray-400">Criando chat...</p>}
                 </div>
               </div>
             ))}
