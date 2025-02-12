@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../integrations/supabase/client";
@@ -14,6 +13,7 @@ export default function Conversations() {
   const [searchQuery, setSearchQuery] = useState("");
   const [username, setUsername] = useState<string>("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState("conversations");
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -97,23 +97,70 @@ export default function Conversations() {
   };
 
   return (
-    <div className="flex flex-col h-screen">
-      <div className="p-4 border-b">
-        <h1 className="text-xl font-semibold">{username}</h1>
-      </div>
-
-      <div className="p-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-          <Input
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Pesquisar"
-            className="w-full pl-12 pr-4 py-2"
-          />
+    <div className="flex flex-col h-screen bg-black text-white">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-green-500 to-teal-500 p-4">
+        <div className="flex items-center justify-between">
+          <h1 className="text-xl font-semibold text-white">{username}</h1>
+          <div className="flex gap-4">
+            <button className="text-white">
+              <img 
+                src="/lovable-uploads/fc6c9218-fdab-4453-a440-56c1f8864774.png" 
+                alt="Facebook" 
+                className="w-6 h-6"
+              />
+            </button>
+            <button className="text-white">
+              <img 
+                src="/lovable-uploads/fc6c9218-fdab-4453-a440-56c1f8864774.png" 
+                alt="Instagram" 
+                className="w-6 h-6"
+              />
+            </button>
+            <button className="text-white">
+              <img 
+                src="/lovable-uploads/fc6c9218-fdab-4453-a440-56c1f8864774.png" 
+                alt="Share" 
+                className="w-6 h-6"
+              />
+            </button>
+          </div>
         </div>
       </div>
 
+      {/* Tabs */}
+      <div className="bg-[#202C33] flex text-center border-b border-gray-700">
+        <button 
+          onClick={() => setActiveTab('conversations')}
+          className={`flex-1 py-4 ${activeTab === 'conversations' ? 'text-green-500 border-b-2 border-green-500' : 'text-gray-400'}`}
+        >
+          Conversas
+        </button>
+        <button 
+          onClick={() => setActiveTab('status')}
+          className={`flex-1 py-4 ${activeTab === 'status' ? 'text-green-500 border-b-2 border-green-500' : 'text-gray-400'}`}
+        >
+          Status
+        </button>
+        <button 
+          onClick={() => setActiveTab('reels')}
+          className={`flex-1 py-4 ${activeTab === 'reels' ? 'text-green-500 border-b-2 border-green-500' : 'text-gray-400'}`}
+        >
+          Reels
+        </button>
+      </div>
+
+      {/* Search */}
+      <div className="absolute bottom-20 right-4 z-10">
+        <Button 
+          size="icon"
+          className="w-14 h-14 rounded-full bg-green-500 hover:bg-green-600 text-white shadow-lg"
+        >
+          <Search className="h-6 w-6" />
+        </Button>
+      </div>
+
+      {/* Chat List */}
       <div className="flex-1 overflow-y-auto">
         {searchQuery ? (
           <div>
@@ -195,6 +242,14 @@ export default function Conversations() {
             })}
           </div>
         )}
+      </div>
+
+      {/* Encryption Notice */}
+      <div className="p-4 text-center text-sm text-gray-500 bg-black">
+        Suas mensagens pessoais são protegidas com{" "}
+        <span className="text-green-500">
+          criptografia de ponta a ponta
+        </span>
       </div>
     </div>
   );
