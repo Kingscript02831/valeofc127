@@ -434,7 +434,9 @@ export type Database = {
           house_number: string | null
           id: string
           last_basic_info_update: string | null
+          last_seen: string | null
           name: string | null
+          online_status: boolean | null
           phone: string | null
           postal_code: string | null
           scheduled_deletion_date: string | null
@@ -455,7 +457,9 @@ export type Database = {
           house_number?: string | null
           id: string
           last_basic_info_update?: string | null
+          last_seen?: string | null
           name?: string | null
+          online_status?: boolean | null
           phone?: string | null
           postal_code?: string | null
           scheduled_deletion_date?: string | null
@@ -476,7 +480,9 @@ export type Database = {
           house_number?: string | null
           id?: string
           last_basic_info_update?: string | null
+          last_seen?: string | null
           name?: string | null
+          online_status?: boolean | null
           phone?: string | null
           postal_code?: string | null
           scheduled_deletion_date?: string | null
