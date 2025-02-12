@@ -26,14 +26,17 @@ export default function ChatPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const session = supabase.auth.getSession();
-    if (!session) {
-      navigate("/login");
-      return;
-    }
-
-    fetchChats();
-    subscribeToMessages();
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate("/login");
+        return;
+      }
+      fetchChats();
+      subscribeToMessages();
+    };
+    
+    checkSession();
   }, []);
 
   useEffect(() => {
@@ -52,7 +55,7 @@ export default function ChatPage() {
             *,
             profile:profiles(*)
           ),
-          messages:messages(*)
+          messages!messages_chat_id_fkey(*)
         `)
         .order('created_at', { foreignTable: 'messages' });
 
