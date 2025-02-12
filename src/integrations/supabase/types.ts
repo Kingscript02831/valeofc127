@@ -2049,6 +2049,18 @@ export type Database = {
           distance: number
         }[]
       }
+      search_users: {
+        Args: {
+          search_query: string
+        }
+        Returns: {
+          id: string
+          username: string
+          full_name: string
+          avatar_url: string
+          email: string
+        }[]
+      }
       set_limit: {
         Args: {
           "": number
