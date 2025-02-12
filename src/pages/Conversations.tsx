@@ -53,6 +53,7 @@ export default function Conversations() {
           .limit(10);
 
         if (error) {
+          console.error('Search error:', error);
           toast.error("Erro ao buscar usuários");
           return;
         }
@@ -68,9 +69,10 @@ export default function Conversations() {
     searchUsers();
   }, [searchQuery, currentUserId]);
 
-  const { data: chats, isLoading } = useQuery({
+  const { data: chats, isLoading, error } = useQuery({
     queryKey: ["chats"],
     queryFn: async () => {
+      console.log('Fetching chats for user:', currentUserId);
       const { data: chatsData, error: chatsError } = await supabase
         .from("chats")
         .select(`
@@ -84,31 +86,42 @@ export default function Conversations() {
         .order('updated_at', { ascending: false });
 
       if (chatsError) {
-        toast.error("Erro ao carregar conversas");
+        console.error('Chats fetch error:', chatsError);
         throw chatsError;
       }
+
+      console.log('Fetched chats:', chatsData);
       return chatsData as Chat[];
     },
     enabled: !!currentUserId,
+    retry: 1,
+    onError: (error) => {
+      console.error('Query error:', error);
+      toast.error("Erro ao carregar conversas. Por favor, tente novamente.");
+    }
   });
 
   const handleUserClick = async (userId: string) => {
     try {
+      console.log('Creating chat with user:', userId);
       const { data: chatId, error: createChatError } = await supabase
         .rpc('create_private_chat', { other_user_id: userId });
 
       if (createChatError) {
+        console.error('Create chat error:', createChatError);
         toast.error('Erro ao criar chat');
         return;
       }
 
       if (chatId) {
+        console.log('Created/found chat:', chatId);
         await queryClient.invalidateQueries({ queryKey: ["chats"] });
         navigate('/chat', { state: { selectedChat: chatId } });
         setIsSearching(false);
         setSearchQuery("");
       }
     } catch (error) {
+      console.error('Handle user click error:', error);
       toast.error('Erro ao iniciar conversa');
     }
   };
@@ -135,8 +148,22 @@ export default function Conversations() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <p>Carregando conversas...</p>
+      <div className="flex items-center justify-center h-screen bg-black">
+        <p className="text-white">Carregando conversas...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-black">
+        <p className="text-white mb-4">Erro ao carregar conversas</p>
+        <Button 
+          onClick={() => queryClient.invalidateQueries({ queryKey: ["chats"] })}
+          variant="secondary"
+        >
+          Tentar novamente
+        </Button>
       </div>
     );
   }
@@ -209,60 +236,69 @@ export default function Conversations() {
 
       {/* Chat List */}
       <div className="flex-1 overflow-y-auto">
-        {chats?.map((chat) => {
-          const otherParticipant = getOtherParticipant(chat);
-          const lastMessage = chat.messages?.[0];
+        {chats?.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-center p-4">
+            <p className="text-gray-400 mb-2">Nenhuma conversa encontrada</p>
+            <p className="text-sm text-gray-500">
+              Clique no botão de pesquisa para começar uma nova conversa
+            </p>
+          </div>
+        ) : (
+          chats?.map((chat) => {
+            const otherParticipant = getOtherParticipant(chat);
+            const lastMessage = chat.messages?.[0];
 
-          if (!otherParticipant) return null;
+            if (!otherParticipant) return null;
 
-          return (
-            <div
-              key={chat.id}
-              onClick={() => navigate("/chat", { state: { selectedChat: chat.id } })}
-              className="px-4 py-3 hover:bg-[#202C33] cursor-pointer"
-            >
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <div className="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden">
-                    {otherParticipant.avatar_url ? (
-                      <img
-                        src={otherParticipant.avatar_url}
-                        alt={otherParticipant.name || "Avatar"}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-lg text-white">
-                        {otherParticipant.name?.[0] || otherParticipant.username?.[0] || "?"}
-                      </span>
-                    )}
-                  </div>
-                  {otherParticipant.online_status && (
-                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[#202C33]" />
-                  )}
-                </div>
-                <div className="flex-1">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-medium text-white">
-                        {otherParticipant.name || otherParticipant.username || "Usuário"}
-                      </h3>
-                      {lastMessage && (
-                        <p className="text-sm text-gray-400 truncate">
-                          {lastMessage.content}
-                        </p>
+            return (
+              <div
+                key={chat.id}
+                onClick={() => navigate("/chat", { state: { selectedChat: chat.id } })}
+                className="px-4 py-3 hover:bg-[#202C33] cursor-pointer"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <div className="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden">
+                      {otherParticipant.avatar_url ? (
+                        <img
+                          src={otherParticipant.avatar_url}
+                          alt={otherParticipant.name || "Avatar"}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-lg text-white">
+                          {otherParticipant.name?.[0] || otherParticipant.username?.[0] || "?"}
+                        </span>
                       )}
                     </div>
-                    {lastMessage && (
-                      <span className="text-xs text-gray-400">
-                        {formatTimestamp(lastMessage.created_at)}
-                      </span>
+                    {otherParticipant.online_status && (
+                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[#202C33]" />
                     )}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-medium text-white">
+                          {otherParticipant.name || otherParticipant.username || "Usuário"}
+                        </h3>
+                        {lastMessage && (
+                          <p className="text-sm text-gray-400 truncate">
+                            {lastMessage.content}
+                          </p>
+                        )}
+                      </div>
+                      {lastMessage && (
+                        <span className="text-xs text-gray-400">
+                          {formatTimestamp(lastMessage.created_at)}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })
+        )}
       </div>
 
       {/* Search Overlay */}
@@ -290,6 +326,11 @@ export default function Conversations() {
           </div>
 
           <div className="p-4">
+            {searchResults.length === 0 && searchQuery && (
+              <p className="text-center text-gray-400 py-4">
+                Nenhum usuário encontrado
+              </p>
+            )}
             {searchResults.map((user) => (
               <div
                 key={user.id}

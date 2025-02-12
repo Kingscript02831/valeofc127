@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,11 +18,10 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import type { Message, Chat, ChatParticipant } from "@/types/chat";
 
 export default function Chat() {
-  const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
@@ -44,9 +44,10 @@ export default function Chat() {
     checkAuth();
   }, [navigate]);
 
-  const { data: chats } = useQuery({
+  const { data: chats, isLoading: isLoadingChats } = useQuery({
     queryKey: ["chats"],
     queryFn: async () => {
+      console.log('Fetching chat details:', selectedChat);
       const { data: chatsData, error: chatsError } = await supabase
         .from("chats")
         .select(`
@@ -60,22 +61,21 @@ export default function Chat() {
         .order('updated_at', { ascending: false });
 
       if (chatsError) {
-        toast({
-          title: "Erro ao carregar chats",
-          description: "Tente novamente mais tarde",
-          variant: "destructive",
-        });
+        console.error('Chat details error:', chatsError);
         throw chatsError;
       }
+
       return chatsData as Chat[];
     },
     enabled: !!currentUserId,
+    retry: 1,
   });
 
-  const { data: messages } = useQuery({
+  const { data: messages, isLoading: isLoadingMessages } = useQuery({
     queryKey: ["messages", selectedChat],
     queryFn: async () => {
       if (!selectedChat) return [];
+      console.log('Fetching messages for chat:', selectedChat);
       const { data, error } = await supabase
         .from("messages")
         .select("*")
@@ -83,16 +83,18 @@ export default function Chat() {
         .order("created_at", { ascending: true });
 
       if (error) {
-        toast({
-          title: "Erro ao carregar mensagens",
-          description: "Tente novamente mais tarde",
-          variant: "destructive",
-        });
+        console.error('Messages fetch error:', error);
         throw error;
       }
+
       return data as Message[];
     },
     enabled: !!selectedChat,
+    retry: 1,
+    onError: (error) => {
+      console.error('Messages query error:', error);
+      toast.error("Erro ao carregar mensagens. Por favor, tente novamente.");
+    }
   });
 
   const sendMessage = useMutation({
@@ -101,6 +103,7 @@ export default function Chat() {
         throw new Error("Dados inválidos para enviar mensagem");
       }
 
+      console.log('Sending message:', { content, chatId: selectedChat });
       const { error } = await supabase
         .from("messages")
         .insert({
@@ -116,12 +119,9 @@ export default function Chat() {
       queryClient.invalidateQueries({ queryKey: ["messages", selectedChat] });
       queryClient.invalidateQueries({ queryKey: ["chats"] });
     },
-    onError: () => {
-      toast({
-        title: "Erro ao enviar mensagem",
-        description: "Tente novamente mais tarde",
-        variant: "destructive",
-      });
+    onError: (error) => {
+      console.error('Send message error:', error);
+      toast.error("Erro ao enviar mensagem. Por favor, tente novamente.");
     },
   });
 
@@ -138,7 +138,8 @@ export default function Chat() {
           table: "messages",
           filter: `chat_id=eq.${selectedChat}`,
         },
-        () => {
+        (payload) => {
+          console.log('New message received:', payload);
           queryClient.invalidateQueries({ queryKey: ["messages", selectedChat] });
           queryClient.invalidateQueries({ queryKey: ["chats"] });
         }
@@ -163,9 +164,6 @@ export default function Chat() {
     return (chat.participants as ChatParticipant[]).find(p => p.user_id !== currentUserId)?.profile;
   };
 
-  const currentChat = getCurrentChat();
-  const otherParticipant = currentChat ? getOtherParticipant(currentChat) : null;
-
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (newMessage.trim()) {
@@ -176,6 +174,31 @@ export default function Chat() {
   if (!selectedChat) {
     navigate("/conversations");
     return null;
+  }
+
+  if (isLoadingChats || isLoadingMessages) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-black">
+        <p className="text-white">Carregando conversa...</p>
+      </div>
+    );
+  }
+
+  const currentChat = getCurrentChat();
+  const otherParticipant = currentChat ? getOtherParticipant(currentChat) : null;
+
+  if (!currentChat || !otherParticipant) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-black">
+        <p className="text-white mb-4">Conversa não encontrada</p>
+        <Button 
+          onClick={() => navigate("/conversations")}
+          variant="secondary"
+        >
+          Voltar para conversas
+        </Button>
+      </div>
+    );
   }
 
   return (
@@ -195,7 +218,7 @@ export default function Chat() {
             <div className="flex items-center gap-3">
               <div className="relative">
                 <div className="w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center overflow-hidden">
-                  {otherParticipant?.avatar_url ? (
+                  {otherParticipant.avatar_url ? (
                     <img
                       src={otherParticipant.avatar_url}
                       alt={otherParticipant.name || "Avatar"}
@@ -203,7 +226,7 @@ export default function Chat() {
                     />
                   ) : (
                     <span className="text-lg text-white">
-                      {otherParticipant?.name?.[0] || "?"}
+                      {otherParticipant.name?.[0] || "?"}
                     </span>
                   )}
                 </div>
@@ -211,7 +234,7 @@ export default function Chat() {
               </div>
               <div>
                 <h2 className="font-semibold text-white">
-                  {otherParticipant?.name || otherParticipant?.username || "Usuário"}
+                  {otherParticipant.name || otherParticipant.username || "Usuário"}
                 </h2>
                 <p className="text-sm text-green-500">Online</p>
               </div>
@@ -223,7 +246,7 @@ export default function Chat() {
           </div>
         </div>
         {/* Bio Section */}
-        {otherParticipant?.bio && (
+        {otherParticipant.bio && (
           <div className="mt-2 px-14 text-sm text-white/80">
             {otherParticipant.bio}
           </div>
@@ -232,26 +255,35 @@ export default function Chat() {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages?.map((message) => (
-          <div
-            key={message.id}
-            className={`flex ${
-              message.sender_id === currentUserId
-                ? "justify-end"
-                : "justify-start"
-            }`}
-          >
+        {messages?.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-center p-4">
+            <p className="text-gray-400 mb-2">Nenhuma mensagem</p>
+            <p className="text-sm text-gray-500">
+              Envie uma mensagem para iniciar a conversa
+            </p>
+          </div>
+        ) : (
+          messages?.map((message) => (
             <div
-              className={`max-w-[80%] p-3 rounded-lg ${
+              key={message.id}
+              className={`flex ${
                 message.sender_id === currentUserId
-                  ? "bg-[#005C4B]"
-                  : "bg-[#202C33]"
+                  ? "justify-end"
+                  : "justify-start"
               }`}
             >
-              <p className="break-words text-white">{message.content}</p>
+              <div
+                className={`max-w-[80%] p-3 rounded-lg ${
+                  message.sender_id === currentUserId
+                    ? "bg-[#005C4B]"
+                    : "bg-[#202C33]"
+                }`}
+              >
+                <p className="break-words text-white">{message.content}</p>
+              </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
         <div ref={messagesEndRef} />
       </div>
 
