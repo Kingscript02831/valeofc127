@@ -2,10 +2,10 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { supabase } from "../integrations/supabase/client";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { useToast } from "../components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/components/ui/use-toast";
 import {
   Form,
   FormControl,
@@ -13,7 +13,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "../components/ui/form";
+} from "@/components/ui/form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -31,14 +31,13 @@ import {
   Home,
   Trash2,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import BottomNav from "../components/BottomNav";
-import Navbar from "../components/Navbar";
-import SubNav from "../components/SubNav";
-import type { ProfileUpdateData } from "../types/profile";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import BottomNav from "@/components/BottomNav";
+import Navbar from "@/components/Navbar";
+import SubNav from "@/components/SubNav";
+import type { ProfileUpdateData } from "@/types/profile";
 
 const profileSchema = z.object({
-  name: z.string().min(1, "Nome é obrigatório"),
   full_name: z.string().min(1, "Nome completo é obrigatório"),
   email: z.string().email("Email inválido"),
   phone: z.string().min(1, "Telefone é obrigatório"),
@@ -65,7 +64,6 @@ export default function Profile() {
   const form = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      name: "",
       full_name: "",
       email: "",
       phone: "",
@@ -146,7 +144,6 @@ export default function Profile() {
   useEffect(() => {
     if (profile) {
       form.reset({
-        name: profile.name || "",
         full_name: profile.full_name || "",
         email: profile.email || "",
         phone: profile.phone || "",
@@ -313,7 +310,7 @@ export default function Profile() {
                   )}
                 </div>
                 <div className="space-y-2">
-                  <h2 className="text-2xl font-semibold text-white">{profile?.name}</h2>
+                  <h2 className="text-2xl font-semibold text-white">{profile?.full_name}</h2>
                   {profile?.username && (
                     <p className="text-gray-400 flex items-center gap-1 text-sm">
                       <AtSign className="h-4 w-4" />
@@ -335,24 +332,6 @@ export default function Profile() {
                   <CardContent className="space-y-4 pt-6">
                     <FormField
                       control={form.control}
-                      name="name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-white">Nome</FormLabel>
-                          <FormControl>
-                            <Input 
-                              {...field} 
-                              className="bg-transparent border-white text-white placeholder:text-gray-400"
-                              placeholder="Seu nome"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
                       name="full_name"
                       render={({ field }) => (
                         <FormItem>
@@ -371,60 +350,6 @@ export default function Profile() {
 
                     <FormField
                       control={form.control}
-                      name="username"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-white">Nome de usuário</FormLabel>
-                          <FormControl>
-                            <Input 
-                              {...field} 
-                              className="bg-transparent border-white text-white placeholder:text-gray-400"
-                              placeholder="@username"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="bio"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-white">Bio</FormLabel>
-                          <FormControl>
-                            <Input 
-                              {...field} 
-                              className="bg-transparent border-white text-white placeholder:text-gray-400"
-                              placeholder="Sua biografia"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-white">Email</FormLabel>
-                          <FormControl>
-                            <Input 
-                              {...field} 
-                              type="email"
-                              className="bg-transparent border-white text-white placeholder:text-gray-400"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
                       name="phone"
                       render={({ field }) => (
                         <FormItem>
@@ -432,7 +357,9 @@ export default function Profile() {
                           <FormControl>
                             <Input 
                               {...field} 
+                              type="tel"
                               className="bg-transparent border-white text-white placeholder:text-gray-400"
+                              placeholder="(00) 00000-0000"
                             />
                           </FormControl>
                           <FormMessage />
