@@ -6,8 +6,17 @@ import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Search, UserPlus } from "lucide-react";
 import { useDebounce } from "@/hooks/use-debounce";
+import { UserSearch } from "./UserSearch";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 interface ChatPreview {
   chat_id: string;
@@ -29,6 +38,7 @@ export const ChatList = ({ onSelectChat, selectedChatId }: ChatListProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearch = useDebounce(searchQuery, 300);
   const [filteredChats, setFilteredChats] = useState<ChatPreview[]>([]);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   useEffect(() => {
     const fetchChats = async () => {
@@ -76,16 +86,34 @@ export const ChatList = ({ onSelectChat, selectedChatId }: ChatListProps) => {
   }, [debouncedSearch, chats]);
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="p-3 border-b">
-        <div className="relative">
-          <Input
-            placeholder="Pesquisar conversa..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-muted/50"
-          />
-          <Search className="w-4 h-4 absolute left-3 top-3 text-muted-foreground" />
+    <div className="flex flex-col h-full bg-background">
+      <div className="p-3 border-b bg-muted/30">
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Input
+              placeholder="Pesquisar conversa..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 bg-background"
+            />
+            <Search className="w-4 h-4 absolute left-3 top-3 text-muted-foreground" />
+          </div>
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="shrink-0">
+                <UserPlus className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left">
+              <SheetHeader>
+                <SheetTitle>Buscar usuários próximos</SheetTitle>
+              </SheetHeader>
+              <UserSearch
+                onSelectUser={onSelectChat}
+                onClose={() => setIsSearchOpen(false)}
+              />
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
       
@@ -93,7 +121,7 @@ export const ChatList = ({ onSelectChat, selectedChatId }: ChatListProps) => {
         {filteredChats.map((chat) => (
           <div
             key={chat.chat_id}
-            className={`p-4 hover:bg-muted/50 cursor-pointer transition-colors border-b ${
+            className={`p-4 hover:bg-muted/50 cursor-pointer transition-colors ${
               selectedChatId === chat.chat_id ? "bg-muted" : ""
             }`}
             onClick={() => onSelectChat(chat.chat_id)}
