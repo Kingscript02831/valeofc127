@@ -5,24 +5,13 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import AuthWrapper from "./components/AuthWrapper";
-import Index from "./pages/Index";
-import Events from "./pages/Events";
-import Places from "./pages/Places";
-import Stores from "./pages/Stores";
-import Notify from "./pages/Notify";
-import Login from "./pages/Login";
-import SignUp from "./pages/SignUp";
-import Config from "./pages/config";
-import Admin from "./pages/Admin";
-import AdminPlaces from "./pages/AdminPlaces";
-import AdminEvents from "./pages/AdminEvents";
-import AdminStores from "./pages/AdminStores";
-import AdminNews from "./pages/AdminNews";
-import AdminCategories from "./pages/AdminCategories";
-import Profile from "./pages/Profile";
-import NotFound from "./pages/NotFound";
-import Chat from "./pages/Chat";
+
+// Componente inicial temporário
+const PlaceholderComponent = () => (
+  <div className="p-4">
+    <h1>Em desenvolvimento</h1>
+  </div>
+);
 
 const queryClient = new QueryClient();
 
@@ -34,28 +23,20 @@ const App: React.FC = () => {
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <AuthWrapper>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/eventos" element={<Events />} />
-                <Route path="/lugares" element={<Places />} />
-                <Route path="/lojas" element={<Stores />} />
-                <Route path="/notify" element={<Notify />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<SignUp />} />
-                <Route path="/perfil" element={<Profile />} />
-                <Route path="/chat" element={<Chat />} />
-                <Route path="/config" element={<Config />} />
-                <Route path="/admin" element={<Admin />}>
-                  <Route path="lugares" element={<AdminPlaces />} />
-                  <Route path="eventos" element={<AdminEvents />} />
-                  <Route path="lojas" element={<AdminStores />} />
-                  <Route path="noticias" element={<AdminNews />} />
-                  <Route path="categorias" element={<AdminCategories />} />
-                </Route>
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </AuthWrapper>
+            <Routes>
+              <Route path="/" element={<PlaceholderComponent />} />
+              <Route path="/eventos" element={<PlaceholderComponent />} />
+              <Route path="/lugares" element={<PlaceholderComponent />} />
+              <Route path="/lojas" element={<PlaceholderComponent />} />
+              <Route path="/notify" element={<PlaceholderComponent />} />
+              <Route path="/login" element={<PlaceholderComponent />} />
+              <Route path="/signup" element={<PlaceholderComponent />} />
+              <Route path="/perfil" element={<PlaceholderComponent />} />
+              <Route path="/chat" element={<PlaceholderComponent />} />
+              <Route path="/config" element={<PlaceholderComponent />} />
+              <Route path="/admin/*" element={<PlaceholderComponent />} />
+              <Route path="*" element={<PlaceholderComponent />} />
+            </Routes>
           </BrowserRouter>
         </TooltipProvider>
       </QueryClientProvider>
