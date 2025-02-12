@@ -1,24 +1,23 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { Search } from "lucide-react";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import BottomNav from "../components/BottomNav";
-import Navbar3 from "../components/Navbar3";
-import SubNav3 from "../components/SubNav3";
-import type { Chat, ChatParticipant } from "../types/chat";
-import { useSiteConfig } from "../hooks/useSiteConfig";
+import { Search, MoreVertical } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import BottomNav from "@/components/BottomNav";
+import Navbar from "@/components/Navbar";
+import SubNav3 from "@/components/SubNav3";
+import type { Chat, ChatParticipant } from "@/types/chat";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
 
 export default function Conversations() {
   const navigate = useNavigate();
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [username, setUsername] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState("conversas");
   const { data: config } = useSiteConfig();
-  const [searchResults, setSearchResults] = useState<any[]>([]);
   
   useEffect(() => {
     const checkAuth = async () => {
@@ -42,26 +41,6 @@ export default function Conversations() {
     checkAuth();
   }, [navigate]);
 
-  useEffect(() => {
-    const searchUsers = async () => {
-      if (searchQuery.trim()) {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('id, username, name, avatar_url')
-          .or(`name.ilike.%${searchQuery}%,username.ilike.%${searchQuery}%`)
-          .limit(10);
-
-        if (!error && data) {
-          setSearchResults(data);
-        }
-      } else {
-        setSearchResults([]);
-      }
-    };
-
-    searchUsers();
-  }, [searchQuery]);
-
   const { data: chats } = useQuery({
     queryKey: ["chats"],
     queryFn: async () => {
@@ -71,7 +50,7 @@ export default function Conversations() {
           *,
           participants:chat_participants(
             *,
-            profile:profiles(username, avatar_url, name, online_status, last_seen)
+            profile:profiles(username, avatar_url, name)
           ),
           messages:messages(*)
         `)
@@ -166,18 +145,15 @@ export default function Conversations() {
     return (chat.participants as ChatParticipant[]).find(p => p.user_id !== currentUserId)?.profile;
   };
 
-  const handleUserClick = async (userId: string) => {
-    const { data: chatId, error } = await supabase
-      .rpc('create_private_chat', { other_user_id: userId });
-
-    if (!error && chatId) {
-      navigate('/chat', { state: { selectedChat: chatId } });
-    }
-  };
+  const filteredChats = chats?.filter(chat => {
+    const otherParticipant = getOtherParticipant(chat);
+    const name = otherParticipant?.name || otherParticipant?.username || "";
+    return name.toLowerCase().includes(searchQuery.toLowerCase());
+  });
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <Navbar3 />
+      <Navbar />
       <SubNav3 />
       
       {/* Search Bar */}
@@ -193,105 +169,69 @@ export default function Conversations() {
         </div>
       </div>
 
-      {/* Search Results or Chat List */}
+      {/* Chat List */}
       <div className="pt-48 pb-20">
-        {searchQuery ? (
-          <div>
-            {searchResults.map((user) => (
-              <div
-                key={user.id}
-                onClick={() => handleUserClick(user.id)}
-                className="px-4 py-3 hover:bg-[#202C33] cursor-pointer"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden">
-                    {user.avatar_url ? (
-                      <img
-                        src={user.avatar_url}
-                        alt={user.name || "Avatar"}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-lg">
-                        {user.name?.[0] || user.username?.[0] || "?"}
+        {/* Encryption Notice */}
+        <div className="px-4 py-3 text-center text-sm text-gray-400 flex items-center justify-center gap-2">
+          <span>
+            Suas mensagens pessoais são protegidas com{" "}
+            <span className="text-[#00A884]">criptografia de ponta a ponta</span>
+          </span>
+        </div>
+
+        {filteredChats?.map((chat) => {
+          const otherParticipant = getOtherParticipant(chat);
+          const lastMessage = chat.messages?.[0];
+
+          return (
+            <div
+              key={chat.id}
+              onClick={() => navigate("/chat", { state: { selectedChat: chat.id } })}
+              className="px-4 py-3 hover:bg-[#202C33] cursor-pointer"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden">
+                  {otherParticipant?.avatar_url ? (
+                    <img
+                      src={otherParticipant.avatar_url}
+                      alt={otherParticipant.name || "Avatar"}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-lg">
+                      {otherParticipant?.name?.[0] || "?"}
+                    </span>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <div className="flex justify-between items-start">
+                    <h3 className="font-medium">
+                      {otherParticipant?.name || otherParticipant?.username || "Usuário"}
+                    </h3>
+                    {lastMessage && (
+                      <span className="text-xs text-gray-400">
+                        {new Date(lastMessage.created_at).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
                       </span>
                     )}
                   </div>
-                  <div>
-                    <h3 className="font-medium">{user.name || user.username}</h3>
-                    {user.username && (
-                      <p className="text-sm text-gray-400">@{user.username}</p>
-                    )}
-                  </div>
+                  {lastMessage && (
+                    <p className="text-sm text-gray-400 truncate">
+                      {lastMessage.content}
+                    </p>
+                  )}
                 </div>
               </div>
-            ))}
-            {searchResults.length === 0 && (
-              <div className="px-4 py-8 text-center text-gray-400">
-                Nenhum usuário encontrado com "{searchQuery}"
-              </div>
-            )}
-          </div>
-        ) : (
-          <>
-            {/* Encryption Notice */}
-            <div className="px-4 py-3 text-center text-sm text-gray-400 flex items-center justify-center gap-2">
-              <span>
-                Suas mensagens pessoais são protegidas com{" "}
-                <span className="text-[#00A884]">criptografia de ponta a ponta</span>
-              </span>
             </div>
+          );
+        })}
 
-            {/* Existing Chats */}
-            {chats?.map((chat) => {
-              const otherParticipant = getOtherParticipant(chat);
-              const lastMessage = chat.messages?.[0];
-
-              return (
-                <div
-                  key={chat.id}
-                  onClick={() => navigate("/chat", { state: { selectedChat: chat.id } })}
-                  className="px-4 py-3 hover:bg-[#202C33] cursor-pointer"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden">
-                      {otherParticipant?.avatar_url ? (
-                        <img
-                          src={otherParticipant.avatar_url}
-                          alt={otherParticipant.name || "Avatar"}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <span className="text-lg">
-                          {otherParticipant?.name?.[0] || "?"}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex justify-between items-start">
-                        <h3 className="font-medium">
-                          {otherParticipant?.name || otherParticipant?.username || "Usuário"}
-                        </h3>
-                        {lastMessage && (
-                          <span className="text-xs text-gray-400">
-                            {new Date(lastMessage.created_at).toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </span>
-                        )}
-                      </div>
-                      {lastMessage && (
-                        <p className="text-sm text-gray-400 truncate">
-                          {lastMessage.content}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </>
+        {filteredChats?.length === 0 && searchQuery && (
+          <div className="px-4 py-8 text-center text-gray-400">
+            Nenhum usuário encontrado com "{searchQuery}"
+          </div>
         )}
       </div>
       <BottomNav />

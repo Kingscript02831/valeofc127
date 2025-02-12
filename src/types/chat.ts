@@ -26,7 +26,5 @@ export interface ChatParticipant {
     username?: string;
     avatar_url?: string;
     name?: string;
-    online_status?: boolean;
-    last_seen?: string;
   };
 }
