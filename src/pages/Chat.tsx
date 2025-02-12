@@ -52,9 +52,9 @@ export default function ChatPage() {
             *,
             profile:profiles(*)
           ),
-          messages!messages_chat_id_fkey(*)
+          messages:messages(*)
         `)
-        .order("created_at", { foreignTable: "messages", ascending: true });
+        .order('created_at', { foreignTable: 'messages' });
 
       if (chatsError) throw chatsError;
 
