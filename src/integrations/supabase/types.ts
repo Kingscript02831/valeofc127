@@ -53,6 +53,45 @@ export type Database = {
           },
         ]
       }
+      chat_configuration: {
+        Row: {
+          background_color: string | null
+          created_at: string
+          id: string
+          input_background_color: string | null
+          primary_color: string | null
+          received_message_color: string | null
+          secondary_color: string | null
+          sent_message_color: string | null
+          text_color: string | null
+          updated_at: string
+        }
+        Insert: {
+          background_color?: string | null
+          created_at?: string
+          id?: string
+          input_background_color?: string | null
+          primary_color?: string | null
+          received_message_color?: string | null
+          secondary_color?: string | null
+          sent_message_color?: string | null
+          text_color?: string | null
+          updated_at?: string
+        }
+        Update: {
+          background_color?: string | null
+          created_at?: string
+          id?: string
+          input_background_color?: string | null
+          primary_color?: string | null
+          received_message_color?: string | null
+          secondary_color?: string | null
+          sent_message_color?: string | null
+          text_color?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       chat_participants: {
         Row: {
           chat_id: string
