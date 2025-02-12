@@ -54,13 +54,20 @@ export default function Chat() {
           *,
           participants:chat_participants(
             *,
-            profile:profiles(username, avatar_url, name, bio)
+            profile:profiles(username, avatar_url, name, bio, online_status, last_seen)
           ),
-          messages:messages(*)
+          messages(*)
         `)
         .order("updated_at", { ascending: false });
 
-      if (chatsError) throw chatsError;
+      if (chatsError) {
+        toast({
+          title: "Erro ao carregar chats",
+          description: "Tente novamente mais tarde",
+          variant: "destructive",
+        });
+        throw chatsError;
+      }
       return chatsData as Chat[];
     },
     enabled: !!currentUserId,
@@ -76,7 +83,14 @@ export default function Chat() {
         .eq("chat_id", selectedChat)
         .order("created_at", { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        toast({
+          title: "Erro ao carregar mensagens",
+          description: "Tente novamente mais tarde",
+          variant: "destructive",
+        });
+        throw error;
+      }
       return data as Message[];
     },
     enabled: !!selectedChat,
@@ -84,7 +98,9 @@ export default function Chat() {
 
   const sendMessage = useMutation({
     mutationFn: async (content: string) => {
-      if (!selectedChat || !currentUserId || !content.trim()) return;
+      if (!selectedChat || !currentUserId || !content.trim()) {
+        throw new Error("Dados inválidos para enviar mensagem");
+      }
 
       const { error } = await supabase
         .from("messages")

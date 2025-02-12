@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../integrations/supabase/client";
@@ -7,6 +8,7 @@ import { Search, Facebook, Instagram, Share2 } from "lucide-react";
 import { Input } from "../components/ui/input";
 import BottomNav from "../components/BottomNav";
 import type { Chat, ChatParticipant } from "../types/chat";
+import { toast } from "sonner";
 
 export default function Conversations() {
   const navigate = useNavigate();
@@ -45,11 +47,17 @@ export default function Conversations() {
       if (searchQuery.trim()) {
         const { data, error } = await supabase
           .from('profiles')
-          .select('id, username, name, avatar_url')
+          .select('id, username, name, avatar_url, online_status, last_seen')
           .or(`name.ilike.%${searchQuery}%,username.ilike.%${searchQuery}%`)
+          .neq('id', currentUserId)
           .limit(10);
 
-        if (!error && data) {
+        if (error) {
+          toast.error("Erro ao buscar usuários");
+          return;
+        }
+
+        if (data) {
           setSearchResults(data);
         }
       } else {
@@ -58,9 +66,9 @@ export default function Conversations() {
     };
 
     searchUsers();
-  }, [searchQuery]);
+  }, [searchQuery, currentUserId]);
 
-  const { data: chats } = useQuery({
+  const { data: chats, isLoading } = useQuery({
     queryKey: ["chats"],
     queryFn: async () => {
       const { data: chatsData, error: chatsError } = await supabase
@@ -71,11 +79,14 @@ export default function Conversations() {
             *,
             profile:profiles(username, avatar_url, name, online_status, last_seen)
           ),
-          messages:messages(*)
+          messages(*)
         `)
-        .order('messages.created_at', { foreignTable: 'messages', ascending: false });
+        .order('messages(created_at)', { foreignTable: 'messages', ascending: false });
 
-      if (chatsError) throw chatsError;
+      if (chatsError) {
+        toast.error("Erro ao carregar conversas");
+        throw chatsError;
+      }
       return chatsData as Chat[];
     },
     enabled: !!currentUserId,
@@ -87,18 +98,18 @@ export default function Conversations() {
         .rpc('create_private_chat', { other_user_id: userId });
 
       if (createChatError) {
-        console.error('Error creating chat:', createChatError);
+        toast.error('Erro ao criar chat');
         return;
       }
 
       if (chatId) {
-        // Refresh the chats list
         await queryClient.invalidateQueries({ queryKey: ["chats"] });
-        // Navigate to the chat
         navigate('/chat', { state: { selectedChat: chatId } });
+        setIsSearching(false);
+        setSearchQuery("");
       }
     } catch (error) {
-      console.error('Error handling user click:', error);
+      toast.error('Erro ao iniciar conversa');
     }
   };
 
@@ -121,6 +132,14 @@ export default function Conversations() {
       console.error("Error sharing:", err);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p>Carregando conversas...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-screen bg-black text-white pb-16">
@@ -177,7 +196,7 @@ export default function Conversations() {
         </button>
       </div>
 
-      {/* Search */}
+      {/* Search Button */}
       <div className="absolute bottom-20 right-4 z-10">
         <Button 
           size="icon"
@@ -194,6 +213,8 @@ export default function Conversations() {
           const otherParticipant = getOtherParticipant(chat);
           const lastMessage = chat.messages?.[0];
 
+          if (!otherParticipant) return null;
+
           return (
             <div
               key={chat.id}
@@ -201,24 +222,29 @@ export default function Conversations() {
               className="px-4 py-3 hover:bg-[#202C33] cursor-pointer"
             >
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden">
-                  {otherParticipant?.avatar_url ? (
-                    <img
-                      src={otherParticipant.avatar_url}
-                      alt={otherParticipant.name || "Avatar"}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-lg text-white">
-                      {otherParticipant?.name?.[0] || "?"}
-                    </span>
+                <div className="relative">
+                  <div className="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden">
+                    {otherParticipant.avatar_url ? (
+                      <img
+                        src={otherParticipant.avatar_url}
+                        alt={otherParticipant.name || "Avatar"}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-lg text-white">
+                        {otherParticipant.name?.[0] || otherParticipant.username?.[0] || "?"}
+                      </span>
+                    )}
+                  </div>
+                  {otherParticipant.online_status && (
+                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[#202C33]" />
                   )}
                 </div>
                 <div className="flex-1">
                   <div className="flex justify-between items-start">
                     <div>
                       <h3 className="font-medium text-white">
-                        {otherParticipant?.name || otherParticipant?.username || "Usuário"}
+                        {otherParticipant.name || otherParticipant.username || "Usuário"}
                       </h3>
                       {lastMessage && (
                         <p className="text-sm text-gray-400 truncate">
@@ -267,28 +293,34 @@ export default function Conversations() {
             {searchResults.map((user) => (
               <div
                 key={user.id}
-                onClick={() => {
-                  handleUserClick(user.id);
-                  setIsSearching(false);
-                  setSearchQuery("");
-                }}
+                onClick={() => handleUserClick(user.id)}
                 className="flex items-center gap-3 p-3 hover:bg-gray-800 rounded-lg cursor-pointer"
               >
-                <div className="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden">
-                  {user.avatar_url ? (
-                    <img
-                      src={user.avatar_url}
-                      alt={user.name || "Avatar"}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-lg text-white">
-                      {user.name?.[0] || user.username?.[0] || "?"}
-                    </span>
+                <div className="relative">
+                  <div className="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden">
+                    {user.avatar_url ? (
+                      <img
+                        src={user.avatar_url}
+                        alt={user.name || "Avatar"}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-lg text-white">
+                        {user.name?.[0] || user.username?.[0] || "?"}
+                      </span>
+                    )}
+                  </div>
+                  {user.online_status && (
+                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-gray-800" />
                   )}
                 </div>
                 <div>
                   <h3 className="font-medium text-white">{user.name || user.username}</h3>
+                  {!user.online_status && user.last_seen && (
+                    <p className="text-sm text-gray-400">
+                      Visto por último: {new Date(user.last_seen).toLocaleDateString()}
+                    </p>
+                  )}
                 </div>
               </div>
             ))}
