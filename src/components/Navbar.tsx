@@ -36,7 +36,7 @@ const Navbar = () => {
   }
 
   return (
-    <nav className="w-full fixed top-0 z-50 shadow-md"
+    <nav className="w-full fixed top-0 z-50 shadow-md fade-in"
          style={{ 
            background: `linear-gradient(to right, ${config?.navbar_color}, ${config?.primary_color})`,
            borderColor: `${config?.primary_color}20`
