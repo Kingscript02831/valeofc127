@@ -20,6 +20,8 @@ import AdminEvents from "./pages/AdminEvents";
 import AdminStores from "./pages/AdminStores";
 import AdminNews from "./pages/AdminNews";
 import AdminCategories from "./pages/AdminCategories";
+import AdminUsers from "./pages/AdminUsers";
+import AdminProtectedRoute from "./components/AdminProtectedRoute";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
@@ -45,11 +47,36 @@ const App: React.FC = () => {
                 <Route path="/perfil" element={<Profile />} />
                 <Route path="/config" element={<Config />} />
                 <Route path="/admin" element={<Admin />}>
-                  <Route path="lugares" element={<AdminPlaces />} />
-                  <Route path="eventos" element={<AdminEvents />} />
-                  <Route path="lojas" element={<AdminStores />} />
-                  <Route path="noticias" element={<AdminNews />} />
-                  <Route path="categorias" element={<AdminCategories />} />
+                  <Route path="usuarios" element={
+                    <AdminProtectedRoute requiredPermission="full_access">
+                      <AdminUsers />
+                    </AdminProtectedRoute>
+                  } />
+                  <Route path="lugares" element={
+                    <AdminProtectedRoute requiredPermission="places">
+                      <AdminPlaces />
+                    </AdminProtectedRoute>
+                  } />
+                  <Route path="eventos" element={
+                    <AdminProtectedRoute requiredPermission="events">
+                      <AdminEvents />
+                    </AdminProtectedRoute>
+                  } />
+                  <Route path="lojas" element={
+                    <AdminProtectedRoute requiredPermission="stores">
+                      <AdminStores />
+                    </AdminProtectedRoute>
+                  } />
+                  <Route path="noticias" element={
+                    <AdminProtectedRoute requiredPermission="news">
+                      <AdminNews />
+                    </AdminProtectedRoute>
+                  } />
+                  <Route path="categorias" element={
+                    <AdminProtectedRoute requiredPermission="categories">
+                      <AdminCategories />
+                    </AdminProtectedRoute>
+                  } />
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>
