@@ -74,11 +74,11 @@ export default function Conversations() {
         .from("chats")
         .select(`
           *,
-          participants:chat_participants!inner(
+          participants:chat_participants(
             user_id,
-            profile:profiles!inner(username, avatar_url, name, online_status, last_seen)
+            profile:profiles(username, avatar_url, name, online_status, last_seen)
           ),
-          messages:messages_chat_id_fkey(*)
+          messages:messages(*)
         `)
         .order('updated_at', { ascending: false });
 
