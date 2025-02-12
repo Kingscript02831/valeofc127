@@ -79,9 +79,9 @@ export default function Conversations() {
             *,
             profile:profiles(username, avatar_url, name, online_status, last_seen)
           ),
-          messages(*)
+          messages!messages_chat_id_fkey(*)
         `)
-        .order('messages(created_at)', { foreignTable: 'messages', ascending: false });
+        .order('messages!messages_chat_id_fkey(created_at)', { ascending: false });
 
       if (chatsError) {
         toast.error("Erro ao carregar conversas");

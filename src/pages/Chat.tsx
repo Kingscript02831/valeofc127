@@ -54,9 +54,9 @@ export default function Chat() {
           *,
           participants:chat_participants(
             *,
-            profile:profiles(username, avatar_url, name, bio, online_status, last_seen)
+            profile:profiles(username, avatar_url, name, online_status, last_seen)
           ),
-          messages(*)
+          messages!messages_chat_id_fkey(*)
         `)
         .order("updated_at", { ascending: false });
 
