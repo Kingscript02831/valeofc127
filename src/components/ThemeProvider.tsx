@@ -1,5 +1,6 @@
 
 import { createContext, useContext, useEffect, useState } from "react"
+import { supabase } from "@/integrations/supabase/client"
 
 type Theme = "dark" | "light" | "system"
 
@@ -15,7 +16,7 @@ type ThemeProviderState = {
 }
 
 const initialState: ThemeProviderState = {
-  theme: "dark", // Mudando o tema inicial para dark
+  theme: "dark",
   setTheme: () => null,
 }
 
@@ -23,7 +24,7 @@ const ThemeProviderContext = createContext<ThemeProviderState>(initialState)
 
 export function ThemeProvider({
   children,
-  defaultTheme = "dark", // Mudando o tema padrão para dark
+  defaultTheme = "dark",
   storageKey = "vite-ui-theme",
   ...props
 }: ThemeProviderProps) {
@@ -32,8 +33,27 @@ export function ThemeProvider({
   )
 
   useEffect(() => {
-    const root = window.document.documentElement
+    // Carregar a preferência de tema do usuário do Supabase quando autenticado
+    const loadUserThemePreference = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.user?.id) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('theme_preference')
+          .eq('id', session.user.id)
+          .single()
 
+        if (profile?.theme_preference) {
+          setTheme(profile.theme_preference as Theme)
+        }
+      }
+    }
+
+    loadUserThemePreference()
+  }, [])
+
+  useEffect(() => {
+    const root = window.document.documentElement
     root.classList.remove("light", "dark")
 
     if (theme === "system") {
@@ -41,7 +61,6 @@ export function ThemeProvider({
         .matches
         ? "dark"
         : "light"
-
       root.classList.add(systemTheme)
       return
     }
@@ -51,9 +70,19 @@ export function ThemeProvider({
 
   const value = {
     theme,
-    setTheme: (theme: Theme) => {
-      localStorage.setItem(storageKey, theme)
-      setTheme(theme)
+    setTheme: async (newTheme: Theme) => {
+      // Salvar no localStorage
+      localStorage.setItem(storageKey, newTheme)
+      setTheme(newTheme)
+
+      // Salvar no Supabase se o usuário estiver autenticado
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.user?.id) {
+        await supabase
+          .from('profiles')
+          .update({ theme_preference: newTheme })
+          .eq('id', session.user.id)
+      }
     },
   }
 

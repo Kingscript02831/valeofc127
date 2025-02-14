@@ -470,6 +470,7 @@ export type Database = {
           postal_code: string | null
           scheduled_deletion_date: string | null
           street: string | null
+          theme_preference: string | null
           updated_at: string | null
           username: string | null
           website: string | null
@@ -495,6 +496,7 @@ export type Database = {
           postal_code?: string | null
           scheduled_deletion_date?: string | null
           street?: string | null
+          theme_preference?: string | null
           updated_at?: string | null
           username?: string | null
           website?: string | null
@@ -520,6 +522,7 @@ export type Database = {
           postal_code?: string | null
           scheduled_deletion_date?: string | null
           street?: string | null
+          theme_preference?: string | null
           updated_at?: string | null
           username?: string | null
           website?: string | null
