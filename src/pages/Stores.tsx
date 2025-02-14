@@ -1,14 +1,14 @@
-
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Phone, Globe, MapPin, Clock, User2, Facebook, Instagram, MessageCircle, Search, DollarSign } from "lucide-react";
-import type { Database } from "@/integrations/supabase/types";
-import { supabase } from "@/integrations/supabase/client";
-import Navbar from "@/components/Navbar";
-import SubNav from "@/components/SubNav";
-import Footer from "@/components/Footer";
-import BottomNav from "@/components/BottomNav";
-import { Input } from "@/components/ui/input";
+import { Phone, Globe, MapPin, Clock, Ticket, User2, Facebook, Instagram, MessageCircle, Search } from "lucide-react";
+import type { Database } from "../integrations/supabase/types";
+import { supabase } from "../integrations/supabase/client";
+import Navbar from "../components/Navbar";
+import SubNav from "../components/SubNav";
+import Footer from "../components/Footer";
+import BottomNav from "../components/BottomNav";
+import { Input } from "../components/ui/input";
+import { Button } from "../components/ui/button";
 
 type Store = Database["public"]["Tables"]["stores"]["Row"];
 type Category = Database["public"]["Tables"]["categories"]["Row"];
@@ -16,13 +16,24 @@ type Category = Database["public"]["Tables"]["categories"]["Row"];
 const Stores = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [expandedDescriptions, setExpandedDescriptions] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     document.title = "Lojas | Vale Notícias";
   }, []);
 
+  const toggleDescription = (id: string) => {
+    const newExpanded = new Set(expandedDescriptions);
+    if (newExpanded.has(id)) {
+      newExpanded.delete(id);
+    } else {
+      newExpanded.add(id);
+    }
+    setExpandedDescriptions(newExpanded);
+  };
+
   const { data: categories } = useQuery({
-    queryKey: ["categories", "stores"],
+    queryKey: ["categories-stores"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("categories")
@@ -118,10 +129,10 @@ const Stores = () => {
                 key={store.id}
                 className="bg-card text-card-foreground rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow border border-border"
               >
-                {store.image && (
+                {store.file_path && (
                   <div className="aspect-video w-full overflow-hidden">
                     <img
-                      src={store.image}
+                      src={store.file_path}
                       alt={store.name}
                       className="w-full h-full object-cover"
                     />
@@ -131,9 +142,18 @@ const Stores = () => {
                   <h2 className="text-xl font-semibold text-foreground">{store.name}</h2>
                   
                   {store.description && (
-                    <p className="text-muted-foreground text-sm line-clamp-3">
-                      {store.description}
-                    </p>
+                    <div>
+                      <p className={`text-muted-foreground text-sm ${!expandedDescriptions.has(store.id) ? "line-clamp-3" : ""}`}>
+                        {store.description}
+                      </p>
+                      <Button
+                        variant="link"
+                        className="p-0 h-auto text-sm text-primary hover:text-primary/80"
+                        onClick={() => toggleDescription(store.id)}
+                      >
+                        {expandedDescriptions.has(store.id) ? "Ver menos" : "Ver mais"}
+                      </Button>
+                    </div>
                   )}
 
                   <div className="space-y-2">
@@ -160,7 +180,7 @@ const Stores = () => {
 
                     {store.entrance_fee && (
                       <div className="flex items-center gap-2 text-sm">
-                        <DollarSign className="w-4 h-4 text-muted-foreground" />
+                        <Ticket className="w-4 h-4 text-muted-foreground" />
                         <span className="text-muted-foreground">{store.entrance_fee}</span>
                       </div>
                     )}

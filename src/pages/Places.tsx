@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Phone, Globe, MapPin, Clock, Ticket, User2, Facebook, Instagram, MessageCircle, Search } from "lucide-react";
@@ -119,21 +118,21 @@ const Places = () => {
           ))}
         </div>
         
-        {isLoading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {places?.map((place) => (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {isLoading ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            </div>
+          ) : (
+            places?.map((place) => (
               <div
                 key={place.id}
                 className="bg-card text-card-foreground rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow border border-border"
               >
-                {place.image && (
+                {place.file_path && (
                   <div className="aspect-video w-full overflow-hidden">
                     <img
-                      src={place.image}
+                      src={place.file_path}
                       alt={place.name}
                       className="w-full h-full object-cover"
                     />
@@ -257,14 +256,14 @@ const Places = () => {
                   </div>
                 </div>
               </div>
-            ))}
-            {!isLoading && (!places || places.length === 0) && (
-              <p className="text-muted-foreground col-span-full text-center py-8">
-                Nenhum lugar encontrado.
-              </p>
-            )}
-          </div>
-        )}
+            ))
+          )}
+          {!isLoading && (!places || places.length === 0) && (
+            <p className="text-muted-foreground col-span-full text-center py-8">
+              Nenhum lugar encontrado.
+            </p>
+          )}
+        </div>
       </main>
       <Footer />
       <BottomNav />
