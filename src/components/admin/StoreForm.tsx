@@ -1,10 +1,9 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
-import { FileUpload } from "./FileUpload";
-import { MultiFileUpload } from "./MultiFileUpload";
 import type { StoreFormData, Store } from "../../types/stores";
 
 interface StoreFormProps {
@@ -28,8 +27,7 @@ export const StoreForm = ({ initialData, onSubmit, onCancel }: StoreFormProps) =
     phone: "",
     whatsapp: "",
     website: "",
-    file_path: "",
-    file_paths: [],
+    image: "",
     social_media: {
       facebook: "",
       instagram: "",
@@ -38,8 +36,6 @@ export const StoreForm = ({ initialData, onSubmit, onCancel }: StoreFormProps) =
 
   useEffect(() => {
     if (initialData) {
-      const socialMedia = typeof initialData.social_media === 'object' ? initialData.social_media : { facebook: '', instagram: '' };
-      
       setFormData({
         name: initialData.name,
         description: initialData.description,
@@ -48,15 +44,17 @@ export const StoreForm = ({ initialData, onSubmit, onCancel }: StoreFormProps) =
         state: initialData.state || "",
         postal_code: initialData.postal_code || "",
         owner_name: initialData.owner_name || "",
-        opening_hours: initialData.opening_hours || "",
+        opening_hours: initialData.opening_hours as string || "",
         entrance_fee: initialData.entrance_fee || "",
         maps_url: initialData.maps_url || "",
         phone: initialData.phone || "",
         whatsapp: initialData.whatsapp || "",
         website: initialData.website || "",
-        file_path: initialData.file_path || "",
-        file_paths: initialData.file_paths || [],
-        social_media: socialMedia as { facebook?: string; instagram?: string },
+        image: initialData.image || "",
+        social_media: initialData.social_media || {
+          facebook: "",
+          instagram: "",
+        },
       });
     }
   }, [initialData]);
@@ -126,26 +124,6 @@ export const StoreForm = ({ initialData, onSubmit, onCancel }: StoreFormProps) =
             required
           />
         </div>
-
-        <div className="space-y-2 col-span-2">
-          <Label>Imagem Principal</Label>
-          <FileUpload
-            accept="image/*"
-            currentValue={formData.file_path || ""}
-            onFileSelect={(url) => setFormData(prev => ({ ...prev, file_path: url }))}
-            buttonText="Upload de Imagem Principal"
-          />
-        </div>
-
-        <div className="space-y-2 col-span-2">
-          <Label>Imagens Adicionais</Label>
-          <MultiFileUpload
-            currentValues={formData.file_paths || []}
-            onFilesSelect={(urls) => setFormData(prev => ({ ...prev, file_paths: urls }))}
-            buttonText="Upload de Imagens Adicionais"
-          />
-        </div>
-
         <div className="space-y-2">
           <Label htmlFor="owner_name">Nome do Proprietário</Label>
           <Input
@@ -211,7 +189,17 @@ export const StoreForm = ({ initialData, onSubmit, onCancel }: StoreFormProps) =
             onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))}
           />
         </div>
+        <div className="space-y-2">
+          <Label htmlFor="image">URL da Imagem</Label>
+          <Input
+            id="image"
+            name="image"
+            value={formData.image || ""}
+            onChange={(e) => setFormData(prev => ({ ...prev, image: e.target.value }))}
+          />
+        </div>
 
+        {/* Redes Sociais */}
         <div className="space-y-2">
           <Label htmlFor="social_media.facebook">Facebook</Label>
           <Input
@@ -258,3 +246,4 @@ export const StoreForm = ({ initialData, onSubmit, onCancel }: StoreFormProps) =
     </form>
   );
 };
+

@@ -9,7 +9,6 @@ import SubNav from "../components/SubNav";
 import BottomNav from "../components/BottomNav";
 import Footer from "../components/Footer";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { FileMetadata } from "../types/files";
 
 type Event = Database['public']['Tables']['events']['Row'];
 type Category = Database['public']['Tables']['categories']['Row'];
@@ -77,32 +76,6 @@ export default function Events() {
     }
   };
 
-  const getImageUrl = (event: Event) => {
-    try {
-      if (event.file_metadata) {
-        const metadata = event.file_metadata as FileMetadata;
-        return metadata.url;
-      }
-      return event.file_path || '';
-    } catch (e) {
-      console.error('Error parsing file metadata:', e);
-      return event.file_path || '';
-    }
-  };
-
-  const getImagesUrls = (event: Event) => {
-    try {
-      if (event.files_metadata) {
-        const metadata = event.files_metadata as FileMetadata[];
-        return metadata.map(m => m.url);
-      }
-      return event.file_paths || [];
-    } catch (e) {
-      console.error('Error parsing files metadata:', e);
-      return event.file_paths || [];
-    }
-  };
-
   return (
     <div className="min-h-screen flex flex-col pb-[72px] md:pb-0">
       <Navbar />
@@ -112,6 +85,7 @@ export default function Events() {
         
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {loading ? (
+            // Mostrar múltiplos skeletons durante o carregamento
             Array(6).fill(0).map((_, index) => (
               <LoadingEventCard key={index} />
             ))
@@ -127,8 +101,8 @@ export default function Events() {
                   eventDate={event.event_date}
                   eventTime={event.event_time}
                   endTime={event.end_time}
-                  image={getImageUrl(event)}
-                  images={getImagesUrls(event)}
+                  image={event.image}
+                  images={event.images || []}
                   location={event.location}
                   mapsUrl={event.url_maps_events}
                   entranceFee={event.entrance_fee}
