@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { supabase } from "@/integrations/supabase/client";
 
 interface InstagramMedia {
   url: string;
@@ -53,6 +54,22 @@ const getInstagramEmbedUrl = (url: string) => {
   return isReel 
     ? `https://www.instagram.com/reel/${postId}/embed`
     : `https://www.instagram.com/p/${postId}/embed`;
+};
+
+const getPublicUrl = (path: string) => {
+  if (!path) return '';
+  
+  // Se já for uma URL completa, retorna ela mesma
+  if (path.startsWith('http')) {
+    return path;
+  }
+
+  // Se for um caminho do storage, gera a URL pública
+  const { data } = supabase.storage
+    .from('news')
+    .getPublicUrl(path);
+
+  return data.publicUrl;
 };
 
 const NewsCard = ({ 
@@ -103,7 +120,7 @@ const NewsCard = ({
       
       {!video && image && (
         <img
-          src={image}
+          src={getPublicUrl(image)}
           alt={title}
           className="w-full h-48 object-cover"
         />
