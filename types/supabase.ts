@@ -80,19 +80,9 @@ export type Database = {
           button_color?: string;
           button_secondary_color?: string;
           video_url?: string;
-          file_path?: string;
-          file_paths?: string[];
-          file_metadata?: Json;
-          files_metadata?: Json[];
+          image?: string;
+          images?: string[];
           category_id?: string;
-          owner_name?: string;
-          phone?: string;
-          website?: string;
-          whatsapp?: string;
-          social_media?: Json;
-          user_id?: string;
-          url_maps_events?: string;
-          numero_whatsapp_events?: string;
         }
       }
       categories: {

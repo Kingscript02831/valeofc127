@@ -25,16 +25,10 @@ interface News {
   content: string;
   date: string;
   category_id: string | null;
-  file_path: string | null;
-  file_paths: string[] | null;
-  file_metadata: any | null;
-  files_metadata: any[] | null;
+  image: string | null;
   video: string | null;
   button_color: string | null;
-  button_secondary_color: string | null;
   instagram_media: InstagramMedia[] | null;
-  created_at?: string;
-  user_id?: string;
 }
 
 const AdminNews = () => {
@@ -46,7 +40,7 @@ const AdminNews = () => {
     title: "",
     content: "",
     category_id: null,
-    file_path: null,
+    image: null,
     video: null,
     button_color: "#9b87f5",
     instagram_media: [],
@@ -94,17 +88,12 @@ const AdminNews = () => {
         return;
       }
 
-      const { data, error } = await supabase.from("news").insert({
-        title: newNews.title,
-        content: newNews.content,
-        category_id: newNews.category_id,
-        file_path: newNews.file_path,
-        video: newNews.video,
-        button_color: newNews.button_color,
-        instagram_media: newNews.instagram_media,
-        date: new Date().toISOString(),
-        user_id: (await supabase.auth.getUser()).data.user?.id,
-      });
+      const { data, error } = await supabase.from("news").insert([
+        {
+          ...newNews,
+          date: new Date().toISOString(),
+        },
+      ]);
 
       if (error) throw error;
 
@@ -113,7 +102,7 @@ const AdminNews = () => {
         title: "",
         content: "",
         category_id: null,
-        file_path: null,
+        image: null,
         video: null,
         button_color: "#9b87f5",
         instagram_media: [],
@@ -134,15 +123,7 @@ const AdminNews = () => {
 
       const { error } = await supabase
         .from("news")
-        .update({
-          title: editingNews.title,
-          content: editingNews.content,
-          category_id: editingNews.category_id,
-          file_path: editingNews.file_path,
-          video: editingNews.video,
-          button_color: editingNews.button_color,
-          instagram_media: editingNews.instagram_media
-        })
+        .update(editingNews)
         .eq("id", editingNews.id);
 
       if (error) throw error;
@@ -311,11 +292,11 @@ const AdminNews = () => {
               </div>
             </div>
             <div>
-              <Label htmlFor="file_path">Link da Imagem</Label>
+              <Label htmlFor="image">Link da Imagem</Label>
               <Input
-                id="file_path"
-                value={newNews.file_path || ""}
-                onChange={(e) => setNewNews({ ...newNews, file_path: e.target.value })}
+                id="image"
+                value={newNews.image || ""}
+                onChange={(e) => setNewNews({ ...newNews, image: e.target.value })}
                 placeholder="https://exemplo.com/imagem.jpg"
               />
             </div>
@@ -390,11 +371,11 @@ const AdminNews = () => {
               </div>
             </div>
             <div>
-              <Label htmlFor="edit-file_path">Link da Imagem</Label>
+              <Label htmlFor="edit-image">Link da Imagem</Label>
               <Input
-                id="edit-file_path"
-                value={editingNews.file_path || ""}
-                onChange={(e) => setEditingNews({ ...editingNews, file_path: e.target.value })}
+                id="edit-image"
+                value={editingNews.image || ""}
+                onChange={(e) => setEditingNews({ ...editingNews, image: e.target.value })}
                 placeholder="https://exemplo.com/imagem.jpg"
               />
             </div>
@@ -471,7 +452,7 @@ const AdminNews = () => {
                   </div>
                 </div>
                 <p className="whitespace-pre-wrap mb-2">{item.content}</p>
-                {item.file_path && <p className="text-sm text-gray-500">Imagem: {item.file_path}</p>}
+                {item.image && <p className="text-sm text-gray-500">Imagem: {item.image}</p>}
                 {item.video && <p className="text-sm text-gray-500">Vídeo: {item.video}</p>}
                 {item.button_color && (
                   <p className="text-sm text-gray-500">
@@ -506,3 +487,4 @@ const AdminNews = () => {
 };
 
 export default AdminNews;
+

@@ -24,8 +24,8 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
     event_date: new Date().toISOString().split('T')[0],
     event_time: "00:00",
     end_time: "00:00",
-    file_path: "",
-    file_paths: [],
+    image: "",
+    images: [],
     location: "",
     maps_url: "",
     url_maps_events: "",
@@ -40,9 +40,7 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
     website: "",
     whatsapp: "",
     social_media: null,
-    user_id: null,
-    file_metadata: null,
-    files_metadata: null
+    user_id: null
   });
 
   const [newImageUrl, setNewImageUrl] = useState("");
@@ -57,10 +55,10 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
   }, [initialData]);
 
   const handleAddImage = () => {
-    if (newImageUrl && !eventData.file_paths?.includes(newImageUrl)) {
+    if (newImageUrl && !eventData.images?.includes(newImageUrl)) {
       setEventData({
         ...eventData,
-        file_paths: [...(eventData.file_paths || []), newImageUrl]
+        images: [...(eventData.images || []), newImageUrl]
       });
       setNewImageUrl("");
     }
@@ -69,7 +67,7 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
   const handleRemoveImage = (imageUrl: string) => {
     setEventData({
       ...eventData,
-      file_paths: eventData.file_paths?.filter(url => url !== imageUrl) || []
+      images: eventData.images?.filter(url => url !== imageUrl) || []
     });
   };
 
@@ -143,11 +141,11 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
       </div>
 
       <div>
-        <Label htmlFor="file_path">Imagem Principal</Label>
+        <Label htmlFor="image">Imagem Principal</Label>
         <Input
-          id="file_path"
-          value={eventData.file_path || ""}
-          onChange={(e) => setEventData({ ...eventData, file_path: e.target.value })}
+          id="image"
+          value={eventData.image || ""}
+          onChange={(e) => setEventData({ ...eventData, image: e.target.value })}
           placeholder="URL da imagem principal"
         />
       </div>
@@ -165,7 +163,7 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
           </Button>
         </div>
         <div className="grid grid-cols-2 gap-2">
-          {eventData.file_paths?.map((url, index) => (
+          {eventData.images?.map((url, index) => (
             <div key={index} className="flex items-center gap-2">
               <Input value={url} disabled />
               <Button

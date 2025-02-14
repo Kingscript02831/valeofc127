@@ -1,9 +1,9 @@
 
 import type { Database } from "../../types/supabase";
-import type { Json } from "../../types/supabase";
 
-export type Store = {
-  id: string;
+export type Store = Database["public"]["Tables"]["stores"]["Row"];
+
+export interface StoreFormData {
   name: string;
   description: string;
   address: string;
@@ -17,8 +17,8 @@ export type Store = {
   phone?: string | null;
   whatsapp?: string | null;
   website?: string | null;
-  file_path?: string | null;
-  file_paths?: string[] | null;
+  image?: string | null;
+  images?: string[] | null;
   latitude?: number | null;
   longitude?: number | null;
   category_id?: string | null;
@@ -26,10 +26,4 @@ export type Store = {
     facebook?: string;
     instagram?: string;
   } | null;
-  created_at?: string;
-  user_id?: string;
-  file_metadata?: Json | null;
-  files_metadata?: Json[] | null;
 }
-
-export interface StoreFormData extends Omit<Store, 'id' | 'created_at'> {}
