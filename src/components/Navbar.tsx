@@ -2,6 +2,7 @@
 import { Share2, Facebook, Instagram } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { useSiteConfig } from "../hooks/useSiteConfig";
+import { ThemeToggle } from "./ThemeToggle";
 
 const Navbar = () => {
   const { data: config, isLoading, isError } = useSiteConfig();
@@ -112,6 +113,8 @@ const Navbar = () => {
             >
               <Share2 className="h-6 w-6" strokeWidth={2.5} />
             </Button>
+
+            <ThemeToggle />
           </div>
         </div>
       </div>
