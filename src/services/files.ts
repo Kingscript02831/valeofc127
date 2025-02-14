@@ -1,51 +1,23 @@
 
 import { v4 as uuidv4 } from 'uuid';
-import { supabase } from "../integrations/supabase/client";
 import type { FileInfo } from "../types/places";
 
-const BUCKET_NAME = 'uploads';
+const UPLOADS_FOLDER = 'lovable-uploads';
 
 export async function uploadFile(file: File): Promise<FileInfo> {
   // Gera um nome único para o arquivo
   const fileExt = file.name.split('.').pop();
   const fileName = `${uuidv4()}.${fileExt}`;
-  const filePath = `${fileName}`;
+  
+  // Cria a URL local do arquivo
+  const publicUrl = `/${UPLOADS_FOLDER}/${fileName}`;
 
-  // Faz o upload do arquivo
-  const { data: uploadData, error: uploadError } = await supabase.storage
-    .from(BUCKET_NAME)
-    .upload(filePath, file);
-
-  if (uploadError) {
-    throw uploadError;
-  }
-
-  // Obtém a URL pública do arquivo
-  const { data: { publicUrl } } = supabase.storage
-    .from(BUCKET_NAME)
-    .getPublicUrl(filePath);
-
-  // Insere o registro do arquivo no banco
-  const { data: fileData, error: insertError } = await supabase
-    .from('files')
-    .insert({
-      path: filePath,
-      metadata: {
-        size: file.size,
-        mimetype: file.type,
-        name: file.name
-      }
-    })
-    .select()
-    .single();
-
-  if (insertError) {
-    throw insertError;
-  }
-
+  // Como estamos usando Vite/React que não tem acesso direto ao sistema de arquivos,
+  // os arquivos precisam ser colocados manualmente na pasta public/lovable-uploads
+  
   return {
-    id: fileData.id,
-    path: filePath,
+    id: fileName,
+    path: fileName,
     url: publicUrl,
     metadata: {
       size: file.size,
@@ -56,11 +28,7 @@ export async function uploadFile(file: File): Promise<FileInfo> {
 }
 
 export async function deleteFile(path: string): Promise<void> {
-  const { error } = await supabase.storage
-    .from(BUCKET_NAME)
-    .remove([path]);
-
-  if (error) {
-    throw error;
-  }
+  // Como estamos no frontend, não podemos deletar arquivos diretamente
+  // O arquivo precisará ser deletado manualmente da pasta public/lovable-uploads
+  console.log('Arquivo para deletar:', path);
 }
