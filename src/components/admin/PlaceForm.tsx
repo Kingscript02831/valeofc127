@@ -3,6 +3,7 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
+import { ImageUpload } from "./ImageUpload";
 import type { PlaceFormData, Place } from "../../types/places";
 
 interface PlaceFormProps {
@@ -57,6 +58,10 @@ export const PlaceForm = ({ initialData, onSubmit, onCancel }: PlaceFormProps) =
     onSubmit(formData);
   };
 
+  const handleImageUploaded = (filePath: string) => {
+    setFormData(prev => ({ ...prev, file_path: filePath }));
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
@@ -70,6 +75,11 @@ export const PlaceForm = ({ initialData, onSubmit, onCancel }: PlaceFormProps) =
             required
           />
         </div>
+        <ImageUpload 
+          onImageUploaded={handleImageUploaded}
+          currentImage={formData.file_path || undefined}
+          label="Imagem Principal"
+        />
         <div className="space-y-2">
           <Label htmlFor="address">Endereço *</Label>
           <Input
