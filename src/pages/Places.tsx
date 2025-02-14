@@ -1,8 +1,6 @@
-
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Phone, Globe, MapPin, Clock, Ticket, User2, Facebook, Instagram, MessageCircle, Search } from "lucide-react";
-import type { Database } from "../integrations/supabase/types";
 import { supabase } from "../integrations/supabase/client";
 import Navbar from "../components/Navbar";
 import SubNav from "../components/SubNav";
@@ -10,6 +8,7 @@ import Footer from "../components/Footer";
 import BottomNav from "../components/BottomNav";
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
+import type { Database } from "../integrations/supabase/types";
 
 type Place = Database["public"]["Tables"]["places"]["Row"];
 type Category = Database["public"]["Tables"]["categories"]["Row"];
@@ -130,10 +129,10 @@ const Places = () => {
                 key={place.id}
                 className="bg-card text-card-foreground rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow border border-border"
               >
-                {place.image && (
+                {place.file_path && (
                   <div className="aspect-video w-full overflow-hidden">
                     <img
-                      src={place.image}
+                      src={place.file_path}
                       alt={place.name}
                       className="w-full h-full object-cover"
                     />
