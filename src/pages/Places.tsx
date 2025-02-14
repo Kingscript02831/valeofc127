@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Phone, Globe, MapPin, Clock, Ticket, User2, Facebook, Instagram, MessageCircle, Search } from "lucide-react";
@@ -73,13 +74,13 @@ const Places = () => {
       <SubNav />
       <main className="flex-1 container mx-auto py-8 px-4">
         <div className="flex flex-col md:flex-row md:items-center gap-4 mb-8">
-          <h1 className="text-3xl font-bold">Lugares</h1>
+          <h1 className="text-3xl font-bold text-foreground">Lugares</h1>
           <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 h-4 w-4" />
+            <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
               type="search"
               placeholder="Buscar lugares..."
-              className="pl-8"
+              className="pl-8 bg-background text-foreground border-border"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -91,8 +92,8 @@ const Places = () => {
             onClick={() => setSelectedCategory(null)}
             className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${
               !selectedCategory
-                ? "bg-primary text-white"
-                : "bg-gray-100 hover:bg-gray-200"
+                ? "bg-primary text-primary-foreground dark:bg-gray-700 dark:text-gray-100"
+                : "bg-secondary text-secondary-foreground hover:bg-secondary/80 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
             }`}
           >
             Todas
@@ -103,8 +104,8 @@ const Places = () => {
               onClick={() => setSelectedCategory(category.id)}
               className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${
                 selectedCategory === category.id
-                  ? "text-white"
-                  : "hover:opacity-80"
+                  ? "text-primary-foreground dark:text-gray-100"
+                  : "hover:opacity-80 dark:text-gray-300"
               }`}
               style={{
                 backgroundColor:
@@ -127,7 +128,7 @@ const Places = () => {
             {places?.map((place) => (
               <div
                 key={place.id}
-                className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
+                className="bg-card text-card-foreground rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow border border-border"
               >
                 {place.image && (
                   <div className="aspect-video w-full overflow-hidden">
@@ -139,16 +140,16 @@ const Places = () => {
                   </div>
                 )}
                 <div className="p-4 space-y-4">
-                  <h2 className="text-xl font-semibold">{place.name}</h2>
+                  <h2 className="text-xl font-semibold text-foreground">{place.name}</h2>
                   
                   {place.description && (
                     <div>
-                      <p className={`text-gray-600 text-sm ${!expandedDescriptions.has(place.id) ? "line-clamp-3" : ""}`}>
+                      <p className={`text-muted-foreground text-sm ${!expandedDescriptions.has(place.id) ? "line-clamp-3" : ""}`}>
                         {place.description}
                       </p>
                       <Button
                         variant="link"
-                        className="p-0 h-auto text-sm text-blue-600 hover:text-blue-800"
+                        className="p-0 h-auto text-sm text-primary hover:text-primary/80"
                         onClick={() => toggleDescription(place.id)}
                       >
                         {expandedDescriptions.has(place.id) ? "Ver menos" : "Ver mais"}
@@ -159,38 +160,38 @@ const Places = () => {
                   <div className="space-y-2">
                     {place.address && (
                       <div className="flex items-center gap-2 text-sm">
-                        <MapPin className="w-4 h-4 text-gray-500" />
-                        <span>{place.address}</span>
+                        <MapPin className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-muted-foreground">{place.address}</span>
                       </div>
                     )}
 
                     {place.owner_name && (
                       <div className="flex items-center gap-2 text-sm">
-                        <User2 className="w-4 h-4 text-gray-500" />
-                        <span>{place.owner_name}</span>
+                        <User2 className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-muted-foreground">{place.owner_name}</span>
                       </div>
                     )}
 
                     {place.opening_hours && (
                       <div className="flex items-center gap-2 text-sm">
-                        <Clock className="w-4 h-4 text-gray-500" />
-                        <span>{place.opening_hours}</span>
+                        <Clock className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-muted-foreground">{place.opening_hours}</span>
                       </div>
                     )}
 
                     {place.entrance_fee && (
                       <div className="flex items-center gap-2 text-sm">
-                        <Ticket className="w-4 h-4 text-gray-500" />
-                        <span>{place.entrance_fee}</span>
+                        <Ticket className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-muted-foreground">{place.entrance_fee}</span>
                       </div>
                     )}
                   </div>
 
-                  <div className="pt-4 border-t flex flex-wrap gap-3">
+                  <div className="pt-4 border-t border-border flex flex-wrap gap-3">
                     {place.phone && (
                       <a
                         href={`tel:${place.phone}`}
-                        className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
+                        className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
                       >
                         <Phone className="w-4 h-4" />
                       </a>
@@ -201,7 +202,7 @@ const Places = () => {
                         href={`https://wa.me/${place.whatsapp.replace(/\D/g, '')}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-sm text-green-600 hover:text-green-800"
+                        className="flex items-center gap-1 text-sm text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300"
                       >
                         <MessageCircle className="w-4 h-4" />
                       </a>
@@ -212,7 +213,7 @@ const Places = () => {
                         href={place.website}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-sm text-purple-600 hover:text-purple-800"
+                        className="flex items-center gap-1 text-sm text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300"
                       >
                         <Globe className="w-4 h-4" />
                       </a>
@@ -225,7 +226,7 @@ const Places = () => {
                             href={(place.social_media as any).facebook}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
+                            className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
                           >
                             <Facebook className="w-4 h-4" />
                           </a>
@@ -235,7 +236,7 @@ const Places = () => {
                             href={(place.social_media as any).instagram}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center gap-1 text-sm text-pink-600 hover:text-pink-800"
+                            className="flex items-center gap-1 text-sm text-pink-600 hover:text-pink-800 dark:text-pink-400 dark:hover:text-pink-300"
                           >
                             <Instagram className="w-4 h-4" />
                           </a>
@@ -248,7 +249,7 @@ const Places = () => {
                         href={place.maps_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-sm text-red-600 hover:text-red-800"
+                        className="flex items-center gap-1 text-sm text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
                       >
                         <MapPin className="w-4 h-4" />
                       </a>
@@ -258,7 +259,7 @@ const Places = () => {
               </div>
             ))}
             {!isLoading && (!places || places.length === 0) && (
-              <p className="text-gray-500 col-span-full text-center py-8">
+              <p className="text-muted-foreground col-span-full text-center py-8">
                 Nenhum lugar encontrado.
               </p>
             )}
