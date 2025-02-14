@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -24,7 +23,7 @@ export const PlaceForm = ({ initialData, onSubmit, onCancel }: PlaceFormProps) =
     phone: "",
     whatsapp: "",
     website: "",
-    image: "",
+    file_path: "",
     social_media: {
       facebook: "",
       instagram: "",
@@ -44,7 +43,7 @@ export const PlaceForm = ({ initialData, onSubmit, onCancel }: PlaceFormProps) =
         phone: initialData.phone,
         whatsapp: initialData.whatsapp,
         website: initialData.website,
-        image: initialData.image,
+        file_path: initialData.file_path || "",
         social_media: initialData.social_media || {
           facebook: "",
           instagram: "",
@@ -157,12 +156,12 @@ export const PlaceForm = ({ initialData, onSubmit, onCancel }: PlaceFormProps) =
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="image">URL da Imagem</Label>
+          <Label htmlFor="file_path">URL da Imagem</Label>
           <Input
-            id="image"
-            name="image"
-            value={formData.image || ""}
-            onChange={(e) => setFormData(prev => ({ ...prev, image: e.target.value }))}
+            id="file_path"
+            name="file_path"
+            value={formData.file_path || ""}
+            onChange={(e) => setFormData(prev => ({ ...prev, file_path: e.target.value }))}
           />
         </div>
 

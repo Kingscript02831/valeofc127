@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import SubNav from "@/components/SubNav";
@@ -105,7 +104,6 @@ const Index = () => {
       <SubNav />
       <main className="flex-1 container mx-auto py-8 px-4">
         <div className="flex flex-col gap-8">
-          {/* Seção de Arquivos */}
           {files.length > 0 && (
             <div>
               <h2 className="text-2xl font-bold mb-4">Arquivos de Mídia</h2>
@@ -134,7 +132,6 @@ const Index = () => {
             </div>
           )}
 
-          {/* Seção de Notícias */}
           <h1 className="text-3xl font-bold">Últimas Notícias</h1>
           
           <div className="flex flex-col sm:flex-row gap-4">
@@ -201,7 +198,7 @@ const Index = () => {
                     title={item.title}
                     content={item.content}
                     date={item.date}
-                    image={item.image || undefined}
+                    file_path={item.file_path || undefined}
                     video={item.video || undefined}
                     instagramMedia={instagramMedia}
                     category={item.categories ? {
@@ -229,4 +226,3 @@ const Index = () => {
 };
 
 export default Index;
-
