@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +25,7 @@ const AdminEvents = () => {
       .eq("page_type", "events");
 
     if (error) {
+      console.error("Error fetching categories:", error);
       toast.error("Erro ao carregar categorias");
       return;
     }
@@ -46,6 +48,7 @@ const AdminEvents = () => {
     const { data, error } = await query;
 
     if (error) {
+      console.error("Error fetching events:", error);
       toast.error("Erro ao carregar eventos");
       return;
     }
@@ -69,14 +72,20 @@ const AdminEvents = () => {
         return;
       }
 
-      // Garantir que o user_id seja definido corretamente
+      // Remove any undefined or null values from eventData
+      const cleanEventData = Object.fromEntries(
+        Object.entries(eventData).filter(([_, v]) => v != null)
+      );
+
+      // Ensure user_id is set
       const finalEventData = {
-        ...eventData,
-        user_id: user.id,
-        category_id: eventData.category_id || null
+        ...cleanEventData,
+        user_id: user.id
       };
 
-      const { error } = await supabase
+      console.log("Submitting event data:", finalEventData);
+
+      const { data, error } = await supabase
         .from("events")
         .insert(finalEventData);
 
@@ -107,12 +116,18 @@ const AdminEvents = () => {
         return;
       }
 
-      // Garantir que o user_id seja mantido durante a edição
+      // Remove any undefined or null values from eventData
+      const cleanEventData = Object.fromEntries(
+        Object.entries(eventData).filter(([_, v]) => v != null)
+      );
+
+      // Ensure user_id is maintained
       const finalEventData = {
-        ...eventData,
-        user_id: user.id,
-        category_id: eventData.category_id || null
+        ...cleanEventData,
+        user_id: user.id
       };
+
+      console.log("Updating event data:", finalEventData);
 
       const { error } = await supabase
         .from("events")
@@ -142,6 +157,7 @@ const AdminEvents = () => {
       toast.success("Evento removido com sucesso!");
       fetchEvents();
     } catch (error: any) {
+      console.error("Error deleting event:", error);
       toast.error("Erro ao remover evento");
     }
   };

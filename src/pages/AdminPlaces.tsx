@@ -67,14 +67,22 @@ const AdminPlaces = () => {
         return;
       }
 
+      // Remove any undefined or null values from formData
+      const cleanFormData = Object.fromEntries(
+        Object.entries(formData).filter(([_, v]) => v != null)
+      );
+
       if (selectedPlace) {
         // Update existing place
         const { error } = await supabase
           .from("places")
-          .update(formData)
+          .update({ ...cleanFormData, user_id: user.id })
           .eq("id", selectedPlace.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error("Error updating place:", error);
+          throw error;
+        }
         toast({
           title: "Local atualizado com sucesso!",
           variant: "default",
@@ -83,9 +91,12 @@ const AdminPlaces = () => {
         // Add new place
         const { error } = await supabase
           .from("places")
-          .insert({ ...formData, user_id: user.id });
+          .insert({ ...cleanFormData, user_id: user.id });
 
-        if (error) throw error;
+        if (error) {
+          console.error("Error inserting place:", error);
+          throw error;
+        }
         toast({
           title: "Local adicionado com sucesso!",
           variant: "default",
@@ -95,7 +106,7 @@ const AdminPlaces = () => {
       queryClient.invalidateQueries({ queryKey: ["admin-places"] });
       setIsAddEditDialogOpen(false);
       setSelectedPlace(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving place:", error);
       toast({
         title: "Erro ao salvar o local",
