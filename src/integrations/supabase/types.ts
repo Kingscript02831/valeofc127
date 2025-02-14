@@ -142,8 +142,11 @@ export type Database = {
           entrance_fee: string | null
           event_date: string
           event_time: string
+          file_metadata: Json | null
+          file_path: string | null
+          file_paths: string[] | null
+          files_metadata: Json[] | null
           id: string
-          image: string | null
           images: string[] | null
           location: string | null
           maps_url: string | null
@@ -169,8 +172,11 @@ export type Database = {
           entrance_fee?: string | null
           event_date: string
           event_time: string
+          file_metadata?: Json | null
+          file_path?: string | null
+          file_paths?: string[] | null
+          files_metadata?: Json[] | null
           id?: string
-          image?: string | null
           images?: string[] | null
           location?: string | null
           maps_url?: string | null
@@ -196,8 +202,11 @@ export type Database = {
           entrance_fee?: string | null
           event_date?: string
           event_time?: string
+          file_metadata?: Json | null
+          file_path?: string | null
+          file_paths?: string[] | null
+          files_metadata?: Json[] | null
           id?: string
-          image?: string | null
           images?: string[] | null
           location?: string | null
           maps_url?: string | null
@@ -228,6 +237,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      files: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_path: string
+          file_type: string
+          id: string
+          size: number | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_path: string
+          file_type: string
+          id?: string
+          size?: number | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          file_type?: string
+          id?: string
+          size?: number | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
       }
       messages: {
         Row: {
@@ -272,8 +314,10 @@ export type Database = {
           content: string
           created_at: string | null
           date: string
+          file_metadata: Json | null
+          file_path: string | null
+          files_metadata: Json[] | null
           id: string
-          image: string | null
           instagram_media: Json | null
           title: string
           updated_at: string | null
@@ -287,8 +331,10 @@ export type Database = {
           content: string
           created_at?: string | null
           date?: string
+          file_metadata?: Json | null
+          file_path?: string | null
+          files_metadata?: Json[] | null
           id?: string
-          image?: string | null
           instagram_media?: Json | null
           title: string
           updated_at?: string | null
@@ -302,8 +348,10 @@ export type Database = {
           content?: string
           created_at?: string | null
           date?: string
+          file_metadata?: Json | null
+          file_path?: string | null
+          files_metadata?: Json[] | null
           id?: string
-          image?: string | null
           instagram_media?: Json | null
           title?: string
           updated_at?: string | null
@@ -373,8 +421,10 @@ export type Database = {
           created_at: string | null
           description: string
           entrance_fee: string | null
+          file_metadata: Json | null
+          file_path: string | null
+          files_metadata: Json[] | null
           id: string
-          image: string | null
           images: string[] | null
           latitude: number | null
           longitude: number | null
@@ -397,8 +447,10 @@ export type Database = {
           created_at?: string | null
           description: string
           entrance_fee?: string | null
+          file_metadata?: Json | null
+          file_path?: string | null
+          files_metadata?: Json[] | null
           id?: string
-          image?: string | null
           images?: string[] | null
           latitude?: number | null
           longitude?: number | null
@@ -421,8 +473,10 @@ export type Database = {
           created_at?: string | null
           description?: string
           entrance_fee?: string | null
+          file_metadata?: Json | null
+          file_path?: string | null
+          files_metadata?: Json[] | null
           id?: string
-          image?: string | null
           images?: string[] | null
           latitude?: number | null
           longitude?: number | null
@@ -747,9 +801,11 @@ export type Database = {
           created_at: string | null
           description: string
           entrance_fee: string | null
+          file_metadata: Json | null
+          file_path: string | null
+          file_paths: string[] | null
+          files_metadata: Json[] | null
           id: string
-          image: string | null
-          images: string[] | null
           latitude: number | null
           longitude: number | null
           maps_url: string | null
@@ -771,9 +827,11 @@ export type Database = {
           created_at?: string | null
           description: string
           entrance_fee?: string | null
+          file_metadata?: Json | null
+          file_path?: string | null
+          file_paths?: string[] | null
+          files_metadata?: Json[] | null
           id?: string
-          image?: string | null
-          images?: string[] | null
           latitude?: number | null
           longitude?: number | null
           maps_url?: string | null
@@ -795,9 +853,11 @@ export type Database = {
           created_at?: string | null
           description?: string
           entrance_fee?: string | null
+          file_metadata?: Json | null
+          file_path?: string | null
+          file_paths?: string[] | null
+          files_metadata?: Json[] | null
           id?: string
-          image?: string | null
-          images?: string[] | null
           latitude?: number | null
           longitude?: number | null
           maps_url?: string | null
