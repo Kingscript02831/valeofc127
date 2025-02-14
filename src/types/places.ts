@@ -21,3 +21,14 @@ export interface PlaceFormData {
     instagram?: string;
   } | null;
 }
+
+export interface FileInfo {
+  id: string;
+  path: string;
+  url: string;
+  metadata: {
+    size: number;
+    mimetype: string;
+    name: string;
+  };
+}
