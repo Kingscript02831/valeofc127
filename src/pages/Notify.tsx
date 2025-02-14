@@ -1,8 +1,10 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bell, CheckCircle, Clock, ChevronRight, Calendar, Newspaper, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -31,6 +33,59 @@ const Notify = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(true);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+
+  // Carregar estado das notificações
+  useEffect(() => {
+    const loadNotificationPreference = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.id) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('notifications_enabled')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profile) {
+          setNotificationsEnabled(profile.notifications_enabled);
+        }
+      }
+    };
+    loadNotificationPreference();
+  }, []);
+
+  // Toggle notificações
+  const toggleNotifications = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user?.id) return;
+
+      const newState = !notificationsEnabled;
+      const { error } = await supabase
+        .from('profiles')
+        .update({ notifications_enabled: newState })
+        .eq('id', session.user.id);
+
+      if (error) throw error;
+
+      setNotificationsEnabled(newState);
+      toast.success(
+        newState 
+          ? "Notificações ativadas com sucesso" 
+          : "Notificações desativadas com sucesso",
+        {
+          position: "top-center",
+          style: { marginTop: "64px" }
+        }
+      );
+    } catch (error) {
+      console.error("Error toggling notifications:", error);
+      toast.error("Erro ao alterar estado das notificações", {
+        position: "top-center",
+        style: { marginTop: "64px" }
+      });
+    }
+  };
 
   // Check for authentication status
   useEffect(() => {
@@ -198,14 +253,26 @@ const Notify = () => {
               {notifications.filter(n => !n.read).length} não lidas
             </Badge>
           </div>
-          <Button 
-            onClick={markAllAsRead} 
-            variant="outline" 
-            size="sm"
-            className="w-full md:w-auto"
-          >
-            Marcar todas como lidas
-          </Button>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center space-x-2">
+              <Switch
+                checked={notificationsEnabled}
+                onCheckedChange={toggleNotifications}
+                aria-label="Toggle notifications"
+              />
+              <span className="text-sm text-muted-foreground">
+                {notificationsEnabled ? "Notificações ativadas" : "Notificações desativadas"}
+              </span>
+            </div>
+            <Button 
+              onClick={markAllAsRead} 
+              variant="outline" 
+              size="sm"
+              className="whitespace-nowrap"
+            >
+              Marcar todas como lidas
+            </Button>
+          </div>
         </div>
 
         <div className="space-y-2">

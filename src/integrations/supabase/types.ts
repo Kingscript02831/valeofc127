@@ -465,6 +465,7 @@ export type Database = {
           location: unknown | null
           location_updated_at: string | null
           name: string | null
+          notifications_enabled: boolean | null
           online_status: boolean | null
           phone: string | null
           postal_code: string | null
@@ -491,6 +492,7 @@ export type Database = {
           location?: unknown | null
           location_updated_at?: string | null
           name?: string | null
+          notifications_enabled?: boolean | null
           online_status?: boolean | null
           phone?: string | null
           postal_code?: string | null
@@ -517,6 +519,7 @@ export type Database = {
           location?: unknown | null
           location_updated_at?: string | null
           name?: string | null
+          notifications_enabled?: boolean | null
           online_status?: boolean | null
           phone?: string | null
           postal_code?: string | null
