@@ -250,7 +250,7 @@ export default function Profile() {
     <div className="min-h-screen bg-black text-white">
       <Navbar />
       <SubNav />
-      <div className="container max-w-4xl mx-auto p-4 pb-20 pt-4">
+      <div className="container max-w-4xl mx-auto p-4 pb-20 pt-20">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-semibold text-white">

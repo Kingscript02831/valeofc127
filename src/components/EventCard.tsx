@@ -17,8 +17,8 @@ interface EventCardProps {
   eventDate: string;
   eventTime: string;
   endTime: string;
-  file_path?: string;
-  file_paths?: string[];
+  image?: string;
+  images?: string[];
   location?: string;
   mapsUrl?: string;
   entranceFee?: string;
@@ -39,8 +39,8 @@ const EventCard = ({
   eventDate,
   eventTime,
   endTime,
-  file_path,
-  file_paths = [],
+  image,
+  images = [],
   location,
   mapsUrl,
   entranceFee,
@@ -64,7 +64,7 @@ const EventCard = ({
     ? format(new Date(createdAt), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })
     : null;
   
-  const allImages = file_path ? [file_path, ...file_paths] : file_paths;
+  const allImages = image ? [image, ...images] : images;
   const hasMultipleImages = allImages.length > 1;
 
   useEffect(() => {

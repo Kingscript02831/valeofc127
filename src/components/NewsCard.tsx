@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { ChevronDown, ChevronUp, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,7 +16,7 @@ interface NewsCardProps {
   title: string;
   content: string;
   date: string;
-  file_path?: string;
+  image?: string;
   video?: string;
   instagramMedia?: InstagramMedia[];
   buttonColor?: string;
@@ -58,7 +59,7 @@ const NewsCard = ({
   title, 
   content, 
   date, 
-  file_path, 
+  image, 
   video, 
   instagramMedia = [], 
   buttonColor,
@@ -100,9 +101,9 @@ const NewsCard = ({
         </div>
       )}
       
-      {!video && file_path && (
+      {!video && image && (
         <img
-          src={file_path}
+          src={image}
           alt={title}
           className="w-full h-48 object-cover"
         />

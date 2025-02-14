@@ -1,13 +1,14 @@
+
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Phone, Globe, MapPin, Clock, User2, Facebook, Instagram, MessageCircle, Search, DollarSign } from "lucide-react";
-import { supabase } from "../integrations/supabase/client";
-import Navbar from "../components/Navbar";
-import SubNav from "../components/SubNav";
-import Footer from "../components/Footer";
-import BottomNav from "../components/BottomNav";
-import { Input } from "../components/ui/input";
-import type { Database } from "../integrations/supabase/types";
+import type { Database } from "@/integrations/supabase/types";
+import { supabase } from "@/integrations/supabase/client";
+import Navbar from "@/components/Navbar";
+import SubNav from "@/components/SubNav";
+import Footer from "@/components/Footer";
+import BottomNav from "@/components/BottomNav";
+import { Input } from "@/components/ui/input";
 
 type Store = Database["public"]["Tables"]["stores"]["Row"];
 type Category = Database["public"]["Tables"]["categories"]["Row"];
@@ -117,10 +118,10 @@ const Stores = () => {
                 key={store.id}
                 className="bg-card text-card-foreground rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow border border-border"
               >
-                {store.file_path && (
+                {store.image && (
                   <div className="aspect-video w-full overflow-hidden">
                     <img
-                      src={store.file_path}
+                      src={store.image}
                       alt={store.name}
                       className="w-full h-full object-cover"
                     />

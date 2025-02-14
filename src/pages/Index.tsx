@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import SubNav from "@/components/SubNav";
@@ -15,7 +16,6 @@ type News = Database['public']['Tables']['news']['Row'] & {
   categories: Database['public']['Tables']['categories']['Row'] | null;
 };
 type Category = Database['public']['Tables']['categories']['Row'];
-type File = Database['public']['Tables']['files']['Row'];
 interface InstagramMedia {
   url: string;
   type: 'post' | 'video';
@@ -38,26 +38,6 @@ const Index = () => {
         toast.error('Erro ao carregar categorias');
         throw error;
       }
-      return data || [];
-    }
-  });
-
-  const { data: files = [] } = useQuery<File[]>({
-    queryKey: ['files'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('files')
-        .select('*')
-        .or('file_type.eq.image,file_type.eq.video')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching files:', error);
-        toast.error('Erro ao carregar arquivos');
-        throw error;
-      }
-
-      console.log('Fetched files:', data);
       return data || [];
     }
   });
@@ -104,34 +84,6 @@ const Index = () => {
       <SubNav />
       <main className="flex-1 container mx-auto py-8 px-4">
         <div className="flex flex-col gap-8">
-          {files.length > 0 && (
-            <div>
-              <h2 className="text-2xl font-bold mb-4">Arquivos de Mídia</h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {files.map((file) => (
-                  <div key={file.id} className="relative group">
-                    {file.file_type.includes('image') ? (
-                      <img
-                        src={file.file_path}
-                        alt={file.file_name}
-                        className="w-full h-48 object-cover rounded-lg"
-                      />
-                    ) : (
-                      <video
-                        src={file.file_path}
-                        className="w-full h-48 object-cover rounded-lg"
-                        controls
-                      />
-                    )}
-                    <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2 text-sm truncate rounded-b-lg">
-                      {file.file_name}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
           <h1 className="text-3xl font-bold">Últimas Notícias</h1>
           
           <div className="flex flex-col sm:flex-row gap-4">
@@ -198,7 +150,7 @@ const Index = () => {
                     title={item.title}
                     content={item.content}
                     date={item.date}
-                    file_path={item.file_path || undefined}
+                    image={item.image || undefined}
                     video={item.video || undefined}
                     instagramMedia={instagramMedia}
                     category={item.categories ? {

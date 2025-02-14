@@ -1,9 +1,9 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
-import { ImageUpload } from "./ImageUpload";
 import type { StoreFormData, Store } from "../../types/stores";
 
 interface StoreFormProps {
@@ -27,7 +27,7 @@ export const StoreForm = ({ initialData, onSubmit, onCancel }: StoreFormProps) =
     phone: "",
     whatsapp: "",
     website: "",
-    file_path: "",
+    image: "",
     social_media: {
       facebook: "",
       instagram: "",
@@ -44,13 +44,13 @@ export const StoreForm = ({ initialData, onSubmit, onCancel }: StoreFormProps) =
         state: initialData.state || "",
         postal_code: initialData.postal_code || "",
         owner_name: initialData.owner_name || "",
-        opening_hours: initialData.opening_hours || "",
+        opening_hours: initialData.opening_hours as string || "",
         entrance_fee: initialData.entrance_fee || "",
         maps_url: initialData.maps_url || "",
         phone: initialData.phone || "",
         whatsapp: initialData.whatsapp || "",
         website: initialData.website || "",
-        file_path: initialData.file_path || "",
+        image: initialData.image || "",
         social_media: initialData.social_media || {
           facebook: "",
           instagram: "",
@@ -62,10 +62,6 @@ export const StoreForm = ({ initialData, onSubmit, onCancel }: StoreFormProps) =
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(formData);
-  };
-
-  const handleImageUploaded = (filePath: string) => {
-    setFormData(prev => ({ ...prev, file_path: filePath }));
   };
 
   return (
@@ -81,11 +77,6 @@ export const StoreForm = ({ initialData, onSubmit, onCancel }: StoreFormProps) =
             required
           />
         </div>
-        <ImageUpload 
-          onImageUploaded={handleImageUploaded}
-          currentImage={formData.file_path || undefined}
-          label="Imagem Principal"
-        />
         <div className="space-y-2">
           <Label htmlFor="address">Endereço *</Label>
           <Input
@@ -199,12 +190,12 @@ export const StoreForm = ({ initialData, onSubmit, onCancel }: StoreFormProps) =
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="file_path">URL da Imagem</Label>
+          <Label htmlFor="image">URL da Imagem</Label>
           <Input
-            id="file_path"
-            name="file_path"
-            value={formData.file_path || ""}
-            onChange={(e) => setFormData(prev => ({ ...prev, file_path: e.target.value }))}
+            id="image"
+            name="image"
+            value={formData.image || ""}
+            onChange={(e) => setFormData(prev => ({ ...prev, image: e.target.value }))}
           />
         </div>
 
@@ -255,3 +246,4 @@ export const StoreForm = ({ initialData, onSubmit, onCancel }: StoreFormProps) =
     </form>
   );
 };
+
