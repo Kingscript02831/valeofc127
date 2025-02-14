@@ -135,9 +135,17 @@ const AdminNews = () => {
         return;
       }
 
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast.error("Você precisa estar logado para editar notícias");
+        return;
+      }
+
       const { error } = await supabase
         .from("news")
-        .update(editingNews)
+        .update({ ...editingNews, user_id: user.id })
         .eq("id", editingNews.id);
 
       if (error) throw error;
