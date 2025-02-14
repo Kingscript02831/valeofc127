@@ -77,10 +77,15 @@ const AdminEvents = () => {
         Object.entries(eventData).filter(([_, v]) => v != null)
       );
 
-      // Ensure user_id is set
+      // Ensure user_id is set and required fields are present
       const finalEventData = {
         ...cleanEventData,
-        user_id: user.id
+        user_id: user.id,
+        title: eventData.title,
+        description: eventData.description,
+        event_date: eventData.event_date,
+        event_time: eventData.event_time,
+        end_time: eventData.end_time
       };
 
       console.log("Submitting event data:", finalEventData);

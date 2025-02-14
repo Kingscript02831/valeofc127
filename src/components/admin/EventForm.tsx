@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,7 +23,7 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
     event_date: new Date().toISOString().split('T')[0],
     event_time: "00:00",
     end_time: "00:00",
-    image: "",
+    file_path: "",
     images: [],
     location: "",
     maps_url: "",
@@ -40,7 +39,11 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
     website: "",
     whatsapp: "",
     social_media: null,
-    user_id: null
+    user_id: null,
+    additional_photos: [],
+    file_paths: [],
+    file_metadata: null,
+    files_metadata: null
   });
 
   const [newImageUrl, setNewImageUrl] = useState("");
@@ -141,11 +144,11 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
       </div>
 
       <div>
-        <Label htmlFor="image">Imagem Principal</Label>
+        <Label htmlFor="file_path">Imagem Principal</Label>
         <Input
-          id="image"
-          value={eventData.image || ""}
-          onChange={(e) => setEventData({ ...eventData, image: e.target.value })}
+          id="file_path"
+          value={eventData.file_path || ""}
+          onChange={(e) => setEventData({ ...eventData, file_path: e.target.value })}
           placeholder="URL da imagem principal"
         />
       </div>

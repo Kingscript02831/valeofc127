@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Edit, Trash, Plus, Search } from "lucide-react";
@@ -72,17 +71,23 @@ const AdminPlaces = () => {
         Object.entries(formData).filter(([_, v]) => v != null)
       );
 
+      // Ensure required fields and user_id are present
+      const finalPlaceData = {
+        ...cleanFormData,
+        user_id: user.id,
+        name: formData.name,
+        description: formData.description,
+        address: formData.address
+      };
+
       if (selectedPlace) {
         // Update existing place
         const { error } = await supabase
           .from("places")
-          .update({ ...cleanFormData, user_id: user.id })
+          .update(finalPlaceData)
           .eq("id", selectedPlace.id);
 
-        if (error) {
-          console.error("Error updating place:", error);
-          throw error;
-        }
+        if (error) throw error;
         toast({
           title: "Local atualizado com sucesso!",
           variant: "default",
@@ -91,12 +96,9 @@ const AdminPlaces = () => {
         // Add new place
         const { error } = await supabase
           .from("places")
-          .insert({ ...cleanFormData, user_id: user.id });
+          .insert(finalPlaceData);
 
-        if (error) {
-          console.error("Error inserting place:", error);
-          throw error;
-        }
+        if (error) throw error;
         toast({
           title: "Local adicionado com sucesso!",
           variant: "default",
