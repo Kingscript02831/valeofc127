@@ -9,6 +9,7 @@ import SubNav from "../components/SubNav";
 import BottomNav from "../components/BottomNav";
 import Footer from "../components/Footer";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { FileMetadata } from "../types/files";
 
 type Event = Database['public']['Tables']['events']['Row'];
 type Category = Database['public']['Tables']['categories']['Row'];
@@ -76,6 +77,30 @@ export default function Events() {
     }
   };
 
+  const getImageUrl = (event: Event) => {
+    try {
+      if (event.file_metadata) {
+        const metadata = JSON.parse(event.file_metadata as string) as FileMetadata;
+        return metadata.url;
+      }
+      return event.image || '';
+    } catch (e) {
+      return event.image || '';
+    }
+  };
+
+  const getImagesUrls = (event: Event) => {
+    try {
+      if (event.files_metadata) {
+        const metadata = JSON.parse(event.files_metadata as string) as FileMetadata[];
+        return metadata.map(m => m.url);
+      }
+      return event.images || [];
+    } catch (e) {
+      return event.images || [];
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col pb-[72px] md:pb-0">
       <Navbar />
@@ -85,7 +110,6 @@ export default function Events() {
         
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {loading ? (
-            // Mostrar múltiplos skeletons durante o carregamento
             Array(6).fill(0).map((_, index) => (
               <LoadingEventCard key={index} />
             ))
@@ -101,8 +125,8 @@ export default function Events() {
                   eventDate={event.event_date}
                   eventTime={event.event_time}
                   endTime={event.end_time}
-                  image={event.image}
-                  images={event.images || []}
+                  image={getImageUrl(event)}
+                  images={getImagesUrls(event)}
                   location={event.location}
                   mapsUrl={event.url_maps_events}
                   entranceFee={event.entrance_fee}
