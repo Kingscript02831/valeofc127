@@ -1,7 +1,7 @@
 
 import type { Database } from "../integrations/supabase/types";
 
-export type Place = Database["public"]["Tables"]["places"]["Row"];
+export type Place = Database['public']['Tables']['places']['Row'];
 
 export interface PlaceFormData {
   name: string;
