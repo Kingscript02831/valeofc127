@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 
 type News = Database['public']['Tables']['news']['Row'] & {
@@ -32,18 +33,23 @@ const Index = () => {
         .select('*')
         .eq('page_type', 'news')
         .order('name');
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching categories:', error);
+        toast.error('Erro ao carregar categorias');
+        throw error;
+      }
       return data || [];
     }
   });
 
-  const { data: news = [], error, isLoading } = useQuery<News[]>({
+  const { data: news = [], isLoading, error } = useQuery<News[]>({
     queryKey: ['news', searchTerm, selectedCategory],
     queryFn: async () => {
       try {
         let query = supabase
           .from('news')
-          .select('*, categories!news_category_id_fkey(*)');
+          .select('*, categories(*)')
+          .order('date', { ascending: false });
 
         if (searchTerm) {
           query = query.ilike('title', `%${searchTerm}%`);
@@ -53,12 +59,11 @@ const Index = () => {
           query = query.eq('category_id', selectedCategory);
         }
 
-        query = query.order('date', { ascending: false });
-
         const { data, error } = await query;
         
         if (error) {
           console.error('Supabase query error:', error);
+          toast.error('Erro ao carregar notícias');
           throw error;
         }
         
@@ -66,14 +71,12 @@ const Index = () => {
         return data as News[];
       } catch (err) {
         console.error('Error fetching news:', err);
+        toast.error('Erro ao carregar notícias');
         throw err;
       }
-    }
+    },
+    retry: 1
   });
-
-  if (error) {
-    console.error('React Query error:', error);
-  }
 
   return (
     <div className="min-h-screen flex flex-col pb-[72px] md:pb-0">
@@ -96,14 +99,13 @@ const Index = () => {
             </div>
           </div>
 
-          {/* Categories Section */}
           <div className="flex gap-2 overflow-x-auto pb-4 mb-6 scrollbar-hide">
             <button
               onClick={() => setSelectedCategory(null)}
               className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${
                 !selectedCategory
-                  ? "bg-[#F1F1F1] text-gray-800"
-                  : "bg-gray-100 hover:bg-gray-200"
+                  ? "bg-[#F1F1F1] text-gray-800 dark:bg-gray-700 dark:text-white"
+                  : "bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-200"
               }`}
             >
               Todas
@@ -114,7 +116,7 @@ const Index = () => {
                 onClick={() => setSelectedCategory(category.id)}
                 className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${
                   selectedCategory === category.id
-                    ? "bg-[#F1F1F1] text-gray-800"
+                    ? "bg-[#F1F1F1] text-gray-800 dark:bg-gray-700 dark:text-white"
                     : "hover:opacity-80"
                 }`}
                 style={{
@@ -131,6 +133,10 @@ const Index = () => {
 
           {isLoading ? (
             <p className="text-center py-8">Carregando notícias...</p>
+          ) : error ? (
+            <p className="text-center py-8 text-red-500">
+              Erro ao carregar notícias. Por favor, tente novamente.
+            </p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {news.map((item) => {
@@ -143,7 +149,7 @@ const Index = () => {
                     key={item.id}
                     title={item.title}
                     content={item.content}
-                    date={new Date(item.date).toLocaleDateString("pt-BR")}
+                    date={item.date}
                     image={item.image || undefined}
                     video={item.video || undefined}
                     instagramMedia={instagramMedia}
@@ -152,6 +158,7 @@ const Index = () => {
                       slug: item.categories.slug
                     } : undefined}
                     buttonColor={item.button_color || undefined}
+                    createdAt={item.created_at}
                   />
                 );
               })}
