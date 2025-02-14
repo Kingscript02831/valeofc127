@@ -25,10 +25,16 @@ interface News {
   content: string;
   date: string;
   category_id: string | null;
-  image: string | null;
+  file_path: string | null;
+  file_paths: string[] | null;
+  file_metadata: any | null;
+  files_metadata: any[] | null;
+  images: string[] | null;
   video: string | null;
   button_color: string | null;
   instagram_media: InstagramMedia[] | null;
+  created_at?: string;
+  user_id?: string;
 }
 
 const AdminNews = () => {
@@ -40,7 +46,7 @@ const AdminNews = () => {
     title: "",
     content: "",
     category_id: null,
-    image: null,
+    images: [],
     video: null,
     button_color: "#9b87f5",
     instagram_media: [],
@@ -92,6 +98,7 @@ const AdminNews = () => {
         {
           ...newNews,
           date: new Date().toISOString(),
+          user_id: (await supabase.auth.getUser()).data.user?.id,
         },
       ]);
 
@@ -102,7 +109,7 @@ const AdminNews = () => {
         title: "",
         content: "",
         category_id: null,
-        image: null,
+        images: [],
         video: null,
         button_color: "#9b87f5",
         instagram_media: [],
@@ -487,4 +494,3 @@ const AdminNews = () => {
 };
 
 export default AdminNews;
-
