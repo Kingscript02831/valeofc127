@@ -1,5 +1,6 @@
 
 import type { Database } from "../integrations/supabase/types";
+import type { FileMetadata } from "./files";
 
 export type Place = Database["public"]["Tables"]["places"]["Row"];
 
@@ -14,7 +15,7 @@ export interface PlaceFormData {
   phone?: string | null;
   whatsapp?: string | null;
   website?: string | null;
-  file_path?: string | null;
+  file_metadata?: FileMetadata | null;
   social_media?: {
     facebook?: string;
     instagram?: string;

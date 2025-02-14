@@ -1,5 +1,6 @@
 
 import type { Database } from "../integrations/supabase/types";
+import type { FileMetadata } from "./files";
 
 export type Store = Database["public"]["Tables"]["stores"]["Row"];
 
@@ -17,8 +18,8 @@ export interface StoreFormData {
   phone?: string | null;
   whatsapp?: string | null;
   website?: string | null;
-  file_path?: string | null;
-  file_paths?: string[] | null;
+  file_metadata?: FileMetadata | null;
+  files_metadata?: FileMetadata[] | null;
   latitude?: number | null;
   longitude?: number | null;
   category_id?: string | null;

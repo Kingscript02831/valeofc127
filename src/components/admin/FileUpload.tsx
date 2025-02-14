@@ -3,11 +3,12 @@ import React, { useCallback } from 'react';
 import { Button } from "../ui/button";
 import { toast } from "sonner";
 import { Upload } from 'lucide-react';
+import type { FileMetadata } from "../../types/files";
 
 interface FileUploadProps {
-  onFileSelect: (url: string) => void;
+  onFileSelect: (metadata: FileMetadata) => void;
   accept?: string;
-  currentValue?: string;
+  currentValue?: FileMetadata;
   buttonText?: string;
 }
 
@@ -23,8 +24,8 @@ export const FileUpload: React.FC<FileUploadProps> = ({
 
     try {
       const { uploadFile } = await import('../../utils/uploadFile');
-      const url = await uploadFile(file);
-      onFileSelect(url);
+      const metadata = await uploadFile(file);
+      onFileSelect(metadata);
       toast.success("File uploaded successfully");
     } catch (error) {
       console.error('Upload error:', error);
@@ -36,11 +37,14 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     <div className="flex flex-col gap-2">
       {currentValue && (
         <div className="relative w-full h-32 bg-gray-100 rounded-lg overflow-hidden">
-          {currentValue.includes('video') ? (
-            <video src={currentValue} className="w-full h-full object-contain" controls />
+          {currentValue.type === 'video' ? (
+            <video src={currentValue.url} className="w-full h-full object-contain" controls />
           ) : (
-            <img src={currentValue} alt="Preview" className="w-full h-full object-contain" />
+            <img src={currentValue.url} alt={currentValue.name} className="w-full h-full object-contain" />
           )}
+          <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2 text-sm">
+            {currentValue.name}
+          </div>
         </div>
       )}
       <Button 

@@ -3,10 +3,11 @@ import React, { useCallback } from 'react';
 import { Button } from "../ui/button";
 import { toast } from "sonner";
 import { Upload, X } from 'lucide-react';
+import type { FileMetadata } from "../../types/files";
 
 interface MultiFileUploadProps {
-  onFilesSelect: (urls: string[]) => void;
-  currentValues?: string[];
+  onFilesSelect: (metadata: FileMetadata[]) => void;
+  currentValues?: FileMetadata[];
   accept?: string;
   buttonText?: string;
 }
@@ -23,8 +24,8 @@ export const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
 
     try {
       const { uploadMultipleFiles } = await import('../../utils/uploadFile');
-      const urls = await uploadMultipleFiles(Array.from(files));
-      onFilesSelect([...currentValues, ...urls]);
+      const metadata = await uploadMultipleFiles(Array.from(files));
+      onFilesSelect([...currentValues, ...metadata]);
       toast.success("Files uploaded successfully");
     } catch (error) {
       console.error('Upload error:', error);
@@ -33,20 +34,23 @@ export const MultiFileUpload: React.FC<MultiFileUploadProps> = ({
   }, [onFilesSelect, currentValues]);
 
   const handleRemove = (indexToRemove: number) => {
-    const newUrls = currentValues.filter((_, index) => index !== indexToRemove);
-    onFilesSelect(newUrls);
+    const newMetadata = currentValues.filter((_, index) => index !== indexToRemove);
+    onFilesSelect(newMetadata);
   };
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {currentValues.map((url, index) => (
-          <div key={index} className="relative group">
+        {currentValues.map((metadata, index) => (
+          <div key={metadata.id} className="relative group">
             <img 
-              src={url} 
-              alt={`Upload ${index + 1}`} 
+              src={metadata.url} 
+              alt={metadata.name} 
               className="w-full h-24 object-cover rounded-lg"
             />
+            <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-1 text-xs">
+              {metadata.name}
+            </div>
             <button
               type="button"
               onClick={() => handleRemove(index)}
