@@ -33,22 +33,21 @@ export const PlaceForm = ({ initialData, onSubmit, onCancel }: PlaceFormProps) =
 
   useEffect(() => {
     if (initialData) {
+      const socialMedia = typeof initialData.social_media === 'object' ? initialData.social_media : { facebook: '', instagram: '' };
+      
       setFormData({
         name: initialData.name,
         description: initialData.description,
         address: initialData.address,
-        owner_name: initialData.owner_name,
+        owner_name: initialData.owner_name || "",
         opening_hours: initialData.opening_hours as string,
-        entrance_fee: initialData.entrance_fee,
-        maps_url: initialData.maps_url,
-        phone: initialData.phone,
-        whatsapp: initialData.whatsapp,
-        website: initialData.website,
-        file_path: initialData.file_path,
-        social_media: initialData.social_media || {
-          facebook: "",
-          instagram: "",
-        },
+        entrance_fee: initialData.entrance_fee || "",
+        maps_url: initialData.maps_url || "",
+        phone: initialData.phone || "",
+        whatsapp: initialData.whatsapp || "",
+        website: initialData.website || "",
+        file_path: initialData.file_path || "",
+        social_media: socialMedia as { facebook?: string; instagram?: string },
       });
     }
   }, [initialData]);

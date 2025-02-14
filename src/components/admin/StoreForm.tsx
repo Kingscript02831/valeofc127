@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -39,6 +38,8 @@ export const StoreForm = ({ initialData, onSubmit, onCancel }: StoreFormProps) =
 
   useEffect(() => {
     if (initialData) {
+      const socialMedia = typeof initialData.social_media === 'object' ? initialData.social_media : { facebook: '', instagram: '' };
+      
       setFormData({
         name: initialData.name,
         description: initialData.description,
@@ -55,10 +56,7 @@ export const StoreForm = ({ initialData, onSubmit, onCancel }: StoreFormProps) =
         website: initialData.website || "",
         file_path: initialData.file_path || "",
         file_paths: initialData.file_paths || [],
-        social_media: initialData.social_media || {
-          facebook: "",
-          instagram: "",
-        },
+        social_media: socialMedia as { facebook?: string; instagram?: string },
       });
     }
   }, [initialData]);
