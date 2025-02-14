@@ -29,9 +29,9 @@ interface News {
   file_paths: string[] | null;
   file_metadata: any | null;
   files_metadata: any[] | null;
-  images: string[] | null;
   video: string | null;
   button_color: string | null;
+  button_secondary_color: string | null;
   instagram_media: InstagramMedia[] | null;
   created_at?: string;
   user_id?: string;
@@ -46,7 +46,7 @@ const AdminNews = () => {
     title: "",
     content: "",
     category_id: null,
-    images: [],
+    file_path: null,
     video: null,
     button_color: "#9b87f5",
     instagram_media: [],
@@ -94,13 +94,17 @@ const AdminNews = () => {
         return;
       }
 
-      const { data, error } = await supabase.from("news").insert([
-        {
-          ...newNews,
-          date: new Date().toISOString(),
-          user_id: (await supabase.auth.getUser()).data.user?.id,
-        },
-      ]);
+      const { data, error } = await supabase.from("news").insert({
+        title: newNews.title,
+        content: newNews.content,
+        category_id: newNews.category_id,
+        file_path: newNews.file_path,
+        video: newNews.video,
+        button_color: newNews.button_color,
+        instagram_media: newNews.instagram_media,
+        date: new Date().toISOString(),
+        user_id: (await supabase.auth.getUser()).data.user?.id,
+      });
 
       if (error) throw error;
 
@@ -109,7 +113,7 @@ const AdminNews = () => {
         title: "",
         content: "",
         category_id: null,
-        images: [],
+        file_path: null,
         video: null,
         button_color: "#9b87f5",
         instagram_media: [],
@@ -130,7 +134,15 @@ const AdminNews = () => {
 
       const { error } = await supabase
         .from("news")
-        .update(editingNews)
+        .update({
+          title: editingNews.title,
+          content: editingNews.content,
+          category_id: editingNews.category_id,
+          file_path: editingNews.file_path,
+          video: editingNews.video,
+          button_color: editingNews.button_color,
+          instagram_media: editingNews.instagram_media
+        })
         .eq("id", editingNews.id);
 
       if (error) throw error;
@@ -299,11 +311,11 @@ const AdminNews = () => {
               </div>
             </div>
             <div>
-              <Label htmlFor="image">Link da Imagem</Label>
+              <Label htmlFor="file_path">Link da Imagem</Label>
               <Input
-                id="image"
-                value={newNews.image || ""}
-                onChange={(e) => setNewNews({ ...newNews, image: e.target.value })}
+                id="file_path"
+                value={newNews.file_path || ""}
+                onChange={(e) => setNewNews({ ...newNews, file_path: e.target.value })}
                 placeholder="https://exemplo.com/imagem.jpg"
               />
             </div>
@@ -378,11 +390,11 @@ const AdminNews = () => {
               </div>
             </div>
             <div>
-              <Label htmlFor="edit-image">Link da Imagem</Label>
+              <Label htmlFor="edit-file_path">Link da Imagem</Label>
               <Input
-                id="edit-image"
-                value={editingNews.image || ""}
-                onChange={(e) => setEditingNews({ ...editingNews, image: e.target.value })}
+                id="edit-file_path"
+                value={editingNews.file_path || ""}
+                onChange={(e) => setEditingNews({ ...editingNews, file_path: e.target.value })}
                 placeholder="https://exemplo.com/imagem.jpg"
               />
             </div>
@@ -459,7 +471,7 @@ const AdminNews = () => {
                   </div>
                 </div>
                 <p className="whitespace-pre-wrap mb-2">{item.content}</p>
-                {item.image && <p className="text-sm text-gray-500">Imagem: {item.image}</p>}
+                {item.file_path && <p className="text-sm text-gray-500">Imagem: {item.file_path}</p>}
                 {item.video && <p className="text-sm text-gray-500">Vídeo: {item.video}</p>}
                 {item.button_color && (
                   <p className="text-sm text-gray-500">
