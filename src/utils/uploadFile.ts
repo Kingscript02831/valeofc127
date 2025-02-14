@@ -7,7 +7,7 @@ export async function uploadFile(file: File, bucket: string = 'uploads'): Promis
   const fileId = uuidv4();
   const fileExt = file.name.split('.').pop();
   const fileName = `${fileId}.${fileExt}`;
-  const filePath = `${fileName}`;
+  const filePath = `lovable-uploads/${fileName}`;
 
   const { error: uploadError } = await supabase.storage
     .from(bucket)
