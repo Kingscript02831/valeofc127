@@ -12,7 +12,6 @@ const AdminNav = () => {
     { path: "/admin/lugares", label: "Lugares" },
     { path: "/admin/lojas", label: "Lojas" },
     { path: "/admin/categorias", label: "Categorias" },
-    { path: "/admin/permissoes", label: "Permissões" },
     { path: "/config", label: "Configurações" },
   ];
 
