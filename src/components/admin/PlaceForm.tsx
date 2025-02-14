@@ -24,7 +24,7 @@ export const PlaceForm = ({ initialData, onSubmit, onCancel }: PlaceFormProps) =
     phone: "",
     whatsapp: "",
     website: "",
-    file_path: "",
+    image: "",
     social_media: {
       facebook: "",
       instagram: "",
@@ -44,7 +44,7 @@ export const PlaceForm = ({ initialData, onSubmit, onCancel }: PlaceFormProps) =
         phone: initialData.phone,
         whatsapp: initialData.whatsapp,
         website: initialData.website,
-        file_path: initialData.file_path,
+        image: initialData.image,
         social_media: initialData.social_media || {
           facebook: "",
           instagram: "",
@@ -157,12 +157,12 @@ export const PlaceForm = ({ initialData, onSubmit, onCancel }: PlaceFormProps) =
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="file_path">URL da Imagem</Label>
+          <Label htmlFor="image">URL da Imagem</Label>
           <Input
-            id="file_path"
-            name="file_path"
-            value={formData.file_path || ""}
-            onChange={(e) => setFormData(prev => ({ ...prev, file_path: e.target.value }))}
+            id="image"
+            name="image"
+            value={formData.image || ""}
+            onChange={(e) => setFormData(prev => ({ ...prev, image: e.target.value }))}
           />
         </div>
 

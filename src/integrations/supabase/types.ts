@@ -143,10 +143,10 @@ export type Database = {
           event_date: string
           event_time: string
           file_metadata: Json | null
-          file_path: string | null
           file_paths: string[] | null
           files_metadata: Json[] | null
           id: string
+          image: string | null
           images: string[] | null
           location: string | null
           maps_url: string | null
@@ -173,10 +173,10 @@ export type Database = {
           event_date: string
           event_time: string
           file_metadata?: Json | null
-          file_path?: string | null
           file_paths?: string[] | null
           files_metadata?: Json[] | null
           id?: string
+          image?: string | null
           images?: string[] | null
           location?: string | null
           maps_url?: string | null
@@ -203,10 +203,10 @@ export type Database = {
           event_date?: string
           event_time?: string
           file_metadata?: Json | null
-          file_path?: string | null
           file_paths?: string[] | null
           files_metadata?: Json[] | null
           id?: string
+          image?: string | null
           images?: string[] | null
           location?: string | null
           maps_url?: string | null
@@ -315,9 +315,9 @@ export type Database = {
           created_at: string | null
           date: string
           file_metadata: Json | null
-          file_path: string | null
           files_metadata: Json[] | null
           id: string
+          image: string | null
           instagram_media: Json | null
           title: string
           updated_at: string | null
@@ -332,9 +332,9 @@ export type Database = {
           created_at?: string | null
           date?: string
           file_metadata?: Json | null
-          file_path?: string | null
           files_metadata?: Json[] | null
           id?: string
+          image?: string | null
           instagram_media?: Json | null
           title: string
           updated_at?: string | null
@@ -349,9 +349,9 @@ export type Database = {
           created_at?: string | null
           date?: string
           file_metadata?: Json | null
-          file_path?: string | null
           files_metadata?: Json[] | null
           id?: string
+          image?: string | null
           instagram_media?: Json | null
           title?: string
           updated_at?: string | null
@@ -422,9 +422,9 @@ export type Database = {
           description: string
           entrance_fee: string | null
           file_metadata: Json | null
-          file_path: string | null
           files_metadata: Json[] | null
           id: string
+          image: string | null
           image_id: string | null
           images: string[] | null
           images_ids: string[] | null
@@ -450,9 +450,9 @@ export type Database = {
           description: string
           entrance_fee?: string | null
           file_metadata?: Json | null
-          file_path?: string | null
           files_metadata?: Json[] | null
           id?: string
+          image?: string | null
           image_id?: string | null
           images?: string[] | null
           images_ids?: string[] | null
@@ -478,9 +478,9 @@ export type Database = {
           description?: string
           entrance_fee?: string | null
           file_metadata?: Json | null
-          file_path?: string | null
           files_metadata?: Json[] | null
           id?: string
+          image?: string | null
           image_id?: string | null
           images?: string[] | null
           images_ids?: string[] | null
@@ -815,10 +815,10 @@ export type Database = {
           description: string
           entrance_fee: string | null
           file_metadata: Json | null
-          file_path: string | null
           file_paths: string[] | null
           files_metadata: Json[] | null
           id: string
+          image: string | null
           image_id: string | null
           images_ids: string[] | null
           latitude: number | null
@@ -843,10 +843,10 @@ export type Database = {
           description: string
           entrance_fee?: string | null
           file_metadata?: Json | null
-          file_path?: string | null
           file_paths?: string[] | null
           files_metadata?: Json[] | null
           id?: string
+          image?: string | null
           image_id?: string | null
           images_ids?: string[] | null
           latitude?: number | null
@@ -871,10 +871,10 @@ export type Database = {
           description?: string
           entrance_fee?: string | null
           file_metadata?: Json | null
-          file_path?: string | null
           file_paths?: string[] | null
           files_metadata?: Json[] | null
           id?: string
+          image?: string | null
           image_id?: string | null
           images_ids?: string[] | null
           latitude?: number | null
