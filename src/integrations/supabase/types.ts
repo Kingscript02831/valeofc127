@@ -145,6 +145,7 @@ export type Database = {
           file_path: string | null
           file_paths: string[] | null
           id: string
+          images: string[] | null
           location: string | null
           maps_url: string | null
           numero_whatsapp_events: string | null
@@ -172,6 +173,7 @@ export type Database = {
           file_path?: string | null
           file_paths?: string[] | null
           id?: string
+          images?: string[] | null
           location?: string | null
           maps_url?: string | null
           numero_whatsapp_events?: string | null
@@ -199,6 +201,7 @@ export type Database = {
           file_path?: string | null
           file_paths?: string[] | null
           id?: string
+          images?: string[] | null
           location?: string | null
           maps_url?: string | null
           numero_whatsapp_events?: string | null

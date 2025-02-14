@@ -1,9 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
+import { FileUpload } from "./FileUpload";
 import type { PlaceFormData, Place } from "../../types/places";
 
 interface PlaceFormProps {
@@ -24,7 +24,7 @@ export const PlaceForm = ({ initialData, onSubmit, onCancel }: PlaceFormProps) =
     phone: "",
     whatsapp: "",
     website: "",
-    image: "",
+    file_path: "",
     social_media: {
       facebook: "",
       instagram: "",
@@ -44,7 +44,7 @@ export const PlaceForm = ({ initialData, onSubmit, onCancel }: PlaceFormProps) =
         phone: initialData.phone,
         whatsapp: initialData.whatsapp,
         website: initialData.website,
-        image: initialData.image,
+        file_path: initialData.file_path,
         social_media: initialData.social_media || {
           facebook: "",
           instagram: "",
@@ -157,12 +157,12 @@ export const PlaceForm = ({ initialData, onSubmit, onCancel }: PlaceFormProps) =
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="image">URL da Imagem</Label>
-          <Input
-            id="image"
-            name="image"
-            value={formData.image || ""}
-            onChange={(e) => setFormData(prev => ({ ...prev, image: e.target.value }))}
+          <Label htmlFor="image">Imagem</Label>
+          <FileUpload
+            accept="image/*"
+            currentValue={formData.file_path}
+            onFileSelect={(url) => setFormData(prev => ({ ...prev, file_path: url }))}
+            buttonText="Upload de Imagem"
           />
         </div>
 

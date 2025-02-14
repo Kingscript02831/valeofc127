@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,6 +5,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Database } from "@/integrations/supabase/types";
+import { FileUpload } from "./FileUpload";
+import { MultiFileUpload } from "./MultiFileUpload";
 
 type Event = Database['public']['Tables']['events']['Row'];
 type Category = Database['public']['Tables']['categories']['Row'];
@@ -24,7 +25,7 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
     event_date: new Date().toISOString().split('T')[0],
     event_time: "00:00",
     end_time: "00:00",
-    image: "",
+    file_path: "",
     images: [],
     location: "",
     maps_url: "",
@@ -142,40 +143,21 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
 
       <div>
         <Label htmlFor="image">Imagem Principal</Label>
-        <Input
-          id="image"
-          value={eventData.image || ""}
-          onChange={(e) => setEventData({ ...eventData, image: e.target.value })}
-          placeholder="URL da imagem principal"
+        <FileUpload
+          accept="image/*"
+          currentValue={eventData.file_path}
+          onFileSelect={(url) => setEventData({ ...eventData, file_path: url })}
+          buttonText="Upload de Imagem Principal"
         />
       </div>
 
-      <div className="space-y-2">
+      <div>
         <Label>Imagens Adicionais</Label>
-        <div className="flex gap-2">
-          <Input
-            value={newImageUrl}
-            onChange={(e) => setNewImageUrl(e.target.value)}
-            placeholder="URL da imagem"
-          />
-          <Button type="button" onClick={handleAddImage}>
-            Adicionar
-          </Button>
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          {eventData.images?.map((url, index) => (
-            <div key={index} className="flex items-center gap-2">
-              <Input value={url} disabled />
-              <Button
-                type="button"
-                variant="destructive"
-                onClick={() => handleRemoveImage(url)}
-              >
-                Remover
-              </Button>
-            </div>
-          ))}
-        </div>
+        <MultiFileUpload
+          currentValues={eventData.images}
+          onFilesSelect={(urls) => setEventData({ ...eventData, images: urls })}
+          buttonText="Upload de Imagens Adicionais"
+        />
       </div>
 
       <div>
