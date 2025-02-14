@@ -31,23 +31,19 @@ interface NewsCardProps {
 const getYouTubeEmbedUrl = (url: string) => {
   if (!url) return '';
   
-  // Handle youtube.com/watch?v= format
   const watchMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/);
   if (watchMatch) {
     return `https://www.youtube.com/embed/${watchMatch[1]}`;
   }
 
-  // If it's already an embed URL or other format, return as is
   return url;
 };
 
 const getInstagramEmbedUrl = (url: string) => {
   if (!url) return '';
 
-  // Remove query parameters and trailing slashes
   url = url.split('?')[0].replace(/\/$/, '');
   
-  // Extract ID from reel or post URL
   const idMatch = url.match(/(?:\/reel\/|\/p\/)([^\/]+)/);
   if (!idMatch) return '';
   
@@ -74,18 +70,15 @@ const NewsCard = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const youtubeEmbedUrl = getYouTubeEmbedUrl(video || '');
 
-  // Format dates
   const formattedDate = format(new Date(date), "dd/MM/yyyy", { locale: ptBR });
   const formattedCreatedAt = createdAt 
     ? format(new Date(createdAt), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })
     : null;
 
-  // Convert line breaks to paragraphs
   const formattedContent = content.split('\n').map((paragraph, index) => (
     paragraph.trim() ? <p key={index} className="mb-4">{paragraph}</p> : null
   ));
 
-  // Create button styles with gradient if both colors are provided
   const buttonStyle = buttonColor ? {
     background: buttonSecondaryColor 
       ? `linear-gradient(to right, ${buttonColor}, ${buttonSecondaryColor})`
@@ -95,7 +88,7 @@ const NewsCard = ({
   } : undefined;
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden">
+    <div className="bg-background border border-border rounded-lg shadow-md overflow-hidden">
       {video && (
         <div className="aspect-video">
           <iframe
@@ -123,21 +116,24 @@ const NewsCard = ({
               {category.name}
             </Badge>
           )}
-          <div className="flex items-center gap-1 text-sm text-gray-500">
+          <div className="flex items-center gap-1 text-sm text-muted-foreground">
             <Calendar className="h-4 w-4" />
             <span>{formattedDate}</span>
           </div>
         </div>
         
-        <h2 className="text-xl font-semibold mb-2">{title}</h2>
+        <h2 className="text-xl font-semibold mb-2 text-foreground">{title}</h2>
 
         {formattedCreatedAt && (
-          <div className="mb-4 text-sm text-gray-500">
+          <div className="mb-4 text-sm text-muted-foreground">
             Publicado em {formattedCreatedAt}
           </div>
         )}
         
-        <div className={cn("prose prose-sm max-w-none", !isExpanded && "line-clamp-3")}>
+        <div className={cn(
+          "prose prose-sm max-w-none dark:prose-invert text-foreground",
+          !isExpanded && "line-clamp-3"
+        )}>
           {formattedContent}
         </div>
 
@@ -162,7 +158,7 @@ const NewsCard = ({
           variant="ghost"
           className={cn(
             "mt-2 w-full flex items-center justify-center gap-2 transition-colors",
-            buttonColor && "text-white hover:text-white hover:opacity-90"
+            buttonColor ? "text-white hover:text-white hover:opacity-90" : "text-foreground"
           )}
           onClick={() => setIsExpanded(!isExpanded)}
           style={buttonStyle}

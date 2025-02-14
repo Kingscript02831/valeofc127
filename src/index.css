@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -65,8 +66,19 @@
   /* Corrige as descrições em modo escuro */
   .dark textarea,
   .dark input[type="text"],
+  .dark input[type="search"],
   .dark .description {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground border-border;
+  }
+
+  /* Ajusta os cartões em modo escuro */
+  .dark .card-content {
+    @apply bg-background text-foreground border-border;
+  }
+
+  /* Ajusta os botões em modo escuro */
+  .dark .button-default {
+    @apply bg-accent text-accent-foreground hover:bg-accent/90;
   }
 }
 
