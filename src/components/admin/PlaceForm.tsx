@@ -4,6 +4,7 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
+import { FileUpload } from "../ui/file-upload";
 import type { PlaceFormData, Place } from "../../types/places";
 
 interface PlaceFormProps {
@@ -31,6 +32,8 @@ export const PlaceForm = ({ initialData, onSubmit, onCancel }: PlaceFormProps) =
     },
   });
 
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
   useEffect(() => {
     if (initialData) {
       setFormData({
@@ -55,7 +58,7 @@ export const PlaceForm = ({ initialData, onSubmit, onCancel }: PlaceFormProps) =
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    onSubmit({ ...formData, file: selectedFile });
   };
 
   return (
@@ -89,6 +92,17 @@ export const PlaceForm = ({ initialData, onSubmit, onCancel }: PlaceFormProps) =
             value={formData.description}
             onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
             required
+          />
+        </div>
+        <div className="space-y-2 col-span-2">
+          <Label>Imagem</Label>
+          <FileUpload
+            onFileSelect={(file) => setSelectedFile(file)}
+            onFileRemove={() => {
+              setSelectedFile(null);
+              setFormData(prev => ({ ...prev, image: "" }));
+            }}
+            currentImageUrl={formData.image || undefined}
           />
         </div>
         <div className="space-y-2">
@@ -154,15 +168,6 @@ export const PlaceForm = ({ initialData, onSubmit, onCancel }: PlaceFormProps) =
             name="website"
             value={formData.website || ""}
             onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="image">URL da Imagem</Label>
-          <Input
-            id="image"
-            name="image"
-            value={formData.image || ""}
-            onChange={(e) => setFormData(prev => ({ ...prev, image: e.target.value }))}
           />
         </div>
 
