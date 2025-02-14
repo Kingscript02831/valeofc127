@@ -64,11 +64,15 @@ const getPublicUrl = (path: string) => {
     return path;
   }
 
-  // Se for um caminho do storage, gera a URL pública
+  // Garantir que o caminho não comece com '/'
+  const cleanPath = path.startsWith('/') ? path.slice(1) : path;
+
+  // Retornar a URL pública do Supabase Storage
   const { data } = supabase.storage
     .from('news')
-    .getPublicUrl(path);
+    .getPublicUrl(cleanPath);
 
+  console.log('Public URL generated:', data.publicUrl); // Log para debug
   return data.publicUrl;
 };
 
@@ -123,6 +127,11 @@ const NewsCard = ({
           src={getPublicUrl(image)}
           alt={title}
           className="w-full h-48 object-cover"
+          onError={(e) => {
+            console.error('Error loading image:', image);
+            console.error('Generated URL:', getPublicUrl(image));
+            e.currentTarget.src = '/placeholder.svg';
+          }}
         />
       )}
       
@@ -198,3 +207,4 @@ const NewsCard = ({
 };
 
 export default NewsCard;
+
