@@ -425,7 +425,9 @@ export type Database = {
           file_path: string | null
           files_metadata: Json[] | null
           id: string
+          image_id: string | null
           images: string[] | null
+          images_ids: string[] | null
           latitude: number | null
           longitude: number | null
           maps_url: string | null
@@ -451,7 +453,9 @@ export type Database = {
           file_path?: string | null
           files_metadata?: Json[] | null
           id?: string
+          image_id?: string | null
           images?: string[] | null
+          images_ids?: string[] | null
           latitude?: number | null
           longitude?: number | null
           maps_url?: string | null
@@ -477,7 +481,9 @@ export type Database = {
           file_path?: string | null
           files_metadata?: Json[] | null
           id?: string
+          image_id?: string | null
           images?: string[] | null
+          images_ids?: string[] | null
           latitude?: number | null
           longitude?: number | null
           maps_url?: string | null
@@ -498,6 +504,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "places_image_id_fkey"
+            columns: ["image_id"]
+            isOneToOne: false
+            referencedRelation: "files"
             referencedColumns: ["id"]
           },
         ]
@@ -806,6 +819,8 @@ export type Database = {
           file_paths: string[] | null
           files_metadata: Json[] | null
           id: string
+          image_id: string | null
+          images_ids: string[] | null
           latitude: number | null
           longitude: number | null
           maps_url: string | null
@@ -832,6 +847,8 @@ export type Database = {
           file_paths?: string[] | null
           files_metadata?: Json[] | null
           id?: string
+          image_id?: string | null
+          images_ids?: string[] | null
           latitude?: number | null
           longitude?: number | null
           maps_url?: string | null
@@ -858,6 +875,8 @@ export type Database = {
           file_paths?: string[] | null
           files_metadata?: Json[] | null
           id?: string
+          image_id?: string | null
+          images_ids?: string[] | null
           latitude?: number | null
           longitude?: number | null
           maps_url?: string | null
@@ -878,6 +897,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stores_image_id_fkey"
+            columns: ["image_id"]
+            isOneToOne: false
+            referencedRelation: "files"
             referencedColumns: ["id"]
           },
         ]
