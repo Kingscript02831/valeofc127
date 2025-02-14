@@ -72,9 +72,9 @@ const AdminEvents = () => {
         return;
       }
 
-      // Remove any undefined or null values from eventData
+      // Remove any undefined, null, or empty string values from eventData
       const cleanEventData = Object.fromEntries(
-        Object.entries(eventData).filter(([_, v]) => v != null)
+        Object.entries(eventData).filter(([_, v]) => v != null && v !== "")
       );
 
       // Ensure user_id is set and required fields are present
@@ -92,18 +92,21 @@ const AdminEvents = () => {
 
       const { data, error } = await supabase
         .from("events")
-        .insert(finalEventData);
+        .insert([finalEventData])
+        .select()
+        .single();
 
       if (error) {
         console.error("Error details:", error);
-        throw error;
+        toast.error(`Erro ao adicionar evento: ${error.message}`);
+        return;
       }
 
       toast.success("Evento adicionado com sucesso!");
       fetchEvents();
     } catch (error: any) {
       console.error("Error adding event:", error);
-      toast.error("Erro ao adicionar evento: " + error.message);
+      toast.error(`Erro ao adicionar evento: ${error.message}`);
     }
   };
 
@@ -121,9 +124,9 @@ const AdminEvents = () => {
         return;
       }
 
-      // Remove any undefined or null values from eventData
+      // Remove any undefined, null, or empty string values from eventData
       const cleanEventData = Object.fromEntries(
-        Object.entries(eventData).filter(([_, v]) => v != null)
+        Object.entries(eventData).filter(([_, v]) => v != null && v !== "")
       );
 
       // Ensure user_id is maintained
@@ -139,14 +142,18 @@ const AdminEvents = () => {
         .update(finalEventData)
         .eq("id", editingEvent.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error details:", error);
+        toast.error(`Erro ao atualizar evento: ${error.message}`);
+        return;
+      }
 
       toast.success("Evento atualizado com sucesso!");
       setEditingEvent(null);
       fetchEvents();
     } catch (error: any) {
       console.error("Error updating event:", error);
-      toast.error("Erro ao atualizar evento: " + error.message);
+      toast.error(`Erro ao atualizar evento: ${error.message}`);
     }
   };
 
@@ -157,13 +164,17 @@ const AdminEvents = () => {
         .delete()
         .eq("id", id);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error details:", error);
+        toast.error(`Erro ao remover evento: ${error.message}`);
+        return;
+      }
 
       toast.success("Evento removido com sucesso!");
       fetchEvents();
     } catch (error: any) {
       console.error("Error deleting event:", error);
-      toast.error("Erro ao remover evento");
+      toast.error(`Erro ao remover evento: ${error.message}`);
     }
   };
 
