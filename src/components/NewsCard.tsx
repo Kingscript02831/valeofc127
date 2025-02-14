@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { supabase } from "@/integrations/supabase/client";
 
 interface InstagramMedia {
   url: string;
@@ -54,26 +53,6 @@ const getInstagramEmbedUrl = (url: string) => {
   return isReel 
     ? `https://www.instagram.com/reel/${postId}/embed`
     : `https://www.instagram.com/p/${postId}/embed`;
-};
-
-const getPublicUrl = (path: string) => {
-  if (!path) return '';
-  
-  // Se já for uma URL completa, retorna ela mesma
-  if (path.startsWith('http')) {
-    return path;
-  }
-
-  // Garantir que o caminho não comece com '/'
-  const cleanPath = path.startsWith('/') ? path.slice(1) : path;
-
-  // Retornar a URL pública do Supabase Storage
-  const { data } = supabase.storage
-    .from('news')
-    .getPublicUrl(cleanPath);
-
-  console.log('Public URL generated:', data.publicUrl); // Log para debug
-  return data.publicUrl;
 };
 
 const NewsCard = ({ 
@@ -124,14 +103,9 @@ const NewsCard = ({
       
       {!video && image && (
         <img
-          src={getPublicUrl(image)}
+          src={image}
           alt={title}
           className="w-full h-48 object-cover"
-          onError={(e) => {
-            console.error('Error loading image:', image);
-            console.error('Generated URL:', getPublicUrl(image));
-            e.currentTarget.src = '/placeholder.svg';
-          }}
         />
       )}
       
@@ -207,4 +181,3 @@ const NewsCard = ({
 };
 
 export default NewsCard;
-
