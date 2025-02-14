@@ -80,24 +80,26 @@ export default function Events() {
   const getImageUrl = (event: Event) => {
     try {
       if (event.file_metadata) {
-        const metadata = JSON.parse(event.file_metadata as string) as FileMetadata;
+        const metadata = event.file_metadata as FileMetadata;
         return metadata.url;
       }
-      return event.image || '';
+      return event.file_path || '';
     } catch (e) {
-      return event.image || '';
+      console.error('Error parsing file metadata:', e);
+      return event.file_path || '';
     }
   };
 
   const getImagesUrls = (event: Event) => {
     try {
       if (event.files_metadata) {
-        const metadata = JSON.parse(event.files_metadata as string) as FileMetadata[];
+        const metadata = event.files_metadata as FileMetadata[];
         return metadata.map(m => m.url);
       }
-      return event.images || [];
+      return event.file_paths || [];
     } catch (e) {
-      return event.images || [];
+      console.error('Error parsing files metadata:', e);
+      return event.file_paths || [];
     }
   };
 

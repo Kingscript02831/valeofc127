@@ -10,6 +10,7 @@ import Footer from "../components/Footer";
 import BottomNav from "../components/BottomNav";
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
+import type { FileMetadata } from "../types/files";
 
 type Place = Database["public"]["Tables"]["places"]["Row"];
 type Category = Database["public"]["Tables"]["categories"]["Row"];
@@ -67,6 +68,19 @@ const Places = () => {
       return data;
     },
   });
+
+  const getImageUrl = (place: Place) => {
+    try {
+      if (place.file_metadata) {
+        const metadata = place.file_metadata as FileMetadata;
+        return metadata.url;
+      }
+      return place.file_path || '';
+    } catch (e) {
+      console.error('Error parsing file metadata:', e);
+      return place.file_path || '';
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col pb-[72px] md:pb-0">
@@ -130,10 +144,10 @@ const Places = () => {
                 key={place.id}
                 className="bg-card text-card-foreground rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow border border-border"
               >
-                {place.image && (
+                {getImageUrl(place) && (
                   <div className="aspect-video w-full overflow-hidden">
                     <img
-                      src={place.image}
+                      src={getImageUrl(place)}
                       alt={place.name}
                       className="w-full h-full object-cover"
                     />
