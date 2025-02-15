@@ -41,6 +41,7 @@ const EventCard = ({
   eventTime,
   endTime,
   image,
+  file_path,
   images = [],
   location,
   mapsUrl,
