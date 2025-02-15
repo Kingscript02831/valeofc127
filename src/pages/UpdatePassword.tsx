@@ -7,33 +7,44 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 
-const ResetPassword = () => {
+const UpdatePassword = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const { data: config, isLoading: configLoading } = useSiteConfig();
 
-  const handleResetPassword = async (e: React.FormEvent) => {
+  const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
+    if (password !== confirmPassword) {
+      toast({
+        title: "Erro",
+        description: "As senhas não coincidem",
+        variant: "destructive",
+      });
+      setLoading(false);
+      return;
+    }
+
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+      const { error } = await supabase.auth.updateUser({
+        password: password
       });
 
       if (error) throw error;
 
       toast({
-        title: "Email enviado",
-        description: "Verifique sua caixa de entrada para redefinir sua senha",
+        title: "Senha atualizada",
+        description: "Sua senha foi atualizada com sucesso",
       });
 
       navigate("/login");
     } catch (error: any) {
       toast({
-        title: "Erro ao enviar email",
+        title: "Erro ao atualizar senha",
         description: error.message,
         variant: "destructive",
       });
@@ -70,28 +81,48 @@ const ResetPassword = () => {
             className="text-3xl font-bold"
             style={{ color: config.login_text_color }}
           >
-            Recuperar Senha
+            Atualizar Senha
           </h1>
           <p style={{ color: config.login_text_color }}>
-            Digite seu email para receber instruções de recuperação
+            Digite sua nova senha
           </p>
         </div>
 
-        <form onSubmit={handleResetPassword} className="space-y-6 mt-6">
+        <form onSubmit={handleUpdatePassword} className="space-y-6 mt-6">
           <div>
             <label 
-              htmlFor="email" 
+              htmlFor="password" 
               className="text-sm font-medium block mb-1"
               style={{ color: config.login_text_color }}
             >
-              Email
+              Nova Senha
             </label>
             <Input
-              id="email"
-              type="email"
-              placeholder="seu@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              id="password"
+              type="password"
+              placeholder="******"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="bg-white/50 border-gray-200"
+              style={{ color: config.login_text_color }}
+            />
+          </div>
+
+          <div>
+            <label 
+              htmlFor="confirmPassword" 
+              className="text-sm font-medium block mb-1"
+              style={{ color: config.login_text_color }}
+            >
+              Confirmar Nova Senha
+            </label>
+            <Input
+              id="confirmPassword"
+              type="password"
+              placeholder="******"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
               required
               className="bg-white/50 border-gray-200"
               style={{ color: config.login_text_color }}
@@ -107,7 +138,7 @@ const ResetPassword = () => {
             }}
             disabled={loading}
           >
-            {loading ? "Enviando..." : "Enviar email de recuperação"}
+            {loading ? "Atualizando..." : "Atualizar Senha"}
           </Button>
 
           <p className="text-center text-sm" style={{ color: config.login_text_color }}>
@@ -127,4 +158,4 @@ const ResetPassword = () => {
   );
 };
 
-export default ResetPassword;
+export default UpdatePassword;
