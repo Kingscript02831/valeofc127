@@ -80,8 +80,8 @@ const NewsCard = ({
 
     if (!postId) return null;
 
-    // Removendo o /captioned da URL e adicionando hidecaption=1
-    const embedUrl = `https://www.instagram.com/${type === 'video' ? 'reel' : 'p'}/${postId}/embed/hidecaption=1`;
+    // URL corrigida para funcionar com posts e reels
+    const embedUrl = `https://www.instagram.com/${type === 'video' ? 'reel' : 'p'}/${postId}/embed/`;
     
     return (
       <div className="relative w-full overflow-hidden" style={{ paddingTop: '177.77%' }}>
