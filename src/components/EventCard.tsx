@@ -26,12 +26,18 @@ interface EventCardProps {
   buttonColor?: string;
   buttonSecondaryColor?: string;
   videoUrl?: string;
+  video_urls?: string[];
   category?: {
     id: string;
     name: string;
     background_color?: string;
   } | null;
 }
+
+type MediaItem = {
+  type: 'image' | 'video';
+  url: string;
+};
 
 const EventCard = ({
   title,
@@ -48,14 +54,25 @@ const EventCard = ({
   buttonColor,
   buttonSecondaryColor,
   videoUrl,
+  video_urls = [],
   category,
 }: EventCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isImageFullscreen, setIsImageFullscreen] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [countdown, setCountdown] = useState({ days: 0, hrs: 0, mins: 0, secs: 0, isExpired: false });
   const [config, setConfig] = useState<SiteConfig | null>(null);
   const [eventStatus, setEventStatus] = useState<'not_started' | 'in_progress' | 'ended'>('not_started');
+
+  const allMedia: MediaItem[] = [
+    ...(image ? [{ type: 'image', url: image }] : []),
+    ...(images?.map(url => ({ type: 'image', url })) || []),
+    ...(videoUrl ? [{ type: 'video', url: videoUrl }] : []),
+    ...(video_urls?.map(url => ({ type: 'video', url })) || [])
+  ];
+
+  const hasMultipleMedia = allMedia.length > 1;
+  const currentMedia = allMedia[currentIndex];
 
   const date = parseISO(eventDate);
   const formattedDate = format(date, "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
@@ -63,9 +80,6 @@ const EventCard = ({
   const formattedCreatedAt = createdAt 
     ? format(new Date(createdAt), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })
     : null;
-  
-  const allImages = image ? [image, ...images] : images;
-  const hasMultipleImages = allImages.length > 1;
 
   useEffect(() => {
     const fetchConfig = async () => {
@@ -146,18 +160,18 @@ const EventCard = ({
     return () => clearInterval(timer);
   }, [eventDate, eventTime, endTime, date, eventStatus]);
 
-  const nextImage = () => {
-    setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
+  const nextMedia = () => {
+    setCurrentIndex((prev) => (prev + 1) % allMedia.length);
   };
 
-  const previousImage = () => {
-    setCurrentImageIndex((prev) => 
-      prev === 0 ? allImages.length - 1 : prev - 1
+  const previousMedia = () => {
+    setCurrentIndex((prev) => 
+      prev === 0 ? allMedia.length - 1 : prev - 1
     );
   };
 
-  const toggleImageFullscreen = () => {
-    setIsImageFullscreen(!isImageFullscreen);
+  const toggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen);
   };
 
   const primaryColor = buttonColor || config?.primary_color || '#9b87f5';
@@ -171,27 +185,72 @@ const EventCard = ({
     border: 'none'
   } : undefined;
 
+  const renderMedia = (mediaItem: MediaItem, isFullscreen: boolean = false) => {
+    if (mediaItem.type === 'video') {
+      const videoId = mediaItem.url.includes('youtu.be') 
+        ? mediaItem.url.split('youtu.be/')[1]
+        : mediaItem.url.split('v=')[1]?.split('&')[0];
+
+      return (
+        <div className={cn(
+          "relative w-full h-48",
+          isFullscreen && "h-[80vh]"
+        )}>
+          <iframe
+            src={`https://www.youtube.com/embed/${videoId}`}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            className="absolute inset-0 w-full h-full"
+          />
+        </div>
+      );
+    }
+
+    return (
+      <img
+        src={mediaItem.url}
+        alt={`${title} - Mídia ${currentIndex + 1}`}
+        className={cn(
+          "h-full w-full object-cover cursor-pointer",
+          isFullscreen ? "max-h-[90vh] max-w-[90vw] object-contain" : "h-48"
+        )}
+        onClick={toggleFullscreen}
+      />
+    );
+  };
+
   return (
     <>
       <Card className="overflow-hidden transition-transform hover:scale-[1.02] max-w-sm mx-auto">
-        {allImages.length > 0 && (
-          <div className="relative h-48 w-full overflow-hidden">
-            <img
-              src={allImages[currentImageIndex]}
-              alt={`${title} - Imagem ${currentImageIndex + 1}`}
-              className="h-full w-full object-cover cursor-pointer"
-              onClick={toggleImageFullscreen}
-            />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-4 right-4 text-white hover:bg-black/50"
-              onClick={toggleImageFullscreen}
-            >
-              <X className="h-6 w-6" />
-            </Button>
+        {allMedia.length > 0 && (
+          <div className="relative overflow-hidden">
+            {renderMedia(currentMedia)}
+            {hasMultipleMedia && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 text-white hover:bg-black/50"
+                  onClick={previousMedia}
+                >
+                  <ChevronLeft className="h-6 w-6" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-white hover:bg-black/50"
+                  onClick={nextMedia}
+                >
+                  <ChevronRight className="h-6 w-6" />
+                </Button>
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/50 px-3 py-1 rounded-full text-white text-sm">
+                  {currentIndex + 1} / {allMedia.length}
+                </div>
+              </>
+            )}
           </div>
         )}
+
         <div className="p-4">
           <h3 className="mb-2 text-xl font-bold">{title}</h3>
           
@@ -333,22 +392,18 @@ const EventCard = ({
         </div>
       </Card>
 
-      {isImageFullscreen && allImages.length > 0 && (
+      {isFullscreen && currentMedia && (
         <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center">
           <div className="relative w-full h-full flex items-center justify-center">
-            <img
-              src={allImages[currentImageIndex]}
-              alt={`${title} - Imagem ${currentImageIndex + 1}`}
-              className="max-h-[90vh] max-w-[90vw] object-contain"
-            />
+            {renderMedia(currentMedia, true)}
             
-            {hasMultipleImages && (
+            {hasMultipleMedia && (
               <>
                 <Button
                   variant="ghost"
                   size="icon"
                   className="absolute left-4 text-white hover:bg-black/50"
-                  onClick={previousImage}
+                  onClick={previousMedia}
                 >
                   <ChevronLeft className="h-6 w-6" />
                 </Button>
@@ -356,12 +411,12 @@ const EventCard = ({
                   variant="ghost"
                   size="icon"
                   className="absolute right-4 text-white hover:bg-black/50"
-                  onClick={nextImage}
+                  onClick={nextMedia}
                 >
                   <ChevronRight className="h-6 w-6" />
                 </Button>
                 <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/50 px-3 py-1 rounded-full text-white text-sm">
-                  {currentImageIndex + 1} / {allImages.length}
+                  {currentIndex + 1} / {allMedia.length}
                 </div>
               </>
             )}
@@ -370,7 +425,7 @@ const EventCard = ({
               variant="ghost"
               size="icon"
               className="absolute top-4 right-4 text-white hover:bg-black/50"
-              onClick={toggleImageFullscreen}
+              onClick={toggleFullscreen}
             >
               <X className="h-6 w-6" />
             </Button>

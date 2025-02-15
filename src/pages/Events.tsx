@@ -109,6 +109,7 @@ export default function Events() {
                   buttonColor={event.button_color}
                   buttonSecondaryColor={event.button_secondary_color}
                   videoUrl={event.video_url}
+                  video_urls={event.video_urls}
                   category={category ? {
                     id: category.id,
                     name: category.name,

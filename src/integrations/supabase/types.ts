@@ -159,6 +159,7 @@ export type Database = {
           url_maps_events: string | null
           user_id: string | null
           video_url: string | null
+          video_urls: string[] | null
           website: string | null
           whatsapp: string | null
         }
@@ -190,6 +191,7 @@ export type Database = {
           url_maps_events?: string | null
           user_id?: string | null
           video_url?: string | null
+          video_urls?: string[] | null
           website?: string | null
           whatsapp?: string | null
         }
@@ -221,6 +223,7 @@ export type Database = {
           url_maps_events?: string | null
           user_id?: string | null
           video_url?: string | null
+          video_urls?: string[] | null
           website?: string | null
           whatsapp?: string | null
         }
