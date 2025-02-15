@@ -80,13 +80,17 @@ const NewsCard = ({
 
     if (!postId) return null;
 
-    const embedUrl = `https://www.instagram.com/${type === 'video' ? 'reel' : 'p'}/${postId}/embed/captioned`;
+    // Removendo o /captioned da URL e adicionando hidecaption=1
+    const embedUrl = `https://www.instagram.com/${type === 'video' ? 'reel' : 'p'}/${postId}/embed/hidecaption=1`;
     
     return (
-      <div className="relative w-full" style={{ paddingTop: '125%' }}>
+      <div className="relative w-full overflow-hidden" style={{ paddingTop: '177.77%' }}>
         <iframe
           src={embedUrl}
           className="absolute top-0 left-0 w-full h-full"
+          style={{
+            margin: '-54px 0px -32px 0px'
+          }}
           frameBorder="0"
           scrolling="no"
           allowTransparency
@@ -118,11 +122,11 @@ const NewsCard = ({
           />
         </div>
       )}
-      {/* Instagram Media Section - Moved to top */}
+      {/* Instagram Media Section */}
       {instagramMedia && instagramMedia.length > 0 && (
         <div className="space-y-4">
           {instagramMedia.map((media, index) => (
-            <div key={index}>
+            <div key={index} className="overflow-hidden">
               {getInstagramEmbed(media.url, media.type)}
             </div>
           ))}
