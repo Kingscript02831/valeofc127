@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bell, CheckCircle, Clock, ChevronRight, Calendar, Newspaper, Trash2 } from "lucide-react";
@@ -238,10 +239,12 @@ const Notify = () => {
           <div className="flex items-center gap-3">
             <Bell className="h-6 w-6 text-primary" />
             <h1 className="text-xl font-bold">Notificações</h1>
-            <Badge variant="secondary" className="ml-2">
-              {notifications.filter(n => !n.read).length} não lidas
-            </Badge>
-            <InstallPWA />
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary">
+                {notifications.filter(n => !n.read).length} não lidas
+              </Badge>
+              <InstallPWA />
+            </div>
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center space-x-2">
