@@ -3,14 +3,19 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
+}
+
 const InstallPWA = () => {
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstallable, setIsInstallable] = useState(false);
 
   useEffect(() => {
     const beforeInstallPromptHandler = (e: Event) => {
       e.preventDefault();
-      setDeferredPrompt(e);
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
       setIsInstallable(true);
     };
 
@@ -30,7 +35,7 @@ const InstallPWA = () => {
     if (!deferredPrompt) return;
 
     try {
-      deferredPrompt.prompt();
+      await deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
       
       if (outcome === 'accepted') {
@@ -49,7 +54,7 @@ const InstallPWA = () => {
     <Button
       variant="outline"
       size="sm"
-      className="gap-2"
+      className="gap-2 whitespace-nowrap"
       onClick={handleInstallClick}
     >
       <Download className="h-4 w-4" />

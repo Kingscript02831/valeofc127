@@ -124,10 +124,7 @@ const Notify = () => {
         .delete()
         .eq("id", id);
 
-      if (error) {
-        console.error("Error deleting notification:", error);
-        throw error;
-      }
+      if (error) throw error;
 
       queryClient.setQueryData<Notification[]>(["notifications"], (old) =>
         old?.filter((n) => n.id !== id)
@@ -139,8 +136,8 @@ const Notify = () => {
         position: "top-center",
         style: { marginTop: "64px" }
       });
-    } catch (error: any) {
-      console.error("Error in deleteNotification:", error);
+    } catch (error) {
+      console.error("Error deleting notification:", error);
       toast.error("Erro ao excluir notificação", {
         position: "top-center",
         style: { marginTop: "64px" }
@@ -171,7 +168,7 @@ const Notify = () => {
           navigate(`/`);
         }
       }
-    } catch (error: any) {
+    } catch (error) {
       toast.error("Erro ao marcar notificação como lida", {
         position: "top-center",
         style: { marginTop: "64px" }
@@ -198,7 +195,7 @@ const Notify = () => {
         position: "top-center",
         style: { marginTop: "64px" }
       });
-    } catch (error: any) {
+    } catch (error) {
       toast.error("Erro ao marcar notificações como lidas", {
         position: "top-center",
         style: { marginTop: "64px" }
@@ -239,12 +236,10 @@ const Notify = () => {
           <div className="flex items-center gap-3">
             <Bell className="h-6 w-6 text-primary" />
             <h1 className="text-xl font-bold">Notificações</h1>
-            <div className="flex items-center gap-2">
-              <Badge variant="secondary">
-                {notifications.filter(n => !n.read).length} não lidas
-              </Badge>
-              <InstallPWA />
-            </div>
+            <Badge variant="secondary">
+              {notifications.filter(n => !n.read).length} não lidas
+            </Badge>
+            <InstallPWA />
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center space-x-2">
