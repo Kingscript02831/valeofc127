@@ -1845,13 +1845,20 @@ export type Database = {
         }
         Returns: boolean
       }
-      has_role: {
-        Args: {
-          user_id: string
-          role: Database["public"]["Enums"]["app_role"]
-        }
-        Returns: boolean
-      }
+      has_role:
+        | {
+            Args: {
+              role: Database["public"]["Enums"]["app_role"]
+            }
+            Returns: boolean
+          }
+        | {
+            Args: {
+              user_id: string
+              role: Database["public"]["Enums"]["app_role"]
+            }
+            Returns: boolean
+          }
       json: {
         Args: {
           "": unknown
