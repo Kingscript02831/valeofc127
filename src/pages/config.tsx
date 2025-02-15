@@ -1,13 +1,13 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { supabase } from "../integrations/supabase/client";
 import { toast } from "sonner";
-import type { Database } from "../../types/supabase";
+import type { Database } from "../integrations/supabase/types";
 import { Textarea } from "../components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import { updateMetaTags } from "../utils/updateMetaTags";
 import Navbar2 from "../components/Navbar2";
 import SubNav2 from "../components/SubNav2";
 
@@ -96,11 +96,32 @@ const Admin = () => {
         .eq("id", config.id);
 
       if (error) throw error;
+
+      // Update meta tags after successful database update
+      updateMetaTags(
+        config.meta_title,
+        config.meta_description,
+        config.meta_author,
+        config.meta_image
+      );
+
       toast.success("Configurações atualizadas com sucesso!");
     } catch (error: any) {
       toast.error("Erro ao atualizar configurações");
     }
   };
+
+  useEffect(() => {
+    if (config) {
+      // Update meta tags when configuration is initially loaded
+      updateMetaTags(
+        config.meta_title,
+        config.meta_description,
+        config.meta_author,
+        config.meta_image
+      );
+    }
+  }, [config]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -114,6 +135,7 @@ const Admin = () => {
             <TabsTrigger value="config">Navbar</TabsTrigger>
             <TabsTrigger value="footer">Rodapé</TabsTrigger>
             <TabsTrigger value="bottom-nav">Barra</TabsTrigger>
+            <TabsTrigger value="general">Geral</TabsTrigger>
             <TabsTrigger value="login">Login/Registro</TabsTrigger>
           </TabsList>
 
@@ -437,9 +459,9 @@ const Admin = () => {
               <h2 className="text-xl font-semibold mb-4">Redes Sociais</h2>
               
               <div>
-                <Label htmlFor="footer_social_facebook">Link do Facebook</Label>
+                <Label htmlFor="nav_social_facebook">Link do Facebook</Label>
                 <Input
-                  id="footer_social_facebook"
+                  id="nav_social_facebook"
                   type="url"
                   value={config.footer_social_facebook || ""}
                   onChange={(e) => setConfig({ ...config, footer_social_facebook: e.target.value })}
@@ -448,9 +470,9 @@ const Admin = () => {
               </div>
 
               <div>
-                <Label htmlFor="footer_social_instagram">Link do Instagram</Label>
+                <Label htmlFor="nav_social_instagram">Link do Instagram</Label>
                 <Input
-                  id="footer_social_instagram"
+                  id="nav_social_instagram"
                   type="url"
                   value={config.footer_social_instagram || ""}
                   onChange={(e) => setConfig({ ...config, footer_social_instagram: e.target.value })}
@@ -555,6 +577,260 @@ const Admin = () => {
                       onChange={(e) => setConfig({ ...config, bottom_nav_icon_color: e.target.value })}
                     />
                   </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <Button onClick={handleConfigUpdate}>
+                Salvar Configurações
+              </Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="general" className="bg-white rounded-lg shadow p-6 space-y-6">
+            <div>
+              <h2 className="text-xl font-semibold mb-4">Cores dos Textos de Autenticação</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <Label htmlFor="login_text_color">Cor do Texto "Conecte-se"</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="login_text_color"
+                      type="color"
+                      value={config.login_text_color}
+                      onChange={(e) => setConfig({ ...config, login_text_color: e.target.value })}
+                      className="w-20"
+                    />
+                    <Input
+                      type="text"
+                      value={config.login_text_color}
+                      onChange={(e) => setConfig({ ...config, login_text_color: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="signup_text_color">Cor do Texto "Inscreva-se"</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="signup_text_color"
+                      type="color"
+                      value={config.signup_text_color}
+                      onChange={(e) => setConfig({ ...config, signup_text_color: e.target.value })}
+                      className="w-20"
+                    />
+                    <Input
+                      type="text"
+                      value={config.signup_text_color}
+                      onChange={(e) => setConfig({ ...config, signup_text_color: e.target.value })}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h2 className="text-xl font-semibold mb-4">Configurações Meta Tags</h2>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="meta_title">Título da Página</Label>
+                  <Input
+                    id="meta_title"
+                    value={config.meta_title || ""}
+                    onChange={(e) => setConfig({ ...config, meta_title: e.target.value })}
+                    placeholder="vale-news-hub"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="meta_description">Descrição da Página</Label>
+                  <Textarea
+                    id="meta_description"
+                    value={config.meta_description || ""}
+                    onChange={(e) => setConfig({ ...config, meta_description: e.target.value })}
+                    placeholder="Descrição do seu site"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="meta_author">Autor</Label>
+                  <Input
+                    id="meta_author"
+                    value={config.meta_author || ""}
+                    onChange={(e) => setConfig({ ...config, meta_author: e.target.value })}
+                    placeholder="Nome do autor"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="meta_image">Link da Imagem de Compartilhamento (OG Image)</Label>
+                  <Input
+                    id="meta_image"
+                    value={config.meta_image || ""}
+                    onChange={(e) => setConfig({ ...config, meta_image: e.target.value })}
+                    placeholder="https://exemplo.com/imagem.jpg"
+                  />
+                  <p className="text-sm text-gray-500 mt-1">
+                    Esta imagem será exibida quando o site for compartilhado em redes sociais
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h2 className="text-xl font-semibold mb-4">Configurações Gerais</h2>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="theme_name">Tema</Label>
+                  <select
+                    id="theme_name"
+                    className="w-full border border-gray-300 rounded-md p-2"
+                    value={config.theme_name}
+                    onChange={(e) => setConfig({ ...config, theme_name: e.target.value })}
+                  >
+                    <option value="light">Claro</option>
+                    <option value="dark">Escuro</option>
+                  </select>
+                </div>
+
+                <div>
+                  <Label htmlFor="language">Idioma</Label>
+                  <select
+                    id="language"
+                    className="w-full border border-gray-300 rounded-md p-2"
+                    value={config.language || "pt-BR"}
+                    onChange={(e) => setConfig({ ...config, language: e.target.value })}
+                  >
+                    <option value="pt-BR">Português (Brasil)</option>
+                    <option value="en">English</option>
+                    <option value="es">Español</option>
+                  </select>
+                </div>
+
+                <div>
+                  <Label htmlFor="font_size">Tamanho da Fonte</Label>
+                  <select
+                    id="font_size"
+                    className="w-full border border-gray-300 rounded-md p-2"
+                    value={config.font_size || "medium"}
+                    onChange={(e) => setConfig({ ...config, font_size: e.target.value })}
+                  >
+                    <option value="small">Pequeno</option>
+                    <option value="medium">Médio</option>
+                    <option value="large">Grande</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="enable_dark_mode"
+                    checked={config.enable_dark_mode || false}
+                    onChange={(e) => setConfig({ ...config, enable_dark_mode: e.target.checked })}
+                    className="h-4 w-4"
+                  />
+                  <Label htmlFor="enable_dark_mode">Habilitar Modo Escuro</Label>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="high_contrast"
+                    checked={config.high_contrast || false}
+                    onChange={(e) => setConfig({ ...config, high_contrast: e.target.checked })}
+                    className="h-4 w-4"
+                  />
+                  <Label htmlFor="high_contrast">Alto Contraste</Label>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h2 className="text-xl font-semibold mb-4">Configurações de Localização</h2>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="location_city">Cidade</Label>
+                  <Input
+                    id="location_city"
+                    value={config.location_city || ""}
+                    onChange={(e) => setConfig({ ...config, location_city: e.target.value })}
+                    placeholder="São Paulo"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="location_state">Estado</Label>
+                  <Input
+                    id="location_state"
+                    value={config.location_state || ""}
+                    onChange={(e) => setConfig({ ...config, location_state: e.target.value })}
+                    placeholder="SP"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="location_country">País</Label>
+                  <Input
+                    id="location_country"
+                    value={config.location_country || ""}
+                    onChange={(e) => setConfig({ ...config, location_country: e.target.value })}
+                    placeholder="BR"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="location_lat">Latitude</Label>
+                  <Input
+                    id="location_lat"
+                    type="number"
+                    step="0.000001"
+                    value={config.location_lat || ""}
+                    onChange={(e) => setConfig({ ...config, location_lat: parseFloat(e.target.value) })}
+                    placeholder="-23.5505"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="location_lng">Longitude</Label>
+                  <Input
+                    id="location_lng"
+                    type="number"
+                    step="0.000001"
+                    value={config.location_lng || ""}
+                    onChange={(e) => setConfig({ ...config, location_lng: parseFloat(e.target.value) })}
+                    placeholder="-46.6333"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h2 className="text-xl font-semibold mb-4">Configurações do Clima</h2>
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="enable_weather"
+                    checked={config.enable_weather || false}
+                    onChange={(e) => setConfig({ ...config, enable_weather: e.target.checked })}
+                    className="h-4 w-4"
+                  />
+                  <Label htmlFor="enable_weather">Habilitar Previsão do Tempo</Label>
+                </div>
+
+                <div>
+                  <Label htmlFor="weather_api_key">Chave da API do Clima</Label>
+                  <Input
+                    id="weather_api_key"
+                    type="password"
+                    value={config.weather_api_key || ""}
+                    onChange={(e) => setConfig({ ...config, weather_api_key: e.target.value })}
+                    placeholder="Sua chave da API do clima"
+                  />
+                  <p className="text-sm text-gray-500 mt-1">
+                    Esta chave é necessária para acessar os dados de previsão do tempo
+                  </p>
                 </div>
               </div>
             </div>

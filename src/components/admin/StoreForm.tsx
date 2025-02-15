@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -73,15 +72,9 @@ export const StoreForm = ({ initialData, onSubmit, onCancel }: StoreFormProps) =
       const { data, error } = await supabase
         .from("categories")
         .select("*")
-        .eq("page_type", "stores")
-        .order("name");
+        .eq("page_type", "stores");
 
-      if (error) {
-        console.error("Error fetching categories:", error);
-        return;
-      }
-
-      if (data) {
+      if (!error && data) {
         setCategories(data);
       }
     };
@@ -119,18 +112,7 @@ export const StoreForm = ({ initialData, onSubmit, onCancel }: StoreFormProps) =
             </SelectTrigger>
             <SelectContent>
               {categories.map((category) => (
-                <SelectItem 
-                  key={category.id} 
-                  value={category.id}
-                  className="flex items-center gap-2"
-                >
-                  <div 
-                    className="w-3 h-3 rounded-full" 
-                    style={{ 
-                      backgroundColor: category.background_color || '#000000',
-                      opacity: 0.7
-                    }}
-                  />
+                <SelectItem key={category.id} value={category.id}>
                   {category.name}
                 </SelectItem>
               ))}
