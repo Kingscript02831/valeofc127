@@ -278,15 +278,15 @@ const AdminNews = () => {
                   <Input
                     id="button_color"
                     type="color"
-                    value={newNews.button_color || "#9b87f5"}
+                    value={newNews.button_color || "#000000"}
                     onChange={(e) => setNewNews({ ...newNews, button_color: e.target.value })}
                     className="w-20"
                   />
                   <Input
                     type="text"
-                    value={newNews.button_color || "#9b87f5"}
+                    value={newNews.button_color || "#000000"}
                     onChange={(e) => setNewNews({ ...newNews, button_color: e.target.value })}
-                    placeholder="#9b87f5"
+                    placeholder="#000000"
                   />
                 </div>
               </div>
