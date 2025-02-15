@@ -97,16 +97,16 @@ const NewsCard = ({
   return (
     <Card className="overflow-hidden transition-transform hover:scale-[1.02]">
       {image && (
-        <div className="relative h-48">
+        <div className="relative">
           <img
             src={image}
             alt={title}
-            className="w-full h-full object-cover"
+            className="w-full object-contain"
           />
         </div>
       )}
       {video && (
-        <div className="relative h-48">
+        <div className="relative aspect-video">
           <iframe
             src={getEmbedUrl(video)}
             title={title}
@@ -177,4 +177,3 @@ const NewsCard = ({
 };
 
 export default NewsCard;
-
