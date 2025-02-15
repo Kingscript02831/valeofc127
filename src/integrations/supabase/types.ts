@@ -143,6 +143,7 @@ export type Database = {
           event_date: string
           event_time: string
           file_metadata: Json | null
+          file_path: string | null
           file_paths: string[] | null
           files_metadata: Json[] | null
           id: string
@@ -173,6 +174,7 @@ export type Database = {
           event_date: string
           event_time: string
           file_metadata?: Json | null
+          file_path?: string | null
           file_paths?: string[] | null
           files_metadata?: Json[] | null
           id?: string
@@ -203,6 +205,7 @@ export type Database = {
           event_date?: string
           event_time?: string
           file_metadata?: Json | null
+          file_path?: string | null
           file_paths?: string[] | null
           files_metadata?: Json[] | null
           id?: string

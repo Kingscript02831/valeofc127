@@ -1,10 +1,11 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { Database } from "@/integrations/supabase/types";
+import type { Database } from "@/types/supabase";
 
 type Event = Database['public']['Tables']['events']['Row'];
 type Category = Database['public']['Tables']['categories']['Row'];
@@ -27,23 +28,11 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
     images: [],
     location: "",
     maps_url: "",
-    url_maps_events: "",
-    numero_whatsapp_events: "",
     entrance_fee: "",
     video_url: "",
     button_color: "#9b87f5",
     button_secondary_color: "#7E69AB",
     category_id: "",
-    owner_name: "",
-    phone: "",
-    website: "",
-    whatsapp: "",
-    social_media: null,
-    user_id: null,
-    additional_photos: [],
-    file_paths: [],
-    file_metadata: null,
-    files_metadata: null
   });
 
   const [newImageUrl, setNewImageUrl] = useState("");
@@ -125,6 +114,17 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
       </div>
 
       <div>
+        <Label htmlFor="end_time">Horário de Término</Label>
+        <Input
+          id="end_time"
+          type="time"
+          value={eventData.end_time}
+          onChange={(e) => setEventData({ ...eventData, end_time: e.target.value })}
+          required
+        />
+      </div>
+
+      <div>
         <Label htmlFor="category">Categoria</Label>
         <Select
           value={eventData.category_id || ""}
@@ -201,23 +201,13 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
       </div>
 
       <div>
-        <Label htmlFor="url_maps_events">Link do Google Maps do Evento</Label>
+        <Label htmlFor="maps_url">Link do Google Maps</Label>
         <Input
-          id="url_maps_events"
+          id="maps_url"
           type="url"
-          value={eventData.url_maps_events || ""}
-          onChange={(e) => setEventData({ ...eventData, url_maps_events: e.target.value })}
+          value={eventData.maps_url || ""}
+          onChange={(e) => setEventData({ ...eventData, maps_url: e.target.value })}
           placeholder="https://maps.google.com/..."
-        />
-      </div>
-
-      <div>
-        <Label htmlFor="numero_whatsapp_events">WhatsApp do Evento</Label>
-        <Input
-          id="numero_whatsapp_events"
-          value={eventData.numero_whatsapp_events || ""}
-          onChange={(e) => setEventData({ ...eventData, numero_whatsapp_events: e.target.value })}
-          placeholder="+55 (11) 99999-9999"
         />
       </div>
 
