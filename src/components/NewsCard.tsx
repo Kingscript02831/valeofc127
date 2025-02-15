@@ -80,23 +80,17 @@ const NewsCard = ({
 
     if (!postId) return null;
 
-    // URL corrigida para funcionar com posts e reels
-    const embedUrl = `https://www.instagram.com/${type === 'video' ? 'reel' : 'p'}/${postId}/embed/`;
+    const embedUrl = `https://www.instagram.com/${type === 'video' ? 'reel' : 'p'}/${postId}/embed`;
     
     return (
-      <div className="relative w-full overflow-hidden" style={{ paddingTop: '177.77%' }}>
-        <iframe
-          src={embedUrl}
-          className="absolute top-0 left-0 w-full h-full"
-          style={{
-            margin: '-54px 0px -32px 0px'
-          }}
-          frameBorder="0"
-          scrolling="no"
-          allowTransparency
-          allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-        />
-      </div>
+      <iframe
+        src={embedUrl}
+        className="w-full aspect-square"
+        frameBorder="0"
+        scrolling="no"
+        allowTransparency
+        allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+      />
     );
   };
 
@@ -122,11 +116,11 @@ const NewsCard = ({
           />
         </div>
       )}
-      {/* Instagram Media Section */}
+      {/* Instagram Media Section - Moved to top */}
       {instagramMedia && instagramMedia.length > 0 && (
         <div className="space-y-4">
           {instagramMedia.map((media, index) => (
-            <div key={index} className="overflow-hidden">
+            <div key={index}>
               {getInstagramEmbed(media.url, media.type)}
             </div>
           ))}
