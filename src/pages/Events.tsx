@@ -85,7 +85,6 @@ export default function Events() {
         
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {loading ? (
-            // Mostrar múltiplos skeletons durante o carregamento
             Array(6).fill(0).map((_, index) => (
               <LoadingEventCard key={index} />
             ))
@@ -101,7 +100,7 @@ export default function Events() {
                   eventDate={event.event_date}
                   eventTime={event.event_time}
                   endTime={event.end_time}
-                  image={event.image}
+                  image={event.file_path || event.image} {/* Updated to check both file_path and image */}
                   images={event.images || []}
                   location={event.location}
                   mapsUrl={event.url_maps_events}
