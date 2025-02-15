@@ -104,7 +104,7 @@ const AdminNews = () => {
         category_id: null,
         image: null,
         video: null,
-        button_color: "#9b87f5",
+        button_color: "#000000",
         instagram_media: [],
       });
       fetchNews();
