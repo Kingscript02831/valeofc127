@@ -24,6 +24,7 @@ import AdminCategories from "./pages/AdminCategories";
 import AdminPermissions from "./pages/AdminPermissions";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound"; 
+import ResetPassword from "./pages/ResetPassword";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +48,7 @@ const App: React.FC = () => {
                   <Route path="/signup" element={<SignUp />} />
                   <Route path="/perfil" element={<Profile />} />
                   <Route path="/config" element={<Config />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/admin" element={<Admin />}>    
                     <Route path="lugares" element={<AdminPlaces />} />
                     <Route path="eventos" element={<AdminEvents />} />
@@ -54,7 +56,6 @@ const App: React.FC = () => {
                     <Route path="noticias" element={<AdminNews />} />
                     <Route path="categorias" element={<AdminCategories />} />
                     <Route path="permissoes" element={<AdminPermissions />} />
-                    
                   </Route> 
                   <Route path="*" element={<NotFound />} />
                 </Routes>
