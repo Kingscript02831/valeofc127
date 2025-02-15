@@ -76,7 +76,12 @@ export const StoreForm = ({ initialData, onSubmit, onCancel }: StoreFormProps) =
         .eq("page_type", "stores")
         .order("name");
 
-      if (!error && data) {
+      if (error) {
+        console.error("Error fetching categories:", error);
+        return;
+      }
+
+      if (data) {
         setCategories(data);
       }
     };
