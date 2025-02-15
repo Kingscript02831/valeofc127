@@ -1,3 +1,4 @@
+
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Card } from "@/components/ui/card";
@@ -61,7 +62,7 @@ const NewsCard = ({
   };
 
   return (
-    <Card className="overflow-hidden transition-transform hover:scale-[1.02] bg-card">
+    <Card className="overflow-hidden transition-transform hover:scale-[1.02]">
       {image && (
         <div className="relative h-48">
           <img

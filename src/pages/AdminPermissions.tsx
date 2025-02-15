@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -8,22 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Search, Plus } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
-
-const AVAILABLE_PERMISSIONS = [
-  { value: "admin", label: "Admin (Acesso Total)" },
-  { value: "editor", label: "Editor (Notícias, Eventos, Lugares, Lojas)" },
-  { value: "viewer", label: "Viewer (Apenas Visualização)" },
-];
-
-const PAGE_PERMISSIONS = {
-  admin: ["/admin", "/admin/noticias", "/admin/eventos", "/admin/lugares", "/admin/lojas", "/admin/categorias", "/admin/permissoes", "/config"],
-  editor: ["/admin/noticias", "/admin/eventos", "/admin/lugares", "/admin/lojas"],
-  viewer: ["/admin"]
-};
 
 const AdminPermissions = () => {
-  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [newUserEmail, setNewUserEmail] = useState("");
   const [newPermission, setNewPermission] = useState("admin");
@@ -54,54 +39,24 @@ const AdminPermissions = () => {
   const handleAddPermission = async () => {
     try {
       // Primeiro, busca o usuário pelo email
-      const { data: user, error: userError } = await supabase
-        .from('profiles')
+      const { data: userData, error: userError } = await supabase
+        .from('auth.users')
         .select('id')
         .eq('email', newUserEmail)
         .single();
 
-      if (userError) {
-        toast({
-          title: "Erro",
-          description: "Usuário não encontrado",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Verifica se já existe uma permissão ativa para este usuário
-      const { data: existingPermission } = await supabase
-        .from('admin_permissions')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('is_active', true)
-        .single();
-
-      if (existingPermission) {
-        toast({
-          title: "Erro",
-          description: "Este usuário já possui uma permissão ativa",
-          variant: "destructive",
-        });
-        return;
-      }
+      if (userError) throw userError;
 
       // Adiciona a permissão para o usuário
       const { error: permissionError } = await supabase
         .from('admin_permissions')
         .insert({
-          user_id: user.id,
+          user_id: userData.id,
           permission: newPermission,
-          is_active: true,
-          granted_at: new Date().toISOString()
+          is_active: true
         });
 
       if (permissionError) throw permissionError;
-
-      toast({
-        title: "Sucesso",
-        description: "Permissão adicionada com sucesso",
-      });
 
       // Limpa o formulário e atualiza a lista
       setNewUserEmail("");
@@ -109,37 +64,6 @@ const AdminPermissions = () => {
       refetch();
     } catch (error) {
       console.error("Erro ao adicionar permissão:", error);
-      toast({
-        title: "Erro",
-        description: "Erro ao adicionar permissão",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleRevokePermission = async (userId: string) => {
-    try {
-      const { error } = await supabase
-        .from('admin_permissions')
-        .update({ is_active: false })
-        .eq('user_id', userId)
-        .eq('is_active', true);
-
-      if (error) throw error;
-
-      toast({
-        title: "Sucesso",
-        description: "Permissão revogada com sucesso",
-      });
-
-      refetch();
-    } catch (error) {
-      console.error("Erro ao revogar permissão:", error);
-      toast({
-        title: "Erro",
-        description: "Erro ao revogar permissão",
-        variant: "destructive",
-      });
     }
   };
 
@@ -161,7 +85,7 @@ const AdminPermissions = () => {
   }
 
   return (
-    <Card className="bg-card">
+    <Card>
       <CardHeader>
         <CardTitle>Gerenciamento de Permissões</CardTitle>
       </CardHeader>
@@ -175,7 +99,7 @@ const AdminPermissions = () => {
                 <Search className="absolute left-2 top-3 h-4 w-4 text-gray-500" />
                 <Input
                   id="search"
-                  placeholder="Buscar por email..."
+                  placeholder="Buscar por email ou ID..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-8"
@@ -204,11 +128,9 @@ const AdminPermissions = () => {
                 onChange={(e) => setNewPermission(e.target.value)}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {AVAILABLE_PERMISSIONS.map((permission) => (
-                  <option key={permission.value} value={permission.value}>
-                    {permission.label}
-                  </option>
-                ))}
+                <option value="admin">admin</option>
+                <option value="editor">editor</option>
+                <option value="viewer">viewer</option>
               </select>
             </div>
             <Button onClick={handleAddPermission} className="flex gap-2">
@@ -220,36 +142,20 @@ const AdminPermissions = () => {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>ID do Usuário</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Permissão</TableHead>
-                <TableHead>Páginas com Acesso</TableHead>
                 <TableHead>Data de Concessão</TableHead>
-                <TableHead>Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {permissions?.map((permission) => (
                 <TableRow key={permission.id}>
+                  <TableCell className="font-mono">{permission.user_id}</TableCell>
                   <TableCell>{permission.users?.email}</TableCell>
-                  <TableCell>
-                    {AVAILABLE_PERMISSIONS.find(p => p.value === permission.permission)?.label || permission.permission}
-                  </TableCell>
-                  <TableCell className="max-w-xs">
-                    <div className="text-xs text-muted-foreground">
-                      {PAGE_PERMISSIONS[permission.permission as keyof typeof PAGE_PERMISSIONS]?.join(", ")}
-                    </div>
-                  </TableCell>
+                  <TableCell>{permission.permission}</TableCell>
                   <TableCell>
                     {new Date(permission.granted_at).toLocaleDateString("pt-BR")}
-                  </TableCell>
-                  <TableCell>
-                    <Button 
-                      variant="destructive" 
-                      size="sm"
-                      onClick={() => handleRevokePermission(permission.user_id)}
-                    >
-                      Revogar
-                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
