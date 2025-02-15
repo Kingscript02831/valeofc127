@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 const ResetPassword = () => {
   const navigate = useNavigate();
@@ -28,7 +29,8 @@ const ResetPassword = () => {
         description: "Verifique sua caixa de entrada para redefinir sua senha",
       });
 
-      navigate("/login");
+      // Redireciona após 3 segundos
+      setTimeout(() => navigate("/login"), 3000);
     } catch (error: any) {
       toast({
         title: "Erro ao enviar email",
@@ -42,49 +44,50 @@ const ResetPassword = () => {
 
   return (
     <div className="container max-w-md mx-auto p-4 min-h-screen flex flex-col justify-center">
-      <div className="space-y-6 bg-card p-6 rounded-lg shadow-lg">
-        <div className="space-y-2 text-center">
-          <h1 className="text-2xl font-bold">Recuperar Senha</h1>
-          <p className="text-muted-foreground">
+      <Card>
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl font-bold">Recuperar Senha</CardTitle>
+          <CardDescription>
             Digite seu email para receber instruções de recuperação
-          </p>
-        </div>
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleResetPassword} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-sm font-medium">
+                Email
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="seu@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full"
+              />
+            </div>
 
-        <form onSubmit={handleResetPassword} className="space-y-4">
-          <div className="space-y-2">
-            <label htmlFor="email" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-              Email
-            </label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="seu@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={loading}
-          >
-            {loading ? "Enviando..." : "Enviar email de recuperação"}
-          </Button>
-
-          <p className="text-center text-sm text-muted-foreground">
-            Lembrou sua senha?{" "}
             <Button
-              variant="link"
-              className="p-0 h-auto"
-              onClick={() => navigate("/login")}
+              type="submit"
+              className="w-full"
+              disabled={loading}
             >
-              Fazer login
+              {loading ? "Enviando..." : "Enviar email de recuperação"}
             </Button>
-          </p>
-        </form>
-      </div>
+
+            <div className="text-center">
+              <Button
+                variant="link"
+                className="text-sm"
+                onClick={() => navigate("/login")}
+              >
+                Voltar para o login
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 };
