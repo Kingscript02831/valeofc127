@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import SubNav from "@/components/SubNav";
 import BottomNav from "@/components/BottomNav";
-import InstallPWA from "../components/InstallPWA";
+import InstallPWA from "@/components/InstallPWA";
 
 interface Notification {
   id: string;
