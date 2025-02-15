@@ -100,7 +100,7 @@ export default function Events() {
                   eventDate={event.event_date}
                   eventTime={event.event_time}
                   endTime={event.end_time}
-                  image={event.file_path || event.image} {/* Updated to check both file_path and image */}
+                  image={event.file_path || event.image}
                   images={event.images || []}
                   location={event.location}
                   mapsUrl={event.url_maps_events}
