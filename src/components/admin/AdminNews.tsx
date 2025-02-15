@@ -365,7 +365,7 @@ const AdminNews = () => {
                     type="text"
                     value={editingNews.button_color || "#9b87f5"}
                     onChange={(e) => setEditingNews({ ...editingNews, button_color: e.target.value })}
-                    placeholder="#9b87f5"
+                    placeholder="#000000"
                   />
                 </div>
               </div>
