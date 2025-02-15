@@ -80,17 +80,19 @@ const NewsCard = ({
 
     if (!postId) return null;
 
-    const embedUrl = `https://www.instagram.com/${type === 'video' ? 'reel' : 'p'}/${postId}/embed`;
+    const embedUrl = `https://www.instagram.com/${type === 'video' ? 'reel' : 'p'}/${postId}/embed/captioned`;
     
     return (
-      <iframe
-        src={embedUrl}
-        className="w-full aspect-square"
-        frameBorder="0"
-        scrolling="no"
-        allowTransparency
-        allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-      />
+      <div className="relative w-full" style={{ paddingTop: '125%' }}>
+        <iframe
+          src={embedUrl}
+          className="absolute top-0 left-0 w-full h-full"
+          frameBorder="0"
+          scrolling="no"
+          allowTransparency
+          allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+        />
+      </div>
     );
   };
 
