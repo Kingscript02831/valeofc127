@@ -1,10 +1,14 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
 import type { PlaceFormData, Place } from "../../types/places";
+import type { Database } from "../../types/supabase";
+
+type Category = Database['public']['Tables']['categories']['Row'];
 
 interface PlaceFormProps {
   initialData?: Place;
@@ -25,11 +29,14 @@ export const PlaceForm = ({ initialData, onSubmit, onCancel }: PlaceFormProps) =
     whatsapp: "",
     website: "",
     image: "",
+    category_id: "",
     social_media: {
       facebook: "",
       instagram: "",
     },
   });
+
+  const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
     if (initialData) {
@@ -37,14 +44,15 @@ export const PlaceForm = ({ initialData, onSubmit, onCancel }: PlaceFormProps) =
         name: initialData.name,
         description: initialData.description,
         address: initialData.address,
-        owner_name: initialData.owner_name,
-        opening_hours: initialData.opening_hours as string,
-        entrance_fee: initialData.entrance_fee,
-        maps_url: initialData.maps_url,
-        phone: initialData.phone,
-        whatsapp: initialData.whatsapp,
-        website: initialData.website,
-        image: initialData.image,
+        owner_name: initialData.owner_name || "",
+        opening_hours: initialData.opening_hours as string || "",
+        entrance_fee: initialData.entrance_fee || "",
+        maps_url: initialData.maps_url || "",
+        phone: initialData.phone || "",
+        whatsapp: initialData.whatsapp || "",
+        website: initialData.website || "",
+        image: initialData.image || "",
+        category_id: initialData.category_id || "",
         social_media: initialData.social_media || {
           facebook: "",
           instagram: "",
@@ -52,6 +60,21 @@ export const PlaceForm = ({ initialData, onSubmit, onCancel }: PlaceFormProps) =
       });
     }
   }, [initialData]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const { data, error } = await supabase
+        .from("categories")
+        .select("*")
+        .eq("page_type", "places");
+
+      if (!error && data) {
+        setCategories(data);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,6 +94,26 @@ export const PlaceForm = ({ initialData, onSubmit, onCancel }: PlaceFormProps) =
             required
           />
         </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="category">Categoria</Label>
+          <Select
+            value={formData.category_id}
+            onValueChange={(value) => setFormData(prev => ({ ...prev, category_id: value }))}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione uma categoria" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map((category) => (
+                <SelectItem key={category.id} value={category.id}>
+                  {category.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
         <div className="space-y-2">
           <Label htmlFor="address">Endereço *</Label>
           <Input

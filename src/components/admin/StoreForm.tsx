@@ -1,10 +1,14 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
 import type { StoreFormData, Store } from "../../types/stores";
+import type { Database } from "../../types/supabase";
+
+type Category = Database['public']['Tables']['categories']['Row'];
 
 interface StoreFormProps {
   initialData?: Store;
@@ -28,11 +32,14 @@ export const StoreForm = ({ initialData, onSubmit, onCancel }: StoreFormProps) =
     whatsapp: "",
     website: "",
     image: "",
+    category_id: "",
     social_media: {
       facebook: "",
       instagram: "",
     },
   });
+
+  const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
     if (initialData) {
@@ -44,13 +51,14 @@ export const StoreForm = ({ initialData, onSubmit, onCancel }: StoreFormProps) =
         state: initialData.state || "",
         postal_code: initialData.postal_code || "",
         owner_name: initialData.owner_name || "",
-        opening_hours: initialData.opening_hours as string || "",
+        opening_hours: initialData.opening_hours || "",
         entrance_fee: initialData.entrance_fee || "",
         maps_url: initialData.maps_url || "",
         phone: initialData.phone || "",
         whatsapp: initialData.whatsapp || "",
         website: initialData.website || "",
         image: initialData.image || "",
+        category_id: initialData.category_id || "",
         social_media: initialData.social_media || {
           facebook: "",
           instagram: "",
@@ -58,6 +66,21 @@ export const StoreForm = ({ initialData, onSubmit, onCancel }: StoreFormProps) =
       });
     }
   }, [initialData]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const { data, error } = await supabase
+        .from("categories")
+        .select("*")
+        .eq("page_type", "stores");
+
+      if (!error && data) {
+        setCategories(data);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,6 +100,26 @@ export const StoreForm = ({ initialData, onSubmit, onCancel }: StoreFormProps) =
             required
           />
         </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="category">Categoria</Label>
+          <Select
+            value={formData.category_id}
+            onValueChange={(value) => setFormData(prev => ({ ...prev, category_id: value }))}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione uma categoria" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map((category) => (
+                <SelectItem key={category.id} value={category.id}>
+                  {category.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
         <div className="space-y-2">
           <Label htmlFor="address">Endereço *</Label>
           <Input
