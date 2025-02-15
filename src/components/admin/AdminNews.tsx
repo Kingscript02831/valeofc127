@@ -357,13 +357,13 @@ const AdminNews = () => {
                   <Input
                     id="edit-button_color"
                     type="color"
-                    value={editingNews.button_color || "#9b87f5"}
+                    value={editingNews.button_color || "#000000"}
                     onChange={(e) => setEditingNews({ ...editingNews, button_color: e.target.value })}
                     className="w-20"
                   />
                   <Input
                     type="text"
-                    value={editingNews.button_color || "#9b87f5"}
+                    value={editingNews.button_color || "#000000"}
                     onChange={(e) => setEditingNews({ ...editingNews, button_color: e.target.value })}
                     placeholder="#000000"
                   />
