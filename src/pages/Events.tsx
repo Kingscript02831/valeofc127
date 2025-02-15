@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "../integrations/supabase/client";
 import type { Database } from "../integrations/supabase/types";
@@ -85,7 +84,6 @@ export default function Events() {
         
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {loading ? (
-            // Mostrar múltiplos skeletons durante o carregamento
             Array(6).fill(0).map((_, index) => (
               <LoadingEventCard key={index} />
             ))
@@ -102,9 +100,10 @@ export default function Events() {
                   eventTime={event.event_time}
                   endTime={event.end_time}
                   image={event.image}
+                  file_path={event.file_path}
                   images={event.images || []}
                   location={event.location}
-                  mapsUrl={event.url_maps_events}
+                  mapsUrl={event.maps_url}
                   entranceFee={event.entrance_fee}
                   createdAt={event.created_at}
                   buttonColor={event.button_color}
