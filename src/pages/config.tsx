@@ -134,6 +134,7 @@ const Admin = () => {
             <TabsTrigger value="footer">Rodapé</TabsTrigger>
             <TabsTrigger value="bottom-nav">Barra</TabsTrigger>
             <TabsTrigger value="login">Login/Registro</TabsTrigger>
+            <TabsTrigger value="pwa">PWA</TabsTrigger>
           </TabsList>
 
           <TabsContent value="config" className="bg-white rounded-lg shadow p-6 space-y-6">
@@ -625,6 +626,84 @@ const Admin = () => {
                   </div>
                 </div>
               </div>
+            </div>
+
+            <div className="flex justify-end">
+              <Button onClick={handleConfigUpdate}>
+                Salvar Configurações
+              </Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="pwa" className="bg-white rounded-lg shadow p-6 space-y-6">
+            <div>
+              <h2 className="text-xl font-semibold mb-4">Configurações do PWA</h2>
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <Label htmlFor="meta_title">Nome do App</Label>
+                    <Input
+                      id="meta_title"
+                      value={config.meta_title}
+                      onChange={(e) => setConfig({ ...config, meta_title: e.target.value })}
+                      placeholder="Nome do seu aplicativo"
+                    />
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Nome que aparecerá na tela inicial do dispositivo
+                    </p>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="meta_description">Descrição do App</Label>
+                    <Input
+                      id="meta_description"
+                      value={config.meta_description}
+                      onChange={(e) => setConfig({ ...config, meta_description: e.target.value })}
+                      placeholder="Descrição do seu aplicativo"
+                    />
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Breve descrição do aplicativo para as lojas de apps
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <Label htmlFor="meta_image">Ícone do App</Label>
+                    <Input
+                      id="meta_image"
+                      value={config.meta_image}
+                      onChange={(e) => setConfig({ ...config, meta_image: e.target.value })}
+                      placeholder="URL do ícone do app (512x512px)"
+                    />
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Ícone principal do app (recomendado: 512x512 pixels, formato PNG)
+                    </p>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="meta_author">Desenvolvedor/Empresa</Label>
+                    <Input
+                      id="meta_author"
+                      value={config.meta_author}
+                      onChange={(e) => setConfig({ ...config, meta_author: e.target.value })}
+                      placeholder="Nome do desenvolvedor ou empresa"
+                    />
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Nome que aparecerá como desenvolvedor do app
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4">
+              <h3 className="font-semibold text-yellow-800 mb-2">Importante</h3>
+              <p className="text-sm text-yellow-700">
+                Após atualizar as configurações do PWA, pode ser necessário limpar o cache do navegador
+                para que as alterações sejam aplicadas. Certifique-se de que o ícone fornecido existe
+                e está acessível publicamente.
+              </p>
             </div>
 
             <div className="flex justify-end">

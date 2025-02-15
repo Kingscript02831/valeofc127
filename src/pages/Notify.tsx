@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bell, CheckCircle, Clock, ChevronRight, Calendar, Newspaper, Trash2 } from "lucide-react";
@@ -14,6 +13,7 @@ import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import SubNav from "@/components/SubNav";
 import BottomNav from "@/components/BottomNav";
+import InstallPWA from "../components/InstallPWA";
 
 interface Notification {
   id: string;
@@ -35,7 +35,6 @@ const Notify = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
-  // Carregar estado das notificações
   useEffect(() => {
     const loadNotificationPreference = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -54,7 +53,6 @@ const Notify = () => {
     loadNotificationPreference();
   }, []);
 
-  // Toggle notificações
   const toggleNotifications = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -87,7 +85,6 @@ const Notify = () => {
     }
   };
 
-  // Check for authentication status
   useEffect(() => {
     const checkSession = async () => {
       try {
@@ -105,7 +102,6 @@ const Notify = () => {
     checkSession();
   }, [navigate]);
 
-  // Fetch notifications
   const { data: notifications = [], refetch } = useQuery({
     queryKey: ["notifications"],
     queryFn: async () => {
@@ -132,12 +128,10 @@ const Notify = () => {
         throw error;
       }
 
-      // Update local cache
       queryClient.setQueryData<Notification[]>(["notifications"], (old) =>
         old?.filter((n) => n.id !== id)
       );
 
-      // Also invalidate the unreadNotifications query
       queryClient.invalidateQueries({ queryKey: ["unreadNotifications"] });
 
       toast.success("Notificação excluída com sucesso", {
@@ -162,15 +156,12 @@ const Notify = () => {
 
       if (error) throw error;
 
-      // Update local cache
       queryClient.setQueryData<Notification[]>(["notifications"], (old) =>
         old?.map((n) => (n.id === id ? { ...n, read: true } : n))
       );
 
-      // Also invalidate the unreadNotifications query
       queryClient.invalidateQueries({ queryKey: ["unreadNotifications"] });
 
-      // Navigate if there's a reference_id
       const notification = notifications.find(n => n.id === id);
       if (notification?.reference_id) {
         if (notification.type === 'event') {
@@ -196,12 +187,10 @@ const Notify = () => {
 
       if (error) throw error;
 
-      // Update local cache
       queryClient.setQueryData<Notification[]>(["notifications"], (old) =>
         old?.map((n) => ({ ...n, read: true }))
       );
 
-      // Also invalidate the unreadNotifications query
       queryClient.invalidateQueries({ queryKey: ["unreadNotifications"] });
 
       toast.success("Todas as notificações foram marcadas como lidas", {
@@ -252,6 +241,7 @@ const Notify = () => {
             <Badge variant="secondary" className="ml-2">
               {notifications.filter(n => !n.read).length} não lidas
             </Badge>
+            <InstallPWA />
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center space-x-2">
