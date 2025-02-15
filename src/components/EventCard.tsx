@@ -1,6 +1,7 @@
+
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Calendar, ChevronDown, ChevronUp, Clock, MapPin, ChevronLeft, ChevronRight, X, Timer, ExternalLink, Ticket, Youtube } from "lucide-react";
+import { Calendar, ChevronDown, ChevronUp, Clock, MapPin, ChevronLeft, ChevronRight, X, Timer, ExternalLink, Ticket } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
@@ -35,7 +36,7 @@ interface EventCardProps {
 }
 
 type MediaItem = {
-  type: 'image' | 'video';
+  type: "image" | "video";
   url: string;
 };
 
@@ -65,10 +66,10 @@ const EventCard = ({
   const [eventStatus, setEventStatus] = useState<'not_started' | 'in_progress' | 'ended'>('not_started');
 
   const allMedia: MediaItem[] = [
-    ...(image ? [{ type: 'image', url: image }] : []),
-    ...(images?.map(url => ({ type: 'image', url })) || []),
-    ...(videoUrl ? [{ type: 'video', url: videoUrl }] : []),
-    ...(video_urls?.map(url => ({ type: 'video', url })) || [])
+    ...(image ? [{ type: "image" as const, url: image }] : []),
+    ...(images?.map(url => ({ type: "image" as const, url })) || []),
+    ...(videoUrl ? [{ type: "video" as const, url: videoUrl }] : []),
+    ...(video_urls?.map(url => ({ type: "video" as const, url })) || [])
   ];
 
   const hasMultipleMedia = allMedia.length > 1;
@@ -115,7 +116,6 @@ const EventCard = ({
         
         const now = new Date();
 
-        // Verifica o status do evento
         if (now < startDate) {
           setEventStatus('not_started');
         } else if (now >= startDate && now <= endDate) {
@@ -132,7 +132,6 @@ const EventCard = ({
           return;
         }
 
-        // Se o evento não começou, mostra contagem regressiva para o início
         if (eventStatus === 'not_started') {
           const difference = startDate.getTime() - now.getTime();
           const days = Math.floor(difference / (1000 * 60 * 60 * 24));
@@ -292,17 +291,6 @@ const EventCard = ({
               >
                 <ExternalLink className="h-4 w-4" />
                 <span>Ver no Google Maps</span>
-              </a>
-            )}
-            {videoUrl && (
-              <a
-                href={videoUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 text-sm text-red-600 hover:text-red-800"
-              >
-                <Youtube className="h-4 w-4" />
-                <span>Assistir vídeo</span>
               </a>
             )}
             {entranceFee && (
