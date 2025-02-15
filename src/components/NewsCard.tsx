@@ -97,23 +97,22 @@ const NewsCard = ({
   return (
     <Card className="overflow-hidden transition-transform hover:scale-[1.02]">
       {image && (
-        <div className="relative w-full">
+        <div className="relative">
           <img
             src={image}
             alt={title}
-            className="w-full h-full object-cover"
-            style={{ maxHeight: '500px' }}
+            className="w-full object-contain"
           />
         </div>
       )}
       {video && (
-        <div className="relative w-full" style={{ minHeight: '400px' }}>
+        <div className="relative aspect-video">
           <iframe
             src={getEmbedUrl(video)}
             title={title}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
-            className="w-full h-full absolute top-0 left-0"
+            className="w-full h-full"
           />
         </div>
       )}
@@ -178,4 +177,3 @@ const NewsCard = ({
 };
 
 export default NewsCard;
-
