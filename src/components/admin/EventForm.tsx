@@ -31,8 +31,8 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
     entrance_fee: "",
     video_url: "",
     video_urls: [],
-    button_color: "#9b87f5",
-    button_secondary_color: "#7E69AB",
+    button_color: "#000000",
+    button_secondary_color: "#000000",
     category_id: "",
   });
 
