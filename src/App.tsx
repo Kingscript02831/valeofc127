@@ -49,7 +49,7 @@ const App: React.FC = () => {
                   <Route path="/perfil" element={<Profile />} />
                   <Route path="/config" element={<Config />} />
                   <Route path="/admin" element={<Admin />}>
-                  <Route path="/ResetPassword" element={<ResetPassword />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
                     <Route path="lugares" element={<AdminPlaces />} />
                     <Route path="eventos" element={<AdminEvents />} />
                     <Route path="lojas" element={<AdminStores />} />
