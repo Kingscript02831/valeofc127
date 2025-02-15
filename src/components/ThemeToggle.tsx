@@ -10,7 +10,12 @@ import {
 import { useTheme } from "./ThemeProvider"
 import { useSiteConfig } from "../hooks/useSiteConfig"
 
-export function ThemeToggle() {
+interface ThemeToggleProps {
+  variant?: "default" | "ghost" | "outline";
+  size?: "default" | "sm" | "lg" | "icon";
+}
+
+export function ThemeToggle({ variant = "ghost", size = "icon" }: ThemeToggleProps) {
   const { setTheme } = useTheme()
   const { data: config } = useSiteConfig()
 
@@ -18,8 +23,8 @@ export function ThemeToggle() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button 
-          variant="ghost" 
-          size="icon" 
+          variant={variant}
+          size={size}
           className="transition-all duration-300 ease-out hover:scale-110 rounded-full p-2 hover:bg-primary/20"
           style={{ 
             color: config?.text_color,
