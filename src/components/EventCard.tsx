@@ -18,6 +18,7 @@ interface EventCardProps {
   eventTime: string;
   endTime: string;
   image?: string;
+  file_path?: string;
   images?: string[];
   location?: string;
   mapsUrl?: string;
