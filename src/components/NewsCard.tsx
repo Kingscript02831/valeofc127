@@ -7,19 +7,26 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
+interface InstagramMedia {
+  url: string;
+  type: 'post' | 'video';
+}
+
 interface NewsCardProps {
   title: string;
   content: string;
   image?: string;
   video?: string;
+  date?: string;
   createdAt?: string;
   buttonColor?: string;
   buttonSecondaryColor?: string;
   category?: {
-    id: string;
     name: string;
+    slug?: string;
     background_color?: string;
   } | null;
+  instagramMedia?: InstagramMedia[];
 }
 
 const NewsCard = ({
@@ -30,7 +37,8 @@ const NewsCard = ({
   createdAt,
   buttonColor,
   buttonSecondaryColor,
-  category
+  category,
+  instagramMedia = []
 }: NewsCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -59,6 +67,31 @@ const NewsCard = ({
     }
     
     return url;
+  };
+
+  // Function to get Instagram embed HTML
+  const getInstagramEmbed = (url: string, type: 'post' | 'video') => {
+    if (!url) return null;
+
+    // Extract Instagram post ID from URL
+    const postIdMatch = url.match(/\/p\/([^/?]+)/);
+    const reelIdMatch = url.match(/\/reel\/([^/?]+)/);
+    const postId = postIdMatch?.[1] || reelIdMatch?.[1];
+
+    if (!postId) return null;
+
+    const embedUrl = `https://www.instagram.com/${type === 'video' ? 'reel' : 'p'}/${postId}/embed`;
+    
+    return (
+      <iframe
+        src={embedUrl}
+        className="w-full aspect-square"
+        frameBorder="0"
+        scrolling="no"
+        allowTransparency
+        allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+      />
+    );
   };
 
   return (
@@ -110,6 +143,17 @@ const NewsCard = ({
           ))}
         </div>
 
+        {/* Instagram Media Section */}
+        {instagramMedia && instagramMedia.length > 0 && (
+          <div className="mt-4 space-y-4">
+            {instagramMedia.map((media, index) => (
+              <div key={index}>
+                {getInstagramEmbed(media.url, media.type)}
+              </div>
+            ))}
+          </div>
+        )}
+
         <Button
           variant="ghost"
           className="mt-2 w-full flex items-center justify-center gap-1 text-sm hover:bg-gray-100"
@@ -134,3 +178,4 @@ const NewsCard = ({
 };
 
 export default NewsCard;
+
