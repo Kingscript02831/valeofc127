@@ -46,6 +46,21 @@ const NewsCard = ({
     border: 'none'
   } : undefined;
 
+  // Function to transform YouTube URL to embed URL
+  const getEmbedUrl = (url: string) => {
+    if (!url) return '';
+    
+    // Handle different YouTube URL formats
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    
+    if (match && match[2].length === 11) {
+      return `https://www.youtube.com/embed/${match[2]}`;
+    }
+    
+    return url;
+  };
+
   return (
     <Card className="overflow-hidden transition-transform hover:scale-[1.02]">
       {image && (
@@ -60,7 +75,7 @@ const NewsCard = ({
       {video && (
         <div className="relative h-48">
           <iframe
-            src={video.replace('watch?v=', 'embed/')}
+            src={getEmbedUrl(video)}
             title={title}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
