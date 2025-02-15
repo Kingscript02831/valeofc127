@@ -116,16 +116,6 @@ const NewsCard = ({
           />
         </div>
       )}
-      {/* Instagram Media Section - Moved to top */}
-      {instagramMedia && instagramMedia.length > 0 && (
-        <div className="space-y-4">
-          {instagramMedia.map((media, index) => (
-            <div key={index}>
-              {getInstagramEmbed(media.url, media.type)}
-            </div>
-          ))}
-        </div>
-      )}
       <div className="p-4">
         <h3 className="text-xl font-bold mb-2">{title}</h3>
 
@@ -152,6 +142,17 @@ const NewsCard = ({
             paragraph.trim() ? <p key={index} className="mb-2">{paragraph}</p> : null
           ))}
         </div>
+
+        {/* Instagram Media Section */}
+        {instagramMedia && instagramMedia.length > 0 && (
+          <div className="mt-4 space-y-4">
+            {instagramMedia.map((media, index) => (
+              <div key={index}>
+                {getInstagramEmbed(media.url, media.type)}
+              </div>
+            ))}
+          </div>
+        )}
 
         <Button
           variant="ghost"
