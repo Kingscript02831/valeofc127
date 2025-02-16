@@ -289,21 +289,21 @@ const AdminNews = () => {
               </div>
             </div>
             <div>
-              <Label htmlFor="image">Link da Imagem (Dropbox)</Label>
+              <Label htmlFor="image">Link da Imagem</Label>
               <Input
                 id="image"
                 value={newNews.image || ""}
                 onChange={(e) => setNewNews({ ...newNews, image: e.target.value })}
-                placeholder="Cole aqui o link de compartilhamento do Dropbox"
+                placeholder="https://exemplo.com/imagem.jpg"
               />
             </div>
             <div>
-              <Label htmlFor="video">Link do Vídeo (Dropbox/YouTube)</Label>
+              <Label htmlFor="video">Link do Vídeo (YouTube)</Label>
               <Input
                 id="video"
                 value={newNews.video || ""}
                 onChange={(e) => setNewNews({ ...newNews, video: e.target.value })}
-                placeholder="Cole aqui o link de compartilhamento do Dropbox ou YouTube"
+                placeholder="https://youtube.com/embed/..."
               />
             </div>
             {renderInstagramMediaFields(newNews)}
@@ -368,21 +368,21 @@ const AdminNews = () => {
               </div>
             </div>
             <div>
-              <Label htmlFor="edit-image">Link da Imagem (Dropbox)</Label>
+              <Label htmlFor="edit-image">Link da Imagem</Label>
               <Input
                 id="edit-image"
                 value={editingNews.image || ""}
                 onChange={(e) => setEditingNews({ ...editingNews, image: e.target.value })}
-                placeholder="Cole aqui o link de compartilhamento do Dropbox"
+                placeholder="https://exemplo.com/imagem.jpg"
               />
             </div>
             <div>
-              <Label htmlFor="edit-video">Link do Vídeo (Dropbox/YouTube)</Label>
+              <Label htmlFor="edit-video">Link do Vídeo (YouTube)</Label>
               <Input
                 id="edit-video"
                 value={editingNews.video || ""}
                 onChange={(e) => setEditingNews({ ...editingNews, video: e.target.value })}
-                placeholder="Cole aqui o link de compartilhamento do Dropbox ou YouTube"
+                placeholder="https://youtube.com/embed/..."
               />
             </div>
             {renderInstagramMediaFields(editingNews)}
