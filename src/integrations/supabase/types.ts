@@ -11,33 +11,24 @@ export type Database = {
     Tables: {
       admin_permissions: {
         Row: {
-          description: string | null
           granted_at: string | null
           id: string
           is_active: boolean | null
-          modified_at: string | null
-          modified_by: string | null
-          permission: Database["public"]["Enums"]["permission_type"]
+          permission: string
           user_id: string
         }
         Insert: {
-          description?: string | null
           granted_at?: string | null
           id?: string
           is_active?: boolean | null
-          modified_at?: string | null
-          modified_by?: string | null
-          permission: Database["public"]["Enums"]["permission_type"]
+          permission: string
           user_id: string
         }
         Update: {
-          description?: string | null
           granted_at?: string | null
           id?: string
           is_active?: boolean | null
-          modified_at?: string | null
-          modified_by?: string | null
-          permission?: Database["public"]["Enums"]["permission_type"]
+          permission?: string
           user_id?: string
         }
         Relationships: []
@@ -4085,13 +4076,7 @@ export type Database = {
       }
     }
     Enums: {
-      permission_type:
-        | "owner"
-        | "admin"
-        | "news_editor"
-        | "events_editor"
-        | "places_editor"
-        | "stores_editor"
+      [_ in never]: never
     }
     CompositeTypes: {
       geometry_dump: {
