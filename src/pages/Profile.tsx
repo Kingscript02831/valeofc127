@@ -46,10 +46,22 @@ const profileSchema = z.object({
   house_number: z.string().min(1, "Número é obrigatório"),
   city: z.string().min(1, "Cidade é obrigatória"),
   postal_code: z.string().min(1, "CEP é obrigatório"),
-  avatar_url: z.string().url("URL inválida").refine((url) => {
-    if (!url) return true;
-    return url.includes('dropbox.com');
-  }, "Por favor, insira uma URL válida do Dropbox").optional(),
+  avatar_url: z.string()
+    .refine(
+      (url) => {
+        if (!url) return true; // Allow empty string
+        try {
+          new URL(url); // Validate URL format
+          return url.includes('dropbox.com') && url.includes('?dl=0');
+        } catch {
+          return false;
+        }
+      },
+      {
+        message: "Por favor, insira uma URL válida do Dropbox (certifique-se que termina com ?dl=0)"
+      }
+    )
+    .optional(),
   username: z.string().min(3, "Username deve ter pelo menos 3 caracteres"),
   bio: z.string().optional(),
   website: z.string().url("URL inválida").optional().or(z.literal("")),
