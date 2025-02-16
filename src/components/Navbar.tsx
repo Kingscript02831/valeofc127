@@ -1,6 +1,6 @@
 
 import { Share2, Facebook, Instagram } from "lucide-react";
-import { Button } from "./ui/button";
+import { Button } from "../components/ui/button";
 import { useSiteConfig } from "../hooks/useSiteConfig";
 import { ThemeToggle } from "./ThemeToggle";
 import { toast } from "sonner";
@@ -21,34 +21,12 @@ const Navbar = () => {
 
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     console.error("Erro ao carregar a imagem do logo:", e);
-    const imgElement = e.target as HTMLImageElement;
-    console.log("URL tentada:", imgElement.src);
-    toast.error("Erro ao carregar o logo. URL atual: " + imgElement.src);
+    toast.error("Erro ao carregar o logo. Verifique se o link do Dropbox termina com '?raw=1'");
   };
 
   const formatDropboxUrl = (url: string) => {
     if (!url) return url;
-    
-    // Remove qualquer parâmetro existente primeiro
-    let baseUrl = url.split('?')[0];
-    
-    // Adiciona os parâmetros necessários
-    if (url.includes('dropbox.com')) {
-      const urlParams = new URLSearchParams(url.split('?')[1]);
-      const rlkey = urlParams.get('rlkey');
-      const st = urlParams.get('st');
-      
-      if (rlkey && st) {
-        baseUrl += `?rlkey=${rlkey}&st=${st}&raw=1`;
-      } else {
-        baseUrl += '?raw=1';
-      }
-      
-      console.log("URL formatada:", baseUrl);
-      return baseUrl;
-    }
-    
-    return url;
+    return url.replace(/\?dl=\d/, "?raw=1");
   };
 
   if (isLoading) {
@@ -69,10 +47,6 @@ const Navbar = () => {
     );
   }
 
-  console.log("URL original:", config.navbar_logo_image);
-  const formattedLogoUrl = formatDropboxUrl(config.navbar_logo_image || '');
-  console.log("URL formatada:", formattedLogoUrl);
-
   return (
     <nav className="w-full fixed top-0 z-50 shadow-md fade-in"
          style={{ 
@@ -87,14 +61,13 @@ const Navbar = () => {
           >
             {config.navbar_logo_type === 'image' && config.navbar_logo_image ? (
               <img 
-                src={formattedLogoUrl}
+                src={formatDropboxUrl(config.navbar_logo_image)}
                 alt="Logo" 
                 className="h-12 w-12 rounded-full object-cover border-2 transition-transform duration-300 hover:scale-110"
                 style={{ 
                   borderColor: config.text_color,
                 }}
                 onError={handleImageError}
-                crossOrigin="anonymous"
               />
             ) : (
               <span 
