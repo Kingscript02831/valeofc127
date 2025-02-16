@@ -25,12 +25,10 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
     event_date: new Date().toISOString().split('T')[0],
     event_time: "00:00",
     end_time: "00:00",
-    image: "",
-    images: [],
     location: "",
     maps_url: "",
     entrance_fee: "",
-    video_url: "",
+    images: [],
     video_urls: [],
     button_color: "#000000",
     button_secondary_color: "#000000",
@@ -44,7 +42,9 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
     if (initialData) {
       setEventData({
         ...initialData,
-        event_date: new Date(initialData.event_date).toISOString().split('T')[0]
+        event_date: new Date(initialData.event_date).toISOString().split('T')[0],
+        images: initialData.images || [],
+        video_urls: initialData.video_urls || []
       });
     }
   }, [initialData]);
@@ -203,7 +203,7 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
               <Input
                 value={newVideoUrl}
                 onChange={(e) => setNewVideoUrl(e.target.value)}
-                placeholder="URL do vídeo do Dropbox"
+                placeholder="URL do vídeo do Dropbox ou YouTube"
               />
               <Button type="button" onClick={handleAddVideo}>
                 <Plus className="w-4 h-4 mr-2" />
@@ -226,26 +226,6 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
               ))}
             </div>
           </div>
-        </div>
-
-        <div>
-          <Label htmlFor="image">Imagem Principal (Dropbox)</Label>
-          <Input
-            id="image"
-            value={eventData.image || ""}
-            onChange={(e) => setEventData({ ...eventData, image: e.target.value })}
-            placeholder="URL da imagem principal do Dropbox"
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="video_url">Link do Vídeo Principal (Dropbox)</Label>
-          <Input
-            id="video_url"
-            value={eventData.video_url || ""}
-            onChange={(e) => setEventData({ ...eventData, video_url: e.target.value })}
-            placeholder="URL do vídeo principal do Dropbox"
-          />
         </div>
 
         <div>
