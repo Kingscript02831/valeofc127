@@ -22,7 +22,6 @@ export function useSiteConfig() {
     staleTime: Infinity,
     gcTime: Infinity,
     retry: 2,
-    // Reduz o delay antes de mostrar o loading state
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false,
