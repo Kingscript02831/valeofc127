@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Edit, Trash, Plus, Search } from "lucide-react";
@@ -66,18 +67,37 @@ const AdminPlaces = () => {
         return;
       }
 
-      // Remove any undefined or null values from formData
+      // Remove any undefined values from the formData
       const cleanFormData = Object.fromEntries(
-        Object.entries(formData).filter(([_, v]) => v != null)
+        Object.entries(formData).filter(([_, v]) => v !== undefined)
       );
 
-      // Ensure required fields and user_id are present
+      // Remove empty arrays if they exist
+      if (Array.isArray(cleanFormData.images) && cleanFormData.images.length === 0) {
+        delete cleanFormData.images;
+      }
+      if (Array.isArray(cleanFormData.video_urls) && cleanFormData.video_urls.length === 0) {
+        delete cleanFormData.video_urls;
+      }
+
+      // Ensure required fields are present
       const finalPlaceData = {
         ...cleanFormData,
         user_id: user.id,
         name: formData.name,
         description: formData.description,
-        address: formData.address
+        address: formData.address,
+        // Convert empty strings to null for optional fields
+        owner_name: formData.owner_name || null,
+        opening_hours: formData.opening_hours || null,
+        entrance_fee: formData.entrance_fee || null,
+        maps_url: formData.maps_url || null,
+        phone: formData.phone || null,
+        whatsapp: formData.whatsapp || null,
+        website: formData.website || null,
+        image: formData.image || null,
+        category_id: formData.category_id || null,
+        social_media: formData.social_media || null
       };
 
       if (selectedPlace) {
@@ -112,7 +132,7 @@ const AdminPlaces = () => {
       console.error("Error saving place:", error);
       toast({
         title: "Erro ao salvar o local",
-        description: "Por favor, tente novamente.",
+        description: error.message || "Por favor, tente novamente.",
         variant: "destructive",
       });
     }
@@ -208,9 +228,6 @@ const AdminPlaces = () => {
                     Endereço
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Cidade
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Telefone
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -224,9 +241,6 @@ const AdminPlaces = () => {
                     <td className="px-6 py-4 whitespace-nowrap">{place.name}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {place.address}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {place.city}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {place.phone || "-"}
