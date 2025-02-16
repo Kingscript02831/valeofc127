@@ -658,7 +658,7 @@ const Admin = () => {
                   <Label htmlFor="pwa_install_message">Mensagem de Instalação</Label>
                   <Input
                     id="pwa_install_message"
-                    value={config.pwa_install_message}
+                    value={config.pwa_install_message || ""}
                     onChange={(e) => setConfig({ ...config, pwa_install_message: e.target.value })}
                     placeholder="Mensagem que será exibida no prompt de instalação"
                   />
@@ -666,22 +666,28 @@ const Admin = () => {
 
                 <div>
                   <Label htmlFor="pwa_app_icon">Ícone do Aplicativo</Label>
-                  <Input
-                    id="pwa_app_icon"
-                    type="file"
-                    accept="image/png,image/jpeg"
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        const formData = new FormData();
-                        formData.append('file', file);
-                        // Aqui você implementaria a lógica para upload da imagem
-                        // e atualizaria o config.pwa_app_icon com a URL
-                      }
-                    }}
-                  />
+                  <div className="flex gap-4 items-center">
+                    {config.pwa_app_icon && (
+                      <img 
+                        src={config.pwa_app_icon} 
+                        alt="App Icon" 
+                        className="w-16 h-16 rounded-xl object-cover"
+                      />
+                    )}
+                    <Input
+                      id="pwa_app_icon"
+                      value={config.pwa_app_icon || ""}
+                      onChange={(e) => setConfig({ ...config, pwa_app_icon: e.target.value })}
+                      placeholder="Link para o ícone (512x512px, formato PNG)"
+                      className="flex-1"
+                    />
+                  </div>
                   <p className="text-sm text-gray-500 mt-1">
-                    Recomendado: PNG 512x512px
+                    Recomendado: Imagem PNG 512x512px. Para usar uma imagem do Dropbox:
+                    1. Faça upload da imagem
+                    2. Clique em "Compartilhar"
+                    3. Copie o link
+                    4. Substitua "?dl=0" por "?raw=1" no final do link
                   </p>
                 </div>
 
