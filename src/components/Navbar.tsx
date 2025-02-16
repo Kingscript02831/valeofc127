@@ -4,9 +4,10 @@ import { Button } from "../components/ui/button";
 import { useSiteConfig } from "../hooks/useSiteConfig";
 import { ThemeToggle } from "./ThemeToggle";
 import { toast } from "sonner";
+import { Link } from "react-router-dom";
 
 const Navbar = () => {
-  const { data: config, isLoading, isError } = useSiteConfig();
+  const { data: config, isLoading } = useSiteConfig();
 
   const handleShare = async () => {
     try {
@@ -35,31 +36,19 @@ const Navbar = () => {
     );
   }
 
-  if (isError || !config) {
-    return (
-      <nav className="w-full fixed top-0 z-50 h-16 bg-gray-800">
-        <div className="max-w-screen-2xl mx-auto px-4">
-          <div className="flex overflow-x-auto scrollbar-hide items-center h-16 gap-x-4">
-            <span className="text-white whitespace-nowrap">Vale Notícias</span>
-          </div>
-        </div>
-      </nav>
-    );
-  }
-
   return (
     <nav className="w-full fixed top-0 z-50 shadow-md fade-in"
          style={{ 
-           background: `linear-gradient(to right, ${config?.navbar_color}, ${config?.primary_color})`,
-           borderColor: `${config?.primary_color}20`
+           background: `linear-gradient(to right, ${config?.navbar_color || '#000000'}, ${config?.primary_color || '#000000'})`,
+           borderColor: `${config?.primary_color || '#000000'}20`
          }}>
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex overflow-x-auto scrollbar-hide justify-between items-center h-16 gap-x-4">
-          <a 
-            href="/" 
+          <Link 
+            to="/" 
             className="flex items-center space-x-2 transform transition duration-300 hover:scale-105 whitespace-nowrap"
           >
-            {config.navbar_logo_type === 'image' && config.navbar_logo_image ? (
+            {config?.navbar_logo_type === 'image' && config?.navbar_logo_image ? (
               <img 
                 src={formatDropboxUrl(config.navbar_logo_image)}
                 alt="Logo" 
@@ -73,24 +62,24 @@ const Navbar = () => {
               <span 
                 className="text-3xl font-bold tracking-tighter px-6 py-3 rounded-full whitespace-nowrap"
                 style={{ 
-                  color: config.text_color,
-                  backgroundColor: `${config.primary_color}20`
+                  color: config?.text_color || '#FFFFFF',
+                  backgroundColor: `${config?.primary_color || '#000000'}20`
                 }}
               >
-                {config.navbar_logo_text || 'VALEOFC'}
+                {config?.navbar_logo_text || 'VALEOFC'}
               </span>
             )}
-          </a>
+          </Link>
 
           <div className="flex items-center space-x-3 whitespace-nowrap">
-            {config.navbar_social_facebook && (
+            {config?.navbar_social_facebook && (
               <a
                 href={config.navbar_social_facebook}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="transition-all duration-300 ease-out hover:scale-110 p-2 rounded-full hover:bg-primary/20"
                 style={{ 
-                  color: config.text_color,
+                  color: config?.text_color || '#FFFFFF',
                 }}
                 aria-label="Facebook"
               >
@@ -98,14 +87,14 @@ const Navbar = () => {
               </a>
             )}
 
-            {config.navbar_social_instagram && (
+            {config?.navbar_social_instagram && (
               <a
                 href={config.navbar_social_instagram}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="transition-all duration-300 ease-out hover:scale-110 p-2 rounded-full hover:bg-primary/20"
                 style={{ 
-                  color: config.text_color,
+                  color: config?.text_color || '#FFFFFF',
                 }}
                 aria-label="Instagram"
               >
@@ -119,7 +108,7 @@ const Navbar = () => {
               onClick={handleShare}
               className="transition-all duration-300 ease-out hover:scale-110 rounded-full p-2 hover:bg-primary/20"
               style={{ 
-                color: config.text_color,
+                color: config?.text_color || '#FFFFFF',
               }}
               aria-label="Compartilhar"
             >

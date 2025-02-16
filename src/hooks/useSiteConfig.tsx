@@ -1,9 +1,18 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../integrations/supabase/client";
-import type { Database } from "../../types/supabase";
 
-type SiteConfig = Database['public']['Tables']['site_configuration']['Row'];
+export type SiteConfig = {
+  id: string;
+  navbar_color: string;
+  primary_color: string;
+  text_color: string;
+  navbar_logo_type: 'text' | 'image';
+  navbar_logo_text: string;
+  navbar_logo_image: string | null;
+  navbar_social_facebook: string | null;
+  navbar_social_instagram: string | null;
+};
 
 export function useSiteConfig() {
   return useQuery({
@@ -17,14 +26,14 @@ export function useSiteConfig() {
       if (error) throw error;
       if (!data) throw new Error("No site configuration found");
       
-      return data;
+      return data as SiteConfig;
     },
-    staleTime: Infinity,
-    gcTime: Infinity,
-    retry: 2,
-    // Reduz o delay antes de mostrar o loading state
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
+    staleTime: Infinity, // Nunca considerar os dados obsoletos
+    gcTime: Infinity, // Nunca remover do cache
+    refetchOnWindowFocus: false, // Não recarregar ao focar a janela
+    refetchOnMount: false, // Não recarregar ao montar o componente
+    refetchOnReconnect: false, // Não recarregar ao reconectar
+    retry: false, // Não tentar novamente em caso de erro
+    cacheTime: Infinity, // Manter no cache indefinidamente
   });
 }
