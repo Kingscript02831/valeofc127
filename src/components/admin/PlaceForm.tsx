@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -5,6 +6,8 @@ import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { Plus, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import type { PlaceFormData, Place } from "../../types/places";
 import type { Database } from "../../types/supabase";
 
@@ -29,6 +32,8 @@ export const PlaceForm = ({ initialData, onSubmit, onCancel }: PlaceFormProps) =
     whatsapp: "",
     website: "",
     image: "",
+    images: [],
+    video_urls: [],
     category_id: "",
     social_media: {
       facebook: "",
@@ -37,6 +42,8 @@ export const PlaceForm = ({ initialData, onSubmit, onCancel }: PlaceFormProps) =
   });
 
   const [categories, setCategories] = useState<Category[]>([]);
+  const [newImageUrl, setNewImageUrl] = useState("");
+  const [newVideoUrl, setNewVideoUrl] = useState("");
 
   useEffect(() => {
     if (initialData) {
@@ -45,13 +52,15 @@ export const PlaceForm = ({ initialData, onSubmit, onCancel }: PlaceFormProps) =
         description: initialData.description,
         address: initialData.address,
         owner_name: initialData.owner_name || "",
-        opening_hours: initialData.opening_hours as string || "",
+        opening_hours: initialData.opening_hours || "",
         entrance_fee: initialData.entrance_fee || "",
         maps_url: initialData.maps_url || "",
         phone: initialData.phone || "",
         whatsapp: initialData.whatsapp || "",
         website: initialData.website || "",
         image: initialData.image || "",
+        images: initialData.images || [],
+        video_urls: initialData.video_urls || [],
         category_id: initialData.category_id || "",
         social_media: initialData.social_media || {
           facebook: "",
@@ -75,6 +84,81 @@ export const PlaceForm = ({ initialData, onSubmit, onCancel }: PlaceFormProps) =
 
     fetchCategories();
   }, []);
+
+  const handleAddImage = () => {
+    if (!newImageUrl) {
+      toast.error("Por favor, insira uma URL de imagem válida");
+      return;
+    }
+
+    if (!newImageUrl.includes('dropbox.com')) {
+      toast.error("Por favor, insira uma URL válida do Dropbox");
+      return;
+    }
+
+    let directImageUrl = newImageUrl;
+    if (newImageUrl.includes('www.dropbox.com')) {
+      directImageUrl = newImageUrl.replace('www.dropbox.com', 'dl.dropboxusercontent.com');
+    }
+
+    if (!formData.images?.includes(directImageUrl)) {
+      setFormData({
+        ...formData,
+        images: [...(formData.images || []), directImageUrl]
+      });
+      setNewImageUrl("");
+      toast.success("Imagem adicionada com sucesso!");
+    } else {
+      toast.error("Esta imagem já foi adicionada");
+    }
+  };
+
+  const handleRemoveImage = (imageUrl: string) => {
+    setFormData({
+      ...formData,
+      images: formData.images?.filter(url => url !== imageUrl) || []
+    });
+    toast.success("Imagem removida com sucesso!");
+  };
+
+  const handleAddVideo = () => {
+    if (!newVideoUrl) {
+      toast.error("Por favor, insira uma URL de vídeo válida");
+      return;
+    }
+
+    const isDropboxUrl = newVideoUrl.includes('dropbox.com');
+    const isYoutubeUrl = newVideoUrl.includes('youtube.com') || newVideoUrl.includes('youtu.be');
+
+    if (!isDropboxUrl && !isYoutubeUrl) {
+      toast.error("Por favor, insira uma URL válida do Dropbox ou YouTube");
+      return;
+    }
+
+    let directVideoUrl = newVideoUrl;
+    if (isDropboxUrl && newVideoUrl.includes('www.dropbox.com')) {
+      directVideoUrl = newVideoUrl.replace('www.dropbox.com', 'dl.dropboxusercontent.com');
+    }
+
+    if (!formData.video_urls?.includes(directVideoUrl)) {
+      setFormData({
+        ...formData,
+        video_urls: [...(formData.video_urls || []), directVideoUrl]
+      });
+      setNewVideoUrl("");
+      toast.success("Vídeo adicionado com sucesso!");
+    } else {
+      toast.error("Este vídeo já foi adicionado");
+    }
+  };
+
+  const handleRemoveVideo = (videoUrl: string) => {
+    setFormData({
+      ...formData,
+      video_urls: formData.video_urls?.filter(url => url !== videoUrl) || []
+    });
+    toast.success("Vídeo removido com sucesso!");
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -124,6 +208,7 @@ export const PlaceForm = ({ initialData, onSubmit, onCancel }: PlaceFormProps) =
             required
           />
         </div>
+
         <div className="space-y-2 col-span-2">
           <Label htmlFor="description">Descrição *</Label>
           <Textarea
@@ -134,6 +219,73 @@ export const PlaceForm = ({ initialData, onSubmit, onCancel }: PlaceFormProps) =
             required
           />
         </div>
+
+        {/* Seção de Imagens do Dropbox */}
+        <div className="col-span-2 space-y-2">
+          <Label>Imagens do Dropbox</Label>
+          <div className="space-y-4">
+            <div className="flex gap-2">
+              <Input
+                value={newImageUrl}
+                onChange={(e) => setNewImageUrl(e.target.value)}
+                placeholder="Cole a URL compartilhada do Dropbox"
+              />
+              <Button type="button" onClick={handleAddImage}>
+                <Plus className="w-4 h-4 mr-2" />
+                Adicionar
+              </Button>
+            </div>
+            <div className="grid grid-cols-1 gap-2">
+              {formData.images?.map((url, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <Input value={url} readOnly />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    onClick={() => handleRemoveImage(url)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Seção de Vídeos */}
+        <div className="col-span-2 space-y-2">
+          <Label>Vídeos (Dropbox ou YouTube)</Label>
+          <div className="space-y-4">
+            <div className="flex gap-2">
+              <Input
+                value={newVideoUrl}
+                onChange={(e) => setNewVideoUrl(e.target.value)}
+                placeholder="Cole a URL do Dropbox ou YouTube"
+              />
+              <Button type="button" onClick={handleAddVideo}>
+                <Plus className="w-4 h-4 mr-2" />
+                Adicionar
+              </Button>
+            </div>
+            <div className="grid grid-cols-1 gap-2">
+              {formData.video_urls?.map((url, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <Input value={url} readOnly />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    onClick={() => handleRemoveVideo(url)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
         <div className="space-y-2">
           <Label htmlFor="owner_name">Nome do Proprietário</Label>
           <Input
@@ -143,6 +295,7 @@ export const PlaceForm = ({ initialData, onSubmit, onCancel }: PlaceFormProps) =
             onChange={(e) => setFormData(prev => ({ ...prev, owner_name: e.target.value }))}
           />
         </div>
+
         <div className="space-y-2">
           <Label htmlFor="opening_hours">Horário de Funcionamento</Label>
           <Input
@@ -153,6 +306,7 @@ export const PlaceForm = ({ initialData, onSubmit, onCancel }: PlaceFormProps) =
             placeholder="Ex: Segunda a Sexta 9h às 18h"
           />
         </div>
+
         <div className="space-y-2">
           <Label htmlFor="entrance_fee">Valor da Entrada</Label>
           <Input
@@ -163,6 +317,7 @@ export const PlaceForm = ({ initialData, onSubmit, onCancel }: PlaceFormProps) =
             placeholder="Ex: R$ 20,00"
           />
         </div>
+
         <div className="space-y-2">
           <Label htmlFor="maps_url">Link do Google Maps</Label>
           <Input
@@ -172,6 +327,7 @@ export const PlaceForm = ({ initialData, onSubmit, onCancel }: PlaceFormProps) =
             onChange={(e) => setFormData(prev => ({ ...prev, maps_url: e.target.value }))}
           />
         </div>
+
         <div className="space-y-2">
           <Label htmlFor="phone">Telefone</Label>
           <Input
@@ -181,6 +337,7 @@ export const PlaceForm = ({ initialData, onSubmit, onCancel }: PlaceFormProps) =
             onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
           />
         </div>
+
         <div className="space-y-2">
           <Label htmlFor="whatsapp">WhatsApp</Label>
           <Input
@@ -190,6 +347,7 @@ export const PlaceForm = ({ initialData, onSubmit, onCancel }: PlaceFormProps) =
             onChange={(e) => setFormData(prev => ({ ...prev, whatsapp: e.target.value }))}
           />
         </div>
+
         <div className="space-y-2">
           <Label htmlFor="website">Website</Label>
           <Input
@@ -197,15 +355,6 @@ export const PlaceForm = ({ initialData, onSubmit, onCancel }: PlaceFormProps) =
             name="website"
             value={formData.website || ""}
             onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="image">URL da Imagem</Label>
-          <Input
-            id="image"
-            name="image"
-            value={formData.image || ""}
-            onChange={(e) => setFormData(prev => ({ ...prev, image: e.target.value }))}
           />
         </div>
 
@@ -225,6 +374,7 @@ export const PlaceForm = ({ initialData, onSubmit, onCancel }: PlaceFormProps) =
             }))}
           />
         </div>
+
         <div className="space-y-2">
           <Label htmlFor="social_media.instagram">Instagram</Label>
           <Input
@@ -241,6 +391,7 @@ export const PlaceForm = ({ initialData, onSubmit, onCancel }: PlaceFormProps) =
           />
         </div>
       </div>
+
       <div className="flex justify-end gap-2 pt-4">
         <Button
           type="button"
