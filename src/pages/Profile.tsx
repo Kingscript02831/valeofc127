@@ -47,18 +47,15 @@ const profileSchema = z.object({
   city: z.string().min(1, "Cidade é obrigatória"),
   postal_code: z.string().min(1, "CEP é obrigatório"),
   avatar_url: z.string()
+    .nullable()
+    .transform(url => url === null ? "" : url)
     .refine(
       (url) => {
         if (!url) return true; // Allow empty string
-        try {
-          new URL(url); // Validate URL format
-          return url.includes('dropbox.com') && url.includes('?dl=0');
-        } catch {
-          return false;
-        }
+        return url.includes('dropbox.com');
       },
       {
-        message: "Por favor, insira uma URL válida do Dropbox (certifique-se que termina com ?dl=0)"
+        message: "Por favor, insira uma URL do Dropbox"
       }
     )
     .optional(),
