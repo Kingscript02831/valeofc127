@@ -8,7 +8,7 @@ import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { supabase } from "../integrations/supabase/client";
 import { toast } from "sonner";
-import type { Database } from "../../types/supabase";
+import type { Database } from "@/types/supabase";
 
 type SiteConfig = Database['public']['Tables']['site_configuration']['Row'];
 
@@ -46,7 +46,6 @@ const EventCard = ({
   eventDate,
   eventTime,
   endTime,
-  image,
   images = [],
   location,
   mapsUrl,
@@ -54,7 +53,6 @@ const EventCard = ({
   createdAt,
   buttonColor,
   buttonSecondaryColor,
-  videoUrl,
   video_urls = [],
   category,
 }: EventCardProps) => {
@@ -65,11 +63,16 @@ const EventCard = ({
   const [config, setConfig] = useState<SiteConfig | null>(null);
   const [eventStatus, setEventStatus] = useState<'not_started' | 'in_progress' | 'ended'>('not_started');
 
+  // Combine all media into one array
   const allMedia: MediaItem[] = [
-    ...(image ? [{ type: "image" as const, url: image }] : []),
     ...(images?.map(url => ({ type: "image" as const, url })) || []),
-    ...(videoUrl ? [{ type: "video" as const, url: videoUrl }] : []),
-    ...(video_urls?.map(url => ({ type: "video" as const, url })) || [])
+    ...(video_urls?.map(url => {
+      const isYoutubeUrl = url.includes('youtube.com') || url.includes('youtu.be');
+      return { 
+        type: "video" as const, 
+        url: isYoutubeUrl ? url : url.replace('www.dropbox.com', 'dl.dropboxusercontent.com')
+      };
+    }) || [])
   ];
 
   const hasMultipleMedia = allMedia.length > 1;
@@ -184,25 +187,50 @@ const EventCard = ({
     border: 'none'
   } : undefined;
 
+  const getYoutubeVideoId = (url: string) => {
+    if (url.includes('youtu.be')) {
+      return url.split('youtu.be/')[1];
+    }
+    const urlParams = new URLSearchParams(new URL(url).search);
+    return urlParams.get('v');
+  };
+
   const renderMedia = (mediaItem: MediaItem, isFullscreen: boolean = false) => {
     if (mediaItem.type === 'video') {
-      const videoId = mediaItem.url.includes('youtu.be') 
-        ? mediaItem.url.split('youtu.be/')[1]
-        : mediaItem.url.split('v=')[1]?.split('&')[0];
-
-      return (
-        <div className={cn(
-          "relative w-full h-48",
-          isFullscreen && "h-[80vh]"
-        )}>
-          <iframe
-            src={`https://www.youtube.com/embed/${videoId}`}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-            className="absolute inset-0 w-full h-full"
-          />
-        </div>
-      );
+      const isYoutubeUrl = mediaItem.url.includes('youtube.com') || mediaItem.url.includes('youtu.be');
+      
+      if (isYoutubeUrl) {
+        const videoId = getYoutubeVideoId(mediaItem.url);
+        return (
+          <div className={cn(
+            "relative w-full h-48",
+            isFullscreen && "h-[80vh]"
+          )}>
+            <iframe
+              src={`https://www.youtube.com/embed/${videoId}`}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              className="absolute inset-0 w-full h-full"
+            />
+          </div>
+        );
+      } else {
+        // For Dropbox videos
+        return (
+          <div className={cn(
+            "relative w-full h-48",
+            isFullscreen && "h-[80vh]"
+          )}>
+            <video
+              src={mediaItem.url}
+              controls
+              className="absolute inset-0 w-full h-full object-contain"
+            >
+              Seu navegador não suporta a reprodução de vídeos.
+            </video>
+          </div>
+        );
+      }
     }
 
     return (
