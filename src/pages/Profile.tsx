@@ -51,7 +51,16 @@ const profileSchema = z.object({
     .transform(url => {
       if (!url) return "";
       // Converte o link do Dropbox para formato de download direto
-      return url.replace('www.dropbox.com', 'dl.dropboxusercontent.com').replace('?dl=0', '');
+      let directUrl = url;
+      if (url.includes('dropbox.com')) {
+        // Remove parâmetros da URL que podem interferir
+        directUrl = url.split('?')[0];
+        // Substitui o domínio do Dropbox
+        directUrl = directUrl.replace('www.dropbox.com/scl/fi', 'dl.dropboxusercontent.com');
+        // Adiciona ?dl=1 no final
+        directUrl = directUrl + '?dl=1';
+      }
+      return directUrl;
     })
     .optional(),
   username: z.string().min(3, "Username deve ter pelo menos 3 caracteres"),
