@@ -99,6 +99,29 @@ const NewsCard = ({
 
   return (
     <Card className="overflow-hidden transition-transform hover:scale-[1.02]">
+      {/* Instagram Media Section - Moved to top */}
+      {processedInstagramUrls.length > 0 && (
+        <div className="space-y-4">
+          {processedInstagramUrls.map((url, index) => (
+            <div key={index} className="aspect-square w-full bg-gray-50">
+              <iframe
+                key={url}
+                src={url}
+                className="w-full h-full"
+                frameBorder="0"
+                scrolling="no"
+                allowTransparency
+                allow="encrypted-media; picture-in-picture; web-share"
+                loading="lazy"
+                referrerPolicy="origin"
+                title={`Instagram post ${index + 1}`}
+              />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Media Carousel Section */}
       {(images?.length > 0 || processedVideoUrls.length > 0) && (
         <MediaCarousel 
           images={images}
@@ -153,28 +176,6 @@ const NewsCard = ({
           )}
         </Button>
       </div>
-
-      {/* Instagram Media Section */}
-      {processedInstagramUrls.length > 0 && (
-        <div className="space-y-4 p-4">
-          {processedInstagramUrls.map((url, index) => (
-            <div key={index} className="aspect-square w-full bg-gray-50">
-              <iframe
-                key={url} // Adicionando key única para forçar re-render
-                src={url}
-                className="w-full h-full"
-                frameBorder="0"
-                scrolling="no"
-                allowTransparency
-                allow="encrypted-media; picture-in-picture; web-share"
-                loading="lazy"
-                referrerPolicy="origin"
-                title={`Instagram post ${index + 1}`}
-              />
-            </div>
-          ))}
-        </div>
-      )}
     </Card>
   );
 };
