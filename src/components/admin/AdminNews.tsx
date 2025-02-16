@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -292,21 +291,21 @@ const AdminNews = () => {
               </div>
             </div>
             <div>
-              <Label htmlFor="image">Link da Imagem</Label>
+              <Label htmlFor="image">Link da Imagem (Dropbox)</Label>
               <Input
                 id="image"
                 value={newNews.image || ""}
                 onChange={(e) => setNewNews({ ...newNews, image: e.target.value })}
-                placeholder="https://exemplo.com/imagem.jpg"
+                placeholder="Cole aqui o link de compartilhamento do Dropbox"
               />
             </div>
             <div>
-              <Label htmlFor="video">Link do Vídeo (YouTube)</Label>
+              <Label htmlFor="video">Link do Vídeo (Dropbox/YouTube)</Label>
               <Input
                 id="video"
                 value={newNews.video || ""}
                 onChange={(e) => setNewNews({ ...newNews, video: e.target.value })}
-                placeholder="https://youtube.com/embed/..."
+                placeholder="Cole aqui o link de compartilhamento do Dropbox ou YouTube"
               />
             </div>
             {renderInstagramMediaFields(newNews)}
@@ -371,21 +370,21 @@ const AdminNews = () => {
               </div>
             </div>
             <div>
-              <Label htmlFor="edit-image">Link da Imagem</Label>
+              <Label htmlFor="edit-image">Link da Imagem (Dropbox)</Label>
               <Input
                 id="edit-image"
                 value={editingNews.image || ""}
                 onChange={(e) => setEditingNews({ ...editingNews, image: e.target.value })}
-                placeholder="https://exemplo.com/imagem.jpg"
+                placeholder="Cole aqui o link de compartilhamento do Dropbox"
               />
             </div>
             <div>
-              <Label htmlFor="edit-video">Link do Vídeo (YouTube)</Label>
+              <Label htmlFor="edit-video">Link do Vídeo (Dropbox/YouTube)</Label>
               <Input
                 id="edit-video"
                 value={editingNews.video || ""}
                 onChange={(e) => setEditingNews({ ...editingNews, video: e.target.value })}
-                placeholder="https://youtube.com/embed/..."
+                placeholder="Cole aqui o link de compartilhamento do Dropbox ou YouTube"
               />
             </div>
             {renderInstagramMediaFields(editingNews)}
@@ -487,4 +486,3 @@ const AdminNews = () => {
 };
 
 export default AdminNews;
-
