@@ -48,16 +48,11 @@ const profileSchema = z.object({
   postal_code: z.string().min(1, "CEP é obrigatório"),
   avatar_url: z.string()
     .nullable()
-    .transform(url => url === null ? "" : url)
-    .refine(
-      (url) => {
-        if (!url) return true; // Allow empty string
-        return url.includes('dropbox.com');
-      },
-      {
-        message: "Por favor, insira uma URL do Dropbox"
-      }
-    )
+    .transform(url => {
+      if (!url) return "";
+      // Converte o link do Dropbox para formato de download direto
+      return url.replace('www.dropbox.com', 'dl.dropboxusercontent.com').replace('?dl=0', '');
+    })
     .optional(),
   username: z.string().min(3, "Username deve ter pelo menos 3 caracteres"),
   bio: z.string().optional(),
