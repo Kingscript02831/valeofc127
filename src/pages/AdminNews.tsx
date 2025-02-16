@@ -24,8 +24,8 @@ interface News {
   content: string;
   date: string;
   category_id: string | null;
-  image: string | null;
-  video: string | null;
+  images: string[] | null;
+  video_urls: string[] | null;
   button_color: string | null;
   instagram_media: InstagramMedia[] | null;
 }
@@ -39,11 +39,14 @@ const AdminNews = () => {
     title: "",
     content: "",
     category_id: null,
-    image: null,
-    video: null,
+    images: [],
+    video_urls: [],
     button_color: "#9b87f5",
     instagram_media: [],
   });
+
+  const [newImageUrl, setNewImageUrl] = useState("");
+  const [newVideoUrl, setNewVideoUrl] = useState("");
 
   useEffect(() => {
     fetchNews();
@@ -87,17 +90,29 @@ const AdminNews = () => {
         return;
       }
 
-      // Validate instagram_media if present
-      if (newNews.instagram_media && Array.isArray(newNews.instagram_media)) {
-        for (const media of newNews.instagram_media) {
-          if (!media.url || !media.type) {
-            toast.error("Preencha todos os campos da mídia do Instagram");
+      // Validate images URLs
+      if (newNews.images && newNews.images.length > 0) {
+        for (const url of newNews.images) {
+          if (!url.includes('dropbox.com')) {
+            toast.error("As imagens devem ser do Dropbox");
             return;
           }
         }
       }
 
-      console.log('Submitting news:', newNews); // Debug log
+      // Validate video URLs
+      if (newNews.video_urls && newNews.video_urls.length > 0) {
+        for (const url of newNews.video_urls) {
+          const isDropbox = url.includes('dropbox.com');
+          const isYoutube = url.includes('youtube.com') || url.includes('youtu.be');
+          if (!isDropbox && !isYoutube) {
+            toast.error("Os vídeos devem ser do Dropbox ou YouTube");
+            return;
+          }
+        }
+      }
+
+      console.log('Submitting news:', newNews);
 
       const { data, error } = await supabase.from("news").insert([
         {
@@ -107,7 +122,7 @@ const AdminNews = () => {
       ]);
 
       if (error) {
-        console.error('Supabase error:', error); // Debug log
+        console.error('Supabase error:', error);
         throw error;
       }
 
@@ -116,14 +131,14 @@ const AdminNews = () => {
         title: "",
         content: "",
         category_id: null,
-        image: null,
-        video: null,
+        images: [],
+        video_urls: [],
         button_color: "#9b87f5",
         instagram_media: [],
       });
       fetchNews();
     } catch (error) {
-      console.error("Error details:", error); // Debug log
+      console.error("Error details:", error);
       toast.error("Erro ao adicionar notícia. Por favor, tente novamente.");
     }
   };
@@ -254,6 +269,178 @@ const AdminNews = () => {
     );
   };
 
+  const handleAddImage = () => {
+    if (!newImageUrl) {
+      toast.error("Por favor, insira uma URL de imagem válida");
+      return;
+    }
+
+    // Check if it's a valid Dropbox URL
+    if (!newImageUrl.includes('dropbox.com')) {
+      toast.error("Por favor, insira uma URL válida do Dropbox");
+      return;
+    }
+
+    // Convert Dropbox URL to direct link if needed
+    let directImageUrl = newImageUrl;
+    if (newImageUrl.includes('www.dropbox.com')) {
+      directImageUrl = newImageUrl.replace('www.dropbox.com', 'dl.dropboxusercontent.com');
+    }
+
+    if (editingNews) {
+      setEditingNews({
+        ...editingNews,
+        images: [...(editingNews.images || []), directImageUrl]
+      });
+    } else {
+      setNewNews({
+        ...newNews,
+        images: [...(newNews.images || []), directImageUrl]
+      });
+    }
+    setNewImageUrl("");
+    toast.success("Imagem adicionada com sucesso!");
+  };
+
+  const handleRemoveImage = (imageUrl: string) => {
+    if (editingNews) {
+      setEditingNews({
+        ...editingNews,
+        images: editingNews.images?.filter(url => url !== imageUrl) || []
+      });
+    } else {
+      setNewNews({
+        ...newNews,
+        images: newNews.images?.filter(url => url !== imageUrl) || []
+      });
+    }
+    toast.success("Imagem removida com sucesso!");
+  };
+
+  const handleAddVideo = () => {
+    if (!newVideoUrl) {
+      toast.error("Por favor, insira uma URL de vídeo válida");
+      return;
+    }
+
+    // Check if it's a valid Dropbox or YouTube URL
+    const isDropboxUrl = newVideoUrl.includes('dropbox.com');
+    const isYoutubeUrl = newVideoUrl.includes('youtube.com') || newVideoUrl.includes('youtu.be');
+
+    if (!isDropboxUrl && !isYoutubeUrl) {
+      toast.error("Por favor, insira uma URL válida do Dropbox ou YouTube");
+      return;
+    }
+
+    // Convert Dropbox URL to direct link if needed
+    let directVideoUrl = newVideoUrl;
+    if (isDropboxUrl && newVideoUrl.includes('www.dropbox.com')) {
+      directVideoUrl = newVideoUrl.replace('www.dropbox.com', 'dl.dropboxusercontent.com');
+    }
+
+    if (editingNews) {
+      setEditingNews({
+        ...editingNews,
+        video_urls: [...(editingNews.video_urls || []), directVideoUrl]
+      });
+    } else {
+      setNewNews({
+        ...newNews,
+        video_urls: [...(newNews.video_urls || []), directVideoUrl]
+      });
+    }
+    setNewVideoUrl("");
+    toast.success("Vídeo adicionado com sucesso!");
+  };
+
+  const handleRemoveVideo = (videoUrl: string) => {
+    if (editingNews) {
+      setEditingNews({
+        ...editingNews,
+        video_urls: editingNews.video_urls?.filter(url => url !== videoUrl) || []
+      });
+    } else {
+      setNewNews({
+        ...newNews,
+        video_urls: newNews.video_urls?.filter(url => url !== videoUrl) || []
+      });
+    }
+    toast.success("Vídeo removido com sucesso!");
+  };
+
+  const renderMediaFields = (item: Partial<News>) => {
+    const images = item.images || [];
+    const videos = item.video_urls || [];
+    
+    return (
+      <>
+        <div className="col-span-2 space-y-2">
+          <Label>Imagens do Dropbox</Label>
+          <div className="space-y-4">
+            <div className="flex gap-2">
+              <Input
+                value={newImageUrl}
+                onChange={(e) => setNewImageUrl(e.target.value)}
+                placeholder="Cole a URL compartilhada do Dropbox"
+              />
+              <Button type="button" onClick={handleAddImage}>
+                <Plus className="w-4 h-4 mr-2" />
+                Adicionar
+              </Button>
+            </div>
+            <div className="grid grid-cols-1 gap-2">
+              {images.map((url, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <Input value={url} readOnly />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    onClick={() => handleRemoveImage(url)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="col-span-2 space-y-2">
+          <Label>Vídeos (Dropbox ou YouTube)</Label>
+          <div className="space-y-4">
+            <div className="flex gap-2">
+              <Input
+                value={newVideoUrl}
+                onChange={(e) => setNewVideoUrl(e.target.value)}
+                placeholder="Cole a URL do Dropbox ou YouTube"
+              />
+              <Button type="button" onClick={handleAddVideo}>
+                <Plus className="w-4 h-4 mr-2" />
+                Adicionar
+              </Button>
+            </div>
+            <div className="grid grid-cols-1 gap-2">
+              {videos.map((url, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <Input value={url} readOnly />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    onClick={() => handleRemoveVideo(url)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  };
+
   return (
     <div className="space-y-6">
       {!editingNews ? (
@@ -313,24 +500,7 @@ const AdminNews = () => {
                 </div>
               </div>
             </div>
-            <div>
-              <Label htmlFor="image">Link da Imagem</Label>
-              <Input
-                id="image"
-                value={newNews.image || ""}
-                onChange={(e) => setNewNews({ ...newNews, image: e.target.value })}
-                placeholder="https://exemplo.com/imagem.jpg"
-              />
-            </div>
-            <div>
-              <Label htmlFor="video">Link do Vídeo (YouTube)</Label>
-              <Input
-                id="video"
-                value={newNews.video || ""}
-                onChange={(e) => setNewNews({ ...newNews, video: e.target.value })}
-                placeholder="https://youtube.com/embed/..."
-              />
-            </div>
+            {renderMediaFields(newNews)}
             {renderInstagramMediaFields(newNews)}
             <Button onClick={handleNewsSubmit}>Adicionar Notícia</Button>
           </div>
@@ -392,24 +562,7 @@ const AdminNews = () => {
                 </div>
               </div>
             </div>
-            <div>
-              <Label htmlFor="edit-image">Link da Imagem</Label>
-              <Input
-                id="edit-image"
-                value={editingNews.image || ""}
-                onChange={(e) => setEditingNews({ ...editingNews, image: e.target.value })}
-                placeholder="https://exemplo.com/imagem.jpg"
-              />
-            </div>
-            <div>
-              <Label htmlFor="edit-video">Link do Vídeo (YouTube)</Label>
-              <Input
-                id="edit-video"
-                value={editingNews.video || ""}
-                onChange={(e) => setEditingNews({ ...editingNews, video: e.target.value })}
-                placeholder="https://youtube.com/embed/..."
-              />
-            </div>
+            {renderMediaFields(editingNews)}
             {renderInstagramMediaFields(editingNews)}
             <div className="flex gap-2">
               <Button onClick={handleNewsEdit}>Salvar Alterações</Button>
@@ -473,8 +626,26 @@ const AdminNews = () => {
                   </div>
                 </div>
                 <p className="whitespace-pre-wrap mb-2">{item.content}</p>
-                {item.image && <p className="text-sm text-gray-500">Imagem: {item.image}</p>}
-                {item.video && <p className="text-sm text-gray-500">Vídeo: {item.video}</p>}
+                {item.images && item.images.length > 0 && (
+                  <div className="mt-2">
+                    <p className="text-sm font-medium text-gray-500">Imagens:</p>
+                    {item.images.map((image, index) => (
+                      <p key={index} className="text-sm text-gray-500">
+                        {image}
+                      </p>
+                    ))}
+                  </div>
+                )}
+                {item.video_urls && item.video_urls.length > 0 && (
+                  <div className="mt-2">
+                    <p className="text-sm font-medium text-gray-500">Vídeos:</p>
+                    {item.video_urls.map((video, index) => (
+                      <p key={index} className="text-sm text-gray-500">
+                        {video}
+                      </p>
+                    ))}
+                  </div>
+                )}
                 {item.button_color && (
                   <p className="text-sm text-gray-500">
                     Cor do botão: <span style={{ color: item.button_color }}>{item.button_color}</span>

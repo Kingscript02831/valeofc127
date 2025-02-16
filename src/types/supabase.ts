@@ -10,6 +10,21 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      news: {
+        Row: {
+          id: string;
+          title: string;
+          content: string;
+          date: string;
+          created_at?: string;
+          user_id?: string;
+          category_id?: string | null;
+          button_color?: string | null;
+          images?: string[];
+          video_urls?: string[];
+          instagram_media?: InstagramMedia[];
+        }
+      }
       site_configuration: {
         Row: {
           id: string;
@@ -93,4 +108,9 @@ export type Database = {
       }
     }
   }
+}
+
+export interface InstagramMedia {
+  url: string;
+  type: 'post' | 'video';
 }

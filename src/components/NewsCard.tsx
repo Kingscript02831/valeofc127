@@ -3,20 +3,15 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-
-interface InstagramMedia {
-  url: string;
-  type: 'post' | 'video';
-}
+import type { Database } from "@/types/supabase";
+import type { InstagramMedia } from "@/types/supabase";
 
 interface NewsCardProps {
   title: string;
   content: string;
-  image?: string;
-  video?: string;
   date?: string;
   createdAt?: string;
   buttonColor?: string;
@@ -26,70 +21,79 @@ interface NewsCardProps {
     slug?: string;
     background_color?: string;
   } | null;
+  images?: string[];
+  video_urls?: string[];
   instagramMedia?: InstagramMedia[];
 }
+
+type MediaItem = {
+  type: "image" | "video";
+  url: string;
+};
 
 const NewsCard = ({
   title,
   content,
-  image,
-  video,
+  date,
   createdAt,
   buttonColor,
-  buttonSecondaryColor,
   category,
+  images = [],
+  video_urls = [],
   instagramMedia = []
 }: NewsCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // Combine all media into one array
+  const allMedia: MediaItem[] = [
+    ...(images?.map(url => ({ type: "image" as const, url })) || []),
+    ...(video_urls?.map(url => {
+      const isYoutubeUrl = url.includes('youtube.com') || url.includes('youtu.be');
+      return { 
+        type: "video" as const, 
+        url: isYoutubeUrl ? url : url.replace('www.dropbox.com', 'dl.dropboxusercontent.com')
+      };
+    }) || [])
+  ];
+
+  const hasMultipleMedia = allMedia.length > 1;
+  const currentMedia = allMedia[currentIndex];
 
   const formattedCreatedAt = createdAt 
     ? format(new Date(createdAt), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })
     : null;
 
   const buttonStyle = buttonColor ? {
-    background: buttonSecondaryColor 
-      ? `linear-gradient(to right, ${buttonColor}, ${buttonSecondaryColor})`
-      : buttonColor,
+    background: buttonColor,
     color: '#FFFFFF',
     border: 'none'
   } : undefined;
 
-  // Function to transform Dropbox URL to direct link
-  const getDropboxDirectLink = (url: string) => {
-    if (!url) return '';
-    
-    // Check if it's a Dropbox link
-    if (url.includes('dropbox.com')) {
-      // Convert www.dropbox.com to dl.dropboxusercontent.com
-      return url.replace('www.dropbox.com', 'dl.dropboxusercontent.com')
-                .replace('?dl=0', '');
-    }
-    return url;
+  const nextMedia = () => {
+    setCurrentIndex((prev) => (prev + 1) % allMedia.length);
   };
 
-  // Function to transform YouTube URL to embed URL
-  const getEmbedUrl = (url: string) => {
-    if (!url) return '';
-    
-    // Handle different YouTube URL formats
-    if (url.includes('youtube.com') || url.includes('youtu.be')) {
-      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-      const match = url.match(regExp);
-      
-      if (match && match[2].length === 11) {
-        return `https://www.youtube.com/embed/${match[2]}`;
-      }
-    }
-    
-    // If it's a Dropbox video, convert to direct link
-    if (url.includes('dropbox.com')) {
-      return getDropboxDirectLink(url);
-    }
-    
-    return url;
+  const previousMedia = () => {
+    setCurrentIndex((prev) => 
+      prev === 0 ? allMedia.length - 1 : prev - 1
+    );
   };
 
-  // Function to get Instagram embed HTML
+  const toggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen);
+  };
+
+  const getYoutubeVideoId = (url: string) => {
+    if (url.includes('youtu.be')) {
+      return url.split('youtu.be/')[1];
+    }
+    const urlParams = new URLSearchParams(new URL(url).search);
+    return urlParams.get('v');
+  };
+
+  // Function to transform Instagram URL to embed URL
   const getInstagramEmbed = (url: string, type: 'post' | 'video') => {
     if (!url) return null;
 
@@ -114,48 +118,88 @@ const NewsCard = ({
     );
   };
 
-  return (
-    <Card className="overflow-hidden transition-transform hover:scale-[1.02]">
-      {image && (
-        <div className="relative">
-          <img
-            src={getDropboxDirectLink(image)}
-            alt={title}
-            className="w-full object-contain"
-          />
-        </div>
-      )}
-      {video && (
-        <div className="relative aspect-video">
-          {video.includes('dropbox.com') ? (
-            <video 
-              src={getDropboxDirectLink(video)}
-              controls
-              className="w-full h-full"
-            >
-              Seu navegador não suporta o elemento de vídeo.
-            </video>
-          ) : (
+  const renderMedia = (mediaItem: MediaItem, isFullscreen: boolean = false) => {
+    if (mediaItem.type === 'video') {
+      const isYoutubeUrl = mediaItem.url.includes('youtube.com') || mediaItem.url.includes('youtu.be');
+      
+      if (isYoutubeUrl) {
+        const videoId = getYoutubeVideoId(mediaItem.url);
+        return (
+          <div className={cn(
+            "relative w-full h-48",
+            isFullscreen && "h-[80vh]"
+          )}>
             <iframe
-              src={getEmbedUrl(video)}
-              title={title}
+              src={`https://www.youtube.com/embed/${videoId}`}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
-              className="w-full h-full"
+              className="absolute inset-0 w-full h-full"
             />
+          </div>
+        );
+      } else {
+        // For Dropbox videos
+        return (
+          <div className={cn(
+            "relative w-full h-48",
+            isFullscreen && "h-[80vh]"
+          )}>
+            <video
+              src={mediaItem.url}
+              controls
+              className="absolute inset-0 w-full h-full object-contain"
+            >
+              Seu navegador não suporta a reprodução de vídeos.
+            </video>
+          </div>
+        );
+      }
+    }
+
+    return (
+      <img
+        src={mediaItem.url}
+        alt={title}
+        className={cn(
+          "h-full w-full object-cover cursor-pointer",
+          isFullscreen ? "max-h-[90vh] max-w-[90vw] object-contain" : "h-48"
+        )}
+        onClick={toggleFullscreen}
+      />
+    );
+  };
+
+  return (
+    <Card className="overflow-hidden transition-transform hover:scale-[1.02]">
+      {allMedia.length > 0 && (
+        <div className="relative">
+          {renderMedia(currentMedia)}
+          {hasMultipleMedia && (
+            <>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute left-2 top-1/2 -translate-y-1/2 text-white hover:bg-black/50"
+                onClick={previousMedia}
+              >
+                <ChevronLeft className="h-6 w-6" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-white hover:bg-black/50"
+                onClick={nextMedia}
+              >
+                <ChevronRight className="h-6 w-6" />
+              </Button>
+              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/50 px-3 py-1 rounded-full text-white text-sm">
+                {currentIndex + 1} / {allMedia.length}
+              </div>
+            </>
           )}
         </div>
       )}
-      {/* Instagram Media Section */}
-      {instagramMedia && instagramMedia.length > 0 && (
-        <div className="space-y-4">
-          {instagramMedia.map((media, index) => (
-            <div key={index}>
-              {getInstagramEmbed(media.url, media.type)}
-            </div>
-          ))}
-        </div>
-      )}
+
       <div className="p-4">
         <h3 className="text-xl font-bold mb-2">{title}</h3>
 
@@ -202,6 +246,17 @@ const NewsCard = ({
           )}
         </Button>
       </div>
+
+      {/* Instagram Media Section */}
+      {instagramMedia && instagramMedia.length > 0 && (
+        <div className="space-y-4">
+          {instagramMedia.map((media, index) => (
+            <div key={index}>
+              {getInstagramEmbed(media.url, media.type)}
+            </div>
+          ))}
+        </div>
+      )}
     </Card>
   );
 };
