@@ -70,7 +70,9 @@ const Admin = () => {
     pwa_short_name: "VALEOFC",
     pwa_description: "Seu app de notícias local",
     pwa_theme_color: "#ffffff",
-    pwa_background_color: "#ffffff"
+    pwa_background_color: "#ffffff",
+    pwa_install_message: "Instale nosso aplicativo para uma experiência melhor!",
+    pwa_app_icon: null
   });
 
   useEffect(() => {
@@ -651,14 +653,45 @@ const Admin = () => {
           <TabsContent value="pwa" className="bg-white rounded-lg shadow p-6 space-y-6">
             <div>
               <h2 className="text-xl font-semibold mb-4">Configurações do PWA</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-6">
+                <div>
+                  <Label htmlFor="pwa_install_message">Mensagem de Instalação</Label>
+                  <Input
+                    id="pwa_install_message"
+                    value={config.pwa_install_message}
+                    onChange={(e) => setConfig({ ...config, pwa_install_message: e.target.value })}
+                    placeholder="Mensagem que será exibida no prompt de instalação"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="pwa_app_icon">Ícone do Aplicativo</Label>
+                  <Input
+                    id="pwa_app_icon"
+                    type="file"
+                    accept="image/png,image/jpeg"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const formData = new FormData();
+                        formData.append('file', file);
+                        // Aqui você implementaria a lógica para upload da imagem
+                        // e atualizaria o config.pwa_app_icon com a URL
+                      }
+                    }}
+                  />
+                  <p className="text-sm text-gray-500 mt-1">
+                    Recomendado: PNG 512x512px
+                  </p>
+                </div>
+
                 <div>
                   <Label htmlFor="pwa_name">Nome do Aplicativo</Label>
                   <Input
                     id="pwa_name"
-                    value={config.pwa_name || "VALEOFC"}
+                    value={config.pwa_name || ""}
                     onChange={(e) => setConfig({ ...config, pwa_name: e.target.value })}
-                    placeholder="Nome do aplicativo"
+                    placeholder="Nome completo do aplicativo"
                   />
                 </div>
 
@@ -666,9 +699,9 @@ const Admin = () => {
                   <Label htmlFor="pwa_short_name">Nome Curto</Label>
                   <Input
                     id="pwa_short_name"
-                    value={config.pwa_short_name || "VALEOFC"}
+                    value={config.pwa_short_name || ""}
                     onChange={(e) => setConfig({ ...config, pwa_short_name: e.target.value })}
-                    placeholder="Nome curto do aplicativo"
+                    placeholder="Nome curto (para ícone)"
                   />
                 </div>
 
@@ -676,7 +709,7 @@ const Admin = () => {
                   <Label htmlFor="pwa_description">Descrição</Label>
                   <Textarea
                     id="pwa_description"
-                    value={config.pwa_description || "Seu app de notícias local"}
+                    value={config.pwa_description || ""}
                     onChange={(e) => setConfig({ ...config, pwa_description: e.target.value })}
                     placeholder="Descrição do aplicativo"
                   />
