@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Phone, Globe, MapPin, Clock, User2, Facebook, Instagram, MessageCircle, Search, ChevronDown, ChevronUp } from "lucide-react";
+import { Phone, Globe, MapPin, Clock, User2, Facebook, Instagram, MessageCircle, Search, ChevronDown, ChevronUp, Wallet } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
@@ -152,34 +152,32 @@ const Places = () => {
                   )}
                   
                   <div className="p-4 space-y-4">
-                    <h2 className="text-xl font-semibold text-foreground">{place.name}</h2>
+                    <div className="flex justify-between items-start">
+                      <h2 className="text-xl font-semibold text-foreground">{place.name}</h2>
+                      {place.description && place.description.length > 150 && (
+                        <button
+                          onClick={() => toggleExpand(place.id)}
+                          className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+                        >
+                          {expandedPlaces[place.id] ? (
+                            <>
+                              Ver menos
+                              <ChevronUp className="h-4 w-4" />
+                            </>
+                          ) : (
+                            <>
+                              Ver mais
+                              <ChevronDown className="h-4 w-4" />
+                            </>
+                          )}
+                        </button>
+                      )}
+                    </div>
                     
                     {place.description && (
-                      <div>
-                        <p className={`text-muted-foreground text-sm ${!expandedPlaces[place.id] && "line-clamp-3"}`}>
-                          {place.description}
-                        </p>
-                        {place.description.length > 150 && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => toggleExpand(place.id)}
-                            className="mt-2 w-full flex items-center justify-center gap-1 text-sm hover:bg-gray-100"
-                          >
-                            {expandedPlaces[place.id] ? (
-                              <>
-                                Ver menos
-                                <ChevronUp className="h-4 w-4" />
-                              </>
-                            ) : (
-                              <>
-                                Ver mais
-                                <ChevronDown className="h-4 w-4" />
-                              </>
-                            )}
-                          </Button>
-                        )}
-                      </div>
+                      <p className={`text-muted-foreground text-sm ${!expandedPlaces[place.id] && "line-clamp-3"}`}>
+                        {place.description}
+                      </p>
                     )}
 
                     <div className={`space-y-2 ${!expandedPlaces[place.id] && "line-clamp-3"}`}>
@@ -206,6 +204,7 @@ const Places = () => {
 
                       {place.entrance_fee && (
                         <div className="flex items-center gap-2 text-sm">
+                          <Wallet className="w-4 h-4 text-muted-foreground" />
                           <span className="text-muted-foreground">
                             Entrada: {place.entrance_fee}
                           </span>
@@ -297,3 +296,4 @@ const Places = () => {
 };
 
 export default Places;
+
