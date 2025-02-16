@@ -9,45 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      admin_permissions: {
-        Row: {
-          custom_role: string | null
-          description: string | null
-          granted_at: string | null
-          id: string
-          is_active: boolean | null
-          modified_at: string | null
-          modified_by: string | null
-          path: string | null
-          permission: Database["public"]["Enums"]["permission_type"]
-          user_id: string
-        }
-        Insert: {
-          custom_role?: string | null
-          description?: string | null
-          granted_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          modified_at?: string | null
-          modified_by?: string | null
-          path?: string | null
-          permission: Database["public"]["Enums"]["permission_type"]
-          user_id: string
-        }
-        Update: {
-          custom_role?: string | null
-          description?: string | null
-          granted_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          modified_at?: string | null
-          modified_by?: string | null
-          path?: string | null
-          permission?: Database["public"]["Enums"]["permission_type"]
-          user_id?: string
-        }
-        Relationships: []
-      }
       categories: {
         Row: {
           background_color: string | null
