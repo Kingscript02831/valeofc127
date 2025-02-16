@@ -3,6 +3,7 @@ import { Share2, Facebook, Instagram } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { useSiteConfig } from "../hooks/useSiteConfig";
 import { ThemeToggle } from "./ThemeToggle";
+import { toast } from "sonner";
 
 const Navbar = () => {
   const { data: config, isLoading, isError } = useSiteConfig();
@@ -16,6 +17,16 @@ const Navbar = () => {
     } catch (err) {
       console.error("Error sharing:", err);
     }
+  };
+
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    console.error("Erro ao carregar a imagem do logo:", e);
+    toast.error("Erro ao carregar o logo. Verifique se o link do Dropbox termina com '?raw=1'");
+  };
+
+  const formatDropboxUrl = (url: string) => {
+    if (!url) return url;
+    return url.replace(/\?dl=\d/, "?raw=1");
   };
 
   if (isLoading) {
@@ -50,12 +61,13 @@ const Navbar = () => {
           >
             {config.navbar_logo_type === 'image' && config.navbar_logo_image ? (
               <img 
-                src={config.navbar_logo_image} 
+                src={formatDropboxUrl(config.navbar_logo_image)}
                 alt="Logo" 
                 className="h-12 w-12 rounded-full object-cover border-2 transition-transform duration-300 hover:scale-110"
                 style={{ 
                   borderColor: config.text_color,
                 }}
+                onError={handleImageError}
               />
             ) : (
               <span 
