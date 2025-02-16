@@ -15,13 +15,13 @@ const SubNav = () => {
 
   if (isLoading) {
     return (
-      <nav className="w-full border-b mt-16 h-12 animate-pulse bg-gray-200" />
+      <nav className="w-full fixed top-16 z-40 h-12 animate-pulse bg-gray-200" />
     );
   }
 
   if (isError || !config) {
     return (
-      <nav className="w-full border-b mt-16 bg-gray-800">
+      <nav className="w-full fixed top-16 z-40 bg-gray-800">
         <div className="max-w-screen-2xl mx-auto px-4">
           <div className="flex justify-center space-x-8 py-2">
             {links.map((link) => (
@@ -41,7 +41,7 @@ const SubNav = () => {
 
   return (
     <nav 
-      className="w-full border-b mt-16 shadow-sm"
+      className="w-full fixed top-16 z-40 shadow-sm"
       style={{ 
         background: `linear-gradient(to right, ${config?.navbar_color}, ${config?.primary_color})`,
         borderColor: `${config?.primary_color}20`
