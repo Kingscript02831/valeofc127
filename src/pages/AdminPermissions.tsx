@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "../integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -25,15 +25,11 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 
-type PermissionType = 'owner' | 'admin' | 'news_editor' | 'events_editor' | 'places_editor' | 'stores_editor' | 'custom';
-
 type Permission = {
   id: string;
   user_id: string;
-  permission: PermissionType;
-  custom_role?: string;
+  permission: 'owner' | 'admin' | 'news_editor' | 'events_editor' | 'places_editor' | 'stores_editor';
   description?: string;
-  path?: string;
   is_active: boolean;
   granted_at: string;
   modified_at?: string;
@@ -42,14 +38,13 @@ type Permission = {
   };
 };
 
-const PERMISSION_LABELS: Record<string, string> = {
-  'owner': 'Dono do Sistema',
-  'admin': 'Administrador',
-  'news_editor': 'Editor de Notícias',
-  'events_editor': 'Editor de Eventos',
-  'places_editor': 'Editor de Lugares',
-  'stores_editor': 'Editor de Lojas',
-  'custom': 'Permissão Personalizada'
+const PERMISSION_LABELS = {
+  owner: 'Dono do Sistema',
+  admin: 'Administrador',
+  news_editor: 'Editor de Notícias',
+  events_editor: 'Editor de Eventos',
+  places_editor: 'Editor de Lugares',
+  stores_editor: 'Editor de Lojas'
 };
 
 const AdminPermissions = () => {
@@ -59,14 +54,14 @@ const AdminPermissions = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
+  // Form state
   const [formData, setFormData] = useState({
     email: "",
-    permission: "admin" as PermissionType,
-    description: "",
-    custom_role: "",
-    path: ""
+    permission: "admin" as Permission["permission"],
+    description: ""
   });
 
+  // Query permissions data
   const { data: permissions, isLoading } = useQuery({
     queryKey: ["admin-permissions"],
     queryFn: async () => {
@@ -74,7 +69,9 @@ const AdminPermissions = () => {
         .from("admin_permissions")
         .select(`
           *,
-          users: profiles(email)
+          users:user_id (
+            email
+          )
         `)
         .eq("is_active", true);
 
@@ -83,58 +80,45 @@ const AdminPermissions = () => {
       }
 
       const { data, error } = await query;
-      
-      if (error) {
-        console.error('Erro ao buscar permissões:', error);
-        throw error;
-      }
-      
+      if (error) throw error;
       return data as Permission[];
     },
   });
 
+  // Add permission mutation
   const addPermissionMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
-      console.log('Adicionando permissão:', data);
-      
+      // First, get user ID from email
       const { data: userData, error: userError } = await supabase
         .from('profiles')
         .select('id')
         .eq('email', data.email)
         .single();
 
-      if (userError) {
-        console.error('Erro ao buscar usuário:', userError);
-        throw new Error('Usuário não encontrado');
-      }
+      if (userError) throw new Error('Usuário não encontrado');
 
+      // Add permission
       const { error: permissionError } = await supabase
         .from('admin_permissions')
         .insert({
           user_id: userData.id,
           permission: data.permission,
           description: data.description,
-          custom_role: data.custom_role,
-          path: data.path,
           is_active: true
         });
 
-      if (permissionError) {
-        console.error('Erro ao adicionar permissão:', permissionError);
-        throw permissionError;
-      }
+      if (permissionError) throw permissionError;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-permissions"] });
       setIsDialogOpen(false);
-      setFormData({ email: "", permission: "admin", description: "", custom_role: "", path: "" });
+      setFormData({ email: "", permission: "admin", description: "" });
       toast({
         title: "Sucesso",
         description: "Permissão adicionada com sucesso",
       });
     },
     onError: (error) => {
-      console.error('Erro na mutation:', error);
       toast({
         title: "Erro",
         description: error.message,
@@ -143,6 +127,7 @@ const AdminPermissions = () => {
     },
   });
 
+  // Update permission mutation
   const updatePermissionMutation = useMutation({
     mutationFn: async (permission: Permission) => {
       const { error } = await supabase
@@ -150,8 +135,6 @@ const AdminPermissions = () => {
         .update({
           permission: permission.permission,
           description: permission.description,
-          custom_role: permission.custom_role,
-          path: permission.path,
           modified_at: new Date().toISOString(),
         })
         .eq('id', permission.id);
@@ -176,6 +159,7 @@ const AdminPermissions = () => {
     },
   });
 
+  // Delete permission mutation
   const deletePermissionMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
@@ -208,8 +192,6 @@ const AdminPermissions = () => {
         ...editingPermission,
         permission: formData.permission,
         description: formData.description,
-        custom_role: formData.custom_role,
-        path: formData.path
       });
     } else {
       addPermissionMutation.mutate(formData);
@@ -222,8 +204,6 @@ const AdminPermissions = () => {
       email: permission.users?.email || "",
       permission: permission.permission,
       description: permission.description || "",
-      custom_role: permission.custom_role || "",
-      path: permission.path || ""
     });
     setIsDialogOpen(true);
   };
@@ -252,6 +232,7 @@ const AdminPermissions = () => {
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
+          {/* Search and Add button */}
           <div className="flex gap-4">
             <div className="flex-1">
               <Label htmlFor="search">Buscar usuário</Label>
@@ -271,7 +252,7 @@ const AdminPermissions = () => {
                 <Button 
                   onClick={() => {
                     setEditingPermission(null);
-                    setFormData({ email: "", permission: "admin", description: "", custom_role: "", path: "" });
+                    setFormData({ email: "", permission: "admin", description: "" });
                   }}
                   className="mt-8"
                 >
@@ -302,7 +283,7 @@ const AdminPermissions = () => {
                     <Label htmlFor="permission">Nível de Permissão</Label>
                     <Select
                       value={formData.permission}
-                      onValueChange={(value: PermissionType) => 
+                      onValueChange={(value: Permission["permission"]) => 
                         setFormData(prev => ({ ...prev, permission: value }))
                       }
                     >
@@ -317,27 +298,6 @@ const AdminPermissions = () => {
                         ))}
                       </SelectContent>
                     </Select>
-                  </div>
-                  {formData.permission === 'custom' && (
-                    <div className="space-y-2">
-                      <Label htmlFor="custom_role">Nome da Permissão Personalizada</Label>
-                      <Input
-                        id="custom_role"
-                        value={formData.custom_role}
-                        onChange={(e) => setFormData(prev => ({ ...prev, custom_role: e.target.value }))}
-                        placeholder="Ex: Editor de Conteúdo Especial"
-                        required
-                      />
-                    </div>
-                  )}
-                  <div className="space-y-2">
-                    <Label htmlFor="path">Endereço da Página</Label>
-                    <Input
-                      id="path"
-                      value={formData.path}
-                      onChange={(e) => setFormData(prev => ({ ...prev, path: e.target.value }))}
-                      placeholder="Ex: admin/addmin"
-                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="description">Descrição</Label>
@@ -355,13 +315,13 @@ const AdminPermissions = () => {
               </DialogContent>
             </Dialog>
           </div>
+
+          {/* Permissions Table */}
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Email</TableHead>
                 <TableHead>Permissão</TableHead>
-                <TableHead>Permissão Personalizada</TableHead>
-                <TableHead>Endereço da Página</TableHead>
                 <TableHead>Descrição</TableHead>
                 <TableHead>Data de Concessão</TableHead>
                 <TableHead>Ações</TableHead>
@@ -372,8 +332,6 @@ const AdminPermissions = () => {
                 <TableRow key={permission.id}>
                   <TableCell>{permission.users?.email}</TableCell>
                   <TableCell>{PERMISSION_LABELS[permission.permission]}</TableCell>
-                  <TableCell>{permission.custom_role || "-"}</TableCell>
-                  <TableCell>{permission.path || "-"}</TableCell>
                   <TableCell>{permission.description || "-"}</TableCell>
                   <TableCell>
                     {new Date(permission.granted_at).toLocaleDateString("pt-BR")}
@@ -404,7 +362,7 @@ const AdminPermissions = () => {
               ))}
               {permissions?.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center">
+                  <TableCell colSpan={5} className="text-center">
                     Nenhuma permissão encontrada
                   </TableCell>
                 </TableRow>

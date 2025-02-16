@@ -7,7 +7,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "./components/ThemeProvider";
 import AuthWrapper from "./components/AuthWrapper";
-import PermissionGuard from "./components/PermissionGuard";
 import Index from "./pages/Index";
 import Events from "./pages/Events";
 import Places from "./pages/Places";
@@ -24,7 +23,7 @@ import AdminNews from "./pages/AdminNews";
 import AdminCategories from "./pages/AdminCategories";
 import AdminPermissions from "./pages/AdminPermissions";
 import Profile from "./pages/Profile";
-import NotFound from "./pages/NotFound";
+import NotFound from "./pages/NotFound"; 
 import ResetPassword from "./pages/ResetPassword";
 import UpdatePassword from "./pages/UpdatePassword";
 
@@ -52,13 +51,13 @@ const App: React.FC = () => {
                   <Route path="/config" element={<Config />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/update-password" element={<UpdatePassword />} />
-                  <Route path="/admin" element={<PermissionGuard><Admin /></PermissionGuard>}>    
-                    <Route path="lugares" element={<PermissionGuard><AdminPlaces /></PermissionGuard>} />
-                    <Route path="eventos" element={<PermissionGuard><AdminEvents /></PermissionGuard>} />
-                    <Route path="lojas" element={<PermissionGuard><AdminStores /></PermissionGuard>} />
-                    <Route path="noticias" element={<PermissionGuard><AdminNews /></PermissionGuard>} />
-                    <Route path="categorias" element={<PermissionGuard><AdminCategories /></PermissionGuard>} />
-                    <Route path="permissoes" element={<PermissionGuard><AdminPermissions /></PermissionGuard>} />
+                  <Route path="/admin" element={<Admin />}>    
+                    <Route path="lugares" element={<AdminPlaces />} />
+                    <Route path="eventos" element={<AdminEvents />} />
+                    <Route path="lojas" element={<AdminStores />} />
+                    <Route path="noticias" element={<AdminNews />} />
+                    <Route path="categorias" element={<AdminCategories />} />
+                    <Route path="permissoes" element={<AdminPermissions />} />
                   </Route> 
                   <Route path="*" element={<NotFound />} />
                 </Routes>
