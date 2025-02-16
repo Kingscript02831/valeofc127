@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -29,6 +28,7 @@ type Permission = {
   id: string;
   user_id: string;
   permission: 'owner' | 'admin' | 'news_editor' | 'events_editor' | 'places_editor' | 'stores_editor';
+  custom_role?: string;
   description?: string;
   is_active: boolean;
   granted_at: string;
@@ -44,7 +44,8 @@ const PERMISSION_LABELS = {
   news_editor: 'Editor de Notícias',
   events_editor: 'Editor de Eventos',
   places_editor: 'Editor de Lugares',
-  stores_editor: 'Editor de Lojas'
+  stores_editor: 'Editor de Lojas',
+  custom: 'Permissão Personalizada'
 };
 
 const AdminPermissions = () => {
@@ -58,7 +59,8 @@ const AdminPermissions = () => {
   const [formData, setFormData] = useState({
     email: "",
     permission: "admin" as Permission["permission"],
-    description: ""
+    description: "",
+    custom_role: ""
   });
 
   // Query permissions data
@@ -104,6 +106,7 @@ const AdminPermissions = () => {
           user_id: userData.id,
           permission: data.permission,
           description: data.description,
+          custom_role: data.custom_role,
           is_active: true
         });
 
@@ -112,7 +115,7 @@ const AdminPermissions = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-permissions"] });
       setIsDialogOpen(false);
-      setFormData({ email: "", permission: "admin", description: "" });
+      setFormData({ email: "", permission: "admin", description: "", custom_role: "" });
       toast({
         title: "Sucesso",
         description: "Permissão adicionada com sucesso",
@@ -135,6 +138,7 @@ const AdminPermissions = () => {
         .update({
           permission: permission.permission,
           description: permission.description,
+          custom_role: permission.custom_role,
           modified_at: new Date().toISOString(),
         })
         .eq('id', permission.id);
@@ -192,6 +196,7 @@ const AdminPermissions = () => {
         ...editingPermission,
         permission: formData.permission,
         description: formData.description,
+        custom_role: formData.custom_role
       });
     } else {
       addPermissionMutation.mutate(formData);
@@ -204,6 +209,7 @@ const AdminPermissions = () => {
       email: permission.users?.email || "",
       permission: permission.permission,
       description: permission.description || "",
+      custom_role: permission.custom_role || ""
     });
     setIsDialogOpen(true);
   };
@@ -252,7 +258,7 @@ const AdminPermissions = () => {
                 <Button 
                   onClick={() => {
                     setEditingPermission(null);
-                    setFormData({ email: "", permission: "admin", description: "" });
+                    setFormData({ email: "", permission: "admin", description: "", custom_role: "" });
                   }}
                   className="mt-8"
                 >
@@ -299,6 +305,18 @@ const AdminPermissions = () => {
                       </SelectContent>
                     </Select>
                   </div>
+                  {formData.permission === 'custom' && (
+                    <div className="space-y-2">
+                      <Label htmlFor="custom_role">Nome da Permissão Personalizada</Label>
+                      <Input
+                        id="custom_role"
+                        value={formData.custom_role}
+                        onChange={(e) => setFormData(prev => ({ ...prev, custom_role: e.target.value }))}
+                        placeholder="Ex: Editor de Conteúdo Especial"
+                        required
+                      />
+                    </div>
+                  )}
                   <div className="space-y-2">
                     <Label htmlFor="description">Descrição</Label>
                     <Textarea
@@ -322,6 +340,7 @@ const AdminPermissions = () => {
               <TableRow>
                 <TableHead>Email</TableHead>
                 <TableHead>Permissão</TableHead>
+                <TableHead>Permissão Personalizada</TableHead>
                 <TableHead>Descrição</TableHead>
                 <TableHead>Data de Concessão</TableHead>
                 <TableHead>Ações</TableHead>
@@ -332,6 +351,7 @@ const AdminPermissions = () => {
                 <TableRow key={permission.id}>
                   <TableCell>{permission.users?.email}</TableCell>
                   <TableCell>{PERMISSION_LABELS[permission.permission]}</TableCell>
+                  <TableCell>{permission.custom_role || "-"}</TableCell>
                   <TableCell>{permission.description || "-"}</TableCell>
                   <TableCell>
                     {new Date(permission.granted_at).toLocaleDateString("pt-BR")}
@@ -362,7 +382,7 @@ const AdminPermissions = () => {
               ))}
               {permissions?.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center">
+                  <TableCell colSpan={6} className="text-center">
                     Nenhuma permissão encontrada
                   </TableCell>
                 </TableRow>

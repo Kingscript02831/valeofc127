@@ -11,6 +11,7 @@ export type Database = {
     Tables: {
       admin_permissions: {
         Row: {
+          custom_role: string | null
           description: string | null
           granted_at: string | null
           id: string
@@ -21,6 +22,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          custom_role?: string | null
           description?: string | null
           granted_at?: string | null
           id?: string
@@ -31,6 +33,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          custom_role?: string | null
           description?: string | null
           granted_at?: string | null
           id?: string
