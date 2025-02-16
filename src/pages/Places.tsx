@@ -1,9 +1,11 @@
+
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Phone, Globe, MapPin, Clock, User2, Facebook, Instagram, MessageCircle, Search } from "lucide-react";
-import type { Database } from "@/types/supabase";
+import { Phone, Globe, MapPin, Clock, User2, Facebook, Instagram, MessageCircle, Search, ChevronDown, ChevronUp } from "lucide-react";
+import type { Database } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import MediaCarousel from "../components/MediaCarousel";
 import Navbar from "../components/Navbar";
 import SubNav from "../components/SubNav";
@@ -17,6 +19,7 @@ type SocialMedia = { facebook?: string; instagram?: string };
 const Places = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [expandedPlaces, setExpandedPlaces] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     document.title = "Lugares | Vale Notícias";
@@ -65,6 +68,13 @@ const Places = () => {
       }
       return url;
     });
+  };
+
+  const toggleExpand = (placeId: string) => {
+    setExpandedPlaces(prev => ({
+      ...prev,
+      [placeId]: !prev[placeId]
+    }));
   };
 
   return (
@@ -145,12 +155,34 @@ const Places = () => {
                     <h2 className="text-xl font-semibold text-foreground">{place.name}</h2>
                     
                     {place.description && (
-                      <p className="text-muted-foreground text-sm line-clamp-3">
-                        {place.description}
-                      </p>
+                      <div>
+                        <p className={`text-muted-foreground text-sm ${!expandedPlaces[place.id] && "line-clamp-3"}`}>
+                          {place.description}
+                        </p>
+                        {place.description.length > 150 && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => toggleExpand(place.id)}
+                            className="mt-2 w-full flex items-center justify-center gap-1 text-sm hover:bg-gray-100"
+                          >
+                            {expandedPlaces[place.id] ? (
+                              <>
+                                Ver menos
+                                <ChevronUp className="h-4 w-4" />
+                              </>
+                            ) : (
+                              <>
+                                Ver mais
+                                <ChevronDown className="h-4 w-4" />
+                              </>
+                            )}
+                          </Button>
+                        )}
+                      </div>
                     )}
 
-                    <div className="space-y-2">
+                    <div className={`space-y-2 ${!expandedPlaces[place.id] && "line-clamp-3"}`}>
                       {place.address && (
                         <div className="flex items-center gap-2 text-sm">
                           <MapPin className="w-4 h-4 text-muted-foreground" />
@@ -169,6 +201,14 @@ const Places = () => {
                         <div className="flex items-center gap-2 text-sm">
                           <Clock className="w-4 h-4 text-muted-foreground" />
                           <span className="text-muted-foreground">{place.opening_hours}</span>
+                        </div>
+                      )}
+
+                      {place.entrance_fee && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="text-muted-foreground">
+                            Entrada: {place.entrance_fee}
+                          </span>
                         </div>
                       )}
                     </div>
