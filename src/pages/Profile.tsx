@@ -50,15 +50,23 @@ const profileSchema = z.object({
     .nullable()
     .transform(url => {
       if (!url) return "";
+      console.log("URL original:", url);
+      
       // Converte o link do Dropbox para formato de download direto
       let directUrl = url;
       if (url.includes('dropbox.com')) {
-        // Remove parâmetros da URL que podem interferir
-        directUrl = url.split('?')[0];
-        // Substitui o domínio do Dropbox
-        directUrl = directUrl.replace('www.dropbox.com', 'dl.dropboxusercontent.com');
-        // Adiciona ?dl=1 no final
-        directUrl = directUrl + '?raw=1';
+        try {
+          // Remove parâmetros da URL que podem interferir
+          directUrl = url.split('?')[0];
+          // Substitui o domínio do Dropbox
+          directUrl = directUrl.replace('www.dropbox.com', 'dl.dropboxusercontent.com');
+          // Adiciona ?raw=1 no final
+          directUrl = directUrl + '?raw=1';
+          console.log("URL convertida:", directUrl);
+        } catch (error) {
+          console.error("Erro ao converter URL do Dropbox:", error);
+          return url;
+        }
       }
       return directUrl;
     })
@@ -96,10 +104,14 @@ export default function Profile() {
 
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     const imgElement = e.target as HTMLImageElement;
-    console.error("Erro ao carregar a imagem do avatar. URL tentada:", imgElement.src);
+    console.error("Erro ao carregar a imagem do avatar:", {
+      urlTentada: imgElement.src,
+      urlOriginal: profile?.avatar_url
+    });
+  
     toast({
       title: "Erro ao carregar imagem",
-      description: `URL atual: ${imgElement.src}. Verifique se é um link direto do Dropbox.`,
+      description: "Verifique se o link do Dropbox está correto e tente novamente.",
       variant: "destructive",
     });
   };
@@ -316,6 +328,7 @@ export default function Profile() {
                         alt="Avatar"
                         className="w-full h-full object-cover"
                         onError={handleImageError}
+                        onLoad={() => console.log("Imagem carregada com sucesso:", profile.avatar_url)}
                       />
                     </div>
                   ) : (
