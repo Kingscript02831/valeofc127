@@ -41,6 +41,7 @@ const NewsCard = ({
   instagramMedia = []
 }: NewsCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   const formattedCreatedAt = createdAt 
     ? format(new Date(createdAt), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })
@@ -96,12 +97,15 @@ const NewsCard = ({
 
   return (
     <Card className="overflow-hidden transition-transform hover:scale-[1.02]">
-      {image && (
+      {image && !imageError && (
         <div className="relative">
           <img
             src={image}
             alt={title}
             className="w-full object-contain"
+            onError={() => setImageError(true)}
+            loading="lazy"
+            crossOrigin="anonymous"
           />
         </div>
       )}
