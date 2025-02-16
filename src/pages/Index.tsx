@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import type { Database } from "@/types/supabase";
 import { supabase } from "@/integrations/supabase/client";
@@ -82,7 +83,7 @@ const Index = () => {
     <div className="min-h-screen flex flex-col pb-[72px] md:pb-0">
       <Navbar />
       <SubNav />
-      <main className="flex-1 container mx-auto py-8 px-4">
+      <main className="flex-1 container mx-auto py-8 px-4 mt-32">
         <div className="flex flex-col gap-8">
           <h1 className="text-3xl font-bold">Últimas Notícias</h1>
           
