@@ -1,11 +1,12 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "../integrations/supabase/client";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { useToast } from "../components/ui/use-toast";
 import {
   Form,
   FormControl,
@@ -13,7 +14,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
+} from "../components/ui/form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -31,11 +32,11 @@ import {
   Home,
   Trash2,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import BottomNav from "@/components/BottomNav";
-import Navbar from "@/components/Navbar";
-import SubNav from "@/components/SubNav";
-import type { ProfileUpdateData } from "@/types/profile";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import BottomNav from "../components/BottomNav";
+import Navbar from "../components/Navbar";
+import SubNav from "../components/SubNav";
+import type { ProfileUpdateData } from "../types/profile";
 
 const profileSchema = z.object({
   full_name: z.string().min(1, "Nome completo é obrigatório"),
@@ -50,21 +51,23 @@ const profileSchema = z.object({
     .nullable()
     .transform(url => {
       if (!url) return "";
-      console.log("URL original:", url);
+      console.log("URL original do Dropbox:", url);
       
-      // Converte o link do Dropbox para formato de download direto
       let directUrl = url;
       if (url.includes('dropbox.com')) {
         try {
-          // Remove parâmetros da URL que podem interferir
-          directUrl = url.split('?')[0];
-          // Substitui o domínio do Dropbox
-          directUrl = directUrl.replace('www.dropbox.com', 'dl.dropboxusercontent.com');
-          // Adiciona ?raw=1 no final
-          directUrl = directUrl + '?raw=1';
-          console.log("URL convertida:", directUrl);
+          // Verifica se a URL já está no formato correto
+          if (url.includes('dl.dropboxusercontent.com')) {
+            directUrl = url.includes('raw=1') ? url : `${url}?raw=1`;
+          } else {
+            // Converte URL normal do Dropbox para URL direta
+            directUrl = url
+              .replace('www.dropbox.com', 'dl.dropboxusercontent.com')
+              .split('?')[0] + '?raw=1';
+          }
+          console.log("URL convertida para download direto:", directUrl);
         } catch (error) {
-          console.error("Erro ao converter URL do Dropbox:", error);
+          console.error("Erro ao processar URL do Dropbox:", error);
           return url;
         }
       }
