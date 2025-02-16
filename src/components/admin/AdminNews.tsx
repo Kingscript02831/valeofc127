@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,11 +8,6 @@ import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { Search, Plus, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import type { Database } from "@/types/supabase";
-
-type News = Database['public']['Tables']['news']['Row'];
-type NewsInsert = Database['public']['Tables']['news']['Insert'];
-type NewsUpdate = Database['public']['Tables']['news']['Update'];
 
 interface Category {
   id: string;
@@ -23,12 +19,24 @@ interface InstagramMedia {
   type: "post" | "video";
 }
 
+interface News {
+  id: string;
+  title: string;
+  content: string;
+  date: string;
+  category_id: string | null;
+  image: string | null;
+  video: string | null;
+  button_color: string | null;
+  instagram_media: InstagramMedia[] | null;
+}
+
 const AdminNews = () => {
   const [news, setNews] = useState<News[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [editingNews, setEditingNews] = useState<News | null>(null);
-  const [newNews, setNewNews] = useState<NewsInsert>({
+  const [newNews, setNewNews] = useState<Partial<News>>({
     title: "",
     content: "",
     category_id: null,
@@ -37,6 +45,11 @@ const AdminNews = () => {
     button_color: "#000000",
     instagram_media: [],
   });
+
+  useEffect(() => {
+    fetchNews();
+    fetchCategories();
+  }, []);
 
   const fetchNews = async () => {
     try {
@@ -68,11 +81,6 @@ const AdminNews = () => {
     }
   };
 
-  useEffect(() => {
-    fetchNews();
-    fetchCategories();
-  }, []);
-
   const handleNewsSubmit = async () => {
     try {
       if (!newNews.title || !newNews.content) {
@@ -80,10 +88,12 @@ const AdminNews = () => {
         return;
       }
 
-      const { error } = await supabase.from("news").insert({
-        ...newNews,
-        date: new Date().toISOString(),
-      } as NewsInsert);
+      const { data, error } = await supabase.from("news").insert([
+        {
+          ...newNews,
+          date: new Date().toISOString(),
+        },
+      ]);
 
       if (error) throw error;
 
@@ -111,16 +121,9 @@ const AdminNews = () => {
         return;
       }
 
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        toast.error("Você precisa estar logado para editar notícias");
-        return;
-      }
-
       const { error } = await supabase
         .from("news")
-        .update(editingNews as NewsUpdate)
+        .update(editingNews)
         .eq("id", editingNews.id);
 
       if (error) throw error;
@@ -484,3 +487,4 @@ const AdminNews = () => {
 };
 
 export default AdminNews;
+
