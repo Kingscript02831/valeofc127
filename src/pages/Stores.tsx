@@ -1,6 +1,7 @@
+
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Phone, Globe, MapPin, Clock, User2, Facebook, Instagram, MessageCircle, Search, DollarSign } from "lucide-react";
+import { Phone, Globe, MapPin, Clock, User2, Facebook, Instagram, MessageCircle, Search } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
@@ -156,13 +157,6 @@ const Stores = () => {
                         <span className="text-muted-foreground">{store.opening_hours}</span>
                       </div>
                     )}
-
-                    {store.entrance_fee && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <DollarSign className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">{store.entrance_fee}</span>
-                      </div>
-                    )}
                   </div>
 
                   <div className="pt-4 border-t border-border flex flex-wrap gap-3">
@@ -197,11 +191,11 @@ const Stores = () => {
                       </a>
                     )}
 
-                    {store.social_media && (
+                    {store.social_media && typeof store.social_media === 'object' && (
                       <>
-                        {(store.social_media as any).facebook && (
+                        {store.social_media.facebook && (
                           <a
-                            href={(store.social_media as any).facebook}
+                            href={store.social_media.facebook}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
@@ -209,9 +203,9 @@ const Stores = () => {
                             <Facebook className="w-4 h-4" />
                           </a>
                         )}
-                        {(store.social_media as any).instagram && (
+                        {store.social_media.instagram && (
                           <a
-                            href={(store.social_media as any).instagram}
+                            href={store.social_media.instagram}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center gap-1 text-sm text-pink-600 hover:text-pink-800 dark:text-pink-400 dark:hover:text-pink-300"

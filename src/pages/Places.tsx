@@ -1,15 +1,15 @@
+
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Phone, Globe, MapPin, Clock, Ticket, User2, Facebook, Instagram, MessageCircle, Search } from "lucide-react";
-import type { Database } from "../integrations/supabase/types";
-import { supabase } from "../integrations/supabase/client";
-import Navbar from "../components/Navbar";
-import SubNav from "../components/SubNav";
-import Footer from "../components/Footer";
-import BottomNav from "../components/BottomNav";
-import { Input } from "../components/ui/input";
-import { Button } from "../components/ui/button";
-import MediaCarousel from "../components/MediaCarousel";
+import { Phone, Globe, MapPin, Clock, User2, Facebook, Instagram, MessageCircle, Search, Ticket } from "lucide-react";
+import type { Database } from "@/integrations/supabase/types";
+import { supabase } from "@/integrations/supabase/client";
+import Navbar from "@/components/Navbar";
+import SubNav from "@/components/SubNav";
+import Footer from "@/components/Footer";
+import BottomNav from "@/components/BottomNav";
+import { Input } from "@/components/ui/input";
+import MediaCarousel from "@/components/MediaCarousel";
 
 type Place = Database["public"]["Tables"]["places"]["Row"];
 type Category = Database["public"]["Tables"]["categories"]["Row"];
@@ -138,24 +138,25 @@ const Places = () => {
                   />
                 )}
                 
-                {place.description && (
-                  <div>
-                    <p className={`text-muted-foreground text-sm ${!expandedDescriptions.has(place.id) ? "line-clamp-3" : ""}`}>
-                      {place.description}
-                    </p>
-                    <Button
-                      variant="link"
-                      className="p-0 h-auto text-sm text-primary hover:text-primary/80"
-                      onClick={() => toggleDescription(place.id)}
-                    >
-                      {expandedDescriptions.has(place.id) ? "Ver menos" : "Ver mais"}
-                    </Button>
-                  </div>
-                )}
-
                 <div className="p-4 space-y-4">
                   <h2 className="text-xl font-semibold text-foreground">{place.name}</h2>
                   
+                  {place.description && (
+                    <div>
+                      <p className={`text-muted-foreground text-sm ${!expandedDescriptions.has(place.id) ? "line-clamp-3" : ""}`}>
+                        {place.description}
+                      </p>
+                      {place.description.length > 150 && (
+                        <button
+                          className="text-sm text-primary hover:text-primary/80"
+                          onClick={() => toggleDescription(place.id)}
+                        >
+                          {expandedDescriptions.has(place.id) ? "Ver menos" : "Ver mais"}
+                        </button>
+                      )}
+                    </div>
+                  )}
+
                   <div className="space-y-2">
                     {place.address && (
                       <div className="flex items-center gap-2 text-sm">
@@ -218,11 +219,11 @@ const Places = () => {
                       </a>
                     )}
 
-                    {place.social_media && (
+                    {place.social_media && typeof place.social_media === 'object' && (
                       <>
-                        {(place.social_media as any).facebook && (
+                        {place.social_media.facebook && (
                           <a
-                            href={(place.social_media as any).facebook}
+                            href={place.social_media.facebook}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
@@ -230,9 +231,9 @@ const Places = () => {
                             <Facebook className="w-4 h-4" />
                           </a>
                         )}
-                        {(place.social_media as any).instagram && (
+                        {place.social_media.instagram && (
                           <a
-                            href={(place.social_media as any).instagram}
+                            href={place.social_media.instagram}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center gap-1 text-sm text-pink-600 hover:text-pink-800 dark:text-pink-400 dark:hover:text-pink-300"
