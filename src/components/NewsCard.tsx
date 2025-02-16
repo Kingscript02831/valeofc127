@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import MediaCarousel from "./MediaCarousel";
+import MediaCarousel from "@/components/MediaCarousel";
 
 interface InstagramMedia {
   url: string;
@@ -45,23 +45,36 @@ const NewsCard = ({
   const [processedInstagramUrls, setProcessedInstagramUrls] = useState<string[]>([]);
 
   useEffect(() => {
-    // Process Instagram URLs
     if (instagramMedia && instagramMedia.length > 0) {
       const urls = instagramMedia.map(media => {
         let url = media.url;
-        // Convert Instagram URL to embed format
-        if (url.includes('/reel/')) {
-          url = url.replace('/reel/', '/p/');
+        
+        // Remove qualquer parâmetro da URL
+        url = url.split('?')[0];
+        
+        // Garantir que a URL começa com https://
+        if (!url.startsWith('http')) {
+          url = 'https://' + url;
         }
+        
+        // Remover www. se existir
+        url = url.replace('www.', '');
+        
+        // Converter reel para post
+        url = url.replace('/reel/', '/p/');
+        
+        // Remover /embed se existir
+        url = url.replace('/embed', '');
+        
+        // Adicionar /embed no final
         if (!url.endsWith('/embed')) {
           url = url + '/embed';
         }
-        // If URL doesn't start with https://, add it
-        if (!url.startsWith('https://')) {
-          url = 'https://' + url;
-        }
+
         return url;
       });
+      
+      console.log('Processed Instagram URLs:', urls);
       setProcessedInstagramUrls(urls);
     }
   }, [instagramMedia]);
@@ -153,6 +166,7 @@ const NewsCard = ({
                 scrolling="no"
                 allowTransparency
                 allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                loading="lazy"
               />
             </div>
           ))}
