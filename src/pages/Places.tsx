@@ -1,37 +1,26 @@
-
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Phone, Globe, MapPin, Clock, User2, Facebook, Instagram, MessageCircle, Search, Ticket } from "lucide-react";
-import type { Database } from "@/integrations/supabase/types";
+import { Phone, Globe, MapPin, Clock, User2, Facebook, Instagram, MessageCircle, Search } from "lucide-react";
+import type { Database } from "@/types/supabase";
 import { supabase } from "@/integrations/supabase/client";
-import Navbar from "@/components/Navbar";
-import SubNav from "@/components/SubNav";
-import Footer from "@/components/Footer";
-import BottomNav from "@/components/BottomNav";
 import { Input } from "@/components/ui/input";
-import MediaCarousel from "@/components/MediaCarousel";
+import MediaCarousel from "../components/MediaCarousel";
+import Navbar from "../components/Navbar";
+import SubNav from "../components/SubNav";
+import Footer from "../components/Footer";
+import BottomNav from "../components/BottomNav";
 
 type Place = Database["public"]["Tables"]["places"]["Row"];
 type Category = Database["public"]["Tables"]["categories"]["Row"];
+type SocialMedia = { facebook?: string; instagram?: string };
 
 const Places = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [expandedDescriptions, setExpandedDescriptions] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     document.title = "Lugares | Vale Notícias";
   }, []);
-
-  const toggleDescription = (id: string) => {
-    const newExpanded = new Set(expandedDescriptions);
-    if (newExpanded.has(id)) {
-      newExpanded.delete(id);
-    } else {
-      newExpanded.add(id);
-    }
-    setExpandedDescriptions(newExpanded);
-  };
 
   const { data: categories } = useQuery({
     queryKey: ["categories-places"],
@@ -67,6 +56,16 @@ const Places = () => {
       return data;
     },
   });
+
+  const parseVideoUrls = (urls: string[] | null) => {
+    if (!urls) return [];
+    return urls.map(url => {
+      if (url.includes('dropbox.com')) {
+        return url.replace('www.dropbox.com', 'dl.dropboxusercontent.com');
+      }
+      return url;
+    });
+  };
 
   return (
     <div className="min-h-screen flex flex-col pb-[72px] md:pb-0">
@@ -125,139 +124,124 @@ const Places = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {places?.map((place) => (
-              <div
-                key={place.id}
-                className="bg-card text-card-foreground rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow border border-border"
-              >
-                {(place.images?.length > 0 || place.video_urls?.length > 0) && (
-                  <MediaCarousel 
-                    images={place.images || []}
-                    videoUrls={place.video_urls || []}
-                    title={place.name}
-                  />
-                )}
-                
-                <div className="p-4 space-y-4">
-                  <h2 className="text-xl font-semibold text-foreground">{place.name}</h2>
+            {places?.map((place) => {
+              const socialMedia = place.social_media as SocialMedia;
+              const processedVideoUrls = parseVideoUrls(place.video_urls);
+
+              return (
+                <div
+                  key={place.id}
+                  className="bg-card text-card-foreground rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow border border-border"
+                >
+                  {(place.images?.length > 0 || processedVideoUrls.length > 0) && (
+                    <MediaCarousel 
+                      images={place.images || []}
+                      videoUrls={processedVideoUrls}
+                      title={place.name}
+                    />
+                  )}
                   
-                  {place.description && (
-                    <div>
-                      <p className={`text-muted-foreground text-sm ${!expandedDescriptions.has(place.id) ? "line-clamp-3" : ""}`}>
+                  <div className="p-4 space-y-4">
+                    <h2 className="text-xl font-semibold text-foreground">{place.name}</h2>
+                    
+                    {place.description && (
+                      <p className="text-muted-foreground text-sm line-clamp-3">
                         {place.description}
                       </p>
-                      {place.description.length > 150 && (
-                        <button
-                          className="text-sm text-primary hover:text-primary/80"
-                          onClick={() => toggleDescription(place.id)}
-                        >
-                          {expandedDescriptions.has(place.id) ? "Ver menos" : "Ver mais"}
-                        </button>
+                    )}
+
+                    <div className="space-y-2">
+                      {place.address && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <MapPin className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-muted-foreground">{place.address}</span>
+                        </div>
+                      )}
+
+                      {place.owner_name && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <User2 className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-muted-foreground">{place.owner_name}</span>
+                        </div>
+                      )}
+
+                      {place.opening_hours && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Clock className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-muted-foreground">{place.opening_hours}</span>
+                        </div>
                       )}
                     </div>
-                  )}
 
-                  <div className="space-y-2">
-                    {place.address && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <MapPin className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">{place.address}</span>
-                      </div>
-                    )}
+                    <div className="pt-4 border-t border-border flex flex-wrap gap-3">
+                      {place.phone && (
+                        <a
+                          href={`tel:${place.phone}`}
+                          className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                        >
+                          <Phone className="w-4 h-4" />
+                        </a>
+                      )}
 
-                    {place.owner_name && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <User2 className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">{place.owner_name}</span>
-                      </div>
-                    )}
+                      {place.whatsapp && (
+                        <a
+                          href={`https://wa.me/${place.whatsapp.replace(/\D/g, '')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-sm text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300"
+                        >
+                          <MessageCircle className="w-4 h-4" />
+                        </a>
+                      )}
 
-                    {place.opening_hours && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Clock className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">{place.opening_hours}</span>
-                      </div>
-                    )}
+                      {place.website && (
+                        <a
+                          href={place.website}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-sm text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300"
+                        >
+                          <Globe className="w-4 h-4" />
+                        </a>
+                      )}
 
-                    {place.entrance_fee && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Ticket className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">{place.entrance_fee}</span>
-                      </div>
-                    )}
-                  </div>
+                      {socialMedia?.facebook && (
+                        <a
+                          href={socialMedia.facebook}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                        >
+                          <Facebook className="w-4 h-4" />
+                        </a>
+                      )}
 
-                  <div className="pt-4 border-t border-border flex flex-wrap gap-3">
-                    {place.phone && (
-                      <a
-                        href={`tel:${place.phone}`}
-                        className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                      >
-                        <Phone className="w-4 h-4" />
-                      </a>
-                    )}
+                      {socialMedia?.instagram && (
+                        <a
+                          href={socialMedia.instagram}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-sm text-pink-600 hover:text-pink-800 dark:text-pink-400 dark:hover:text-pink-300"
+                        >
+                          <Instagram className="w-4 h-4" />
+                        </a>
+                      )}
 
-                    {place.whatsapp && (
-                      <a
-                        href={`https://wa.me/${place.whatsapp.replace(/\D/g, '')}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-sm text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300"
-                      >
-                        <MessageCircle className="w-4 h-4" />
-                      </a>
-                    )}
-
-                    {place.website && (
-                      <a
-                        href={place.website}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-sm text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300"
-                      >
-                        <Globe className="w-4 h-4" />
-                      </a>
-                    )}
-
-                    {place.social_media && typeof place.social_media === 'object' && (
-                      <>
-                        {place.social_media.facebook && (
-                          <a
-                            href={place.social_media.facebook}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                          >
-                            <Facebook className="w-4 h-4" />
-                          </a>
-                        )}
-                        {place.social_media.instagram && (
-                          <a
-                            href={place.social_media.instagram}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1 text-sm text-pink-600 hover:text-pink-800 dark:text-pink-400 dark:hover:text-pink-300"
-                          >
-                            <Instagram className="w-4 h-4" />
-                          </a>
-                        )}
-                      </>
-                    )}
-
-                    {place.maps_url && (
-                      <a
-                        href={place.maps_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-sm text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
-                      >
-                        <MapPin className="w-4 h-4" />
-                      </a>
-                    )}
+                      {place.maps_url && (
+                        <a
+                          href={place.maps_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-sm text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
+                        >
+                          <MapPin className="w-4 h-4" />
+                        </a>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
             {!isLoading && (!places || places.length === 0) && (
               <p className="text-muted-foreground col-span-full text-center py-8">
                 Nenhum lugar encontrado.

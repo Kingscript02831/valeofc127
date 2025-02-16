@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import MediaCarousel from "@/components/MediaCarousel";
+import MediaCarousel from "./MediaCarousel";
 
 interface InstagramMedia {
   url: string;
@@ -53,12 +53,20 @@ const NewsCard = ({
     border: 'none'
   } : undefined;
 
+  // Handle both Dropbox and YouTube videos
+  const processedVideoUrls = video_urls?.map(url => {
+    if (url.includes('dropbox.com')) {
+      return url.replace('www.dropbox.com', 'dl.dropboxusercontent.com');
+    }
+    return url;
+  }) || [];
+
   return (
     <Card className="overflow-hidden transition-transform hover:scale-[1.02]">
-      {(images?.length > 0 || video_urls?.length > 0) && (
+      {(images?.length > 0 || processedVideoUrls.length > 0) && (
         <MediaCarousel 
           images={images}
-          videoUrls={video_urls}
+          videoUrls={processedVideoUrls}
           title={title}
         />
       )}

@@ -1,16 +1,16 @@
 
 import { useState } from "react";
-import Navbar from "@/components/Navbar";
-import SubNav from "@/components/SubNav";
-import Footer from "@/components/Footer";
-import NewsCard from "@/components/NewsCard";
-import BottomNav from "@/components/BottomNav";
+import type { Database } from "@/types/supabase";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import type { Database } from "@/integrations/supabase/types";
+import NewsCard from "@/components/NewsCard";
+import Navbar from "../components/Navbar";
+import SubNav from "../components/SubNav";
+import Footer from "../components/Footer";
+import BottomNav from "../components/BottomNav";
 
 type News = Database['public']['Tables']['news']['Row'] & {
   categories: Database['public']['Tables']['categories']['Row'] | null;
@@ -140,10 +140,12 @@ const Index = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {news.map((item) => {
-                const instagramMedia = Array.isArray(item.instagram_media) 
-                  ? (item.instagram_media as unknown as InstagramMedia[])
+                const instagramMedia = item.instagram_media 
+                  ? (typeof item.instagram_media === 'string' 
+                      ? JSON.parse(item.instagram_media) 
+                      : item.instagram_media) as InstagramMedia[]
                   : [];
-                  
+
                 return (
                   <NewsCard
                     key={item.id}
@@ -158,7 +160,7 @@ const Index = () => {
                       name: item.categories.name,
                       slug: item.categories.slug,
                       background_color: item.categories.background_color
-                    } : undefined}
+                    } : null}
                     buttonColor={item.button_color || undefined}
                   />
                 );
