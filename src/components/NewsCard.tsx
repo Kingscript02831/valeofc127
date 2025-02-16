@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import MediaCarousel from "../components/MediaCarousel";
+import MediaCarousel from "./MediaCarousel";
 
 interface InstagramMedia {
   url: string;
@@ -49,8 +49,8 @@ const NewsCard = ({
       const urls = instagramMedia.map(media => {
         let url = media.url;
         
-        // Remove qualquer parâmetro da URL
-        url = url.split('?')[0];
+        // Remove parâmetros e trailing slashes
+        url = url.split('?')[0].replace(/\/+$/, '');
         
         // Garantir que a URL começa com https://
         if (!url.startsWith('http')) {
@@ -60,19 +60,16 @@ const NewsCard = ({
         // Remover www. se existir
         url = url.replace('www.', '');
         
-        // Converter reel para post
+        // Transformar URLs de reel em post
         url = url.replace('/reel/', '/p/');
         
-        // Remover /embed se existir
-        url = url.replace('/embed', '');
-        
-        // Adicionar /embed/simple no final (usando embed simples para melhor compatibilidade)
-        if (!url.endsWith('/embed/simple')) {
-          url = url.replace(/\/?$/, '/embed/simple');
+        // Garantir que termina com /embed
+        if (!url.endsWith('/embed')) {
+          url = url + '/embed';
         }
 
-        // Adicionar parâmetro para evitar problemas de cache
-        url = `${url}?t=${Date.now()}`;
+        // Adicionar parâmetros necessários
+        url = `${url}?cr=1&v=14&wp=540&rd=https%3A%2F%2Finstagram.com`;
 
         return url;
       });
@@ -163,15 +160,16 @@ const NewsCard = ({
           {processedInstagramUrls.map((url, index) => (
             <div key={index} className="aspect-square w-full bg-gray-50">
               <iframe
+                key={url} // Adicionando key única para forçar re-render
                 src={url}
                 className="w-full h-full"
                 frameBorder="0"
                 scrolling="no"
                 allowTransparency
-                allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                allow="encrypted-media; picture-in-picture; web-share"
                 loading="lazy"
-                referrerPolicy="no-referrer"
-                sandbox="allow-scripts allow-same-origin allow-popups allow-presentation"
+                referrerPolicy="origin"
+                title={`Instagram post ${index + 1}`}
               />
             </div>
           ))}
