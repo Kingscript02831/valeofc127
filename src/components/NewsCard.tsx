@@ -1,3 +1,4 @@
+
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Card } from "@/components/ui/card";
@@ -5,8 +6,11 @@ import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronUp, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import type { Database } from "@/types/supabase";
-import type { InstagramMedia } from "@/types/supabase";
+
+interface InstagramMedia {
+  url: string;
+  type: 'post' | 'video';
+}
 
 interface NewsCardProps {
   title: string;

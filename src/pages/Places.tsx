@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Phone, Globe, MapPin, Clock, Ticket, User2, Facebook, Instagram, MessageCircle, Search } from "lucide-react";
@@ -10,6 +9,7 @@ import Footer from "../components/Footer";
 import BottomNav from "../components/BottomNav";
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
+import MediaCarousel from "../components/MediaCarousel";
 
 type Place = Database["public"]["Tables"]["places"]["Row"];
 type Category = Database["public"]["Tables"]["categories"]["Row"];
@@ -130,33 +130,32 @@ const Places = () => {
                 key={place.id}
                 className="bg-card text-card-foreground rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow border border-border"
               >
-                {place.image && (
-                  <div className="aspect-video w-full overflow-hidden">
-                    <img
-                      src={place.image}
-                      alt={place.name}
-                      className="w-full h-full object-cover"
-                    />
+                {(place.images?.length > 0 || place.video_urls?.length > 0) && (
+                  <MediaCarousel 
+                    images={place.images || []}
+                    videoUrls={place.video_urls || []}
+                    title={place.name}
+                  />
+                )}
+                
+                {place.description && (
+                  <div>
+                    <p className={`text-muted-foreground text-sm ${!expandedDescriptions.has(place.id) ? "line-clamp-3" : ""}`}>
+                      {place.description}
+                    </p>
+                    <Button
+                      variant="link"
+                      className="p-0 h-auto text-sm text-primary hover:text-primary/80"
+                      onClick={() => toggleDescription(place.id)}
+                    >
+                      {expandedDescriptions.has(place.id) ? "Ver menos" : "Ver mais"}
+                    </Button>
                   </div>
                 )}
+
                 <div className="p-4 space-y-4">
                   <h2 className="text-xl font-semibold text-foreground">{place.name}</h2>
                   
-                  {place.description && (
-                    <div>
-                      <p className={`text-muted-foreground text-sm ${!expandedDescriptions.has(place.id) ? "line-clamp-3" : ""}`}>
-                        {place.description}
-                      </p>
-                      <Button
-                        variant="link"
-                        className="p-0 h-auto text-sm text-primary hover:text-primary/80"
-                        onClick={() => toggleDescription(place.id)}
-                      >
-                        {expandedDescriptions.has(place.id) ? "Ver menos" : "Ver mais"}
-                      </Button>
-                    </div>
-                  )}
-
                   <div className="space-y-2">
                     {place.address && (
                       <div className="flex items-center gap-2 text-sm">

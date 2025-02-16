@@ -457,6 +457,7 @@ export type Database = {
           social_media: Json | null
           state: string | null
           user_id: string | null
+          video_urls: string[] | null
           website: string | null
           whatsapp: string | null
         }
@@ -485,6 +486,7 @@ export type Database = {
           social_media?: Json | null
           state?: string | null
           user_id?: string | null
+          video_urls?: string[] | null
           website?: string | null
           whatsapp?: string | null
         }
@@ -513,6 +515,7 @@ export type Database = {
           social_media?: Json | null
           state?: string | null
           user_id?: string | null
+          video_urls?: string[] | null
           website?: string | null
           whatsapp?: string | null
         }
@@ -838,6 +841,7 @@ export type Database = {
           id: string
           image: string | null
           image_id: string | null
+          images: string[] | null
           images_ids: string[] | null
           latitude: number | null
           longitude: number | null
@@ -850,6 +854,7 @@ export type Database = {
           social_media: Json | null
           state: string | null
           user_id: string | null
+          video_urls: string[] | null
           website: string | null
           whatsapp: string | null
         }
@@ -866,6 +871,7 @@ export type Database = {
           id?: string
           image?: string | null
           image_id?: string | null
+          images?: string[] | null
           images_ids?: string[] | null
           latitude?: number | null
           longitude?: number | null
@@ -878,6 +884,7 @@ export type Database = {
           social_media?: Json | null
           state?: string | null
           user_id?: string | null
+          video_urls?: string[] | null
           website?: string | null
           whatsapp?: string | null
         }
@@ -894,6 +901,7 @@ export type Database = {
           id?: string
           image?: string | null
           image_id?: string | null
+          images?: string[] | null
           images_ids?: string[] | null
           latitude?: number | null
           longitude?: number | null
@@ -906,6 +914,7 @@ export type Database = {
           social_media?: Json | null
           state?: string | null
           user_id?: string | null
+          video_urls?: string[] | null
           website?: string | null
           whatsapp?: string | null
         }

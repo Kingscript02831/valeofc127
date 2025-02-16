@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Phone, Globe, MapPin, Clock, User2, Facebook, Instagram, MessageCircle, Search, DollarSign } from "lucide-react";
@@ -9,6 +8,7 @@ import SubNav from "@/components/SubNav";
 import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
 import { Input } from "@/components/ui/input";
+import MediaCarousel from "@/components/MediaCarousel";
 
 type Store = Database["public"]["Tables"]["stores"]["Row"];
 type Category = Database["public"]["Tables"]["categories"]["Row"];
@@ -118,15 +118,14 @@ const Stores = () => {
                 key={store.id}
                 className="bg-card text-card-foreground rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow border border-border"
               >
-                {store.image && (
-                  <div className="aspect-video w-full overflow-hidden">
-                    <img
-                      src={store.image}
-                      alt={store.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
+                {(store.images?.length > 0 || store.video_urls?.length > 0) && (
+                  <MediaCarousel 
+                    images={store.images || []}
+                    videoUrls={store.video_urls || []}
+                    title={store.name}
+                  />
                 )}
+                
                 <div className="p-4 space-y-4">
                   <h2 className="text-xl font-semibold text-foreground">{store.name}</h2>
                   
