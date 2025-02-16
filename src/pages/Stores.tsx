@@ -1,15 +1,15 @@
 
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Phone, Globe, MapPin, Clock, User2, Facebook, Instagram, MessageCircle, Search } from "lucide-react";
-import type { Database } from "@/integrations/supabase/types";
-import { supabase } from "@/integrations/supabase/client";
-import Navbar from "@/components/Navbar";
-import SubNav from "@/components/SubNav";
-import Footer from "@/components/Footer";
-import BottomNav from "@/components/BottomNav";
-import { Input } from "@/components/ui/input";
-import MediaCarousel from "@/components/MediaCarousel";
+import { Phone, Globe, MapPin, Clock, User2, Facebook, Instagram, MessageCircle, Search, ChevronDown, ChevronUp, Wallet } from "lucide-react";
+import { supabase } from "../integrations/supabase/client";
+import type { Database } from "../integrations/supabase/types";
+import { Input } from "../components/ui/input";
+import MediaCarousel from "../components/MediaCarousel";
+import Navbar from "../components/Navbar";
+import SubNav from "../components/SubNav";
+import Footer from "../components/Footer";
+import BottomNav from "../components/BottomNav";
 
 type Store = Database["public"]["Tables"]["stores"]["Row"];
 type Category = Database["public"]["Tables"]["categories"]["Row"];
@@ -17,6 +17,7 @@ type Category = Database["public"]["Tables"]["categories"]["Row"];
 const Stores = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [expandedStores, setExpandedStores] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     document.title = "Lojas | Vale Notícias";
@@ -56,6 +57,23 @@ const Stores = () => {
       return data;
     },
   });
+
+  const parseVideoUrls = (urls: string[] | null) => {
+    if (!urls) return [];
+    return urls.map(url => {
+      if (url.includes('dropbox.com')) {
+        return url.replace('www.dropbox.com', 'dl.dropboxusercontent.com');
+      }
+      return url;
+    });
+  };
+
+  const toggleExpand = (storeId: string) => {
+    setExpandedStores(prev => ({
+      ...prev,
+      [storeId]: !prev[storeId]
+    }));
+  };
 
   return (
     <div className="min-h-screen flex flex-col pb-[72px] md:pb-0">
@@ -114,122 +132,155 @@ const Stores = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {stores?.map((store) => (
-              <div
-                key={store.id}
-                className="bg-card text-card-foreground rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow border border-border"
-              >
-                {(store.images?.length > 0 || store.video_urls?.length > 0) && (
-                  <MediaCarousel 
-                    images={store.images || []}
-                    videoUrls={store.video_urls || []}
-                    title={store.name}
-                  />
-                )}
-                
-                <div className="p-4 space-y-4">
-                  <h2 className="text-xl font-semibold text-foreground">{store.name}</h2>
-                  
-                  {store.description && (
-                    <p className="text-muted-foreground text-sm line-clamp-3">
-                      {store.description}
-                    </p>
+            {stores?.map((store) => {
+              const processedVideoUrls = parseVideoUrls(store.video_urls);
+
+              return (
+                <div
+                  key={store.id}
+                  className="bg-card text-card-foreground rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow border border-border"
+                >
+                  {(store.images?.length > 0 || processedVideoUrls.length > 0) && (
+                    <MediaCarousel 
+                      images={store.images || []}
+                      videoUrls={processedVideoUrls}
+                      title={store.name}
+                    />
                   )}
-
-                  <div className="space-y-2">
-                    {store.address && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <MapPin className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">{store.address}</span>
-                      </div>
+                  
+                  <div className="p-4 space-y-4">
+                    <div className="flex justify-between items-start">
+                      <h2 className="text-xl font-semibold text-foreground">{store.name}</h2>
+                      {store.description && store.description.length > 150 && (
+                        <button
+                          onClick={() => toggleExpand(store.id)}
+                          className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+                        >
+                          {expandedStores[store.id] ? (
+                            <>
+                              Ver menos
+                              <ChevronUp className="h-4 w-4" />
+                            </>
+                          ) : (
+                            <>
+                              Ver mais
+                              <ChevronDown className="h-4 w-4" />
+                            </>
+                          )}
+                        </button>
+                      )}
+                    </div>
+                    
+                    {store.description && (
+                      <p className={`text-muted-foreground text-sm ${!expandedStores[store.id] && "line-clamp-3"}`}>
+                        {store.description}
+                      </p>
                     )}
 
-                    {store.owner_name && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <User2 className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">{store.owner_name}</span>
-                      </div>
-                    )}
+                    <div className={`space-y-2 ${!expandedStores[store.id] && "line-clamp-3"}`}>
+                      {store.address && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <MapPin className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-muted-foreground">{store.address}</span>
+                        </div>
+                      )}
 
-                    {store.opening_hours && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Clock className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">{store.opening_hours}</span>
-                      </div>
-                    )}
-                  </div>
+                      {store.owner_name && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <User2 className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-muted-foreground">{store.owner_name}</span>
+                        </div>
+                      )}
 
-                  <div className="pt-4 border-t border-border flex flex-wrap gap-3">
-                    {store.phone && (
-                      <a
-                        href={`tel:${store.phone}`}
-                        className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                      >
-                        <Phone className="w-4 h-4" />
-                      </a>
-                    )}
+                      {store.opening_hours && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Clock className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-muted-foreground">{store.opening_hours}</span>
+                        </div>
+                      )}
 
-                    {store.whatsapp && (
-                      <a
-                        href={`https://wa.me/${store.whatsapp.replace(/\D/g, '')}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-sm text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300"
-                      >
-                        <MessageCircle className="w-4 h-4" />
-                      </a>
-                    )}
+                      {store.entrance_fee && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Wallet className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-muted-foreground">
+                            Entrada: {store.entrance_fee}
+                          </span>
+                        </div>
+                      )}
+                    </div>
 
-                    {store.website && (
-                      <a
-                        href={store.website}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-sm text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300"
-                      >
-                        <Globe className="w-4 h-4" />
-                      </a>
-                    )}
+                    <div className="pt-4 border-t border-border flex flex-wrap gap-3">
+                      {store.phone && (
+                        <a
+                          href={`tel:${store.phone}`}
+                          className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                        >
+                          <Phone className="w-4 h-4" />
+                        </a>
+                      )}
 
-                    {store.social_media && typeof store.social_media === 'object' && (
-                      <>
-                        {store.social_media.facebook && (
-                          <a
-                            href={store.social_media.facebook}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                          >
-                            <Facebook className="w-4 h-4" />
-                          </a>
-                        )}
-                        {store.social_media.instagram && (
-                          <a
-                            href={store.social_media.instagram}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1 text-sm text-pink-600 hover:text-pink-800 dark:text-pink-400 dark:hover:text-pink-300"
-                          >
-                            <Instagram className="w-4 h-4" />
-                          </a>
-                        )}
-                      </>
-                    )}
+                      {store.whatsapp && (
+                        <a
+                          href={`https://wa.me/${store.whatsapp.replace(/\D/g, '')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-sm text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300"
+                        >
+                          <MessageCircle className="w-4 h-4" />
+                        </a>
+                      )}
 
-                    {store.maps_url && (
-                      <a
-                        href={store.maps_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-sm text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
-                      >
-                        <MapPin className="w-4 h-4" />
-                      </a>
-                    )}
+                      {store.website && (
+                        <a
+                          href={store.website}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-sm text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300"
+                        >
+                          <Globe className="w-4 h-4" />
+                        </a>
+                      )}
+
+                      {store.social_media && typeof store.social_media === 'object' && (
+                        <>
+                          {store.social_media.facebook && (
+                            <a
+                              href={store.social_media.facebook}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                            >
+                              <Facebook className="w-4 h-4" />
+                            </a>
+                          )}
+                          {store.social_media.instagram && (
+                            <a
+                              href={store.social_media.instagram}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1 text-sm text-pink-600 hover:text-pink-800 dark:text-pink-400 dark:hover:text-pink-300"
+                            >
+                              <Instagram className="w-4 h-4" />
+                            </a>
+                          )}
+                        </>
+                      )}
+
+                      {store.maps_url && (
+                        <a
+                          href={store.maps_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-sm text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
+                        >
+                          <MapPin className="w-4 h-4" />
+                        </a>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
             {!isLoading && (!stores || stores.length === 0) && (
               <p className="text-muted-foreground col-span-full text-center py-8">
                 Nenhuma loja encontrada.
@@ -245,3 +296,4 @@ const Stores = () => {
 };
 
 export default Stores;
+
