@@ -78,6 +78,11 @@ export type Database = {
           weather_api_key: string | null
           login_text_color: string
           signup_text_color: string
+          pwa_name: string | null
+          pwa_short_name: string | null
+          pwa_description: string | null
+          pwa_theme_color: string | null
+          pwa_background_color: string | null
         }
       }
       events: {
@@ -94,8 +99,9 @@ export type Database = {
           created_at: string;
           button_color?: string;
           button_secondary_color?: string;
+          video_url?: string;
+          image?: string;
           images?: string[];
-          video_urls?: string[];
           category_id?: string;
         }
       }
