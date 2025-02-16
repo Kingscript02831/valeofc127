@@ -335,12 +335,12 @@ export type Database = {
           file_metadata: Json | null
           files_metadata: Json[] | null
           id: string
-          image: string | null
+          images: string[] | null
           instagram_media: Json | null
           title: string
           updated_at: string | null
           user_id: string | null
-          video: string | null
+          video_urls: string[] | null
         }
         Insert: {
           button_color?: string | null
@@ -352,12 +352,12 @@ export type Database = {
           file_metadata?: Json | null
           files_metadata?: Json[] | null
           id?: string
-          image?: string | null
+          images?: string[] | null
           instagram_media?: Json | null
           title: string
           updated_at?: string | null
           user_id?: string | null
-          video?: string | null
+          video_urls?: string[] | null
         }
         Update: {
           button_color?: string | null
@@ -369,12 +369,12 @@ export type Database = {
           file_metadata?: Json | null
           files_metadata?: Json[] | null
           id?: string
-          image?: string | null
+          images?: string[] | null
           instagram_media?: Json | null
           title?: string
           updated_at?: string | null
           user_id?: string | null
-          video?: string | null
+          video_urls?: string[] | null
         }
         Relationships: [
           {
