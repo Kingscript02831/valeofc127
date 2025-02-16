@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import MediaCarousel from "@/components/MediaCarousel";
+import MediaCarousel from "../components/MediaCarousel";
 
 interface InstagramMedia {
   url: string;
@@ -66,10 +66,13 @@ const NewsCard = ({
         // Remover /embed se existir
         url = url.replace('/embed', '');
         
-        // Adicionar /embed no final
-        if (!url.endsWith('/embed')) {
-          url = url + '/embed';
+        // Adicionar /embed/simple no final (usando embed simples para melhor compatibilidade)
+        if (!url.endsWith('/embed/simple')) {
+          url = url.replace(/\/?$/, '/embed/simple');
         }
+
+        // Adicionar parâmetro para evitar problemas de cache
+        url = `${url}?t=${Date.now()}`;
 
         return url;
       });
@@ -158,7 +161,7 @@ const NewsCard = ({
       {processedInstagramUrls.length > 0 && (
         <div className="space-y-4 p-4">
           {processedInstagramUrls.map((url, index) => (
-            <div key={index} className="aspect-square w-full">
+            <div key={index} className="aspect-square w-full bg-gray-50">
               <iframe
                 src={url}
                 className="w-full h-full"
@@ -167,6 +170,8 @@ const NewsCard = ({
                 allowTransparency
                 allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
                 loading="lazy"
+                referrerPolicy="no-referrer"
+                sandbox="allow-scripts allow-same-origin allow-popups allow-presentation"
               />
             </div>
           ))}
