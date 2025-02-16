@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,7 +25,7 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
     event_date: new Date().toISOString().split('T')[0],
     event_time: "00:00",
     end_time: "00:00",
-    file_path: "",
+    image: "",
     images: [],
     location: "",
     maps_url: "",
@@ -164,13 +165,13 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
         </div>
 
         <div className="col-span-2 space-y-2">
-          <Label>Imagens</Label>
+          <Label>Imagens do Dropbox</Label>
           <div className="space-y-4">
             <div className="flex gap-2">
               <Input
                 value={newImageUrl}
                 onChange={(e) => setNewImageUrl(e.target.value)}
-                placeholder="URL da imagem"
+                placeholder="URL da imagem do Dropbox"
               />
               <Button type="button" onClick={handleAddImage}>
                 <Plus className="w-4 h-4 mr-2" />
@@ -196,13 +197,13 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
         </div>
 
         <div className="col-span-2 space-y-2">
-          <Label>Vídeos do YouTube</Label>
+          <Label>Vídeos do Dropbox</Label>
           <div className="space-y-4">
             <div className="flex gap-2">
               <Input
                 value={newVideoUrl}
                 onChange={(e) => setNewVideoUrl(e.target.value)}
-                placeholder="URL do vídeo do YouTube"
+                placeholder="URL do vídeo do Dropbox"
               />
               <Button type="button" onClick={handleAddVideo}>
                 <Plus className="w-4 h-4 mr-2" />
@@ -228,22 +229,22 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
         </div>
 
         <div>
-          <Label htmlFor="file_path">Imagem Principal</Label>
+          <Label htmlFor="image">Imagem Principal (Dropbox)</Label>
           <Input
-            id="file_path"
-            value={eventData.file_path || ""}
-            onChange={(e) => setEventData({ ...eventData, file_path: e.target.value })}
-            placeholder="URL da imagem principal"
+            id="image"
+            value={eventData.image || ""}
+            onChange={(e) => setEventData({ ...eventData, image: e.target.value })}
+            placeholder="URL da imagem principal do Dropbox"
           />
         </div>
 
         <div>
-          <Label htmlFor="video_url">Link do Vídeo</Label>
+          <Label htmlFor="video_url">Link do Vídeo Principal (Dropbox)</Label>
           <Input
             id="video_url"
             value={eventData.video_url || ""}
             onChange={(e) => setEventData({ ...eventData, video_url: e.target.value })}
-            placeholder="URL do vídeo (YouTube, Vimeo, etc.)"
+            placeholder="URL do vídeo principal do Dropbox"
           />
         </div>
 
