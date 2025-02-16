@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -67,7 +66,6 @@ const AdminSistema = () => {
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [showHistory, setShowHistory] = useState(false);
 
-  // Fetch users
   const { data: users, isLoading } = useQuery({
     queryKey: ["users", searchTerm],
     queryFn: async () => {
@@ -88,7 +86,6 @@ const AdminSistema = () => {
     },
   });
 
-  // Fetch user history
   const { data: userHistory } = useQuery({
     queryKey: ["userHistory", selectedUser?.id],
     queryFn: async () => {
@@ -101,7 +98,6 @@ const AdminSistema = () => {
     enabled: !!selectedUser && showHistory,
   });
 
-  // Delete user mutation
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: string) => {
       const { error } = await supabase.rpc("soft_delete_user", {
@@ -126,7 +122,6 @@ const AdminSistema = () => {
     },
   });
 
-  // Toggle block mutation
   const toggleBlockMutation = useMutation({
     mutationFn: async ({
       userId,
@@ -158,7 +153,6 @@ const AdminSistema = () => {
     },
   });
 
-  // Update user mutation
   const updateUserMutation = useMutation({
     mutationFn: async (userData: Partial<UserProfile>) => {
       const { error } = await supabase
@@ -178,6 +172,35 @@ const AdminSistema = () => {
     onError: (error) => {
       toast({
         title: "Erro ao atualizar usuário",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const resetPasswordMutation = useMutation({
+    mutationFn: async (email: string) => {
+      const { error: rpcError } = await supabase.rpc("request_password_reset", {
+        target_email: email,
+        admin_user_id: (await supabase.auth.getUser()).data.user?.id,
+      });
+      if (rpcError) throw rpcError;
+
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/update-password`,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      toast({
+        title: "Redefinição de senha solicitada",
+        description: "Um email foi enviado para o usuário com as instruções de redefinição de senha",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao solicitar redefinição de senha",
         description: error.message,
         variant: "destructive",
       });
@@ -309,6 +332,13 @@ const AdminSistema = () => {
                           </div>
                         </DialogContent>
                       </Dialog>
+
+                      <DropdownMenuItem
+                        onClick={() => resetPasswordMutation.mutate(user.email)}
+                      >
+                        <Lock className="mr-2 h-4 w-4" />
+                        Redefinir Senha
+                      </DropdownMenuItem>
 
                       <DropdownMenuItem
                         onClick={() =>

@@ -2115,6 +2115,13 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      request_password_reset: {
+        Args: {
+          target_email: string
+          admin_user_id: string
+        }
+        Returns: undefined
+      }
       schedule_account_deletion: {
         Args: {
           user_id: string
@@ -2147,6 +2154,18 @@ export type Database = {
           avatar_url: string
           email: string
         }[]
+      }
+      send_system_notification: {
+        Args: {
+          p_user_id: string
+          p_title: string
+          p_message: string
+          p_type?: string
+          p_reference_id?: string
+          p_publication_title?: string
+          p_publication_description?: string
+        }
+        Returns: string
       }
       set_limit: {
         Args: {
