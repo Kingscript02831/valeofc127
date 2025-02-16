@@ -54,16 +54,36 @@ const NewsCard = ({
     border: 'none'
   } : undefined;
 
+  // Function to transform Dropbox URL to direct link
+  const getDropboxDirectLink = (url: string) => {
+    if (!url) return '';
+    
+    // Check if it's a Dropbox link
+    if (url.includes('dropbox.com')) {
+      // Convert www.dropbox.com to dl.dropboxusercontent.com
+      return url.replace('www.dropbox.com', 'dl.dropboxusercontent.com')
+                .replace('?dl=0', '');
+    }
+    return url;
+  };
+
   // Function to transform YouTube URL to embed URL
   const getEmbedUrl = (url: string) => {
     if (!url) return '';
     
     // Handle different YouTube URL formats
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-    const match = url.match(regExp);
+    if (url.includes('youtube.com') || url.includes('youtu.be')) {
+      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+      const match = url.match(regExp);
+      
+      if (match && match[2].length === 11) {
+        return `https://www.youtube.com/embed/${match[2]}`;
+      }
+    }
     
-    if (match && match[2].length === 11) {
-      return `https://www.youtube.com/embed/${match[2]}`;
+    // If it's a Dropbox video, convert to direct link
+    if (url.includes('dropbox.com')) {
+      return getDropboxDirectLink(url);
     }
     
     return url;
@@ -99,7 +119,7 @@ const NewsCard = ({
       {image && (
         <div className="relative">
           <img
-            src={image}
+            src={getDropboxDirectLink(image)}
             alt={title}
             className="w-full object-contain"
           />
@@ -107,16 +127,26 @@ const NewsCard = ({
       )}
       {video && (
         <div className="relative aspect-video">
-          <iframe
-            src={getEmbedUrl(video)}
-            title={title}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-            className="w-full h-full"
-          />
+          {video.includes('dropbox.com') ? (
+            <video 
+              src={getDropboxDirectLink(video)}
+              controls
+              className="w-full h-full"
+            >
+              Seu navegador não suporta o elemento de vídeo.
+            </video>
+          ) : (
+            <iframe
+              src={getEmbedUrl(video)}
+              title={title}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              className="w-full h-full"
+            />
+          )}
         </div>
       )}
-      {/* Instagram Media Section - Moved to top */}
+      {/* Instagram Media Section */}
       {instagramMedia && instagramMedia.length > 0 && (
         <div className="space-y-4">
           {instagramMedia.map((media, index) => (
