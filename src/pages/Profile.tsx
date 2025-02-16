@@ -94,6 +94,15 @@ export default function Profile() {
     },
   });
 
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    console.error("Erro ao carregar a imagem do avatar:", e);
+    toast({
+      title: "Erro ao carregar imagem",
+      description: "Verifique se o link do Dropbox termina com '?raw=1'",
+      variant: "destructive",
+    });
+  };
+
   useEffect(() => {
     const checkSession = async () => {
       try {
@@ -305,6 +314,7 @@ export default function Profile() {
                         src={profile.avatar_url}
                         alt="Avatar"
                         className="w-full h-full object-cover"
+                        onError={handleImageError}
                       />
                     </div>
                   ) : (
@@ -544,9 +554,17 @@ export default function Profile() {
                             <Input 
                               {...field} 
                               className="bg-transparent border-white text-white placeholder:text-gray-400"
-                              placeholder="https://exemplo.com/avatar.jpg"
+                              placeholder="Cole o link do Dropbox aqui"
                             />
                           </FormControl>
+                          <div className="mt-2 p-4 bg-gray-800 rounded-lg border border-gray-700">
+                            <p className="text-sm text-gray-300">
+                              <strong className="text-white block mb-2">Como usar uma imagem do Dropbox:</strong>
+                              1. Faça upload da imagem no Dropbox<br />
+                              2. Clique com botão direito na imagem e selecione "Copiar link de compartilhamento"<br />
+                              3. Cole o link aqui e substitua "?dl=0" por "?raw=1" no final do link
+                            </p>
+                          </div>
                           <FormMessage />
                         </FormItem>
                       )}
