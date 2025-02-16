@@ -209,13 +209,21 @@ const Admin = () => {
                     />
                   </div>
                 ) : (
-                  <div>
+                  <div className="space-y-2">
                     <Label htmlFor="logo_image">Link da Imagem da Logo</Label>
                     <Input
                       id="logo_image"
                       value={config.navbar_logo_image || ""}
                       onChange={(e) => setConfig({ ...config, navbar_logo_image: e.target.value })}
+                      placeholder="Cole o link compartilhado do Dropbox aqui"
                     />
+                    <p className="text-sm text-gray-500">
+                      Para usar uma imagem do Dropbox:
+                      1. Faça upload da imagem no Dropbox
+                      2. Clique em "Compartilhar"
+                      3. Copie o link compartilhado
+                      4. Substitua "?dl=0" por "?raw=1" no final do link
+                    </p>
                   </div>
                 )}
               </div>
