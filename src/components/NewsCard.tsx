@@ -4,7 +4,7 @@ import { ptBR } from "date-fns/locale";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import MediaCarousel from "./MediaCarousel";
 
@@ -42,6 +42,29 @@ const NewsCard = ({
   instagramMedia = []
 }: NewsCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [processedInstagramUrls, setProcessedInstagramUrls] = useState<string[]>([]);
+
+  useEffect(() => {
+    // Process Instagram URLs
+    if (instagramMedia && instagramMedia.length > 0) {
+      const urls = instagramMedia.map(media => {
+        let url = media.url;
+        // Convert Instagram URL to embed format
+        if (url.includes('/reel/')) {
+          url = url.replace('/reel/', '/p/');
+        }
+        if (!url.endsWith('/embed')) {
+          url = url + '/embed';
+        }
+        // If URL doesn't start with https://, add it
+        if (!url.startsWith('https://')) {
+          url = 'https://' + url;
+        }
+        return url;
+      });
+      setProcessedInstagramUrls(urls);
+    }
+  }, [instagramMedia]);
 
   const formattedCreatedAt = createdAt 
     ? format(new Date(createdAt), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })
@@ -119,14 +142,12 @@ const NewsCard = ({
       </div>
 
       {/* Instagram Media Section */}
-      {instagramMedia && instagramMedia.length > 0 && (
+      {processedInstagramUrls.length > 0 && (
         <div className="space-y-4 p-4">
-          {instagramMedia.map((media, index) => (
+          {processedInstagramUrls.map((url, index) => (
             <div key={index} className="aspect-square w-full">
               <iframe
-                src={media.url.includes('/reel/') 
-                  ? media.url.replace('/reel/', '/p/') + '/embed'
-                  : media.url + '/embed'}
+                src={url}
                 className="w-full h-full"
                 frameBorder="0"
                 scrolling="no"
