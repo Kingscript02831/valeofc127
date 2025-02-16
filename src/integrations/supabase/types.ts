@@ -509,6 +509,7 @@ export type Database = {
           full_name: string | null
           house_number: string | null
           id: string
+          is_blocked: boolean | null
           last_basic_info_update: string | null
           last_seen: string | null
           location: unknown | null
@@ -536,6 +537,7 @@ export type Database = {
           full_name?: string | null
           house_number?: string | null
           id: string
+          is_blocked?: boolean | null
           last_basic_info_update?: string | null
           last_seen?: string | null
           location?: unknown | null
@@ -563,6 +565,7 @@ export type Database = {
           full_name?: string | null
           house_number?: string | null
           id?: string
+          is_blocked?: boolean | null
           last_basic_info_update?: string | null
           last_seen?: string | null
           location?: unknown | null
@@ -886,6 +889,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_audit_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          details: Json | null
+          id: string
+          performed_by: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          performed_by?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          performed_by?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
     }
     Views: {
@@ -1744,6 +1774,18 @@ export type Database = {
         }
         Returns: string
       }
+      get_user_audit_history: {
+        Args: {
+          user_id_param: string
+        }
+        Returns: {
+          id: string
+          action: string
+          details: Json
+          performed_by: string
+          performed_at: string
+        }[]
+      }
       gettransactionid: {
         Args: Record<PropertyKey, never>
         Returns: unknown
@@ -1801,6 +1843,15 @@ export type Database = {
           "": unknown
         }
         Returns: Json
+      }
+      log_user_action: {
+        Args: {
+          user_id: string
+          action: string
+          details: Json
+          performed_by: string
+        }
+        Returns: undefined
       }
       longtransactionsenabled: {
         Args: Record<PropertyKey, never>
@@ -2112,6 +2163,13 @@ export type Database = {
           "": string
         }
         Returns: string[]
+      }
+      soft_delete_user: {
+        Args: {
+          target_user_id: string
+          admin_user_id: string
+        }
+        Returns: undefined
       }
       spheroid_in: {
         Args: {
@@ -4033,6 +4091,14 @@ export type Database = {
           "": unknown
         }
         Returns: string
+      }
+      toggle_user_block: {
+        Args: {
+          target_user_id: string
+          should_block: boolean
+          admin_user_id: string
+        }
+        Returns: undefined
       }
       unlockrows: {
         Args: {

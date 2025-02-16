@@ -21,6 +21,7 @@ import AdminEvents from "./pages/AdminEvents";
 import AdminStores from "./pages/AdminStores";
 import AdminNews from "./pages/AdminNews";
 import AdminCategories from "./pages/AdminCategories";
+import AdminSistema from "./pages/AdminSistema";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound"; 
 import ResetPassword from "./pages/ResetPassword";
@@ -56,6 +57,7 @@ const App: React.FC = () => {
                     <Route path="lojas" element={<AdminStores />} />
                     <Route path="noticias" element={<AdminNews />} />
                     <Route path="categorias" element={<AdminCategories />} />
+                    <Route path="sistema" element={<AdminSistema />} />
                   </Route> 
                   <Route path="*" element={<NotFound />} />
                 </Routes>
