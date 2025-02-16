@@ -39,12 +39,15 @@ const PWAInstallPrompt = () => {
 
   return (
     <div 
-      className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-2"
-      style={{ backgroundColor: config.navbar_color }}
+      className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between h-12 px-4"
+      style={{ 
+        background: `linear-gradient(to right, ${config.navbar_color}, ${config.primary_color})`,
+        color: config.text_color
+      }}
     >
       <div className="flex items-center gap-3">
-        <Download size={20} className="text-white" />
-        <p className="text-white text-sm">
+        <Download size={18} style={{ color: config.text_color }} />
+        <p className="text-sm" style={{ color: config.text_color }}>
           {config.pwa_install_message || "Instale nosso aplicativo para uma experiência melhor!"}
         </p>
       </div>
@@ -53,15 +56,20 @@ const PWAInstallPrompt = () => {
           variant="secondary" 
           size="sm" 
           onClick={handleInstall}
-          className="text-sm"
+          className="text-sm h-8"
+          style={{
+            backgroundColor: config.button_secondary_color,
+            color: config.text_color
+          }}
         >
           Instalar
         </Button>
         <button
           onClick={() => setShowPrompt(false)}
-          className="text-white hover:text-gray-200"
+          className="hover:opacity-80 transition-opacity"
+          style={{ color: config.text_color }}
         >
-          <X size={20} />
+          <X size={18} />
         </button>
       </div>
     </div>
