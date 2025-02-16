@@ -24,14 +24,14 @@ const SubNav = () => {
     return (
       <nav className="w-full border-b mt-16 bg-gray-800">
         <div className="max-w-screen-2xl mx-auto px-4">
-          <div className="flex justify-center space-x-8 py-2">
+          <div className="flex justify-center space-x-16 py-3">
             {links.map((link) => {
               const Icon = link.icon;
               return (
                 <Link
                   key={link.path}
                   to={link.path}
-                  className="text-white hover:opacity-80 transition-opacity"
+                  className="text-white hover:opacity-80 transition-opacity p-2"
                   title={link.label}
                 >
                   <Icon size={24} />
@@ -53,14 +53,14 @@ const SubNav = () => {
       }}
     >
       <div className="max-w-screen-2xl mx-auto px-4">
-        <div className="flex justify-center space-x-8 py-2">
+        <div className="flex justify-center space-x-16 py-3">
           {links.map((link) => {
             const Icon = link.icon;
             return (
               <Link
                 key={link.path}
                 to={link.path}
-                className={`text-white hover:opacity-80 transition-opacity ${
+                className={`text-white hover:opacity-80 transition-opacity p-2 ${
                   location.pathname === link.path ? "border-b-2" : ""
                 }`}
                 title={link.label}
