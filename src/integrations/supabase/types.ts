@@ -18,6 +18,7 @@ export type Database = {
           is_active: boolean | null
           modified_at: string | null
           modified_by: string | null
+          path: string | null
           permission: Database["public"]["Enums"]["permission_type"]
           user_id: string
         }
@@ -29,6 +30,7 @@ export type Database = {
           is_active?: boolean | null
           modified_at?: string | null
           modified_by?: string | null
+          path?: string | null
           permission: Database["public"]["Enums"]["permission_type"]
           user_id: string
         }
@@ -40,6 +42,7 @@ export type Database = {
           is_active?: boolean | null
           modified_at?: string | null
           modified_by?: string | null
+          path?: string | null
           permission?: Database["public"]["Enums"]["permission_type"]
           user_id?: string
         }

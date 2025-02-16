@@ -30,6 +30,7 @@ type Permission = {
   permission: 'owner' | 'admin' | 'news_editor' | 'events_editor' | 'places_editor' | 'stores_editor';
   custom_role?: string;
   description?: string;
+  path?: string;
   is_active: boolean;
   granted_at: string;
   modified_at?: string;
@@ -60,7 +61,8 @@ const AdminPermissions = () => {
     email: "",
     permission: "admin" as Permission["permission"],
     description: "",
-    custom_role: ""
+    custom_role: "",
+    path: ""
   });
 
   // Query permissions data
@@ -107,6 +109,7 @@ const AdminPermissions = () => {
           permission: data.permission,
           description: data.description,
           custom_role: data.custom_role,
+          path: data.path,
           is_active: true
         });
 
@@ -115,7 +118,7 @@ const AdminPermissions = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-permissions"] });
       setIsDialogOpen(false);
-      setFormData({ email: "", permission: "admin", description: "", custom_role: "" });
+      setFormData({ email: "", permission: "admin", description: "", custom_role: "", path: "" });
       toast({
         title: "Sucesso",
         description: "Permissão adicionada com sucesso",
@@ -139,6 +142,7 @@ const AdminPermissions = () => {
           permission: permission.permission,
           description: permission.description,
           custom_role: permission.custom_role,
+          path: permission.path,
           modified_at: new Date().toISOString(),
         })
         .eq('id', permission.id);
@@ -196,7 +200,8 @@ const AdminPermissions = () => {
         ...editingPermission,
         permission: formData.permission,
         description: formData.description,
-        custom_role: formData.custom_role
+        custom_role: formData.custom_role,
+        path: formData.path
       });
     } else {
       addPermissionMutation.mutate(formData);
@@ -209,7 +214,8 @@ const AdminPermissions = () => {
       email: permission.users?.email || "",
       permission: permission.permission,
       description: permission.description || "",
-      custom_role: permission.custom_role || ""
+      custom_role: permission.custom_role || "",
+      path: permission.path || ""
     });
     setIsDialogOpen(true);
   };
@@ -258,7 +264,7 @@ const AdminPermissions = () => {
                 <Button 
                   onClick={() => {
                     setEditingPermission(null);
-                    setFormData({ email: "", permission: "admin", description: "", custom_role: "" });
+                    setFormData({ email: "", permission: "admin", description: "", custom_role: "", path: "" });
                   }}
                   className="mt-8"
                 >
@@ -318,6 +324,15 @@ const AdminPermissions = () => {
                     </div>
                   )}
                   <div className="space-y-2">
+                    <Label htmlFor="path">Endereço da Página</Label>
+                    <Input
+                      id="path"
+                      value={formData.path}
+                      onChange={(e) => setFormData(prev => ({ ...prev, path: e.target.value }))}
+                      placeholder="Ex: admin/addmin"
+                    />
+                  </div>
+                  <div className="space-y-2">
                     <Label htmlFor="description">Descrição</Label>
                     <Textarea
                       id="description"
@@ -341,6 +356,7 @@ const AdminPermissions = () => {
                 <TableHead>Email</TableHead>
                 <TableHead>Permissão</TableHead>
                 <TableHead>Permissão Personalizada</TableHead>
+                <TableHead>Endereço da Página</TableHead>
                 <TableHead>Descrição</TableHead>
                 <TableHead>Data de Concessão</TableHead>
                 <TableHead>Ações</TableHead>
@@ -352,6 +368,7 @@ const AdminPermissions = () => {
                   <TableCell>{permission.users?.email}</TableCell>
                   <TableCell>{PERMISSION_LABELS[permission.permission]}</TableCell>
                   <TableCell>{permission.custom_role || "-"}</TableCell>
+                  <TableCell>{permission.path || "-"}</TableCell>
                   <TableCell>{permission.description || "-"}</TableCell>
                   <TableCell>
                     {new Date(permission.granted_at).toLocaleDateString("pt-BR")}
@@ -382,7 +399,7 @@ const AdminPermissions = () => {
               ))}
               {permissions?.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center">
+                  <TableCell colSpan={7} className="text-center">
                     Nenhuma permissão encontrada
                   </TableCell>
                 </TableRow>
