@@ -1,7 +1,6 @@
-
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Edit, Trash, Plus, Search } from "lucide-react";
+import { Edit, Trash, Plus, Search, ChevronDown, ChevronUp } from "lucide-react";
 import { useToast } from "../hooks/use-toast";
 import { supabase } from "../integrations/supabase/client";
 import { Button } from "../components/ui/button";
@@ -25,6 +24,7 @@ import {
 } from "../components/ui/alert-dialog";
 import { PlaceForm } from "../components/admin/PlaceForm";
 import type { Place, PlaceFormData } from "../types/places";
+import { cn } from "../lib/utils";
 
 const AdminPlaces = () => {
   const { toast } = useToast();
@@ -33,6 +33,14 @@ const AdminPlaces = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
   const [isAddEditDialogOpen, setIsAddEditDialogOpen] = useState(false);
+  const [expandedPlaces, setExpandedPlaces] = useState<Record<string, boolean>>({});
+
+  const toggleExpand = (placeId: string) => {
+    setExpandedPlaces(prev => ({
+      ...prev,
+      [placeId]: !prev[placeId]
+    }));
+  };
 
   // Fetch places
   const { data: places, isLoading } = useQuery({
@@ -237,37 +245,96 @@ const AdminPlaces = () => {
               </thead>
               <tbody>
                 {filteredPlaces?.map((place) => (
-                  <tr key={place.id} className="border-b hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">{place.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {place.address}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {place.phone || "-"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedPlace(place);
-                          setIsAddEditDialogOpen(true);
-                        }}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedPlace(place);
-                          setIsDeleteDialogOpen(true);
-                        }}
-                      >
-                        <Trash className="w-4 h-4" />
-                      </Button>
-                    </td>
-                  </tr>
+                  <>
+                    <tr key={place.id} className="border-b hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">{place.name}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {place.address}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {place.phone || "-"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => toggleExpand(place.id)}
+                          className="mr-2"
+                        >
+                          {expandedPlaces[place.id] ? (
+                            <ChevronUp className="w-4 h-4" />
+                          ) : (
+                            <ChevronDown className="w-4 h-4" />
+                          )}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedPlace(place);
+                            setIsAddEditDialogOpen(true);
+                          }}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedPlace(place);
+                            setIsDeleteDialogOpen(true);
+                          }}
+                        >
+                          <Trash className="w-4 h-4" />
+                        </Button>
+                      </td>
+                    </tr>
+                    {expandedPlaces[place.id] && (
+                      <tr className="bg-gray-50">
+                        <td colSpan={4} className="px-6 py-4">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <h4 className="font-semibold mb-2">Descrição:</h4>
+                              <p className="text-sm text-gray-600">{place.description}</p>
+                            </div>
+                            <div>
+                              <h4 className="font-semibold mb-2">Informações Adicionais:</h4>
+                              <div className="space-y-2 text-sm text-gray-600">
+                                {place.owner_name && (
+                                  <p><span className="font-medium">Proprietário:</span> {place.owner_name}</p>
+                                )}
+                                {place.opening_hours && (
+                                  <p><span className="font-medium">Horário de Funcionamento:</span> {place.opening_hours}</p>
+                                )}
+                                {place.entrance_fee && (
+                                  <p><span className="font-medium">Taxa de Entrada:</span> {place.entrance_fee}</p>
+                                )}
+                                {place.whatsapp && (
+                                  <p><span className="font-medium">WhatsApp:</span> {place.whatsapp}</p>
+                                )}
+                                {place.website && (
+                                  <p><span className="font-medium">Website:</span> {place.website}</p>
+                                )}
+                                {place.maps_url && (
+                                  <p>
+                                    <span className="font-medium">Maps:</span>{" "}
+                                    <a 
+                                      href={place.maps_url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-blue-600 hover:underline"
+                                    >
+                                      Ver no Google Maps
+                                    </a>
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </>
                 ))}
               </tbody>
             </table>
