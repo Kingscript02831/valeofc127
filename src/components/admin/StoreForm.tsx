@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -24,9 +23,6 @@ export const StoreForm = ({ initialData, onSubmit, onCancel }: StoreFormProps) =
     name: "",
     description: "",
     address: "",
-    city: "",
-    state: "",
-    postal_code: "",
     owner_name: "",
     opening_hours: "",
     entrance_fee: "",
@@ -54,9 +50,6 @@ export const StoreForm = ({ initialData, onSubmit, onCancel }: StoreFormProps) =
         name: initialData.name,
         description: initialData.description,
         address: initialData.address,
-        city: initialData.city || "",
-        state: initialData.state || "",
-        postal_code: initialData.postal_code || "",
         owner_name: initialData.owner_name || "",
         opening_hours: initialData.opening_hours || "",
         entrance_fee: initialData.entrance_fee || "",
@@ -204,48 +197,7 @@ export const StoreForm = ({ initialData, onSubmit, onCancel }: StoreFormProps) =
           </Select>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="address">Endereço *</Label>
-          <Input
-            id="address"
-            name="address"
-            value={formData.address}
-            onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
-            required
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="city">Cidade</Label>
-          <Input
-            id="city"
-            name="city"
-            value={formData.city || ""}
-            onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="state">Estado</Label>
-          <Input
-            id="state"
-            name="state"
-            value={formData.state || ""}
-            onChange={(e) => setFormData(prev => ({ ...prev, state: e.target.value }))}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="postal_code">CEP</Label>
-          <Input
-            id="postal_code"
-            name="postal_code"
-            value={formData.postal_code || ""}
-            onChange={(e) => setFormData(prev => ({ ...prev, postal_code: e.target.value }))}
-          />
-        </div>
-
-        <div className="space-y-2 col-span-2">
+        <div className="col-span-2 space-y-2">
           <Label htmlFor="description">Descrição *</Label>
           <Textarea
             id="description"
@@ -256,70 +208,15 @@ export const StoreForm = ({ initialData, onSubmit, onCancel }: StoreFormProps) =
           />
         </div>
 
-        {/* Seção de Imagens do Dropbox */}
-        <div className="col-span-2 space-y-2">
-          <Label>Imagens do Dropbox</Label>
-          <div className="space-y-4">
-            <div className="flex gap-2">
-              <Input
-                value={newImageUrl}
-                onChange={(e) => setNewImageUrl(e.target.value)}
-                placeholder="Cole a URL compartilhada do Dropbox"
-              />
-              <Button type="button" onClick={handleAddImage}>
-                <Plus className="w-4 h-4 mr-2" />
-                Adicionar
-              </Button>
-            </div>
-            <div className="grid grid-cols-1 gap-2">
-              {formData.images?.map((url, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <Input value={url} readOnly />
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="icon"
-                    onClick={() => handleRemoveImage(url)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Seção de Vídeos */}
-        <div className="col-span-2 space-y-2">
-          <Label>Vídeos (Dropbox ou YouTube)</Label>
-          <div className="space-y-4">
-            <div className="flex gap-2">
-              <Input
-                value={newVideoUrl}
-                onChange={(e) => setNewVideoUrl(e.target.value)}
-                placeholder="Cole a URL do Dropbox ou YouTube"
-              />
-              <Button type="button" onClick={handleAddVideo}>
-                <Plus className="w-4 h-4 mr-2" />
-                Adicionar
-              </Button>
-            </div>
-            <div className="grid grid-cols-1 gap-2">
-              {formData.video_urls?.map((url, index) => (
-                <div key={index} className="flex items-center gap-2">
-                  <Input value={url} readOnly />
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="icon"
-                    onClick={() => handleRemoveVideo(url)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </div>
+        <div className="space-y-2">
+          <Label htmlFor="address">Endereço *</Label>
+          <Input
+            id="address"
+            name="address"
+            value={formData.address}
+            onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+            required
+          />
         </div>
 
         <div className="space-y-2">
@@ -404,7 +301,70 @@ export const StoreForm = ({ initialData, onSubmit, onCancel }: StoreFormProps) =
           />
         </div>
 
-        {/* Redes Sociais */}
+        <div className="col-span-2 space-y-2">
+          <Label>Imagens do Dropbox</Label>
+          <div className="space-y-4">
+            <div className="flex gap-2">
+              <Input
+                value={newImageUrl}
+                onChange={(e) => setNewImageUrl(e.target.value)}
+                placeholder="Cole a URL compartilhada do Dropbox"
+              />
+              <Button type="button" onClick={handleAddImage}>
+                <Plus className="w-4 h-4 mr-2" />
+                Adicionar
+              </Button>
+            </div>
+            <div className="grid grid-cols-1 gap-2">
+              {formData.images?.map((url, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <Input value={url} readOnly />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    onClick={() => handleRemoveImage(url)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="col-span-2 space-y-2">
+          <Label>Vídeos (Dropbox ou YouTube)</Label>
+          <div className="space-y-4">
+            <div className="flex gap-2">
+              <Input
+                value={newVideoUrl}
+                onChange={(e) => setNewVideoUrl(e.target.value)}
+                placeholder="Cole a URL do Dropbox ou YouTube"
+              />
+              <Button type="button" onClick={handleAddVideo}>
+                <Plus className="w-4 h-4 mr-2" />
+                Adicionar
+              </Button>
+            </div>
+            <div className="grid grid-cols-1 gap-2">
+              {formData.video_urls?.map((url, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <Input value={url} readOnly />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    onClick={() => handleRemoveVideo(url)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
         <div className="space-y-2">
           <Label htmlFor="social_media.facebook">Facebook</Label>
           <Input
@@ -453,3 +413,5 @@ export const StoreForm = ({ initialData, onSubmit, onCancel }: StoreFormProps) =
     </form>
   );
 };
+
+export default StoreForm;
