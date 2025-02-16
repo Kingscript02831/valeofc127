@@ -150,15 +150,16 @@ const Index = () => {
                     title={item.title}
                     content={item.content}
                     date={item.date}
-                    image={item.image || undefined}
-                    video={item.video || undefined}
+                    createdAt={item.created_at}
+                    images={item.images || []}
+                    video_urls={item.video_urls || []}
                     instagramMedia={instagramMedia}
                     category={item.categories ? {
                       name: item.categories.name,
-                      slug: item.categories.slug
+                      slug: item.categories.slug,
+                      background_color: item.categories.background_color
                     } : undefined}
                     buttonColor={item.button_color || undefined}
-                    createdAt={item.created_at}
                   />
                 );
               })}
