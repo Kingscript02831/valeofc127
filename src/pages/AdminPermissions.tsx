@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "../integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -24,10 +24,12 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 
+type PermissionType = 'owner' | 'admin' | 'news_editor' | 'events_editor' | 'places_editor' | 'stores_editor' | 'custom';
+
 type Permission = {
   id: string;
   user_id: string;
-  permission: 'owner' | 'admin' | 'news_editor' | 'events_editor' | 'places_editor' | 'stores_editor';
+  permission: PermissionType;
   custom_role?: string;
   description?: string;
   path?: string;
@@ -56,16 +58,14 @@ const AdminPermissions = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // Form state
   const [formData, setFormData] = useState({
     email: "",
-    permission: "admin" as Permission["permission"],
+    permission: "admin" as PermissionType,
     description: "",
     custom_role: "",
     path: ""
   });
 
-  // Query permissions data
   const { data: permissions, isLoading } = useQuery({
     queryKey: ["admin-permissions"],
     queryFn: async () => {
@@ -89,10 +89,8 @@ const AdminPermissions = () => {
     },
   });
 
-  // Add permission mutation
   const addPermissionMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
-      // First, get user ID from email
       const { data: userData, error: userError } = await supabase
         .from('profiles')
         .select('id')
@@ -101,7 +99,6 @@ const AdminPermissions = () => {
 
       if (userError) throw new Error('Usuário não encontrado');
 
-      // Add permission
       const { error: permissionError } = await supabase
         .from('admin_permissions')
         .insert({
@@ -133,7 +130,6 @@ const AdminPermissions = () => {
     },
   });
 
-  // Update permission mutation
   const updatePermissionMutation = useMutation({
     mutationFn: async (permission: Permission) => {
       const { error } = await supabase
@@ -167,7 +163,6 @@ const AdminPermissions = () => {
     },
   });
 
-  // Delete permission mutation
   const deletePermissionMutation = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
@@ -244,7 +239,6 @@ const AdminPermissions = () => {
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
-          {/* Search and Add button */}
           <div className="flex gap-4">
             <div className="flex-1">
               <Label htmlFor="search">Buscar usuário</Label>
@@ -295,7 +289,7 @@ const AdminPermissions = () => {
                     <Label htmlFor="permission">Nível de Permissão</Label>
                     <Select
                       value={formData.permission}
-                      onValueChange={(value: Permission["permission"]) => 
+                      onValueChange={(value: PermissionType) => 
                         setFormData(prev => ({ ...prev, permission: value }))
                       }
                     >
@@ -348,8 +342,6 @@ const AdminPermissions = () => {
               </DialogContent>
             </Dialog>
           </div>
-
-          {/* Permissions Table */}
           <Table>
             <TableHeader>
               <TableRow>
