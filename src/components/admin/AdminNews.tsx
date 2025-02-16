@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +8,7 @@ import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { Search, Plus, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import type { Json } from "@/types/supabase";
 
 interface Category {
   id: string;
@@ -27,7 +29,11 @@ interface News {
   image: string | null;
   video: string | null;
   button_color: string | null;
+  button_secondary_color?: string | null;
   instagram_media: InstagramMedia[] | null;
+  created_at?: string;
+  file_metadata?: Json;
+  files_metadata?: Json[];
 }
 
 const AdminNews = () => {
@@ -58,7 +64,11 @@ const AdminNews = () => {
         .order("date", { ascending: false });
 
       if (error) throw error;
-      setNews(data || []);
+      const formattedData = data?.map(item => ({
+        ...item,
+        instagram_media: item.instagram_media as InstagramMedia[] || []
+      }));
+      setNews(formattedData || []);
     } catch (error) {
       console.error("Error fetching news:", error);
       toast.error("Erro ao carregar notícias");
@@ -87,12 +97,10 @@ const AdminNews = () => {
         return;
       }
 
-      const { data, error } = await supabase.from("news").insert([
-        {
-          ...newNews,
-          date: new Date().toISOString(),
-        },
-      ]);
+      const { data, error } = await supabase.from("news").insert({
+        ...newNews,
+        date: new Date().toISOString(),
+      });
 
       if (error) throw error;
 
@@ -117,6 +125,13 @@ const AdminNews = () => {
     try {
       if (!editingNews || !editingNews.title || !editingNews.content) {
         toast.error("Preencha os campos obrigatórios");
+        return;
+      }
+
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast.error("Você precisa estar logado para editar notícias");
         return;
       }
 
@@ -404,7 +419,9 @@ const AdminNews = () => {
             <Input
               type="search"
               placeholder="Buscar notícias..."
-              className="pl-8"
+              className="pl
+
+-8"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
