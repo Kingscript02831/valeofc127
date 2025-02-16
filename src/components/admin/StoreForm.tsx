@@ -5,7 +5,7 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "../../integrations/supabase/client";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import type { StoreFormData, Store } from "../../types/stores";
@@ -453,4 +453,3 @@ export const StoreForm = ({ initialData, onSubmit, onCancel }: StoreFormProps) =
     </form>
   );
 };
-

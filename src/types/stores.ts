@@ -1,5 +1,5 @@
 
-import type { Database } from "../../types/supabase";
+import type { Database } from "./supabase";
 
 export type Store = Database["public"]["Tables"]["stores"]["Row"];
 
@@ -19,8 +19,7 @@ export interface StoreFormData {
   website?: string | null;
   image?: string | null;
   images?: string[] | null;
-  latitude?: number | null;
-  longitude?: number | null;
+  video_urls?: string[] | null;
   category_id?: string | null;
   social_media?: {
     facebook?: string;
