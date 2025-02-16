@@ -63,6 +63,13 @@ export type Database = {
           weather_api_key: string | null
           login_text_color: string
           signup_text_color: string
+          pwa_name: string | null
+          pwa_short_name: string | null
+          pwa_description: string | null
+          pwa_theme_color: string | null
+          pwa_background_color: string | null
+          pwa_install_message: string | null
+          pwa_app_icon: string | null
         }
       }
       events: {
@@ -94,4 +101,9 @@ export type Database = {
       }
     }
   }
+}
+
+export interface InstagramMedia {
+  url: string;
+  type: 'post' | 'video';
 }
