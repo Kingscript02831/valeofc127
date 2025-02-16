@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -41,14 +42,14 @@ type Permission = {
   };
 };
 
-const PERMISSION_LABELS = {
-  owner: 'Dono do Sistema',
-  admin: 'Administrador',
-  news_editor: 'Editor de Notícias',
-  events_editor: 'Editor de Eventos',
-  places_editor: 'Editor de Lugares',
-  stores_editor: 'Editor de Lojas',
-  custom: 'Permissão Personalizada'
+const PERMISSION_LABELS: Record<string, string> = {
+  'owner': 'Dono do Sistema',
+  'admin': 'Administrador',
+  'news_editor': 'Editor de Notícias',
+  'events_editor': 'Editor de Eventos',
+  'places_editor': 'Editor de Lugares',
+  'stores_editor': 'Editor de Lojas',
+  'custom': 'Permissão Personalizada'
 };
 
 const AdminPermissions = () => {
@@ -73,9 +74,7 @@ const AdminPermissions = () => {
         .from("admin_permissions")
         .select(`
           *,
-          users:user_id (
-            email
-          )
+          users: profiles(email)
         `)
         .eq("is_active", true);
 
@@ -84,20 +83,30 @@ const AdminPermissions = () => {
       }
 
       const { data, error } = await query;
-      if (error) throw error;
+      
+      if (error) {
+        console.error('Erro ao buscar permissões:', error);
+        throw error;
+      }
+      
       return data as Permission[];
     },
   });
 
   const addPermissionMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
+      console.log('Adicionando permissão:', data);
+      
       const { data: userData, error: userError } = await supabase
         .from('profiles')
         .select('id')
         .eq('email', data.email)
         .single();
 
-      if (userError) throw new Error('Usuário não encontrado');
+      if (userError) {
+        console.error('Erro ao buscar usuário:', userError);
+        throw new Error('Usuário não encontrado');
+      }
 
       const { error: permissionError } = await supabase
         .from('admin_permissions')
@@ -110,7 +119,10 @@ const AdminPermissions = () => {
           is_active: true
         });
 
-      if (permissionError) throw permissionError;
+      if (permissionError) {
+        console.error('Erro ao adicionar permissão:', permissionError);
+        throw permissionError;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-permissions"] });
@@ -122,6 +134,7 @@ const AdminPermissions = () => {
       });
     },
     onError: (error) => {
+      console.error('Erro na mutation:', error);
       toast({
         title: "Erro",
         description: error.message,

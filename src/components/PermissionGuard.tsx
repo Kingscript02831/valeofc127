@@ -27,11 +27,17 @@ const PermissionGuard = ({ children }: PermissionGuardProps) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('admin_permissions')
-        .select('*')
+        .select(`
+          *,
+          users: profiles(email)
+        `)
         .eq('user_id', session?.user?.id)
         .eq('is_active', true);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao buscar permissões:', error);
+        throw error;
+      }
       return data;
     },
   });
@@ -39,13 +45,14 @@ const PermissionGuard = ({ children }: PermissionGuardProps) => {
   useEffect(() => {
     const checkPermission = async () => {
       if (!session?.user) {
+        console.log('Usuário não autenticado, redirecionando para login');
         navigate('/login');
         return;
       }
 
       if (!isLoading && userPermissions) {
         const hasPermission = userPermissions.some(permission => {
-          // Verifica se é admin ou owner (acesso total)
+          // Admin e owner têm acesso total
           if (permission.permission === 'admin' || permission.permission === 'owner') {
             return true;
           }
@@ -60,6 +67,7 @@ const PermissionGuard = ({ children }: PermissionGuardProps) => {
 
         if (!hasPermission) {
           console.log('Usuário sem permissão para acessar:', currentPath);
+          console.log('Permissões do usuário:', userPermissions);
           navigate('/404');
         }
       }
