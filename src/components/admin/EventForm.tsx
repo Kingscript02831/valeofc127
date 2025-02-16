@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2 } from "lucide-react";
 import type { Database } from "@/types/supabase";
+import { toast } from "sonner";
 
 type Event = Database['public']['Tables']['events']['Row'];
 type Category = Database['public']['Tables']['categories']['Row'];
@@ -50,12 +51,32 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
   }, [initialData]);
 
   const handleAddImage = () => {
-    if (newImageUrl && !eventData.images?.includes(newImageUrl)) {
+    if (!newImageUrl) {
+      toast.error("Por favor, insira uma URL de imagem válida");
+      return;
+    }
+
+    // Check if it's a valid Dropbox URL
+    if (!newImageUrl.includes('dropbox.com')) {
+      toast.error("Por favor, insira uma URL válida do Dropbox");
+      return;
+    }
+
+    // Convert Dropbox URL to direct link if needed
+    let directImageUrl = newImageUrl;
+    if (newImageUrl.includes('www.dropbox.com')) {
+      directImageUrl = newImageUrl.replace('www.dropbox.com', 'dl.dropboxusercontent.com');
+    }
+
+    if (!eventData.images?.includes(directImageUrl)) {
       setEventData({
         ...eventData,
-        images: [...(eventData.images || []), newImageUrl]
+        images: [...(eventData.images || []), directImageUrl]
       });
       setNewImageUrl("");
+      toast.success("Imagem adicionada com sucesso!");
+    } else {
+      toast.error("Esta imagem já foi adicionada");
     }
   };
 
@@ -64,15 +85,39 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
       ...eventData,
       images: eventData.images?.filter(url => url !== imageUrl) || []
     });
+    toast.success("Imagem removida com sucesso!");
   };
 
   const handleAddVideo = () => {
-    if (newVideoUrl && !eventData.video_urls?.includes(newVideoUrl)) {
+    if (!newVideoUrl) {
+      toast.error("Por favor, insira uma URL de vídeo válida");
+      return;
+    }
+
+    // Check if it's a valid Dropbox or YouTube URL
+    const isDropboxUrl = newVideoUrl.includes('dropbox.com');
+    const isYoutubeUrl = newVideoUrl.includes('youtube.com') || newVideoUrl.includes('youtu.be');
+
+    if (!isDropboxUrl && !isYoutubeUrl) {
+      toast.error("Por favor, insira uma URL válida do Dropbox ou YouTube");
+      return;
+    }
+
+    // Convert Dropbox URL to direct link if needed
+    let directVideoUrl = newVideoUrl;
+    if (isDropboxUrl && newVideoUrl.includes('www.dropbox.com')) {
+      directVideoUrl = newVideoUrl.replace('www.dropbox.com', 'dl.dropboxusercontent.com');
+    }
+
+    if (!eventData.video_urls?.includes(directVideoUrl)) {
       setEventData({
         ...eventData,
-        video_urls: [...(eventData.video_urls || []), newVideoUrl]
+        video_urls: [...(eventData.video_urls || []), directVideoUrl]
       });
       setNewVideoUrl("");
+      toast.success("Vídeo adicionado com sucesso!");
+    } else {
+      toast.error("Este vídeo já foi adicionado");
     }
   };
 
@@ -81,6 +126,7 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
       ...eventData,
       video_urls: eventData.video_urls?.filter(url => url !== videoUrl) || []
     });
+    toast.success("Vídeo removido com sucesso!");
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -171,7 +217,7 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
               <Input
                 value={newImageUrl}
                 onChange={(e) => setNewImageUrl(e.target.value)}
-                placeholder="URL da imagem do Dropbox"
+                placeholder="Cole a URL compartilhada do Dropbox"
               />
               <Button type="button" onClick={handleAddImage}>
                 <Plus className="w-4 h-4 mr-2" />
@@ -197,13 +243,13 @@ export const EventForm = ({ initialData, categories, onSubmit, onCancel }: Event
         </div>
 
         <div className="col-span-2 space-y-2">
-          <Label>Vídeos do Dropbox</Label>
+          <Label>Vídeos (Dropbox ou YouTube)</Label>
           <div className="space-y-4">
             <div className="flex gap-2">
               <Input
                 value={newVideoUrl}
                 onChange={(e) => setNewVideoUrl(e.target.value)}
-                placeholder="URL do vídeo do Dropbox ou YouTube"
+                placeholder="Cole a URL do Dropbox ou YouTube"
               />
               <Button type="button" onClick={handleAddVideo}>
                 <Plus className="w-4 h-4 mr-2" />
