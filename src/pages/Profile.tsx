@@ -56,9 +56,9 @@ const profileSchema = z.object({
         // Remove parâmetros da URL que podem interferir
         directUrl = url.split('?')[0];
         // Substitui o domínio do Dropbox
-        directUrl = directUrl.replace('www.dropbox.com/scl/fi', 'dl.dropboxusercontent.com');
+        directUrl = directUrl.replace('www.dropbox.com', 'dl.dropboxusercontent.com');
         // Adiciona ?dl=1 no final
-        directUrl = directUrl + '?dl=1';
+        directUrl = directUrl + '?raw=1';
       }
       return directUrl;
     })
@@ -95,10 +95,11 @@ export default function Profile() {
   });
 
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    console.error("Erro ao carregar a imagem do avatar:", e);
+    const imgElement = e.target as HTMLImageElement;
+    console.error("Erro ao carregar a imagem do avatar. URL tentada:", imgElement.src);
     toast({
       title: "Erro ao carregar imagem",
-      description: "Verifique se o link do Dropbox termina com '?raw=1'",
+      description: `URL atual: ${imgElement.src}. Verifique se é um link direto do Dropbox.`,
       variant: "destructive",
     });
   };
@@ -562,7 +563,11 @@ export default function Profile() {
                               <strong className="text-white block mb-2">Como usar uma imagem do Dropbox:</strong>
                               1. Faça upload da imagem no Dropbox<br />
                               2. Clique com botão direito na imagem e selecione "Copiar link de compartilhamento"<br />
-                              3. Cole o link aqui e substitua "?dl=0" por "?raw=1" no final do link
+                              3. Cole aqui o link exatamente como está, o sistema irá convertê-lo automaticamente
+                            </p>
+                            <p className="text-xs text-gray-400 mt-2">
+                              Exemplo de link válido:<br />
+                              https://www.dropbox.com/scl/fi/xxxxx/imagem.jpg?rlkey=xxxxx
                             </p>
                           </div>
                           <FormMessage />
