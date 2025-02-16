@@ -9,19 +9,3 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // import { supabase } from "@/integrations/supabase/client";
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
-
-// Adicionando tipos para PWA
-export type PWAConfig = {
-  name: string;
-  short_name: string;
-  description: string;
-  theme_color: string;
-  background_color: string;
-  display: 'standalone' | 'minimal-ui' | 'fullscreen' | 'browser';
-  start_url: string;
-  icons: {
-    src: string;
-    sizes: string;
-    type: string;
-  }[];
-};
