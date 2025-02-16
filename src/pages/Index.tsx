@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import type { Database } from "@/types/supabase";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +10,7 @@ import Navbar from "../components/Navbar";
 import SubNav from "../components/SubNav";
 import Footer from "../components/Footer";
 import BottomNav from "../components/BottomNav";
+import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 
 type News = Database['public']['Tables']['news']['Row'] & {
   categories: Database['public']['Tables']['categories']['Row'] | null;
@@ -176,6 +176,7 @@ const Index = () => {
       </main>
       <Footer />
       <BottomNav />
+      <PWAInstallPrompt />
     </div>
   );
 };

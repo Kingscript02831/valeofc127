@@ -65,7 +65,12 @@ const Admin = () => {
     weather_api_key: null,
     version: 1,
     login_text_color: "#1A1F2C",
-    signup_text_color: "#1A1F2C"
+    signup_text_color: "#1A1F2C",
+    pwa_name: "VALEOFC",
+    pwa_short_name: "VALEOFC",
+    pwa_description: "Seu app de notícias local",
+    pwa_theme_color: "#ffffff",
+    pwa_background_color: "#ffffff"
   });
 
   useEffect(() => {
@@ -134,6 +139,7 @@ const Admin = () => {
             <TabsTrigger value="footer">Rodapé</TabsTrigger>
             <TabsTrigger value="bottom-nav">Barra</TabsTrigger>
             <TabsTrigger value="login">Login/Registro</TabsTrigger>
+            <TabsTrigger value="pwa">PWA</TabsTrigger>
           </TabsList>
 
           <TabsContent value="config" className="bg-white rounded-lg shadow p-6 space-y-6">
@@ -629,6 +635,85 @@ const Admin = () => {
                       type="text"
                       value={config.signup_text_color}
                       onChange={(e) => setConfig({ ...config, signup_text_color: e.target.value })}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <Button onClick={handleConfigUpdate}>
+                Salvar Configurações
+              </Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="pwa" className="bg-white rounded-lg shadow p-6 space-y-6">
+            <div>
+              <h2 className="text-xl font-semibold mb-4">Configurações do PWA</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <Label htmlFor="pwa_name">Nome do Aplicativo</Label>
+                  <Input
+                    id="pwa_name"
+                    value={config.pwa_name || "VALEOFC"}
+                    onChange={(e) => setConfig({ ...config, pwa_name: e.target.value })}
+                    placeholder="Nome do aplicativo"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="pwa_short_name">Nome Curto</Label>
+                  <Input
+                    id="pwa_short_name"
+                    value={config.pwa_short_name || "VALEOFC"}
+                    onChange={(e) => setConfig({ ...config, pwa_short_name: e.target.value })}
+                    placeholder="Nome curto do aplicativo"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="pwa_description">Descrição</Label>
+                  <Textarea
+                    id="pwa_description"
+                    value={config.pwa_description || "Seu app de notícias local"}
+                    onChange={(e) => setConfig({ ...config, pwa_description: e.target.value })}
+                    placeholder="Descrição do aplicativo"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="pwa_theme_color">Cor do Tema</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="pwa_theme_color"
+                      type="color"
+                      value={config.pwa_theme_color || "#ffffff"}
+                      onChange={(e) => setConfig({ ...config, pwa_theme_color: e.target.value })}
+                      className="w-20"
+                    />
+                    <Input
+                      type="text"
+                      value={config.pwa_theme_color || "#ffffff"}
+                      onChange={(e) => setConfig({ ...config, pwa_theme_color: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="pwa_background_color">Cor de Fundo</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="pwa_background_color"
+                      type="color"
+                      value={config.pwa_background_color || "#ffffff"}
+                      onChange={(e) => setConfig({ ...config, pwa_background_color: e.target.value })}
+                      className="w-20"
+                    />
+                    <Input
+                      type="text"
+                      value={config.pwa_background_color || "#ffffff"}
+                      onChange={(e) => setConfig({ ...config, pwa_background_color: e.target.value })}
                     />
                   </div>
                 </div>
