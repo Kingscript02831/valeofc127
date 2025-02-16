@@ -1,6 +1,7 @@
 
 import { User } from "lucide-react";
 import { useToast } from "../../hooks/use-toast";
+import { useEffect, useState } from "react";
 
 interface ProfileAvatarProps {
   avatarUrl: string | null | undefined;
@@ -8,21 +9,47 @@ interface ProfileAvatarProps {
 
 export const ProfileAvatar = ({ avatarUrl }: ProfileAvatarProps) => {
   const { toast } = useToast();
+  const [imageUrl, setImageUrl] = useState<string>("");
 
-  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    const imgElement = e.target as HTMLImageElement;
-    console.error("Erro ao carregar a imagem do avatar:", {
-      urlTentada: imgElement.src,
-      urlOriginal: avatarUrl,
-      headers: {
-        'Content-Type': 'image/jpeg',
-        'Cache-Control': 'no-cache',
+  useEffect(() => {
+    if (avatarUrl) {
+      try {
+        // Remove qualquer parâmetro da URL original
+        const baseUrl = avatarUrl.split('?')[0];
+        
+        // Converte para URL direta do Dropbox
+        let directUrl = baseUrl;
+        
+        if (baseUrl.includes('www.dropbox.com')) {
+          if (baseUrl.includes('/s/')) {
+            directUrl = baseUrl.replace('www.dropbox.com/s/', 'dl.dropboxusercontent.com/s/');
+          } else if (baseUrl.includes('/scl/')) {
+            directUrl = baseUrl.replace('www.dropbox.com/scl/', 'dl.dropboxusercontent.com/scl/');
+          }
+          // Adiciona parâmetro raw=1 apenas se for URL do Dropbox
+          directUrl = `${directUrl}?raw=1`;
+        }
+        
+        console.log('URL original:', avatarUrl);
+        console.log('URL convertida:', directUrl);
+        
+        setImageUrl(directUrl);
+      } catch (error) {
+        console.error('Erro ao processar URL:', error);
+        setImageUrl(avatarUrl);
       }
+    }
+  }, [avatarUrl]);
+
+  const handleImageError = () => {
+    console.error("Erro ao carregar imagem:", {
+      urlOriginal: avatarUrl,
+      urlProcessada: imageUrl
     });
 
     toast({
       title: "Erro ao carregar imagem",
-      description: "Por favor, verifique se:\n1. O link do Dropbox está correto\n2. A imagem é pública\n3. O link é de compartilhamento",
+      description: "Verifique se:\n1. O link do Dropbox está correto\n2. A imagem é pública\n3. O link é de compartilhamento",
       variant: "destructive",
     });
   };
@@ -38,16 +65,11 @@ export const ProfileAvatar = ({ avatarUrl }: ProfileAvatarProps) => {
   return (
     <div className="w-24 h-24 rounded-full overflow-hidden ring-2 ring-gray-700">
       <img
-        src={avatarUrl}
+        src={imageUrl}
         alt="Avatar"
         className="w-full h-full object-cover"
         onError={handleImageError}
-        onLoad={() => {
-          console.log("Imagem carregada com sucesso:", {
-            url: avatarUrl
-          });
-        }}
-        crossOrigin="anonymous"
+        onLoad={() => console.log("Imagem carregada com sucesso!")}
       />
     </div>
   );
