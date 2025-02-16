@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +7,11 @@ import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { Search, Plus, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import type { Json } from "@/types/supabase";
+import type { Database } from "@/types/supabase";
+
+type News = Database['public']['Tables']['news']['Row'];
+type NewsInsert = Database['public']['Tables']['news']['Insert'];
+type NewsUpdate = Database['public']['Tables']['news']['Update'];
 
 interface Category {
   id: string;
@@ -20,28 +23,12 @@ interface InstagramMedia {
   type: "post" | "video";
 }
 
-interface News {
-  id: string;
-  title: string;
-  content: string;
-  date: string;
-  category_id: string | null;
-  image: string | null;
-  video: string | null;
-  button_color: string | null;
-  button_secondary_color?: string | null;
-  instagram_media: InstagramMedia[] | null;
-  created_at?: string;
-  file_metadata?: Json;
-  files_metadata?: Json[];
-}
-
 const AdminNews = () => {
   const [news, setNews] = useState<News[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [editingNews, setEditingNews] = useState<News | null>(null);
-  const [newNews, setNewNews] = useState<Partial<News>>({
+  const [newNews, setNewNews] = useState<NewsInsert>({
     title: "",
     content: "",
     category_id: null,
@@ -51,11 +38,6 @@ const AdminNews = () => {
     instagram_media: [],
   });
 
-  useEffect(() => {
-    fetchNews();
-    fetchCategories();
-  }, []);
-
   const fetchNews = async () => {
     try {
       const { data, error } = await supabase
@@ -64,11 +46,7 @@ const AdminNews = () => {
         .order("date", { ascending: false });
 
       if (error) throw error;
-      const formattedData = data?.map(item => ({
-        ...item,
-        instagram_media: item.instagram_media as InstagramMedia[] || []
-      }));
-      setNews(formattedData || []);
+      setNews(data || []);
     } catch (error) {
       console.error("Error fetching news:", error);
       toast.error("Erro ao carregar notícias");
@@ -90,6 +68,11 @@ const AdminNews = () => {
     }
   };
 
+  useEffect(() => {
+    fetchNews();
+    fetchCategories();
+  }, []);
+
   const handleNewsSubmit = async () => {
     try {
       if (!newNews.title || !newNews.content) {
@@ -97,10 +80,10 @@ const AdminNews = () => {
         return;
       }
 
-      const { data, error } = await supabase.from("news").insert({
+      const { error } = await supabase.from("news").insert({
         ...newNews,
         date: new Date().toISOString(),
-      });
+      } as NewsInsert);
 
       if (error) throw error;
 
@@ -137,7 +120,7 @@ const AdminNews = () => {
 
       const { error } = await supabase
         .from("news")
-        .update(editingNews)
+        .update(editingNews as NewsUpdate)
         .eq("id", editingNews.id);
 
       if (error) throw error;
@@ -419,9 +402,7 @@ const AdminNews = () => {
             <Input
               type="search"
               placeholder="Buscar notícias..."
-              className="pl
-
--8"
+              className="pl-8"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
