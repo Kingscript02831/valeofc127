@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -6,7 +5,7 @@ import { format } from "date-fns";
 import { supabase } from "../integrations/supabase/client";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
-import { useToast } from "../components/ui/use-toast";
+import { useToast } from "../hooks/use-toast";
 import {
   Form,
   FormControl,
@@ -56,15 +55,22 @@ const profileSchema = z.object({
       let directUrl = url;
       if (url.includes('dropbox.com')) {
         try {
-          // Verifica se a URL já está no formato correto
-          if (url.includes('dl.dropboxusercontent.com')) {
-            directUrl = url.includes('raw=1') ? url : `${url}?raw=1`;
-          } else {
-            // Converte URL normal do Dropbox para URL direta
-            directUrl = url
-              .replace('www.dropbox.com', 'dl.dropboxusercontent.com')
-              .split('?')[0] + '?raw=1';
+          // Remove todos os parâmetros da URL
+          let cleanUrl = url.split('?')[0];
+          
+          // Verifica se é um link compartilhável do Dropbox
+          if (cleanUrl.includes('www.dropbox.com/s/')) {
+            // Converte para formato dl.dropboxusercontent.com
+            directUrl = cleanUrl
+              .replace('www.dropbox.com/s/', 'dl.dropboxusercontent.com/s/') 
+              + '?raw=1';
+          } else if (cleanUrl.includes('www.dropbox.com/scl/')) {
+            // Converte novo formato de link do Dropbox
+            directUrl = cleanUrl
+              .replace('www.dropbox.com/scl/', 'dl.dropboxusercontent.com/scl/') 
+              + '?raw=1';
           }
+          
           console.log("URL convertida para download direto:", directUrl);
         } catch (error) {
           console.error("Erro ao processar URL do Dropbox:", error);
@@ -109,12 +115,16 @@ export default function Profile() {
     const imgElement = e.target as HTMLImageElement;
     console.error("Erro ao carregar a imagem do avatar:", {
       urlTentada: imgElement.src,
-      urlOriginal: profile?.avatar_url
+      urlOriginal: profile?.avatar_url,
+      headers: {
+        'Content-Type': 'image/jpeg',
+        'Cache-Control': 'no-cache',
+      }
     });
-  
+
     toast({
       title: "Erro ao carregar imagem",
-      description: "Verifique se o link do Dropbox está correto e tente novamente.",
+      description: "Por favor, verifique se:\n1. O link do Dropbox está correto\n2. A imagem é pública\n3. O link é de compartilhamento",
       variant: "destructive",
     });
   };
@@ -331,7 +341,12 @@ export default function Profile() {
                         alt="Avatar"
                         className="w-full h-full object-cover"
                         onError={handleImageError}
-                        onLoad={() => console.log("Imagem carregada com sucesso:", profile.avatar_url)}
+                        onLoad={() => {
+                          console.log("Imagem carregada com sucesso:", {
+                            url: profile.avatar_url
+                          });
+                        }}
+                        crossOrigin="anonymous"
                       />
                     </div>
                   ) : (
