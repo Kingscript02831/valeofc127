@@ -72,7 +72,14 @@ const Admin = () => {
     pwa_theme_color: "#ffffff",
     pwa_background_color: "#ffffff",
     pwa_install_message: "Instale nosso aplicativo para uma experiência melhor!",
-    pwa_app_icon: null
+    pwa_app_icon: null,
+    admin_accent_color: "#9b87f5",
+    admin_background_color: "#F8F9FA",
+    admin_card_color: "#FFFFFF",
+    admin_header_color: "#D6BCFA",
+    admin_hover_color: "#E2E8F0",
+    admin_sidebar_color: "#1A1F2C",
+    admin_text_color: "#FFFFFF"
   });
 
   useEffect(() => {
