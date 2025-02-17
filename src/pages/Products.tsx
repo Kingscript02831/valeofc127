@@ -7,12 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import type { ProductWithDistance } from "@/types/products";
+import type { Product, ProductWithDistance } from "@/types/products";
 import { useQuery } from "@tanstack/react-query";
-import { useSiteConfig } from "@/hooks/useSiteConfig";
-import Navbar from "@/components/Navbar";
-import SubNav from "@/components/SubNav";
-import BottomNav from "@/components/BottomNav";
+import { useSiteConfig, type SiteConfig } from "@/hooks/useSiteConfig";
 
 const Products = () => {
   const navigate = useNavigate();
@@ -74,8 +71,6 @@ const Products = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
-      <SubNav />
       <div className="container mx-auto px-4 pb-20 pt-4">
         <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm pb-4">
           <div className="flex gap-2 mb-4">
@@ -123,7 +118,7 @@ const Products = () => {
         {isLoading ? (
           <div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4">
             {[...Array(8)].map((_, i) => (
-              <Card key={i} className="animate-pulse bg-card shadow-none border-none">
+              <Card key={i} className="animate-pulse bg-transparent shadow-none border-none">
                 <div className="aspect-square bg-muted rounded-lg" />
                 <CardContent className="p-3">
                   <div className="h-4 bg-muted rounded mb-2" />
@@ -137,15 +132,10 @@ const Products = () => {
             {filteredProducts?.map((product) => (
               <Card 
                 key={product.id}
-                className="cursor-pointer hover:scale-105 transition-transform shadow-none border-none overflow-hidden"
+                className="cursor-pointer hover:scale-105 transition-transform shadow-none border-none overflow-hidden bg-transparent"
                 onClick={() => navigate(`/product/${product.id}`)}
-                style={{
-                  background: config ? `linear-gradient(to bottom, ${config.navbar_color}20, ${config.primary_color}10)` : undefined,
-                }}
               >
-                <div 
-                  className="aspect-square relative overflow-hidden rounded-lg"
-                >
+                <div className="aspect-square relative overflow-hidden rounded-lg">
                   <img
                     src={product.images[0] || "/placeholder.svg"}
                     alt={product.title}
@@ -154,22 +144,22 @@ const Products = () => {
                   <div className="absolute top-2 right-2 bg-primary/80 backdrop-blur-sm text-white px-2 py-1 rounded-full text-xs">
                     {product.condition}
                   </div>
+                  {product.distance && (
+                    <div className="absolute top-2 left-2 bg-primary/80 backdrop-blur-sm text-white px-2 py-1 rounded-full text-xs flex items-center gap-1">
+                      <MapPin className="w-3 h-3" />
+                      {(product.distance / 1000).toFixed(1)}km
+                    </div>
+                  )}
                 </div>
                 <CardContent className="p-3">
-                  <h3 className="font-semibold truncate mb-1" style={{ color: config?.text_color }}>
-                    {product.title}
-                  </h3>
-                  <div className="flex justify-between items-center" style={{ color: config?.text_color }}>
+                  <div className="mb-1">
                     <span className="text-lg font-bold text-primary">
                       R$ {product.price.toFixed(2)}
                     </span>
-                    {product.distance && (
-                      <span className="text-sm flex items-center gap-1 text-muted-foreground">
-                        <MapPin className="w-3 h-3" />
-                        {(product.distance / 1000).toFixed(1)}km
-                      </span>
-                    )}
                   </div>
+                  <h3 className="font-semibold truncate mb-1" style={{ color: config?.text_color }}>
+                    {product.title}
+                  </h3>
                   {product.location_name && (
                     <p className="text-sm truncate mt-1 text-muted-foreground">
                       {product.location_name}
@@ -181,7 +171,6 @@ const Products = () => {
           </div>
         )}
       </div>
-      <BottomNav />
     </div>
   );
 };
