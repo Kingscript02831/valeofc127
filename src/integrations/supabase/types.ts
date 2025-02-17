@@ -905,6 +905,12 @@ export type Database = {
           navbar_social_instagram: string | null
           navigation_links: Json | null
           primary_color: string | null
+          product_card_primary_color: string | null
+          product_card_secondary_color: string | null
+          product_location_color: string | null
+          product_page_background_color: string | null
+          product_price_color: string | null
+          product_text_color: string | null
           pwa_app_icon: string | null
           pwa_background_color: string | null
           pwa_description: string | null
@@ -972,6 +978,12 @@ export type Database = {
           navbar_social_instagram?: string | null
           navigation_links?: Json | null
           primary_color?: string | null
+          product_card_primary_color?: string | null
+          product_card_secondary_color?: string | null
+          product_location_color?: string | null
+          product_page_background_color?: string | null
+          product_price_color?: string | null
+          product_text_color?: string | null
           pwa_app_icon?: string | null
           pwa_background_color?: string | null
           pwa_description?: string | null
@@ -1039,6 +1051,12 @@ export type Database = {
           navbar_social_instagram?: string | null
           navigation_links?: Json | null
           primary_color?: string | null
+          product_card_primary_color?: string | null
+          product_card_secondary_color?: string | null
+          product_location_color?: string | null
+          product_page_background_color?: string | null
+          product_price_color?: string | null
+          product_text_color?: string | null
           pwa_app_icon?: string | null
           pwa_background_color?: string | null
           pwa_description?: string | null
