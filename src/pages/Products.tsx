@@ -10,6 +10,9 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Product, ProductWithDistance } from "@/types/products";
 import { useQuery } from "@tanstack/react-query";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import Navbar from "@/components/Navbar";
+import SubNav from "@/components/SubNav";
+import BottomNav from "@/components/BottomNav";
 
 const Products = () => {
   const navigate = useNavigate();
@@ -71,16 +74,18 @@ const Products = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Navbar />
+      <SubNav />
       <div className="container mx-auto px-4 pb-20 pt-4">
-        <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm pb-4">
+        <div className="sticky top-20 z-10 bg-background/80 backdrop-blur-sm pb-4">
           <div className="flex gap-2 mb-4">
             <Button
-              variant="ghost"
+              variant="outline"
               size="icon"
               onClick={() => navigate("/user-products")}
-              className="hover:scale-105 transition-transform text-foreground"
+              className="hover:scale-105 transition-transform text-foreground rounded-full shadow-lg"
             >
-              <User className="h-5 w-5" />
+              <User className="h-4 w-4" />
             </Button>
             <div className="relative flex-1">
               <Input
@@ -171,6 +176,7 @@ const Products = () => {
           </div>
         )}
       </div>
+      <BottomNav />
     </div>
   );
 };
