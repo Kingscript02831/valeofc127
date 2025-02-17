@@ -1,18 +1,19 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { supabase } from "../integrations/supabase/client";
-import Navbar from "../components/Navbar";
-import SubNav from "../components/SubNav";
-import type { SiteConfig } from "../hooks/useSiteConfig";
+import { supabase } from "@/integrations/supabase/client";
+import Navbar from "@/components/Navbar";
+import SubNav from "@/components/SubNav";
+import { useSiteConfig, type SiteConfig } from "@/hooks/useSiteConfig";
 
 const Config = () => {
   const navigate = useNavigate();
+  const { data: existingConfig, isLoading } = useSiteConfig();
   const [config, setConfig] = useState<Partial<SiteConfig>>({
     product_card_primary_color: "#FF69B4",
     product_card_secondary_color: "#FFB6C1",
@@ -22,22 +23,51 @@ const Config = () => {
     product_location_color: "#FFFFFF",
   });
 
+  useEffect(() => {
+    if (existingConfig) {
+      setConfig(existingConfig);
+    }
+  }, [existingConfig]);
+
   const handleConfigUpdate = async () => {
     try {
+      if (!existingConfig?.id) {
+        toast.error("Configuração não encontrada");
+        return;
+      }
+
       const { error } = await supabase
         .from("site_configuration")
-        .update(config)
-        .eq("id", config.id);
+        .update({
+          product_card_primary_color: config.product_card_primary_color,
+          product_card_secondary_color: config.product_card_secondary_color,
+          product_page_background_color: config.product_page_background_color,
+          product_text_color: config.product_text_color,
+          product_price_color: config.product_price_color,
+          product_location_color: config.product_location_color
+        })
+        .eq("id", existingConfig.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error updating config:", error);
+        throw error;
+      }
       
       toast.success("Configurações atualizadas com sucesso!");
       navigate("/products");
     } catch (error) {
       console.error("Error updating config:", error);
-      toast.error("Erro ao atualizar configurações");
+      toast.error("Erro ao atualizar configurações. Por favor, tente novamente.");
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
