@@ -14,39 +14,36 @@ const ProductDetails = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const { data: product, isLoading } = useQuery({
+  const { data: product, isLoading, error } = useQuery({
     queryKey: ["product", id],
     queryFn: async () => {
-      console.log("Fetching product with ID:", id);
-      
       if (!id) throw new Error("No product ID provided");
 
-      const { data, error } = await supabase
+      const { data: productData, error: productError } = await supabase
         .from("products")
         .select(`
           *,
-          profiles (
+          profiles:profiles (
             full_name,
             avatar_url
           )
         `)
-        .eq("id", id)
+        .eq('id', id)
         .single();
 
-      if (error) {
-        console.error("Error fetching product:", error);
-        throw error;
+      if (productError) {
+        console.error("Error fetching product:", productError);
+        throw productError;
       }
 
-      if (!data) {
+      if (!productData) {
         throw new Error("Product not found");
       }
 
-      console.log("Product data:", data);
-      return data as Product;
+      return productData as unknown as Product;
     },
     enabled: !!id,
-    retry: 1,
+    retry: 1
   });
 
   const handleShare = async () => {
@@ -81,7 +78,7 @@ const ProductDetails = () => {
     );
   }
 
-  if (!product) {
+  if (error || !product) {
     return (
       <div className="container mx-auto px-4 py-6">
         <div className="flex items-center mb-4">
@@ -93,7 +90,9 @@ const ProductDetails = () => {
             <ArrowLeft className="h-6 w-6" />
           </Button>
         </div>
-        <p className="text-center text-lg">Produto não encontrado</p>
+        <p className="text-center text-lg">
+          {error instanceof Error ? error.message : 'Produto não encontrado'}
+        </p>
       </div>
     );
   }
