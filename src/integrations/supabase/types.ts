@@ -542,6 +542,7 @@ export type Database = {
           updated_at: string | null
           user_id: string
           video_urls: string[] | null
+          whatsapp: string | null
         }
         Insert: {
           category_id?: string | null
@@ -558,6 +559,7 @@ export type Database = {
           updated_at?: string | null
           user_id: string
           video_urls?: string[] | null
+          whatsapp?: string | null
         }
         Update: {
           category_id?: string | null
@@ -574,6 +576,7 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
           video_urls?: string[] | null
+          whatsapp?: string | null
         }
         Relationships: [
           {
