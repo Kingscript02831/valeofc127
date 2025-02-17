@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -28,7 +29,6 @@ import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound"; 
 import ResetPassword from "./pages/ResetPassword";
 import UpdatePassword from "./pages/UpdatePassword";
-import UserProducts from "./pages/UserProducts";
 
 const queryClient = new QueryClient();
 
@@ -65,7 +65,6 @@ const App: React.FC = () => {
                     <Route path="categorias" element={<AdminCategories />} />
                     <Route path="sistema" element={<AdminSistema />} />
                   </Route> 
-                  <Route path="/user-products" element={<UserProducts />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </AuthWrapper>

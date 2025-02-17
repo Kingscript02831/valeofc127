@@ -6,24 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "../integrations/supabase/client";
-import Navbar from "../components/Navbar";
-import SubNav from "../components/SubNav";
-import BottomNav from "../components/BottomNav";
-
-interface Product {
-  id: string;
-  title: string;
-  description: string;
-  price: number;
-  images: string[];
-  location_name?: string;
-  distance?: number;
-}
-
-interface ProductWithDistance extends Product {
-  distance: number;
-}
+import { supabase } from "@/integrations/supabase/client";
+import type { ProductWithDistance } from "@/types/products";
+import { useQuery } from "@tanstack/react-query";
+import Navbar from "@/components/Navbar";
+import SubNav from "@/components/SubNav";
+import BottomNav from "@/components/BottomNav";
 
 const Products = () => {
   const navigate = useNavigate();
@@ -89,14 +77,6 @@ const Products = () => {
       <div className="container mx-auto px-4 pb-20 pt-4">
         <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm pb-4">
           <div className="flex gap-2 mb-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate("/user-products")}
-              className="hover:scale-105 transition-transform absolute -top-8 left-2"
-            >
-              <User className="h-5 w-5 text-muted-foreground transition-colors hover:text-foreground" />
-            </Button>
             <div className="relative flex-1">
               <Input
                 placeholder="Buscar produtos..."
@@ -104,7 +84,8 @@ const Products = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pr-10"
               />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                <User className="h-4 w-4 text-muted-foreground transition-colors hover:text-foreground" />
                 <Search className="h-4 w-4 text-muted-foreground transition-colors hover:text-foreground" />
               </div>
             </div>
@@ -185,3 +166,4 @@ const Products = () => {
 };
 
 export default Products;
+
