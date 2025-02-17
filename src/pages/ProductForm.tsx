@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,10 @@ import type { ProductFormData } from "../types/products";
 
 const ProductForm = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const editProductId = searchParams.get('edit');
+  
   const [loading, setLoading] = useState(false);
   const [newImageUrl, setNewImageUrl] = useState("");
   const [imageUrls, setImageUrls] = useState<string[]>([]);
@@ -31,6 +35,40 @@ const ProductForm = () => {
     condition: "novo",
     images: [],
   });
+
+  // Carregar dados do produto se estiver em modo de edição
+  useEffect(() => {
+    const loadProduct = async () => {
+      if (!editProductId) return;
+
+      try {
+        const { data: product, error } = await supabase
+          .from('products')
+          .select('*')
+          .eq('id', editProductId)
+          .single();
+
+        if (error) throw error;
+
+        if (product) {
+          setFormData({
+            title: product.title,
+            description: product.description,
+            price: product.price,
+            condition: product.condition,
+            images: product.images,
+            whatsapp: product.whatsapp,
+          });
+          setImageUrls(product.images || []);
+          setVideoUrls(product.video_urls || []);
+        }
+      } catch (error) {
+        toast.error("Erro ao carregar produto");
+      }
+    };
+
+    loadProduct();
+  }, [editProductId]);
 
   const handleAddImage = () => {
     if (!newImageUrl) {
@@ -112,22 +150,36 @@ const ProductForm = () => {
         navigator.geolocation.getCurrentPosition(resolve, reject);
       });
 
-      // Create product
-      const { error } = await supabase.from("products").insert({
+      const productData = {
         ...formData,
         images: imageUrls,
         video_urls: videoUrls,
         user_id: user.id,
         latitude: position.coords.latitude,
         longitude: position.coords.longitude,
-      });
+      };
+
+      let error;
+
+      if (editProductId) {
+        // Atualizar produto existente
+        ({ error } = await supabase
+          .from("products")
+          .update(productData)
+          .eq('id', editProductId));
+      } else {
+        // Criar novo produto
+        ({ error } = await supabase
+          .from("products")
+          .insert(productData));
+      }
 
       if (error) throw error;
 
-      toast.success("Produto adicionado com sucesso!");
+      toast.success(editProductId ? "Produto atualizado com sucesso!" : "Produto adicionado com sucesso!");
       navigate("/products");
     } catch (error: any) {
-      toast.error("Erro ao adicionar produto: " + error.message);
+      toast.error("Erro ao " + (editProductId ? "atualizar" : "adicionar") + " produto: " + error.message);
     } finally {
       setLoading(false);
     }
@@ -143,7 +195,7 @@ const ProductForm = () => {
         >
           <ArrowLeft className="h-6 w-6" />
         </Button>
-        <h1 className="text-2xl font-bold">Novo Produto</h1>
+        <h1 className="text-2xl font-bold">{editProductId ? "Editar Produto" : "Novo Produto"}</h1>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -278,7 +330,7 @@ const ProductForm = () => {
         </div>
 
         <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? "Publicando..." : "Publicar Produto"}
+          {loading ? "Publicando..." : (editProductId ? "Atualizar Produto" : "Publicar Produto")}
         </Button>
       </form>
     </div>
@@ -286,4 +338,3 @@ const ProductForm = () => {
 };
 
 export default ProductForm;
-
