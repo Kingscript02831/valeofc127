@@ -1,8 +1,8 @@
 
-import { Home, Bell, User } from "lucide-react";
+import { Home, Bell, User, Plus } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useSiteConfig } from "@/hooks/useSiteConfig";
-import { supabase } from "@/integrations/supabase/client";
+import { useSiteConfig } from "../hooks/useSiteConfig";
+import { supabase } from "../integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
@@ -80,15 +80,32 @@ const BottomNav = () => {
             className="flex items-center p-2 rounded-xl transition-all duration-300 hover:scale-105"
             style={getItemStyle(isActive("/"))}
           >
-            <Home className="h-7 w-7" strokeWidth={2} />
+            <Home className="h-6 w-6" strokeWidth={2} />
           </Link>
+
+          <button
+            onClick={() => toast.info("Em breve!")}
+            className="flex items-center p-2 rounded-xl transition-all duration-300 hover:scale-105"
+            style={{
+              color: config?.bottom_nav_icon_color,
+              background: `${config?.primary_color}15`,
+            }}
+          >
+            <Plus 
+              className="h-6 w-6" 
+              strokeWidth={2.5}
+              style={{
+                filter: `drop-shadow(0 2px 4px ${config?.primary_color}40)`
+              }}
+            />
+          </button>
 
           <button
             onClick={(e) => handleNavigation("/notify", e)}
             className="flex items-center p-2 rounded-xl transition-all duration-300 hover:scale-105 relative"
             style={getItemStyle(isActive("/notify"))}
           >
-            <Bell className="h-7 w-7" strokeWidth={2} />
+            <Bell className="h-6 w-6" strokeWidth={2} />
             {unreadCount > 0 && (
               <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center animate-pulse">
                 {unreadCount}
@@ -101,7 +118,7 @@ const BottomNav = () => {
             className="flex items-center p-2 rounded-xl transition-all duration-300 hover:scale-105"
             style={getItemStyle(isActive("/perfil") || isActive("/login"))}
           >
-            <User className="h-7 w-7" strokeWidth={2} />
+            <User className="h-6 w-6" strokeWidth={2} />
           </Link>
         </div>
       </div>
