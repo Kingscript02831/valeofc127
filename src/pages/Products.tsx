@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, MapPin, User } from "lucide-react";
@@ -140,7 +139,7 @@ const Products = () => {
                 className="cursor-pointer hover:shadow-lg transition-shadow overflow-hidden"
                 onClick={() => navigate(`/product/${product.id}`)}
                 style={{
-                  background: config ? `linear-gradient(to bottom, ${config.navbar_color}, ${config.primary_color}40)` : undefined,
+                  background: config ? `linear-gradient(to bottom, ${config.navbar_color}, ${config.primary_color}90)` : undefined,
                   borderColor: config?.primary_color
                 }}
               >
@@ -172,7 +171,7 @@ const Products = () => {
                     )}
                   </div>
                   {product.location_name && (
-                    <p className="text-sm truncate mt-1" style={{ color: `${config?.text_color}90` }}>
+                    <p className="text-sm truncate mt-1" style={{ color: config?.text_color }}>
                       {product.location_name}
                     </p>
                   )}
