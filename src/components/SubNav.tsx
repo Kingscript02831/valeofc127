@@ -1,17 +1,16 @@
 
 import { Link, useLocation } from "react-router-dom";
 import { useSiteConfig } from "../hooks/useSiteConfig";
-import { Newspaper, Calendar, MapPin, Store } from "lucide-react";
 
 const SubNav = () => {
   const { data: config, isLoading, isError } = useSiteConfig();
   const location = useLocation();
 
   const links = [
-    { path: "/", label: "Notícias", icon: Newspaper },
-    { path: "/eventos", label: "Eventos", icon: Calendar },
-    { path: "/lugares", label: "Lugares", icon: MapPin },
-    { path: "/lojas", label: "Lojas", icon: Store },
+    { path: "/", label: "Notícias" },
+    { path: "/eventos", label: "Eventos" },
+    { path: "/lugares", label: "Lugares" },
+    { path: "/lojas", label: "Lojas" },
   ];
 
   if (isLoading) {
@@ -25,19 +24,15 @@ const SubNav = () => {
       <nav className="w-full border-b mt-16 bg-gray-800">
         <div className="max-w-screen-2xl mx-auto px-4">
           <div className="flex justify-center space-x-8 py-2">
-            {links.map((link) => {
-              const Icon = link.icon;
-              return (
-                <Link
-                  key={link.path}
-                  to={link.path}
-                  className="text-white hover:opacity-80 transition-opacity flex items-center gap-2"
-                >
-                  <Icon size={20} />
-                  {link.label}
-                </Link>
-              );
-            })}
+            {links.map((link) => (
+              <Link
+                key={link.path}
+                to={link.path}
+                className="text-white hover:opacity-80 transition-opacity"
+              >
+                {link.label}
+              </Link>
+            ))}
           </div>
         </div>
       </nav>
@@ -54,21 +49,17 @@ const SubNav = () => {
     >
       <div className="max-w-screen-2xl mx-auto px-4">
         <div className="flex justify-center space-x-8 py-2">
-          {links.map((link) => {
-            const Icon = link.icon;
-            return (
-              <Link
-                key={link.path}
-                to={link.path}
-                className={`text-white hover:opacity-80 transition-opacity flex items-center gap-2 ${
-                  location.pathname === link.path ? "border-b-2" : ""
-                }`}
-              >
-                <Icon size={20} />
-                {link.label}
-              </Link>
-            );
-          })}
+          {links.map((link) => (
+            <Link
+              key={link.path}
+              to={link.path}
+              className={`text-white hover:opacity-80 transition-opacity ${
+                location.pathname === link.path ? "border-b-2" : ""
+              }`}
+            >
+              {link.label}
+            </Link>
+          ))}
         </div>
       </div>
     </nav>
@@ -76,4 +67,3 @@ const SubNav = () => {
 };
 
 export default SubNav;
-

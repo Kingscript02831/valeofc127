@@ -61,13 +61,6 @@ export type SiteConfig = {
   pwa_background_color: string | null
   pwa_install_message: string | null
   pwa_app_icon: string | null
-  admin_accent_color: string
-  admin_background_color: string
-  admin_card_color: string
-  admin_header_color: string
-  admin_hover_color: string
-  admin_sidebar_color: string
-  admin_text_color: string
 };
 
 export function useSiteConfig() {
