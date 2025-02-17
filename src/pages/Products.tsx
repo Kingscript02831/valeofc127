@@ -81,7 +81,7 @@ const Products = () => {
               variant="ghost"
               size="icon"
               onClick={() => navigate("/user-products")}
-              className="hover:scale-105 transition-transform absolute -top-8 left-2"
+              className="hover:scale-105 transition-transform"
             >
               <User className="h-5 w-5 text-muted-foreground transition-colors hover:text-foreground" />
             </Button>

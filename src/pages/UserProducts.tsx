@@ -34,7 +34,10 @@ const UserProducts = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setMyProducts(products || []);
+      setMyProducts(products?.map(product => ({
+        ...product,
+        distance: 0 // Adicionando a propriedade distance requerida
+      })) || []);
     } catch (error) {
       toast({
         title: "Erro ao carregar produtos",
@@ -57,7 +60,10 @@ const UserProducts = () => {
         .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
 
       if (error) throw error;
-      setFavoriteProducts(favorites?.map(f => f.products) || []);
+      setFavoriteProducts(favorites?.map(f => ({
+        ...f.products,
+        distance: 0 // Adicionando a propriedade distance requerida
+      })) || []);
     } catch (error) {
       toast({
         title: "Erro ao carregar favoritos",
@@ -115,7 +121,7 @@ const UserProducts = () => {
               size="sm"
               onClick={(e) => {
                 e.stopPropagation();
-                navigate(`/products/edit/${product.id}`);
+                navigate(`/products/new?edit=${product.id}`);
               }}
             >
               <Pencil className="h-4 w-4" />
