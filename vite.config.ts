@@ -4,7 +4,12 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { VitePWA } from 'vite-plugin-pwa';
-import { supabase } from "./src/integrations/supabase/client";
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  "https://cxnktrfpqjjkdfmiyhdz.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN4bmt0cmZwcWpqa2RmbWl5aGR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzkyNDAyNDksImV4cCI6MjA1NDgxNjI0OX0.GwEFcZ0mI8xuZs1hGJgz8R2zp13cLJIbtu6ZY2nDeTU"
+);
 
 // Fetch PWA configuration from Supabase
 const getPWAConfig = async () => {
@@ -24,6 +29,7 @@ const getPWAConfig = async () => {
 // https://vitejs.dev/config/
 export default defineConfig(async ({ mode }) => {
   const pwaConfig = await getPWAConfig();
+  console.log("PWA Config:", pwaConfig); // Debug log
 
   return {
     server: {
