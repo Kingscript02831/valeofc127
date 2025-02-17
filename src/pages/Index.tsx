@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import type { Database } from "@/types/supabase";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,10 +17,6 @@ type News = Database['public']['Tables']['news']['Row'] & {
   categories: Database['public']['Tables']['categories']['Row'] | null;
 };
 type Category = Database['public']['Tables']['categories']['Row'];
-interface InstagramMedia {
-  url: string;
-  type: 'post' | 'video';
-}
 
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -36,10 +33,11 @@ const Index = () => {
       if (error) {
         console.error('Error fetching categories:', error);
         toast.error('Erro ao carregar categorias');
-        throw error;
+        return [];
       }
       return data || [];
-    }
+    },
+    retry: false
   });
 
   const { data: news = [], isLoading, error } = useQuery<News[]>({
@@ -63,19 +61,16 @@ const Index = () => {
         
         if (error) {
           console.error('Supabase query error:', error);
-          toast.error('Erro ao carregar notícias');
-          throw error;
+          return [];
         }
         
-        console.log('Fetched news data:', data);
         return data as News[];
       } catch (err) {
         console.error('Error fetching news:', err);
-        toast.error('Erro ao carregar notícias');
-        throw err;
+        return [];
       }
     },
-    retry: 1
+    retry: false
   });
 
   return (
@@ -132,7 +127,15 @@ const Index = () => {
           </div>
 
           {isLoading ? (
-            <p className="text-center py-8">Carregando notícias...</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1,2,3].map((i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="h-48 bg-gray-200 rounded-lg mb-4"></div>
+                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                </div>
+              ))}
+            </div>
           ) : error ? (
             <p className="text-center py-8 text-red-500">
               Erro ao carregar notícias. Por favor, tente novamente.
@@ -143,7 +146,7 @@ const Index = () => {
                 const instagramMedia = item.instagram_media 
                   ? (typeof item.instagram_media === 'string' 
                       ? JSON.parse(item.instagram_media) 
-                      : item.instagram_media) as InstagramMedia[]
+                      : item.instagram_media)
                   : [];
 
                 return (
