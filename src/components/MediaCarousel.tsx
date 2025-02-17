@@ -76,7 +76,6 @@ export const MediaCarousel = ({ images, videoUrls, title }: MediaCarouselProps) 
           </div>
         );
       } else {
-        // For Dropbox videos
         return (
           <div className={cn(
             "relative w-full h-48",

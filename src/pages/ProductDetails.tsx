@@ -7,7 +7,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { Product } from "@/types/products";
 import { useQuery } from "@tanstack/react-query";
-import { MediaCarousel } from "@/components/MediaCarousel";
+import MediaCarousel from "@/components/MediaCarousel";
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -19,32 +19,40 @@ const ProductDetails = () => {
     queryFn: async () => {
       if (!id) throw new Error("No product ID provided");
 
-      console.log("Fetching product with ID:", id); // Debug log
+      console.log("Fetching product with ID:", id);
 
+      // First, let's try to get just the product
       const { data: productData, error: productError } = await supabase
         .from("products")
-        .select(`
-          *,
-          profiles:profiles (
-            full_name,
-            avatar_url
-          )
-        `)
+        .select("*")
         .eq('id', id)
         .single();
 
       if (productError) {
-        console.error("Error fetching product:", productError); // Debug log
+        console.error("Error fetching product:", productError);
         throw productError;
       }
 
       if (!productData) {
-        console.error("No product data found for ID:", id); // Debug log
-        throw new Error("Product not found");
+        console.error("No product data found for ID:", id);
+        throw new Error("Produto não encontrado");
       }
 
-      console.log("Product data retrieved:", productData); // Debug log
-      return productData as unknown as Product;
+      // Now, let's get the profile data separately
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("full_name, avatar_url")
+        .eq('id', productData.user_id)
+        .single();
+
+      // Combine the data
+      const finalProduct = {
+        ...productData,
+        profiles: profileData
+      };
+
+      console.log("Product data retrieved:", finalProduct);
+      return finalProduct as Product;
     },
     enabled: !!id,
     retry: 1
