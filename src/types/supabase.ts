@@ -24,8 +24,17 @@ export interface Database {
           location_name?: string
           images: string[]
           video_urls?: string[]
+          whatsapp?: string
           created_at?: string
           updated_at?: string
+        }
+      }
+      favorites: {
+        Row: {
+          id: string
+          user_id: string
+          product_id: string
+          created_at?: string
         }
       }
       profiles: {
