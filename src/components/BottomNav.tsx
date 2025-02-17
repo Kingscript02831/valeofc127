@@ -46,7 +46,7 @@ const BottomNav = () => {
 
   const handleNavigation = (path: string, e: React.MouseEvent) => {
     e.preventDefault();
-    if (!session && path === "/notify") {
+    if (!session && (path === "/notify" || path === "/products/new")) {
       toast.error("Você precisa fazer login para acessar esta área");
       navigate("/login");
       return;
@@ -84,11 +84,12 @@ const BottomNav = () => {
           </Link>
 
           <button
-            onClick={() => navigate("/products/new")}
+            onClick={(e) => handleNavigation("/products/new", e)}
             className="flex items-center p-2 rounded-xl transition-all duration-300 hover:scale-105"
             style={{
               color: config?.bottom_nav_icon_color,
               background: `${config?.primary_color}15`,
+              opacity: session ? 1 : 0.5, // Reduz a opacidade quando não está logado
             }}
           >
             <Plus 
