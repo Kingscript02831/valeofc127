@@ -2,14 +2,17 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, MapPin, User } from "lucide-react";
-import { Input } from "./ui/input";
-import { Button } from "./ui/button";
-import { Card, CardContent } from "./ui/card";
-import { useToast } from "./ui/use-toast";
-import { supabase } from "../integrations/supabase/client";
-import type { ProductWithDistance } from "../types/products";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import type { ProductWithDistance } from "@/types/products";
 import { useQuery } from "@tanstack/react-query";
-import { useSiteConfig } from "../hooks/useSiteConfig";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
+import Navbar from "@/components/Navbar";
+import SubNav from "@/components/SubNav";
+import BottomNav from "@/components/BottomNav";
 
 const Products = () => {
   const navigate = useNavigate();
@@ -71,8 +74,10 @@ const Products = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 pb-20 pt-20">
-        <div className="sticky top-16 z-10 bg-background/80 backdrop-blur-sm pb-4">
+      <Navbar />
+      <SubNav />
+      <div className="container mx-auto px-4 pb-20 pt-4">
+        <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm pb-4">
           <div className="flex gap-2 mb-4">
             <Button
               variant="ghost"
@@ -139,7 +144,12 @@ const Products = () => {
                   borderColor: config?.primary_color
                 }}
               >
-                <div className="aspect-square relative overflow-hidden">
+                <div 
+                  className="aspect-square relative overflow-hidden"
+                  style={{
+                    background: config?.navbar_color
+                  }}
+                >
                   <img
                     src={product.images[0] || "/placeholder.svg"}
                     alt={product.title}
@@ -170,6 +180,7 @@ const Products = () => {
           </div>
         )}
       </div>
+      <BottomNav />
     </div>
   );
 };
