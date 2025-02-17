@@ -21,6 +21,7 @@ export type SiteConfig = {
   footer_contact_phone: string | null
   footer_copyright_text: string | null
   footer_primary_color: string
+  footer_schedule: string | null
   footer_secondary_color: string
   footer_social_facebook: string | null
   footer_social_instagram: string | null
@@ -91,4 +92,3 @@ export function useSiteConfig() {
     refetchOnReconnect: false,
   });
 }
-
