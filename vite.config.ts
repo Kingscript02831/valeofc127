@@ -37,8 +37,14 @@ export default defineConfig(async ({ mode }) => {
   const pwaConfig = await getPWAConfig();
   console.log("Final PWA Config being used:", pwaConfig);
 
+  if (!pwaConfig?.pwa_app_icon) {
+    console.warn("Warning: No PWA icon configured in site_configuration!");
+  } else {
+    console.log("Using PWA icon:", pwaConfig.pwa_app_icon);
+  }
+
   const manifestConfig = {
-    registerType: 'prompt',
+    registerType: "autoUpdate" as const,
     includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
     manifest: {
       name: pwaConfig?.pwa_name || 'VALEOFC',
@@ -68,7 +74,8 @@ export default defineConfig(async ({ mode }) => {
     },
     devOptions: {
       enabled: true,
-      type: 'module'
+      type: 'module',
+      navigateFallback: 'index.html'
     }
   };
 
