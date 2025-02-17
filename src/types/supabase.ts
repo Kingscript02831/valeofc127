@@ -1,3 +1,4 @@
+
 export type Json =
   | string
   | number
@@ -18,7 +19,6 @@ export interface Database {
           condition: string
           category_id?: string
           user_id: string
-          whatsapp?: string
           latitude?: number
           longitude?: number
           location_name?: string
@@ -33,20 +33,6 @@ export interface Database {
           id: string
           full_name: string | null
           avatar_url: string | null
-        }
-      }
-      favorites: {
-        Row: {
-          id: string
-          user_id: string
-          product_id: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          product_id: string
-          created_at?: string
         }
       }
       news: {

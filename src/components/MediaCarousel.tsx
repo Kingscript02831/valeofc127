@@ -64,8 +64,8 @@ export const MediaCarousel = ({ images, videoUrls, title }: MediaCarouselProps) 
         const videoId = getYoutubeVideoId(mediaItem.url);
         return (
           <div className={cn(
-            "relative w-full h-full",
-            isFullscreen ? "h-[80vh]" : "h-[500px]"
+            "relative w-full h-48",
+            isFullscreen && "h-[80vh]"
           )}>
             <iframe
               src={`https://www.youtube.com/embed/${videoId}`}
@@ -78,13 +78,13 @@ export const MediaCarousel = ({ images, videoUrls, title }: MediaCarouselProps) 
       } else {
         return (
           <div className={cn(
-            "relative w-full h-full",
-            isFullscreen ? "h-[80vh]" : "h-[500px]"
+            "relative w-full h-48",
+            isFullscreen && "h-[80vh]"
           )}>
             <video
               src={mediaItem.url}
               controls
-              className="absolute inset-0 w-full h-full object-contain bg-black"
+              className="absolute inset-0 w-full h-full object-contain"
             >
               Seu navegador não suporta a reprodução de vídeos.
             </video>
@@ -98,8 +98,8 @@ export const MediaCarousel = ({ images, videoUrls, title }: MediaCarouselProps) 
         src={mediaItem.url}
         alt={title}
         className={cn(
-          "w-full cursor-pointer bg-black",
-          isFullscreen ? "h-[90vh] object-contain" : "h-[500px] object-contain"
+          "h-full w-full object-cover cursor-pointer",
+          isFullscreen ? "max-h-[90vh] max-w-[90vw] object-contain" : "h-48"
         )}
         onClick={toggleFullscreen}
       />
@@ -110,7 +110,7 @@ export const MediaCarousel = ({ images, videoUrls, title }: MediaCarouselProps) 
 
   return (
     <>
-      <div className="relative bg-black w-full h-full">
+      <div className="relative">
         {renderMedia(currentMedia)}
         {hasMultipleMedia && (
           <>
@@ -138,7 +138,7 @@ export const MediaCarousel = ({ images, videoUrls, title }: MediaCarouselProps) 
       </div>
 
       {isFullscreen && currentMedia && (
-        <div className="fixed inset-0 z-50 bg-black flex items-center justify-center">
+        <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center">
           <div className="relative w-full h-full flex items-center justify-center">
             {renderMedia(currentMedia, true)}
             
