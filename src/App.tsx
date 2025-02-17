@@ -11,6 +11,9 @@ import Index from "./pages/Index";
 import Events from "./pages/Events";
 import Places from "./pages/Places";
 import Stores from "./pages/Stores";
+import Products from "./pages/Products";
+import ProductDetails from "./pages/ProductDetails";
+import ProductForm from "./pages/ProductForm";
 import Notify from "./pages/Notify";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
@@ -44,6 +47,9 @@ const App: React.FC = () => {
                   <Route path="/eventos" element={<Events />} />
                   <Route path="/lugares" element={<Places />} />
                   <Route path="/lojas" element={<Stores />} />
+                  <Route path="/products" element={<Products />} />
+                  <Route path="/products/:id" element={<ProductDetails />} />
+                  <Route path="/products/new" element={<ProductForm />} />
                   <Route path="/notify" element={<Notify />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/signup" element={<SignUp />} />
