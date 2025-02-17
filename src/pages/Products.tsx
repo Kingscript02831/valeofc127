@@ -156,21 +156,23 @@ const Products = () => {
                     className="object-cover w-full h-full"
                   />
                 </div>
-                <CardContent className="p-4" style={{ color: config?.text_color }}>
-                  <h3 className="font-semibold truncate mb-2">{product.title}</h3>
-                  <div className="flex justify-between items-center">
+                <CardContent className="p-4">
+                  <h3 className="font-semibold truncate mb-2" style={{ color: config?.text_color }}>
+                    {product.title}
+                  </h3>
+                  <div className="flex justify-between items-center" style={{ color: config?.text_color }}>
                     <span className="text-lg font-bold">
                       R$ {product.price.toFixed(2)}
                     </span>
                     {product.distance && (
-                      <span className="text-sm opacity-75 flex items-center gap-1">
+                      <span className="text-sm flex items-center gap-1">
                         <MapPin className="w-3 h-3" />
                         {(product.distance / 1000).toFixed(1)}km
                       </span>
                     )}
                   </div>
                   {product.location_name && (
-                    <p className="text-sm opacity-75 truncate mt-1">
+                    <p className="text-sm truncate mt-1" style={{ color: `${config?.text_color}90` }}>
                       {product.location_name}
                     </p>
                   )}
