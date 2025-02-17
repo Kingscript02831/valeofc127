@@ -11,9 +11,6 @@ import { MediaCarousel } from "@/components/MediaCarousel";
 import { Badge } from "@/components/ui/badge";
 import { formatDistance } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import Navbar from "@/components/Navbar";
-import SubNav from "@/components/SubNav";
-import BottomNav from "@/components/BottomNav";
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -126,116 +123,112 @@ const ProductDetails = () => {
   }
 
   return (
-    <>
-      <Navbar />
-      <SubNav />
-      <div className="container mx-auto px-4 py-6 pb-20">
-        <div className="flex items-center justify-between mb-4">
+    <div className="container mx-auto px-4 py-6 pb-20">
+      <div className="flex items-center justify-between mb-4">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => navigate(-1)}
+        >
+          <ArrowLeft className="h-6 w-6" />
+        </Button>
+        <div className="flex gap-2">
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate(-1)}
+            onClick={handleFavorite}
           >
-            <ArrowLeft className="h-6 w-6" />
+            <Heart className="h-6 w-6" />
           </Button>
-          <div className="flex gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleFavorite}
-            >
-              <Heart className="h-6 w-6" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleShare}
-            >
-              <Share2 className="h-6 w-6" />
-            </Button>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-          <MediaCarousel
-            images={product?.images || []}
-            videoUrls={product?.video_urls || []}
-            title={product?.title || ""}
-          />
-
-          <div className="p-6 space-y-6">
-            <div>
-              <div className="flex justify-between items-start mb-2">
-                <h1 className="text-2xl font-bold">{product?.title}</h1>
-                <Badge variant="outline" className="capitalize">
-                  {product?.condition}
-                </Badge>
-              </div>
-              <p className="text-3xl font-bold text-primary">
-                R$ {product?.price.toFixed(2)}
-              </p>
-            </div>
-            
-            <div>
-              <h2 className="text-lg font-semibold mb-2">Descrição</h2>
-              <p className="text-muted-foreground whitespace-pre-line">
-                {product?.description}
-              </p>
-            </div>
-
-            {product?.location_name && (
-              <div>
-                <h2 className="text-lg font-semibold mb-2">Localização</h2>
-                <p className="text-muted-foreground">
-                  {product.location_name}
-                </p>
-              </div>
-            )}
-
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-muted overflow-hidden">
-                    {product?.profiles?.avatar_url ? (
-                      <img
-                        src={product.profiles.avatar_url}
-                        alt={product.profiles.full_name || ''}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-primary/10 flex items-center justify-center text-primary text-lg font-semibold">
-                        {product?.profiles?.full_name?.[0]?.toUpperCase() || '?'}
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-semibold">
-                      {product?.profiles?.full_name || 'Usuário'}
-                    </p>
-                    {product?.created_at && (
-                      <p className="text-sm text-muted-foreground">
-                        Anunciado há {formatDistance(new Date(product.created_at), new Date(), { locale: ptBR })}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-md border-t">
-          <Button 
-            className="w-full h-12 text-lg font-semibold"
-            onClick={handleContact}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleShare}
           >
-            Comprar agora
+            <Share2 className="h-6 w-6" />
           </Button>
         </div>
       </div>
-      <BottomNav />
-    </>
+
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+        <MediaCarousel
+          images={product.images}
+          videoUrls={product.video_urls || []}
+          title={product.title}
+        />
+
+        <div className="p-6 space-y-6">
+          <div>
+            <div className="flex justify-between items-start mb-2">
+              <h1 className="text-2xl font-bold">{product.title}</h1>
+              <Badge variant="outline" className="capitalize">
+                {product.condition}
+              </Badge>
+            </div>
+            <p className="text-3xl font-bold text-primary">
+              R$ {product.price.toFixed(2)}
+            </p>
+          </div>
+          
+          <div>
+            <h2 className="text-lg font-semibold mb-2">Descrição</h2>
+            <p className="text-muted-foreground whitespace-pre-line">
+              {product.description}
+            </p>
+          </div>
+
+          {product.location_name && (
+            <div>
+              <h2 className="text-lg font-semibold mb-2">Localização</h2>
+              <p className="text-muted-foreground">
+                {product.location_name}
+              </p>
+            </div>
+          )}
+
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-muted overflow-hidden">
+                  {product.profiles?.avatar_url ? (
+                    <img
+                      src={product.profiles.avatar_url}
+                      alt={product.profiles.full_name || ''}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-primary/10 flex items-center justify-center text-primary text-lg font-semibold">
+                      {product.profiles?.full_name?.[0]?.toUpperCase() || '?'}
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <p className="font-semibold">
+                    {product.profiles?.full_name || 'Usuário'}
+                  </p>
+                  {product.created_at && (
+                    <p className="text-sm text-muted-foreground">
+                      Anunciado há {formatDistance(new Date(product.created_at), new Date(), { locale: ptBR })}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-md border-t">
+        <Button 
+          className="w-full h-12 text-lg font-semibold"
+          onClick={handleContact}
+        >
+          Comprar agora
+        </Button>
+      </div>
+    </div>
   );
 };
 
 export default ProductDetails;
+

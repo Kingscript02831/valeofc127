@@ -526,173 +526,6 @@ export type Database = {
           },
         ]
       }
-      product_page_configs: {
-        Row: {
-          card_shadow: string | null
-          container_max_width: string | null
-          container_padding: string | null
-          created_at: string | null
-          font_size_price: string | null
-          font_size_title: string | null
-          grid_columns: string | null
-          id: string
-          image_aspect_ratio: string | null
-          page_type: string
-          spacing: string | null
-          theme_id: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          card_shadow?: string | null
-          container_max_width?: string | null
-          container_padding?: string | null
-          created_at?: string | null
-          font_size_price?: string | null
-          font_size_title?: string | null
-          grid_columns?: string | null
-          id?: string
-          image_aspect_ratio?: string | null
-          page_type: string
-          spacing?: string | null
-          theme_id?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          card_shadow?: string | null
-          container_max_width?: string | null
-          container_padding?: string | null
-          created_at?: string | null
-          font_size_price?: string | null
-          font_size_title?: string | null
-          grid_columns?: string | null
-          id?: string
-          image_aspect_ratio?: string | null
-          page_type?: string
-          spacing?: string | null
-          theme_id?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "product_page_configs_theme_id_fkey"
-            columns: ["theme_id"]
-            isOneToOne: false
-            referencedRelation: "product_themes"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      product_themes: {
-        Row: {
-          background_muted: string | null
-          background_primary: string | null
-          background_secondary: string | null
-          border_dark: string | null
-          border_light: string | null
-          border_medium: string | null
-          button_primary_bg: string | null
-          button_primary_text: string | null
-          button_secondary_bg: string | null
-          button_secondary_text: string | null
-          created_at: string | null
-          dark_background_muted: string | null
-          dark_background_primary: string | null
-          dark_background_secondary: string | null
-          dark_border_dark: string | null
-          dark_border_light: string | null
-          dark_border_medium: string | null
-          dark_button_primary_bg: string | null
-          dark_button_primary_text: string | null
-          dark_button_secondary_bg: string | null
-          dark_button_secondary_text: string | null
-          dark_text_muted: string | null
-          dark_text_primary: string | null
-          dark_text_secondary: string | null
-          description: string | null
-          id: string
-          name: string
-          price_discount: string | null
-          price_old: string | null
-          price_regular: string | null
-          text_muted: string | null
-          text_primary: string | null
-          text_secondary: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          background_muted?: string | null
-          background_primary?: string | null
-          background_secondary?: string | null
-          border_dark?: string | null
-          border_light?: string | null
-          border_medium?: string | null
-          button_primary_bg?: string | null
-          button_primary_text?: string | null
-          button_secondary_bg?: string | null
-          button_secondary_text?: string | null
-          created_at?: string | null
-          dark_background_muted?: string | null
-          dark_background_primary?: string | null
-          dark_background_secondary?: string | null
-          dark_border_dark?: string | null
-          dark_border_light?: string | null
-          dark_border_medium?: string | null
-          dark_button_primary_bg?: string | null
-          dark_button_primary_text?: string | null
-          dark_button_secondary_bg?: string | null
-          dark_button_secondary_text?: string | null
-          dark_text_muted?: string | null
-          dark_text_primary?: string | null
-          dark_text_secondary?: string | null
-          description?: string | null
-          id?: string
-          name: string
-          price_discount?: string | null
-          price_old?: string | null
-          price_regular?: string | null
-          text_muted?: string | null
-          text_primary?: string | null
-          text_secondary?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          background_muted?: string | null
-          background_primary?: string | null
-          background_secondary?: string | null
-          border_dark?: string | null
-          border_light?: string | null
-          border_medium?: string | null
-          button_primary_bg?: string | null
-          button_primary_text?: string | null
-          button_secondary_bg?: string | null
-          button_secondary_text?: string | null
-          created_at?: string | null
-          dark_background_muted?: string | null
-          dark_background_primary?: string | null
-          dark_background_secondary?: string | null
-          dark_border_dark?: string | null
-          dark_border_light?: string | null
-          dark_border_medium?: string | null
-          dark_button_primary_bg?: string | null
-          dark_button_primary_text?: string | null
-          dark_button_secondary_bg?: string | null
-          dark_button_secondary_text?: string | null
-          dark_text_muted?: string | null
-          dark_text_primary?: string | null
-          dark_text_secondary?: string | null
-          description?: string | null
-          id?: string
-          name?: string
-          price_discount?: string | null
-          price_old?: string | null
-          price_regular?: string | null
-          text_muted?: string | null
-          text_primary?: string | null
-          text_secondary?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       products: {
         Row: {
           category_id: string | null
@@ -709,7 +542,6 @@ export type Database = {
           updated_at: string | null
           user_id: string
           video_urls: string[] | null
-          whatsapp: string | null
         }
         Insert: {
           category_id?: string | null
@@ -726,7 +558,6 @@ export type Database = {
           updated_at?: string | null
           user_id: string
           video_urls?: string[] | null
-          whatsapp?: string | null
         }
         Update: {
           category_id?: string | null
@@ -743,7 +574,6 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
           video_urls?: string[] | null
-          whatsapp?: string | null
         }
         Relationships: [
           {
@@ -774,7 +604,6 @@ export type Database = {
           full_name: string | null
           house_number: string | null
           id: string
-          is_admin: boolean | null
           is_blocked: boolean | null
           last_basic_info_update: string | null
           last_seen: string | null
@@ -803,7 +632,6 @@ export type Database = {
           full_name?: string | null
           house_number?: string | null
           id: string
-          is_admin?: boolean | null
           is_blocked?: boolean | null
           last_basic_info_update?: string | null
           last_seen?: string | null
@@ -832,7 +660,6 @@ export type Database = {
           full_name?: string | null
           house_number?: string | null
           id?: string
-          is_admin?: boolean | null
           is_blocked?: boolean | null
           last_basic_info_update?: string | null
           last_seen?: string | null
