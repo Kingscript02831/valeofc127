@@ -116,7 +116,7 @@ const Products = () => {
             <Card 
               key={product.id}
               className="cursor-pointer hover:shadow-lg transition-shadow"
-              onClick={() => navigate(`/products/${product.id}`)}
+              onClick={() => navigate(`/product/${product.id}`)}
             >
               <div className="aspect-square relative overflow-hidden">
                 <img

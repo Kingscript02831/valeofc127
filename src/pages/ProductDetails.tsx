@@ -4,10 +4,10 @@ import { ArrowLeft, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "../integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import type { Product } from "@/types/products";
 import { useQuery } from "@tanstack/react-query";
-import { MediaCarousel } from "../components/MediaCarousel";
+import { MediaCarousel } from "@/components/MediaCarousel";
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -19,6 +19,8 @@ const ProductDetails = () => {
     queryFn: async () => {
       console.log("Fetching product with ID:", id);
       
+      if (!id) throw new Error("No product ID provided");
+
       const { data, error } = await supabase
         .from("products")
         .select(`
@@ -36,10 +38,15 @@ const ProductDetails = () => {
         throw error;
       }
 
+      if (!data) {
+        throw new Error("Product not found");
+      }
+
       console.log("Product data:", data);
       return data as Product;
     },
     enabled: !!id,
+    retry: 1,
   });
 
   const handleShare = async () => {
@@ -77,7 +84,16 @@ const ProductDetails = () => {
   if (!product) {
     return (
       <div className="container mx-auto px-4 py-6">
-        <p>Produto não encontrado</p>
+        <div className="flex items-center mb-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate(-1)}
+          >
+            <ArrowLeft className="h-6 w-6" />
+          </Button>
+        </div>
+        <p className="text-center text-lg">Produto não encontrado</p>
       </div>
     );
   }
