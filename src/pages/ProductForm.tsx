@@ -250,6 +250,17 @@ const ProductForm = () => {
         </div>
 
         <div>
+          <Label htmlFor="whatsapp">WhatsApp</Label>
+          <Input
+            id="whatsapp"
+            type="tel"
+            value={formData.whatsapp || ""}
+            onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
+            placeholder="(00) 00000-0000"
+          />
+        </div>
+
+        <div>
           <Label htmlFor="condition">Condição</Label>
           <Select
             value={formData.condition}
@@ -275,3 +286,4 @@ const ProductForm = () => {
 };
 
 export default ProductForm;
+

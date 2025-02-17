@@ -1,5 +1,6 @@
+
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Share2 } from "lucide-react";
+import { ArrowLeft, Share2, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
@@ -7,6 +8,9 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Product } from "@/types/products";
 import { useQuery } from "@tanstack/react-query";
 import { MediaCarousel } from "@/components/MediaCarousel";
+import { Badge } from "@/components/ui/badge";
+import { formatDistance } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -66,6 +70,26 @@ const ProductDetails = () => {
     }
   };
 
+  const handleContact = () => {
+    if (product?.whatsapp) {
+      const message = `Olá! Vi seu anúncio "${product.title}" por R$ ${product.price.toFixed(2)} no Vale OFC e gostaria de mais informações.`;
+      const whatsappLink = `https://wa.me/${product.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
+      window.open(whatsappLink, '_blank');
+    } else {
+      toast({
+        variant: "destructive",
+        description: "Este produto não tem número de WhatsApp cadastrado",
+      });
+    }
+  };
+
+  const handleFavorite = async () => {
+    // TODO: Implement favorites functionality
+    toast({
+      description: "Funcionalidade de favoritos em desenvolvimento",
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-6 animate-pulse">
@@ -108,56 +132,64 @@ const ProductDetails = () => {
         >
           <ArrowLeft className="h-6 w-6" />
         </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleShare}
-        >
-          <Share2 className="h-6 w-6" />
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleFavorite}
+          >
+            <Heart className="h-6 w-6" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleShare}
+          >
+            <Share2 className="h-6 w-6" />
+          </Button>
+        </div>
       </div>
 
-      <MediaCarousel
-        images={product.images}
-        videoUrls={product.video_urls || []}
-        title={product.title}
-      />
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+        <MediaCarousel
+          images={product.images}
+          videoUrls={product.video_urls || []}
+          title={product.title}
+        />
 
-      <Card className="mt-4">
-        <CardContent className="p-6">
-          <h1 className="text-2xl font-bold mb-2">{product.title}</h1>
-          <p className="text-3xl font-bold mb-4">
-            R$ {product.price.toFixed(2)}
-          </p>
-          
-          <div className="space-y-4">
-            <div>
-              <h2 className="font-semibold mb-1">Descrição</h2>
-              <p className="text-muted-foreground whitespace-pre-line">
-                {product.description}
-              </p>
-            </div>
-
-            <div>
-              <h2 className="font-semibold mb-1">Condição</h2>
-              <p className="text-muted-foreground capitalize">
+        <div className="p-6 space-y-6">
+          <div>
+            <div className="flex justify-between items-start mb-2">
+              <h1 className="text-2xl font-bold">{product.title}</h1>
+              <Badge variant="outline" className="capitalize">
                 {product.condition}
+              </Badge>
+            </div>
+            <p className="text-3xl font-bold text-primary">
+              R$ {product.price.toFixed(2)}
+            </p>
+          </div>
+          
+          <div>
+            <h2 className="text-lg font-semibold mb-2">Descrição</h2>
+            <p className="text-muted-foreground whitespace-pre-line">
+              {product.description}
+            </p>
+          </div>
+
+          {product.location_name && (
+            <div>
+              <h2 className="text-lg font-semibold mb-2">Localização</h2>
+              <p className="text-muted-foreground">
+                {product.location_name}
               </p>
             </div>
+          )}
 
-            {product.location_name && (
-              <div>
-                <h2 className="font-semibold mb-1">Localização</h2>
-                <p className="text-muted-foreground">
-                  {product.location_name}
-                </p>
-              </div>
-            )}
-
-            <div>
-              <h2 className="font-semibold mb-1">Vendedor</h2>
-              <div className="flex items-center gap-2">
-                <div className="w-10 h-10 rounded-full bg-muted overflow-hidden">
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-muted overflow-hidden">
                   {product.profiles?.avatar_url ? (
                     <img
                       src={product.profiles.avatar_url}
@@ -165,21 +197,38 @@ const ProductDetails = () => {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full bg-primary/10 flex items-center justify-center text-primary">
+                    <div className="w-full h-full bg-primary/10 flex items-center justify-center text-primary text-lg font-semibold">
                       {product.profiles?.full_name?.[0]?.toUpperCase() || '?'}
                     </div>
                   )}
                 </div>
-                <span className="font-medium">
-                  {product.profiles?.full_name || 'Usuário'}
-                </span>
+                <div className="flex-1">
+                  <p className="font-semibold">
+                    {product.profiles?.full_name || 'Usuário'}
+                  </p>
+                  {product.created_at && (
+                    <p className="text-sm text-muted-foreground">
+                      Anunciado há {formatDistance(new Date(product.created_at), new Date(), { locale: ptBR })}
+                    </p>
+                  )}
+                </div>
               </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-md border-t">
+        <Button 
+          className="w-full h-12 text-lg font-semibold"
+          onClick={handleContact}
+        >
+          Comprar agora
+        </Button>
+      </div>
     </div>
   );
 };
 
 export default ProductDetails;
+

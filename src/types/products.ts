@@ -12,6 +12,7 @@ export interface Product {
   location_name?: string;
   images: string[];
   video_urls?: string[];
+  whatsapp?: string;
   created_at?: string;
   updated_at?: string;
   profiles?: {
@@ -33,4 +34,6 @@ export interface ProductFormData {
   images: string[];
   video_urls?: string[];
   location_name?: string;
+  whatsapp?: string;
 }
+
