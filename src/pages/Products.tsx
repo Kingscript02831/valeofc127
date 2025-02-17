@@ -9,7 +9,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { Product, ProductWithDistance } from "@/types/products";
 import { useQuery } from "@tanstack/react-query";
-import { useSiteConfig, type SiteConfig } from "@/hooks/useSiteConfig";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
 
 const Products = () => {
   const navigate = useNavigate();
@@ -90,7 +90,7 @@ const Products = () => {
                 className="pr-10 rounded-full bg-card/50 backdrop-blur-sm border-none shadow-lg"
               />
               <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                <Search className="h-5 w-5 text-primary" />
+                <Search className="h-5 w-5 text-foreground" />
               </div>
             </div>
             <Button
@@ -153,15 +153,15 @@ const Products = () => {
                 </div>
                 <CardContent className="p-3">
                   <div className="mb-1">
-                    <span className="text-lg font-bold text-primary">
+                    <span className="text-lg font-bold text-foreground">
                       R$ {product.price.toFixed(2)}
                     </span>
                   </div>
-                  <h3 className="font-semibold truncate mb-1" style={{ color: config?.text_color }}>
+                  <h3 className="font-semibold truncate mb-1 text-foreground">
                     {product.title}
                   </h3>
                   {product.location_name && (
-                    <p className="text-sm truncate mt-1 text-muted-foreground">
+                    <p className="text-sm truncate mt-1 text-foreground/60">
                       {product.location_name}
                     </p>
                   )}
