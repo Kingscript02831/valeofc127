@@ -1,8 +1,8 @@
 
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import type { Product } from "@/types/products";
+import { supabase } from "../integrations/supabase/client";
+import type { Product } from "../types/products";
 
 const Products = () => {
   const { data: products, isLoading } = useQuery({
@@ -19,7 +19,12 @@ const Products = () => {
         `)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching products:", error);
+        throw error;
+      }
+      
+      console.log("Products fetched:", data); // Para debug
       return data as (Product & {
         profiles: {
           full_name: string;
@@ -45,10 +50,18 @@ const Products = () => {
     );
   }
 
+  if (!products || products.length === 0) {
+    return (
+      <div className="container mx-auto px-4 py-6 text-center">
+        <p className="text-muted-foreground">Nenhum produto encontrado</p>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto px-4 py-6 pb-20">
       <div className="grid grid-cols-2 gap-4">
-        {products?.map((product) => (
+        {products.map((product) => (
           <Link
             key={product.id}
             to={`/products/${product.id}`}
@@ -70,7 +83,7 @@ const Products = () => {
               </p>
               <div className="flex items-center gap-2">
                 <div className="w-6 h-6 rounded-full bg-muted overflow-hidden">
-                  {product.profiles.avatar_url ? (
+                  {product.profiles?.avatar_url ? (
                     <img
                       src={product.profiles.avatar_url}
                       alt={product.profiles.full_name}
@@ -78,12 +91,12 @@ const Products = () => {
                     />
                   ) : (
                     <div className="w-full h-full bg-primary/10 flex items-center justify-center text-primary text-xs">
-                      {product.profiles.full_name?.[0]?.toUpperCase()}
+                      {product.profiles?.full_name?.[0]?.toUpperCase()}
                     </div>
                   )}
                 </div>
                 <span className="text-sm text-muted-foreground line-clamp-1">
-                  {product.profiles.full_name}
+                  {product.profiles?.full_name}
                 </span>
               </div>
             </div>

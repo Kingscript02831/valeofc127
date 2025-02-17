@@ -4,10 +4,9 @@ import { ArrowLeft, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import type { Product } from "@/types/products";
+import { supabase } from "../integrations/supabase/client";
+import type { Product } from "../types/products";
 import { useQuery } from "@tanstack/react-query";
-import MediaCarousel from "@/components/MediaCarousel";
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -29,7 +28,12 @@ const ProductDetails = () => {
         .eq("id", id)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching product:", error);
+        throw error;
+      }
+
+      console.log("Product fetched:", data); // Para debug
       return data as Product & {
         profiles: {
           full_name: string;
@@ -98,13 +102,17 @@ const ProductDetails = () => {
         </Button>
       </div>
 
-      <MediaCarousel
-        images={product.images}
-        videoUrls={[]}
-        title={product.title}
-      />
+      <div className="aspect-square rounded-lg overflow-hidden bg-muted mb-4">
+        {product.images?.[0] && (
+          <img
+            src={product.images[0]}
+            alt={product.title}
+            className="w-full h-full object-cover"
+          />
+        )}
+      </div>
 
-      <Card className="mt-4">
+      <Card>
         <CardContent className="p-6">
           <h1 className="text-2xl font-bold mb-2">{product.title}</h1>
           <p className="text-3xl font-bold mb-4">
@@ -139,7 +147,7 @@ const ProductDetails = () => {
               <h2 className="font-semibold mb-1">Vendedor</h2>
               <div className="flex items-center gap-2">
                 <div className="w-10 h-10 rounded-full bg-muted overflow-hidden">
-                  {product.profiles.avatar_url ? (
+                  {product.profiles?.avatar_url ? (
                     <img
                       src={product.profiles.avatar_url}
                       alt={product.profiles.full_name}
@@ -147,12 +155,12 @@ const ProductDetails = () => {
                     />
                   ) : (
                     <div className="w-full h-full bg-primary/10 flex items-center justify-center text-primary">
-                      {product.profiles.full_name?.[0]?.toUpperCase()}
+                      {product.profiles?.full_name?.[0]?.toUpperCase()}
                     </div>
                   )}
                 </div>
                 <span className="font-medium">
-                  {product.profiles.full_name}
+                  {product.profiles?.full_name}
                 </span>
               </div>
             </div>
