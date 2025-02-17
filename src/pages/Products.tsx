@@ -10,6 +10,8 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Product, ProductWithDistance } from "@/types/products";
 import { useQuery } from "@tanstack/react-query";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
+import Navbar from "@/components/Navbar";
+import BottomNav from "@/components/BottomNav";
 
 const Products = () => {
   const navigate = useNavigate();
@@ -71,6 +73,8 @@ const Products = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Navbar />
+      
       <div className="container mx-auto px-4 pb-20 pt-4">
         <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm pb-4">
           <div className="flex gap-2 mb-4">
@@ -171,8 +175,11 @@ const Products = () => {
           </div>
         )}
       </div>
+
+      <BottomNav />
     </div>
   );
 };
 
 export default Products;
+
