@@ -75,8 +75,8 @@ const Products = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       
-      <div className="container mx-auto px-4 pb-20 pt-4">
-        <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm pb-4">
+      <div className="container mx-auto px-4 pb-20 pt-20">
+        <div className="sticky top-16 z-10 bg-background/80 backdrop-blur-sm pb-4">
           <div className="flex gap-2 mb-4">
             <Button
               variant="ghost"
@@ -117,6 +117,11 @@ const Products = () => {
               <MapPin className="h-4 w-4" />
             </Button>
           </div>
+        </div>
+
+        <div className="flex items-center gap-2 mb-4">
+          <h1 className="text-2xl font-bold text-foreground">Seleção de Hoje</h1>
+          <MapPin className="h-6 w-6 text-primary" />
         </div>
 
         {isLoading ? (
