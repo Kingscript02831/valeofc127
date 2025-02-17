@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, MapPin, User } from "lucide-react";
@@ -72,7 +73,12 @@ const Products = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background">
+    <div 
+      className="min-h-screen"
+      style={{
+        background: config?.product_page_background_color || "var(--background)"
+      }}
+    >
       <Navbar />
       <SubNav />
       <div className="container mx-auto px-4 pb-20 pt-4">
@@ -139,14 +145,13 @@ const Products = () => {
                 className="cursor-pointer hover:shadow-lg transition-shadow overflow-hidden"
                 onClick={() => navigate(`/product/${product.id}`)}
                 style={{
-                  background: config ? `linear-gradient(to bottom, ${config.navbar_color}, ${config.primary_color}90)` : undefined,
-                  borderColor: config?.primary_color
+                  background: `linear-gradient(to bottom, ${config?.product_card_primary_color || '#FF69B4'}, ${config?.product_card_secondary_color || '#FFB6C1'})`,
                 }}
               >
                 <div 
                   className="aspect-square relative overflow-hidden"
                   style={{
-                    background: config?.navbar_color
+                    background: config?.product_card_primary_color || '#FF69B4'
                   }}
                 >
                   <img
@@ -156,22 +161,34 @@ const Products = () => {
                   />
                 </div>
                 <CardContent className="p-4">
-                  <h3 className="font-semibold truncate mb-2" style={{ color: config?.text_color }}>
+                  <h3 
+                    className="font-semibold truncate mb-2"
+                    style={{ color: config?.product_text_color || '#FFFFFF' }}
+                  >
                     {product.title}
                   </h3>
-                  <div className="flex justify-between items-center" style={{ color: config?.text_color }}>
-                    <span className="text-lg font-bold">
+                  <div className="flex justify-between items-center">
+                    <span 
+                      className="text-lg font-bold"
+                      style={{ color: config?.product_price_color || '#FFFFFF' }}
+                    >
                       R$ {product.price.toFixed(2)}
                     </span>
                     {product.distance && (
-                      <span className="text-sm flex items-center gap-1">
+                      <span 
+                        className="text-sm flex items-center gap-1"
+                        style={{ color: config?.product_location_color || '#FFFFFF' }}
+                      >
                         <MapPin className="w-3 h-3" />
                         {(product.distance / 1000).toFixed(1)}km
                       </span>
                     )}
                   </div>
                   {product.location_name && (
-                    <p className="text-sm truncate mt-1" style={{ color: config?.text_color }}>
+                    <p 
+                      className="text-sm truncate mt-1"
+                      style={{ color: config?.product_location_color || '#FFFFFF' }}
+                    >
                       {product.location_name}
                     </p>
                   )}
