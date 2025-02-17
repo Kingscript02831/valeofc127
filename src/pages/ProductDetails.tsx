@@ -19,6 +19,8 @@ const ProductDetails = () => {
     queryFn: async () => {
       if (!id) throw new Error("No product ID provided");
 
+      console.log("Fetching product with ID:", id); // Debug log
+
       const { data: productData, error: productError } = await supabase
         .from("products")
         .select(`
@@ -32,14 +34,16 @@ const ProductDetails = () => {
         .single();
 
       if (productError) {
-        console.error("Error fetching product:", productError);
+        console.error("Error fetching product:", productError); // Debug log
         throw productError;
       }
 
       if (!productData) {
+        console.error("No product data found for ID:", id); // Debug log
         throw new Error("Product not found");
       }
 
+      console.log("Product data retrieved:", productData); // Debug log
       return productData as unknown as Product;
     },
     enabled: !!id,
