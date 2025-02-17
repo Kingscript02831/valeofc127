@@ -497,6 +497,62 @@ export type Database = {
           },
         ]
       }
+      products: {
+        Row: {
+          category_id: string | null
+          condition: string
+          created_at: string | null
+          description: string
+          id: string
+          images: string[] | null
+          latitude: number | null
+          location_name: string | null
+          longitude: number | null
+          price: number
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          category_id?: string | null
+          condition: string
+          created_at?: string | null
+          description: string
+          id?: string
+          images?: string[] | null
+          latitude?: number | null
+          location_name?: string | null
+          longitude?: number | null
+          price: number
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          category_id?: string | null
+          condition?: string
+          created_at?: string | null
+          description?: string
+          id?: string
+          images?: string[] | null
+          latitude?: number | null
+          location_name?: string | null
+          longitude?: number | null
+          price?: number
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -1322,6 +1378,61 @@ export type Database = {
         }
         Returns: string
       }
+      cube:
+        | {
+            Args: {
+              "": number[]
+            }
+            Returns: unknown
+          }
+        | {
+            Args: {
+              "": number
+            }
+            Returns: unknown
+          }
+      cube_dim: {
+        Args: {
+          "": unknown
+        }
+        Returns: number
+      }
+      cube_in: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      cube_is_point: {
+        Args: {
+          "": unknown
+        }
+        Returns: boolean
+      }
+      cube_out: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      cube_recv: {
+        Args: {
+          "": unknown
+        }
+        Returns: unknown
+      }
+      cube_send: {
+        Args: {
+          "": unknown
+        }
+        Returns: string
+      }
+      cube_size: {
+        Args: {
+          "": unknown
+        }
+        Returns: number
+      }
       disablelongtransactions: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -1373,6 +1484,10 @@ export type Database = {
             }
             Returns: string
           }
+      earth: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       enablelongtransactions: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -1383,6 +1498,12 @@ export type Database = {
           geom2: unknown
         }
         Returns: boolean
+      }
+      gc_to_sec: {
+        Args: {
+          "": number
+        }
+        Returns: number
       }
       geography:
         | {
@@ -1865,6 +1986,12 @@ export type Database = {
         }
         Returns: Json
       }
+      latitude: {
+        Args: {
+          "": unknown
+        }
+        Returns: number
+      }
       log_user_action: {
         Args: {
           user_id: string
@@ -1873,6 +2000,12 @@ export type Database = {
           performed_by: string
         }
         Returns: undefined
+      }
+      longitude: {
+        Args: {
+          "": unknown
+        }
+        Returns: number
       }
       longtransactionsenabled: {
         Args: Record<PropertyKey, never>
@@ -2164,6 +2297,21 @@ export type Database = {
           distance: number
         }[]
       }
+      search_products_by_location: {
+        Args: {
+          search_lat: number
+          search_lon: number
+          radius_in_meters?: number
+        }
+        Returns: {
+          id: string
+          title: string
+          price: number
+          images: string[]
+          distance: number
+          location_name: string
+        }[]
+      }
       search_users: {
         Args: {
           search_query: string
@@ -2175,6 +2323,12 @@ export type Database = {
           avatar_url: string
           email: string
         }[]
+      }
+      sec_to_gc: {
+        Args: {
+          "": number
+        }
+        Returns: number
       }
       send_system_notification: {
         Args: {

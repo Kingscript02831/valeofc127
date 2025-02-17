@@ -84,7 +84,7 @@ const BottomNav = () => {
           </Link>
 
           <button
-            onClick={() => toast.info("Em breve!")}
+            onClick={() => navigate("/products/new")}
             className="flex items-center p-2 rounded-xl transition-all duration-300 hover:scale-105"
             style={{
               color: config?.bottom_nav_icon_color,
