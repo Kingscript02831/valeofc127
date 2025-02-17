@@ -1,4 +1,3 @@
-
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,7 +6,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { Product } from "@/types/products";
 import { useQuery } from "@tanstack/react-query";
-import MediaCarousel from "@/components/MediaCarousel";
+import { MediaCarousel } from "@/components/MediaCarousel";
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -21,16 +20,21 @@ const ProductDetails = () => {
 
       console.log("Fetching product with ID:", id);
 
-      // First, let's try to get just the product
       const { data: productData, error: productError } = await supabase
         .from("products")
-        .select("*")
+        .select(`
+          *,
+          profiles (
+            full_name,
+            avatar_url
+          )
+        `)
         .eq('id', id)
         .single();
 
       if (productError) {
         console.error("Error fetching product:", productError);
-        throw productError;
+        throw new Error("Erro ao buscar o produto");
       }
 
       if (!productData) {
@@ -38,24 +42,9 @@ const ProductDetails = () => {
         throw new Error("Produto não encontrado");
       }
 
-      // Now, let's get the profile data separately
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("full_name, avatar_url")
-        .eq('id', productData.user_id)
-        .single();
-
-      // Combine the data
-      const finalProduct = {
-        ...productData,
-        profiles: profileData
-      };
-
-      console.log("Product data retrieved:", finalProduct);
-      return finalProduct as Product;
+      console.log("Product data retrieved:", productData);
+      return productData as Product;
     },
-    enabled: !!id,
-    retry: 1
   });
 
   const handleShare = async () => {
