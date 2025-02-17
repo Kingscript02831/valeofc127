@@ -71,7 +71,7 @@ const Products = () => {
   );
 
   return (
-    <>
+    <div className="dark min-h-screen bg-background">
       <Navbar />
       <SubNav />
       <div className="container mx-auto px-4 pb-20 pt-4">
@@ -81,19 +81,19 @@ const Products = () => {
               variant="ghost"
               size="icon"
               onClick={() => navigate("/user-products")}
-              className="hover:scale-105 transition-transform"
+              className="hover:scale-105 transition-transform text-foreground"
             >
-              <User className="h-5 w-5 text-muted-foreground transition-colors hover:text-foreground" />
+              <User className="h-5 w-5" />
             </Button>
             <div className="relative flex-1">
               <Input
                 placeholder="Buscar produtos..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pr-10"
+                className="pr-10 bg-card text-card-foreground"
               />
               <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                <Search className="h-4 w-4 text-muted-foreground transition-colors hover:text-foreground" />
+                <Search className="h-4 w-4 text-muted-foreground" />
               </div>
             </div>
             <Button
@@ -111,7 +111,7 @@ const Products = () => {
                   );
                 }
               }}
-              className="hover:scale-105 transition-transform"
+              className="hover:scale-105 transition-transform text-foreground"
             >
               <MapPin className="h-4 w-4" />
             </Button>
@@ -121,7 +121,7 @@ const Products = () => {
         {isLoading ? (
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
             {[...Array(8)].map((_, i) => (
-              <Card key={i} className="animate-pulse">
+              <Card key={i} className="animate-pulse bg-card">
                 <div className="aspect-square bg-muted" />
                 <CardContent className="p-4">
                   <div className="h-4 bg-muted rounded mb-2" />
@@ -135,25 +135,25 @@ const Products = () => {
             {filteredProducts?.map((product) => (
               <Card 
                 key={product.id}
-                className="cursor-pointer hover:shadow-lg transition-shadow"
+                className="cursor-pointer hover:shadow-lg transition-shadow bg-card/80 backdrop-blur-sm border-border/50"
                 onClick={() => navigate(`/product/${product.id}`)}
               >
-                <div className="aspect-square relative overflow-hidden">
+                <div className="aspect-square relative overflow-hidden rounded-t-lg">
                   <img
                     src={product.images[0] || "/placeholder.svg"}
                     alt={product.title}
                     className="object-cover w-full h-full"
                   />
                   {product.distance && (
-                    <div className="absolute bottom-2 left-2 bg-black/50 text-white px-2 py-1 rounded-full text-xs flex items-center gap-1">
+                    <div className="absolute bottom-2 left-2 bg-primary/80 text-primary-foreground px-2 py-1 rounded-full text-xs flex items-center gap-1 backdrop-blur-sm">
                       <MapPin className="w-3 h-3" />
                       {(product.distance / 1000).toFixed(1)}km
                     </div>
                   )}
                 </div>
                 <CardContent className="p-4">
-                  <h3 className="font-semibold truncate">{product.title}</h3>
-                  <p className="text-lg font-bold">
+                  <h3 className="font-semibold truncate text-card-foreground">{product.title}</h3>
+                  <p className="text-lg font-bold text-primary">
                     R$ {product.price.toFixed(2)}
                   </p>
                   {product.location_name && (
@@ -168,7 +168,7 @@ const Products = () => {
         )}
       </div>
       <BottomNav />
-    </>
+    </div>
   );
 };
 
