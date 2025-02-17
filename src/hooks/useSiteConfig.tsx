@@ -15,12 +15,6 @@ export type SiteConfig = {
   navbar_color: string;
   primary_color: string;
   text_color: string;
-  product_card_primary_color: string;
-  product_card_secondary_color: string;
-  product_page_background_color: string;
-  product_text_color: string;
-  product_price_color: string;
-  product_location_color: string;
 };
 
 export function useSiteConfig() {

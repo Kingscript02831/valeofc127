@@ -1,4 +1,3 @@
-<lov-code>
 import { useState, useEffect } from "react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -80,13 +79,7 @@ const Admin = () => {
     admin_header_color: "#D6BCFA",
     admin_hover_color: "#E2E8F0",
     admin_sidebar_color: "#1A1F2C",
-    admin_text_color: "#FFFFFF",
-    product_card_primary_color: "#FF69B4", // Pink color from the image
-    product_card_secondary_color: "#FFB6C1", // Lighter pink for gradient
-    product_page_background_color: "#FFFFFF", // White background
-    product_text_color: "#FFFFFF", // White text for contrast
-    product_price_color: "#FFFFFF", // White price text
-    product_location_color: "#FFFFFF", // White location text
+    admin_text_color: "#FFFFFF"
   });
 
   useEffect(() => {
@@ -156,7 +149,6 @@ const Admin = () => {
             <TabsTrigger value="bottom-nav">Barra</TabsTrigger>
             <TabsTrigger value="login">Login/Registro</TabsTrigger>
             <TabsTrigger value="pwa">PWA</TabsTrigger>
-            <TabsTrigger value="products">Produtos</TabsTrigger>
           </TabsList>
 
           <TabsContent value="config" className="bg-white rounded-lg shadow p-6 space-y-6">
@@ -780,92 +772,10 @@ const Admin = () => {
               </Button>
             </div>
           </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+};
 
-          <TabsContent value="products" className="bg-white rounded-lg shadow p-6 space-y-6">
-            <div>
-              <h2 className="text-xl font-semibold mb-4">Cores dos Cartões de Produtos</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <Label htmlFor="product_card_primary_color">Cor Primária do Cartão</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="product_card_primary_color"
-                      type="color"
-                      value={config.product_card_primary_color}
-                      onChange={(e) => setConfig({ ...config, product_card_primary_color: e.target.value })}
-                      className="w-20"
-                    />
-                    <Input
-                      type="text"
-                      value={config.product_card_primary_color}
-                      onChange={(e) => setConfig({ ...config, product_card_primary_color: e.target.value })}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="product_card_secondary_color">Cor Secundária do Cartão</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="product_card_secondary_color"
-                      type="color"
-                      value={config.product_card_secondary_color}
-                      onChange={(e) => setConfig({ ...config, product_card_secondary_color: e.target.value })}
-                      className="w-20"
-                    />
-                    <Input
-                      type="text"
-                      value={config.product_card_secondary_color}
-                      onChange={(e) => setConfig({ ...config, product_card_secondary_color: e.target.value })}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="product_page_background_color">Cor do Fundo da Página</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="product_page_background_color"
-                      type="color"
-                      value={config.product_page_background_color}
-                      onChange={(e) => setConfig({ ...config, product_page_background_color: e.target.value })}
-                      className="w-20"
-                    />
-                    <Input
-                      type="text"
-                      value={config.product_page_background_color}
-                      onChange={(e) => setConfig({ ...config, product_page_background_color: e.target.value })}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="product_text_color">Cor do Texto</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="product_text_color"
-                      type="color"
-                      value={config.product_text_color}
-                      onChange={(e) => setConfig({ ...config, product_text_color: e.target.value })}
-                      className="w-20"
-                    />
-                    <Input
-                      type="text"
-                      value={config.product_text_color}
-                      onChange={(e) => setConfig({ ...config, product_text_color: e.target.value })}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="product_price_color">Cor do Preço</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="product_price_color"
-                      type="color"
-                      value={config.product_price_color}
-                      onChange={(e) => setConfig({ ...config, product_price_color: e.target.value })}
-                      className="w-20"
-                    />
-                    <Input
-                      type="text
+export default Admin;
