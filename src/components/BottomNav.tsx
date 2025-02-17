@@ -59,7 +59,7 @@ const BottomNav = () => {
   };
 
   const navStyle = {
-    background: `linear-gradient(to right, ${config?.bottom_nav_primary_color || '#1A1F2C'}90, ${config?.bottom_nav_secondary_color || '#D6BCFA'}90)`,
+    background: `linear-gradient(to right, ${config?.bottom_nav_primary_color || '#1A1F2C'}, ${config?.bottom_nav_secondary_color || '#D6BCFA'})`,
     borderTop: `1px solid ${config?.bottom_nav_primary_color}20 || '#1A1F2C20'`,
   };
 
@@ -70,11 +70,11 @@ const BottomNav = () => {
 
   return (
     <nav 
-      className="fixed bottom-0 left-0 right-0 py-2 backdrop-blur-md shadow-lg transition-all duration-300 md:hidden"
+      className="fixed bottom-0 left-0 right-0 shadow-lg transition-all duration-300 md:hidden"
       style={navStyle}
     >
       <div className="container mx-auto px-4">
-        <div className="flex justify-around items-center">
+        <div className="flex justify-around items-center py-2">
           <Link
             to="/"
             className="flex flex-col items-center p-2 rounded-xl transition-all duration-300 hover:scale-105"
