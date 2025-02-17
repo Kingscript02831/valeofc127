@@ -1,8 +1,8 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { ProductTheme, ProductPageConfig } from "@/types/product-theme";
-import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "../integrations/supabase/client";
+import { ProductTheme, ProductPageConfig } from "../types/product-theme";
+import { useToast } from "../components/ui/use-toast";
 
 export function useProductTheme(pageType: 'list' | 'details' | 'form') {
   const { toast } = useToast();
@@ -46,7 +46,7 @@ export function useProductTheme(pageType: 'list' | 'details' | 'form') {
       if (error) throw error;
 
       // Invalidar cache para forçar recarregamento
-      queryClient.invalidateQueries(['productTheme']);
+      queryClient.invalidateQueries({ queryKey: ['productTheme'] });
 
       toast({
         title: "Tema atualizado",
@@ -71,7 +71,7 @@ export function useProductTheme(pageType: 'list' | 'details' | 'form') {
 
       if (error) throw error;
 
-      queryClient.invalidateQueries(['productTheme']);
+      queryClient.invalidateQueries({ queryKey: ['productTheme'] });
 
       toast({
         title: "Configurações atualizadas",
