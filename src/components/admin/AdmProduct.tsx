@@ -1,5 +1,6 @@
-
 import { cn } from "@/lib/utils";
+import { useProductTheme } from "@/hooks/useProductTheme";
+import { ProductTheme, ProductPageConfig } from "@/types/product-theme";
 
 // Tipos para as variantes de cores
 type ColorVariant = "default" | "primary" | "secondary" | "accent";
@@ -8,52 +9,73 @@ type ColorVariant = "default" | "primary" | "secondary" | "accent";
 interface AdmProductStylesProps {
   variant?: ColorVariant;
   className?: string;
+  pageType: 'list' | 'details' | 'form';
 }
 
 // Componente que exporta as configurações de estilo
-export const AdmProductStyles = ({ variant = "default", className }: AdmProductStylesProps) => {
-  // Configurações base de cores para produtos
+export const AdmProductStyles = ({ variant = "default", className, pageType }: AdmProductStylesProps) => {
+  const { theme, config, isLoading } = useProductTheme(pageType);
+
+  if (isLoading || !theme || !config) {
+    return {
+      backgroundPrimary: "bg-gray-100 dark:bg-gray-800",
+      backgroundSecondary: "bg-gray-200 dark:bg-gray-700",
+      backgroundMuted: "bg-gray-300 dark:bg-gray-600",
+      priceRegular: "text-gray-900 dark:text-gray-100",
+      priceDiscount: "text-red-500 dark:text-red-400",
+      priceOld: "text-gray-500 dark:text-gray-400 line-through",
+      borderLight: "border-gray-200 dark:border-gray-700",
+      borderMedium: "border-gray-300 dark:border-gray-600",
+      borderDark: "border-gray-400 dark:border-gray-500",
+      textPrimary: "text-gray-900 dark:text-gray-100",
+      textSecondary: "text-gray-700 dark:text-gray-300",
+      textMuted: "text-gray-500 dark:text-gray-400",
+      cardBase: "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-md",
+      buttonPrimary: "bg-blue-500 text-white",
+      buttonSecondary: "bg-green-500 text-white",
+      variant: "",
+      className: className || "",
+      config: {
+        container_padding: "4",
+        container_max_width: "2xl",
+        grid_columns: "1",
+        card_shadow: "md",
+        image_aspect_ratio: "square",
+        font_size_title: "xl",
+        font_size_price: "2xl",
+        spacing: "4",
+      },
+    };
+  }
+
+  // Configurações base de cores para produtos usando o tema do banco de dados
   const baseStyles = {
     // Backgrounds
-    backgroundPrimary: "bg-white dark:bg-[#222222]",
-    backgroundSecondary: "bg-[#F1F0FB] dark:bg-[#1A1F2C]",
-    backgroundMuted: "bg-[#eee] dark:bg-[#2A2A2A]",
+    backgroundPrimary: `bg-[${theme.background_primary}] dark:bg-[${theme.dark_background_primary}]`,
+    backgroundSecondary: `bg-[${theme.background_secondary}] dark:bg-[${theme.dark_background_secondary}]`,
+    backgroundMuted: `bg-[${theme.background_muted}] dark:bg-[${theme.dark_background_muted}]`,
     
     // Preços
-    priceRegular: "text-[#9b87f5] dark:text-[#a594f8]",
-    priceDiscount: "text-[#F97316] dark:text-[#ff8534]",
-    priceOld: "text-[#8E9196] line-through",
+    priceRegular: `text-[${theme.price_regular}]`,
+    priceDiscount: `text-[${theme.price_discount}]`,
+    priceOld: `text-[${theme.price_old}] line-through`,
     
     // Bordas
-    borderLight: "border-[#C8C8C9] dark:border-[#3A3A3A]",
-    borderMedium: "border-[#9F9EA1] dark:border-[#4A4A4A]",
-    borderDark: "border-[#403E43] dark:border-[#5A5A5A]",
+    borderLight: `border-[${theme.border_light}] dark:border-[${theme.dark_border_light}]`,
+    borderMedium: `border-[${theme.border_medium}] dark:border-[${theme.dark_border_medium}]`,
+    borderDark: `border-[${theme.border_dark}] dark:border-[${theme.dark_border_dark}]`,
     
     // Textos
-    textPrimary: "text-[#1A1F2C] dark:text-white",
-    textSecondary: "text-[#403E43] dark:text-[#B0B0B0]",
-    textMuted: "text-[#8E9196] dark:text-[#808080]",
+    textPrimary: `text-[${theme.text_primary}] dark:text-[${theme.dark_text_primary}]`,
+    textSecondary: `text-[${theme.text_secondary}] dark:text-[${theme.dark_text_secondary}]`,
+    textMuted: `text-[${theme.text_muted}] dark:text-[${theme.dark_text_muted}]`,
 
     // Cards
-    cardBase: "bg-white dark:bg-[#1A1F2C] border border-[#C8C8C9] dark:border-[#3A3A3A] rounded-lg shadow-sm",
-    
-    // Hover States
-    hoverBackground: "hover:bg-[#F1F0FB] dark:hover:bg-[#2A2F3C]",
-    hoverBorder: "hover:border-[#9b87f5] dark:hover:border-[#a594f8]",
-    
-    // Status
-    statusNew: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100",
-    statusUsed: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100",
-    
-    // Forms
-    inputBackground: "bg-white dark:bg-[#2A2F3C]",
-    inputBorder: "border-[#C8C8C9] dark:border-[#3A3A3A] focus:border-[#9b87f5] dark:focus:border-[#a594f8]",
-    inputText: "text-[#1A1F2C] dark:text-white",
+    cardBase: `bg-[${theme.background_primary}] dark:bg-[${theme.dark_background_primary}] border-[${theme.border_light}] dark:border-[${theme.dark_border_light}] rounded-lg shadow-${config.card_shadow}`,
     
     // Botões
-    buttonPrimary: "bg-[#9b87f5] hover:bg-[#8674e4] text-white",
-    buttonSecondary: "bg-[#F1F0FB] hover:bg-[#E1E0EB] text-[#1A1F2C] dark:bg-[#2A2F3C] dark:hover:bg-[#3A3F4C] dark:text-white",
-    buttonOutline: "border border-[#9b87f5] text-[#9b87f5] hover:bg-[#9b87f5] hover:text-white dark:border-[#a594f8] dark:text-[#a594f8] dark:hover:bg-[#a594f8]",
+    buttonPrimary: `bg-[${theme.button_primary_bg}] text-[${theme.button_primary_text}]`,
+    buttonSecondary: `bg-[${theme.button_secondary_bg}] text-[${theme.button_secondary_text}]`,
   };
 
   // Classes CSS específicas para cada variante
@@ -71,60 +93,50 @@ export const AdmProductStyles = ({ variant = "default", className }: AdmProductS
       baseStyles.textSecondary
     ),
     accent: cn(
-      "bg-gradient-to-r from-[#9b87f5] to-[#a594f8]",
+      `bg-gradient-to-r from-[${theme.button_primary_bg}] to-[${theme.dark_button_primary_bg}]`,
       "text-white"
     ),
   };
 
   return {
-    // Retorna todas as configurações de estilo
     ...baseStyles,
     variant: variantStyles[variant],
     className: cn(variantStyles[variant], className),
+    config, // Retorna também as configurações da página
   };
 };
 
-// Exemplos de uso para diferentes páginas
-
-// Página de Lista de Produtos
+// Configurações específicas para cada tipo de página
 export const ProductListStyles = {
   container: "container mx-auto px-4 py-8",
   header: "flex justify-between items-center mb-6",
   grid: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6",
-  card: "bg-white dark:bg-[#1A1F2C] rounded-lg shadow-sm overflow-hidden transition-all duration-200 hover:shadow-md",
-  imageContainer: "aspect-square relative overflow-hidden",
-  image: "object-cover w-full h-full",
+  card: "rounded-lg shadow-md overflow-hidden",
+  image: "aspect-square object-cover w-full",
   content: "p-4",
-  title: "text-lg font-semibold text-[#1A1F2C] dark:text-white truncate",
-  price: "text-xl font-bold text-[#9b87f5] dark:text-[#a594f8] mt-2",
-  location: "text-sm text-[#8E9196] dark:text-[#808080] mt-1",
+  title: "text-xl font-semibold mb-2",
+  price: "text-2xl font-bold text-primary",
 };
 
-// Página de Detalhes do Produto
 export const ProductDetailsStyles = {
   container: "container mx-auto px-4 py-8",
   header: "mb-6",
-  gallery: "bg-[#F1F0FB] dark:bg-[#2A2F3C] rounded-lg p-4 mb-6",
-  info: "space-y-6",
-  title: "text-2xl font-bold text-[#1A1F2C] dark:text-white",
-  price: "text-3xl font-bold text-[#9b87f5] dark:text-[#a594f8]",
-  description: "text-[#403E43] dark:text-[#B0B0B0] whitespace-pre-line",
-  sellerCard: "bg-white dark:bg-[#1A1F2C] border border-[#C8C8C9] dark:border-[#3A3A3A] rounded-lg p-4",
+  gallery: "rounded-lg p-4 mb-6",
+  image: "aspect-square object-cover w-full",
+  content: "p-4",
+  title: "text-2xl font-bold mb-4",
+  price: "text-3xl font-bold text-primary mb-4",
+  description: "text-gray-700 dark:text-gray-300 mb-4",
 };
 
-// Página de Adicionar/Editar Produto
 export const ProductFormStyles = {
   container: "container mx-auto px-4 py-8 max-w-2xl",
   form: "space-y-6",
-  section: "bg-white dark:bg-[#1A1F2C] rounded-lg shadow-sm p-6",
-  label: "block text-sm font-medium text-[#403E43] dark:text-[#B0B0B0] mb-2",
-  input: "w-full bg-white dark:bg-[#2A2F3C] border border-[#C8C8C9] dark:border-[#3A3A3A] rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-[#9b87f5] dark:focus:ring-[#a594f8]",
-  textarea: "w-full bg-white dark:bg-[#2A2F3C] border border-[#C8C8C9] dark:border-[#3A3A3A] rounded-md p-2 min-h-[120px] focus:outline-none focus:ring-2 focus:ring-[#9b87f5] dark:focus:ring-[#a594f8]",
-  select: "w-full bg-white dark:bg-[#2A2F3C] border border-[#C8C8C9] dark:border-[#3A3A3A] rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-[#9b87f5] dark:focus:ring-[#a594f8]",
-  button: {
-    primary: "w-full bg-[#9b87f5] hover:bg-[#8674e4] text-white py-3 rounded-md font-medium transition-colors",
-    secondary: "w-full bg-[#F1F0FB] hover:bg-[#E1E0EB] text-[#1A1F2C] dark:bg-[#2A2F3C] dark:hover:bg-[#3A3F4C] dark:text-white py-3 rounded-md font-medium transition-colors",
-  },
+  section: "rounded-lg shadow-sm p-6",
+  label: "block text-sm font-medium text-gray-700 dark:text-gray-300",
+  input: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100",
+  textarea: "mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100",
+  button: "bg-primary text-white rounded-md py-2 px-4 hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50",
 };
 
 export default AdmProductStyles;
