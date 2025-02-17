@@ -47,10 +47,10 @@ export default defineConfig(async ({ mode }) => {
     registerType: "autoUpdate" as const,
     includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
     manifest: {
-      name: pwaConfig?.pwa_name || 'VALEOFC',
-      short_name: pwaConfig?.pwa_short_name || 'VALEOFC',
+      name: pwaConfig?.pwa_name || 'ValeOfc',
+      short_name: pwaConfig?.pwa_short_name || 'ValeOfc',
       description: pwaConfig?.pwa_description || 'Seu app de notícias local',
-      theme_color: pwaConfig?.pwa_theme_color || '#ffffff',
+      theme_color: pwaConfig?.pwa_theme_color || '#000000',
       background_color: pwaConfig?.pwa_background_color || '#ffffff',
       display: 'standalone',
       icons: [
