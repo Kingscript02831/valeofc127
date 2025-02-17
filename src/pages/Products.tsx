@@ -6,12 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import type { Product, ProductWithDistance } from "@/types/products";
+import { supabase } from "../integrations/supabase/client";
+import type { Product, ProductWithDistance } from "../types/products";
 import { useQuery } from "@tanstack/react-query";
-import { useSiteConfig } from "@/hooks/useSiteConfig";
-import Navbar from "@/components/Navbar";
-import BottomNav from "@/components/BottomNav";
+import { useSiteConfig } from "../hooks/useSiteConfig";
+import Navbar from "../components/Navbar";
+import BottomNav from "../components/BottomNav";
 
 const Products = () => {
   const navigate = useNavigate();
@@ -75,8 +75,13 @@ const Products = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       
-      <div className="container mx-auto px-4 pb-20 pt-4">
-        <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm pb-4">
+      <main className="container mx-auto px-4 pb-20 pt-20">
+        <div className="flex items-center gap-2 mb-6">
+          <h1 className="text-2xl font-bold">Seleção de Hoje</h1>
+          <MapPin className="h-6 w-6 text-primary" />
+        </div>
+
+        <div className="sticky top-16 z-10 bg-background/80 backdrop-blur-sm pb-4">
           <div className="flex gap-2 mb-4">
             <Button
               variant="ghost"
@@ -174,7 +179,7 @@ const Products = () => {
             ))}
           </div>
         )}
-      </div>
+      </main>
 
       <BottomNav />
     </div>
@@ -182,4 +187,3 @@ const Products = () => {
 };
 
 export default Products;
-
