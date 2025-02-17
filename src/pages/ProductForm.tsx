@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Upload } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,15 +13,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { ProductFormData } from "@/types/products";
 
 const ProductForm = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [images, setImages] = useState<File[]>([]);
+  const [newVideoUrl, setNewVideoUrl] = useState("");
+  const [videoUrls, setVideoUrls] = useState<string[]>([]);
   const [formData, setFormData] = useState<ProductFormData>({
     title: "",
     description: "",
@@ -33,6 +34,39 @@ const ProductForm = () => {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     setImages(files);
+  };
+
+  const handleAddVideo = () => {
+    if (!newVideoUrl) {
+      toast.error("Por favor, insira uma URL de vídeo válida");
+      return;
+    }
+
+    const isDropboxUrl = newVideoUrl.includes('dropbox.com');
+    const isYoutubeUrl = newVideoUrl.includes('youtube.com') || newVideoUrl.includes('youtu.be');
+
+    if (!isDropboxUrl && !isYoutubeUrl) {
+      toast.error("Por favor, insira uma URL válida do Dropbox ou YouTube");
+      return;
+    }
+
+    let directVideoUrl = newVideoUrl;
+    if (isDropboxUrl && newVideoUrl.includes('www.dropbox.com')) {
+      directVideoUrl = newVideoUrl.replace('www.dropbox.com', 'dl.dropboxusercontent.com');
+    }
+
+    if (!videoUrls.includes(directVideoUrl)) {
+      setVideoUrls([...videoUrls, directVideoUrl]);
+      setNewVideoUrl("");
+      toast.success("Vídeo adicionado com sucesso!");
+    } else {
+      toast.error("Este vídeo já foi adicionado");
+    }
+  };
+
+  const handleRemoveVideo = (videoUrl: string) => {
+    setVideoUrls(videoUrls.filter(url => url !== videoUrl));
+    toast.success("Vídeo removido com sucesso!");
   };
 
   const uploadImages = async () => {
@@ -76,24 +110,17 @@ const ProductForm = () => {
       const { error } = await supabase.from("products").insert({
         ...formData,
         images: imageUrls,
+        video_urls: videoUrls,
         latitude: position.coords.latitude,
         longitude: position.coords.longitude,
       });
 
       if (error) throw error;
 
-      toast({
-        title: "Produto adicionado com sucesso!",
-        description: "Seu produto já está disponível para visualização.",
-      });
-
+      toast.success("Produto adicionado com sucesso!");
       navigate("/products");
     } catch (error: any) {
-      toast({
-        title: "Erro ao adicionar produto",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast.error("Erro ao adicionar produto: " + error.message);
     } finally {
       setLoading(false);
     }
@@ -140,6 +167,36 @@ const ProductForm = () => {
                 )}
               </div>
             </Button>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label>Vídeos (Dropbox ou YouTube)</Label>
+          <div className="flex gap-2">
+            <Input
+              value={newVideoUrl}
+              onChange={(e) => setNewVideoUrl(e.target.value)}
+              placeholder="Cole a URL do Dropbox ou YouTube"
+            />
+            <Button type="button" onClick={handleAddVideo}>
+              <Plus className="h-4 w-4 mr-2" />
+              Adicionar
+            </Button>
+          </div>
+          <div className="space-y-2">
+            {videoUrls.map((url, index) => (
+              <div key={index} className="flex items-center gap-2">
+                <Input value={url} readOnly />
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="icon"
+                  onClick={() => handleRemoveVideo(url)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
           </div>
         </div>
 

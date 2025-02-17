@@ -11,6 +11,7 @@ export interface Product {
   longitude?: number;
   location_name?: string;
   images: string[];
+  video_urls?: string[];
   created_at?: string;
   updated_at?: string;
 }
@@ -26,5 +27,6 @@ export interface ProductFormData {
   condition: string;
   category_id?: string;
   images: string[];
+  video_urls?: string[];
   location_name?: string;
 }
