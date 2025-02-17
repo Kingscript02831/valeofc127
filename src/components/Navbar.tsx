@@ -1,8 +1,14 @@
-import { Share2, Facebook, Instagram, User } from "lucide-react";
+import { Share2, Facebook, Instagram, User, Menu } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { useSiteConfig } from "../hooks/useSiteConfig";
 import { ThemeToggle } from "./ThemeToggle";
 import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../components/ui/dropdown-menu"; // Certifique-se de ter um componente DropdownMenu
 
 const Navbar = () => {
   const { data: config, isLoading, isError } = useSiteConfig();
@@ -82,57 +88,78 @@ const Navbar = () => {
           </a>
 
           <div className="flex items-center space-x-4">
-            <a
-              href="/perfil"
-              className="flex items-center space-x-2 p-2 rounded-full transition-all duration-300 ease-out hover:scale-110 hover:bg-primary/20"
-              style={{ color: config.text_color }}
-            >
-              <User className="h-6 w-6" strokeWidth={2.5} />
-              <span>Perfil</span>
-            </a>
-
-            {config.navbar_social_facebook && (
-              <a
-                href={config.navbar_social_facebook}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="transition-all duration-300 ease-out hover:scale-110 p-2 rounded-full hover:bg-primary/20"
-                style={{ 
-                  color: config.text_color,
-                }}
-                aria-label="Facebook"
+            {/* Menu Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="transition-all duration-300 ease-out hover:scale-110 rounded-full p-2 hover:bg-primary/20"
+                  style={{ 
+                    color: config.text_color,
+                  }}
+                  aria-label="Menu"
+                >
+                  <Menu className="h-6 w-6" strokeWidth={2.5} />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                className="min-w-[200px] bg-white shadow-lg rounded-lg"
+                align="end"
               >
-                <Facebook className="h-6 w-6" strokeWidth={2.5} />
-              </a>
-            )}
+                <DropdownMenuItem
+                  onClick={handleShare}
+                  className="flex items-center space-x-2 p-2 cursor-pointer hover:bg-gray-100 rounded-md"
+                >
+                  <Share2 className="h-4 w-4" strokeWidth={2} />
+                  <span>Compartilhar</span>
+                </DropdownMenuItem>
 
-            {config.navbar_social_instagram && (
-              <a
-                href={config.navbar_social_instagram}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="transition-all duration-300 ease-out hover:scale-110 p-2 rounded-full hover:bg-primary/20"
-                style={{ 
-                  color: config.text_color,
-                }}
-                aria-label="Instagram"
-              >
-                <Instagram className="h-6 w-6" strokeWidth={2.5} />
-              </a>
-            )}
+                {config.navbar_social_facebook && (
+                  <DropdownMenuItem
+                    asChild
+                    className="flex items-center space-x-2 p-2 cursor-pointer hover:bg-gray-100 rounded-md"
+                  >
+                    <a
+                      href={config.navbar_social_facebook}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full"
+                    >
+                      <Facebook className="h-4 w-4" strokeWidth={2} />
+                      <span>Facebook</span>
+                    </a>
+                  </DropdownMenuItem>
+                )}
 
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleShare}
-              className="transition-all duration-300 ease-out hover:scale-110 rounded-full p-2 hover:bg-primary/20"
-              style={{ 
-                color: config.text_color,
-              }}
-              aria-label="Compartilhar"
-            >
-              <Share2 className="h-6 w-6" strokeWidth={2.5} />
-            </Button>
+                {config.navbar_social_instagram && (
+                  <DropdownMenuItem
+                    asChild
+                    className="flex items-center space-x-2 p-2 cursor-pointer hover:bg-gray-100 rounded-md"
+                  >
+                    <a
+                      href={config.navbar_social_instagram}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full"
+                    >
+                      <Instagram className="h-4 w-4" strokeWidth={2} />
+                      <span>Instagram</span>
+                    </a>
+                  </DropdownMenuItem>
+                )}
+
+                <DropdownMenuItem
+                  asChild
+                  className="flex items-center space-x-2 p-2 cursor-pointer hover:bg-gray-100 rounded-md"
+                >
+                  <a href="/perfil" className="w-full">
+                    <User className="h-4 w-4" strokeWidth={2} />
+                    <span>Perfil</span>
+                  </a>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             <ThemeToggle />
           </div>
