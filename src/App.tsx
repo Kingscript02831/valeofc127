@@ -65,7 +65,7 @@ const App: React.FC = () => {
                     <Route path="noticias" element={<AdminNews />} />
                     <Route path="categorias" element={<AdminCategories />} />
                     <Route path="sistema" element={<AdminSistema />} />
-                    <Route path="produtos/tema" element={<ProductThemeConfig />} />
+                    <Route path="tema" element={<ProductThemeConfig />} />
                   </Route> 
                   <Route path="/user-products" element={<UserProducts />} />
                   <Route path="*" element={<NotFound />} />
