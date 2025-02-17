@@ -14,6 +14,10 @@ export interface Product {
   video_urls?: string[];
   created_at?: string;
   updated_at?: string;
+  profiles?: {
+    full_name: string;
+    avatar_url: string;
+  };
 }
 
 export interface ProductWithDistance extends Product {
