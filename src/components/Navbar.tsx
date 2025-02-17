@@ -1,7 +1,8 @@
+
 import { Share2, Facebook, Instagram } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useSiteConfig } from "@/hooks/useSiteConfig";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { Button } from "./ui/button";
+import { useSiteConfig } from "../hooks/useSiteConfig";
+import { ThemeToggle } from "./ThemeToggle";
 import { toast } from "sonner";
 
 const Navbar = () => {
