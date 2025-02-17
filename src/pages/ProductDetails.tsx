@@ -4,10 +4,10 @@ import { ArrowLeft, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "../integrations/supabase/client";
 import type { Product } from "@/types/products";
 import { useQuery } from "@tanstack/react-query";
-import MediaCarousel from "@/components/MediaCarousel";
+import { MediaCarousel } from "../components/MediaCarousel";
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -17,6 +17,8 @@ const ProductDetails = () => {
   const { data: product, isLoading } = useQuery({
     queryKey: ["product", id],
     queryFn: async () => {
+      console.log("Fetching product with ID:", id);
+      
       const { data, error } = await supabase
         .from("products")
         .select(`
@@ -33,9 +35,11 @@ const ProductDetails = () => {
         console.error("Error fetching product:", error);
         throw error;
       }
-      
+
+      console.log("Product data:", data);
       return data as Product;
     },
+    enabled: !!id,
   });
 
   const handleShare = async () => {
