@@ -2,22 +2,21 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, MapPin, User } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import type { ProductWithDistance } from "@/types/products";
+import { Input } from "./ui/input";
+import { Button } from "./ui/button";
+import { Card, CardContent } from "./ui/card";
+import { useToast } from "./ui/use-toast";
+import { supabase } from "../integrations/supabase/client";
+import type { ProductWithDistance } from "../types/products";
 import { useQuery } from "@tanstack/react-query";
-import Navbar from "@/components/Navbar";
-import SubNav from "@/components/SubNav";
-import BottomNav from "@/components/BottomNav";
+import { useSiteConfig } from "../hooks/useSiteConfig";
 
 const Products = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [userLocation, setUserLocation] = useState<{lat: number; lon: number} | null>(null);
+  const { data: config } = useSiteConfig();
 
   useEffect(() => {
     if ("geolocation" in navigator) {
@@ -71,11 +70,9 @@ const Products = () => {
   );
 
   return (
-    <div className="dark min-h-screen bg-background">
-      <Navbar />
-      <SubNav />
-      <div className="container mx-auto px-4 pb-20 pt-4">
-        <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm pb-4">
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 pb-20 pt-20">
+        <div className="sticky top-16 z-10 bg-background/80 backdrop-blur-sm pb-4">
           <div className="flex gap-2 mb-4">
             <Button
               variant="ghost"
@@ -135,29 +132,35 @@ const Products = () => {
             {filteredProducts?.map((product) => (
               <Card 
                 key={product.id}
-                className="cursor-pointer hover:shadow-lg transition-shadow bg-card/80 backdrop-blur-sm border-border/50"
+                className="cursor-pointer hover:shadow-lg transition-shadow overflow-hidden"
                 onClick={() => navigate(`/product/${product.id}`)}
+                style={{
+                  background: config ? `linear-gradient(to bottom, ${config.navbar_color}, ${config.primary_color}40)` : undefined,
+                  borderColor: config?.primary_color
+                }}
               >
-                <div className="aspect-square relative overflow-hidden rounded-t-lg">
+                <div className="aspect-square relative overflow-hidden">
                   <img
                     src={product.images[0] || "/placeholder.svg"}
                     alt={product.title}
                     className="object-cover w-full h-full"
                   />
-                  {product.distance && (
-                    <div className="absolute bottom-2 left-2 bg-primary/80 text-primary-foreground px-2 py-1 rounded-full text-xs flex items-center gap-1 backdrop-blur-sm">
-                      <MapPin className="w-3 h-3" />
-                      {(product.distance / 1000).toFixed(1)}km
-                    </div>
-                  )}
                 </div>
-                <CardContent className="p-4">
-                  <h3 className="font-semibold truncate text-card-foreground">{product.title}</h3>
-                  <p className="text-lg font-bold text-primary">
-                    R$ {product.price.toFixed(2)}
-                  </p>
+                <CardContent className="p-4" style={{ color: config?.text_color }}>
+                  <h3 className="font-semibold truncate mb-2">{product.title}</h3>
+                  <div className="flex justify-between items-center">
+                    <span className="text-lg font-bold">
+                      R$ {product.price.toFixed(2)}
+                    </span>
+                    {product.distance && (
+                      <span className="text-sm opacity-75 flex items-center gap-1">
+                        <MapPin className="w-3 h-3" />
+                        {(product.distance / 1000).toFixed(1)}km
+                      </span>
+                    )}
+                  </div>
                   {product.location_name && (
-                    <p className="text-sm text-muted-foreground truncate">
+                    <p className="text-sm opacity-75 truncate mt-1">
                       {product.location_name}
                     </p>
                   )}
@@ -167,7 +170,6 @@ const Products = () => {
           </div>
         )}
       </div>
-      <BottomNav />
     </div>
   );
 };

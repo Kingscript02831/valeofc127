@@ -36,4 +36,3 @@ export interface ProductFormData {
   location_name?: string;
   whatsapp?: string;
 }
-
