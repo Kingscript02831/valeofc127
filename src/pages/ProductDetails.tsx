@@ -129,12 +129,13 @@ const ProductDetails = () => {
     <>
       <Navbar />
       <SubNav />
-      <div className="container mx-auto px-4 py-6 pb-20">
+      <div className="container mx-auto px-4 py-6 pb-32">
         <div className="flex items-center justify-between mb-4">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => navigate(-1)}
+            className="hover:scale-105 transition-transform"
           >
             <ArrowLeft className="h-6 w-6" />
           </Button>
@@ -143,6 +144,7 @@ const ProductDetails = () => {
               variant="ghost"
               size="icon"
               onClick={handleFavorite}
+              className="hover:scale-105 transition-transform"
             >
               <Heart className="h-6 w-6" />
             </Button>
@@ -150,13 +152,42 @@ const ProductDetails = () => {
               variant="ghost"
               size="icon"
               onClick={handleShare}
+              className="hover:scale-105 transition-transform"
             >
               <Share2 className="h-6 w-6" />
             </Button>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 transition-all duration-300 hover:shadow-xl">
+          <div className="p-4 border-b border-gray-100">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-12 h-12 rounded-full bg-muted overflow-hidden shadow-md">
+                {product?.profiles?.avatar_url ? (
+                  <img
+                    src={product.profiles.avatar_url}
+                    alt={product.profiles.full_name || ''}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-primary/10 flex items-center justify-center text-primary text-lg font-semibold">
+                    {product?.profiles?.full_name?.[0]?.toUpperCase() || '?'}
+                  </div>
+                )}
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-lg">
+                  {product?.profiles?.full_name || 'Usuário'}
+                </p>
+                {product?.created_at && (
+                  <p className="text-sm text-muted-foreground">
+                    Anunciado há {formatDistance(new Date(product.created_at), new Date(), { locale: ptBR })}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+
           <MediaCarousel
             images={product?.images || []}
             videoUrls={product?.video_urls || []}
@@ -167,7 +198,7 @@ const ProductDetails = () => {
             <div>
               <div className="flex justify-between items-start mb-2">
                 <h1 className="text-2xl font-bold">{product?.title}</h1>
-                <Badge variant="outline" className="capitalize">
+                <Badge variant="outline" className="capitalize shadow-sm hover:shadow-md transition-shadow">
                   {product?.condition}
                 </Badge>
               </div>
@@ -176,57 +207,31 @@ const ProductDetails = () => {
               </p>
             </div>
             
-            <div>
-              <h2 className="text-lg font-semibold mb-2">Descrição</h2>
-              <p className="text-muted-foreground whitespace-pre-line">
-                {product?.description}
-              </p>
-            </div>
-
-            {product?.location_name && (
-              <div>
-                <h2 className="text-lg font-semibold mb-2">Localização</h2>
-                <p className="text-muted-foreground">
-                  {product.location_name}
-                </p>
-              </div>
-            )}
-
-            <Card>
+            <Card className="border-none shadow-none bg-gray-50">
               <CardContent className="p-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-muted overflow-hidden">
-                    {product?.profiles?.avatar_url ? (
-                      <img
-                        src={product.profiles.avatar_url}
-                        alt={product.profiles.full_name || ''}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-primary/10 flex items-center justify-center text-primary text-lg font-semibold">
-                        {product?.profiles?.full_name?.[0]?.toUpperCase() || '?'}
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-semibold">
-                      {product?.profiles?.full_name || 'Usuário'}
-                    </p>
-                    {product?.created_at && (
-                      <p className="text-sm text-muted-foreground">
-                        Anunciado há {formatDistance(new Date(product.created_at), new Date(), { locale: ptBR })}
-                      </p>
-                    )}
-                  </div>
-                </div>
+                <h2 className="text-lg font-semibold mb-2">Descrição</h2>
+                <p className="text-muted-foreground whitespace-pre-line">
+                  {product?.description}
+                </p>
               </CardContent>
             </Card>
+
+            {product?.location_name && (
+              <Card className="border-none shadow-none bg-gray-50">
+                <CardContent className="p-4">
+                  <h2 className="text-lg font-semibold mb-2">Localização</h2>
+                  <p className="text-muted-foreground">
+                    {product.location_name}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
 
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-md border-t">
+        <div className="fixed bottom-16 left-0 right-0 p-4 bg-background/80 backdrop-blur-md border-t">
           <Button 
-            className="w-full h-12 text-lg font-semibold"
+            className="w-full h-12 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
             onClick={handleContact}
           >
             Comprar agora
