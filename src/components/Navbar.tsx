@@ -1,5 +1,4 @@
-
-import { Share2, Facebook, Instagram } from "lucide-react";
+import { Share2, Facebook, Instagram, User } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { useSiteConfig } from "../hooks/useSiteConfig";
 import { ThemeToggle } from "./ThemeToggle";
@@ -82,7 +81,16 @@ const Navbar = () => {
             )}
           </a>
 
-          <div className="flex items-center space-x-3 whitespace-nowrap">
+          <div className="flex items-center space-x-4">
+            <a
+              href="/perfil"
+              className="flex items-center space-x-2 p-2 rounded-full transition-all duration-300 ease-out hover:scale-110 hover:bg-primary/20"
+              style={{ color: config.text_color }}
+            >
+              <User className="h-6 w-6" strokeWidth={2.5} />
+              <span>Perfil</span>
+            </a>
+
             {config.navbar_social_facebook && (
               <a
                 href={config.navbar_social_facebook}
