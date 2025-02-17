@@ -13,23 +13,66 @@ const supabase = createClient(
 
 // Fetch PWA configuration from Supabase
 const getPWAConfig = async () => {
-  const { data, error } = await supabase
-    .from("site_configuration")
-    .select("pwa_name, pwa_short_name, pwa_description, pwa_theme_color, pwa_background_color, pwa_app_icon")
-    .single();
+  try {
+    const { data, error } = await supabase
+      .from("site_configuration")
+      .select("pwa_name, pwa_short_name, pwa_description, pwa_theme_color, pwa_background_color, pwa_app_icon")
+      .single();
 
-  if (error) {
-    console.error("Error fetching PWA config:", error);
+    if (error) {
+      console.error("Error fetching PWA config:", error);
+      return null;
+    }
+
+    console.log("Fetched PWA config:", data);
+    return data;
+  } catch (error) {
+    console.error("Error in getPWAConfig:", error);
     return null;
   }
-
-  return data;
 };
 
 // https://vitejs.dev/config/
 export default defineConfig(async ({ mode }) => {
   const pwaConfig = await getPWAConfig();
-  console.log("PWA Config:", pwaConfig); // Debug log
+  console.log("Final PWA Config being used:", pwaConfig);
+
+  const manifestConfig = {
+    registerType: 'prompt',
+    includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+    manifest: {
+      name: pwaConfig?.pwa_name || 'VALEOFC',
+      short_name: pwaConfig?.pwa_short_name || 'VALEOFC',
+      description: pwaConfig?.pwa_description || 'Seu app de notícias local',
+      theme_color: pwaConfig?.pwa_theme_color || '#ffffff',
+      background_color: pwaConfig?.pwa_background_color || '#ffffff',
+      display: 'standalone',
+      icons: [
+        {
+          src: pwaConfig?.pwa_app_icon || '/pwa-192x192.png',
+          sizes: '192x192',
+          type: 'image/png'
+        },
+        {
+          src: pwaConfig?.pwa_app_icon || '/pwa-512x512.png',
+          sizes: '512x512',
+          type: 'image/png'
+        },
+        {
+          src: pwaConfig?.pwa_app_icon || '/pwa-512x512.png',
+          sizes: '512x512',
+          type: 'image/png',
+          purpose: 'any maskable'
+        }
+      ]
+    },
+    devOptions: {
+      enabled: true,
+      type: 'module'
+    }
+  };
+
+  console.log("PWA Manifest configuration:", manifestConfig);
 
   return {
     server: {
@@ -40,36 +83,7 @@ export default defineConfig(async ({ mode }) => {
       react(),
       mode === 'development' &&
       componentTagger(),
-      VitePWA({
-        registerType: 'prompt',
-        includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
-        manifest: {
-          name: pwaConfig?.pwa_name || 'VALEOFC',
-          short_name: pwaConfig?.pwa_short_name || 'VALEOFC',
-          description: pwaConfig?.pwa_description || 'Seu app de notícias local',
-          theme_color: pwaConfig?.pwa_theme_color || '#ffffff',
-          background_color: pwaConfig?.pwa_background_color || '#ffffff',
-          display: 'standalone',
-          icons: [
-            {
-              src: pwaConfig?.pwa_app_icon || '/pwa-192x192.png',
-              sizes: '192x192',
-              type: 'image/png'
-            },
-            {
-              src: pwaConfig?.pwa_app_icon || '/pwa-512x512.png',
-              sizes: '512x512',
-              type: 'image/png'
-            },
-            {
-              src: pwaConfig?.pwa_app_icon || '/pwa-512x512.png',
-              sizes: '512x512',
-              type: 'image/png',
-              purpose: 'any maskable'
-            }
-          ]
-        }
-      })
+      VitePWA(manifestConfig)
     ].filter(Boolean),
     resolve: {
       alias: {
