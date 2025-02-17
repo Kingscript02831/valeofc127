@@ -7,6 +7,7 @@ export interface Product {
   condition: string;
   category_id?: string;
   user_id: string;
+  whatsapp?: string;
   latitude?: number;
   longitude?: number;
   location_name?: string;
@@ -29,6 +30,7 @@ export interface ProductFormData {
   description: string;
   price: number;
   condition: string;
+  whatsapp?: string;
   category_id?: string;
   images: string[];
   video_urls?: string[];
