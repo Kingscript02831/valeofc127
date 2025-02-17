@@ -1,14 +1,9 @@
-import { Share2, Facebook, Instagram, User, Menu, Moon } from "lucide-react";
+
+import { Share2, Facebook, Instagram } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { useSiteConfig } from "../hooks/useSiteConfig";
 import { ThemeToggle } from "./ThemeToggle";
 import { toast } from "sonner";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "../components/ui/dropdown-menu";
 
 const Navbar = () => {
   const { data: config, isLoading, isError } = useSiteConfig();
@@ -35,7 +30,9 @@ const Navbar = () => {
   };
 
   if (isLoading) {
-    return <nav className="w-full fixed top-0 z-50 h-16 animate-pulse bg-gray-200" />;
+    return (
+      <nav className="w-full fixed top-0 z-50 h-16 animate-pulse bg-gray-200" />
+    );
   }
 
   if (isError || !config) {
@@ -51,102 +48,85 @@ const Navbar = () => {
   }
 
   return (
-    <nav
-      className="w-full fixed top-0 z-50 shadow-md fade-in backdrop-blur-md"
-      style={{
-        background: `linear-gradient(to right, ${config?.navbar_color}, ${config?.primary_color})`,
-        borderBottom: `2px solid ${config?.primary_color}50`,
-      }}
-    >
-      <div className="max-w-screen-2xl mx-auto px-6 sm:px-8 lg:px-10">
-        <div className="flex justify-between items-center h-20">
-          {/* Logo */}
-          <a href="/" className="flex items-center space-x-3 transform transition duration-300 hover:scale-105">
-            {config.navbar_logo_type === "image" && config.navbar_logo_image ? (
-              <img
+    <nav className="w-full fixed top-0 z-50 shadow-md fade-in"
+         style={{ 
+           background: `linear-gradient(to right, ${config?.navbar_color}, ${config?.primary_color})`,
+           borderColor: `${config?.primary_color}20`
+         }}>
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex overflow-x-auto scrollbar-hide justify-between items-center h-16 gap-x-4">
+          <a 
+            href="/" 
+            className="flex items-center space-x-2 transform transition duration-300 hover:scale-105 whitespace-nowrap"
+          >
+            {config.navbar_logo_type === 'image' && config.navbar_logo_image ? (
+              <img 
                 src={formatDropboxUrl(config.navbar_logo_image)}
-                alt="Logo"
-                className="h-14 w-14 rounded-full object-cover border-2 shadow-md transition-transform duration-300 hover:scale-110"
-                style={{ borderColor: config.text_color }}
+                alt="Logo" 
+                className="h-12 w-12 rounded-full object-cover border-2 transition-transform duration-300 hover:scale-110"
+                style={{ 
+                  borderColor: config.text_color,
+                }}
                 onError={handleImageError}
               />
             ) : (
-              <span
-                className="text-4xl font-extrabold tracking-tight px-6 py-3 rounded-full whitespace-nowrap shadow-md"
-                style={{
+              <span 
+                className="text-3xl font-bold tracking-tighter px-6 py-3 rounded-full whitespace-nowrap"
+                style={{ 
                   color: config.text_color,
-                  backgroundColor: `${config.primary_color}30`,
+                  backgroundColor: `${config.primary_color}20`
                 }}
               >
-                {config.navbar_logo_text || "VALEOFC"}
+                {config.navbar_logo_text || 'VALEOFC'}
               </span>
             )}
           </a>
 
-          <div className="flex items-center space-x-6">
-            {/* Menu Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="transition-all duration-300 ease-out hover:scale-125 rounded-full p-3 hover:bg-opacity-20"
-                  style={{ color: config.text_color }}
-                  aria-label="Menu"
-                >
-                  <Menu className="h-10 w-10" strokeWidth={2.8} />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                className="min-w-[220px] rounded-xl shadow-lg overflow-hidden border"
-                align="end"
-                style={{
-                  background: `linear-gradient(to right, ${config?.navbar_color}, ${config?.primary_color})`,
+          <div className="flex items-center space-x-3 whitespace-nowrap">
+            {config.navbar_social_facebook && (
+              <a
+                href={config.navbar_social_facebook}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="transition-all duration-300 ease-out hover:scale-110 p-2 rounded-full hover:bg-primary/20"
+                style={{ 
                   color: config.text_color,
-                  borderColor: `${config?.primary_color}50`,
                 }}
+                aria-label="Facebook"
               >
-                <DropdownMenuItem
-                  onClick={handleShare}
-                  className="flex items-center space-x-3 p-3 cursor-pointer hover:bg-opacity-30 rounded-md transition-all"
-                  style={{ color: config.text_color }}
-                >
-                  <Share2 className="h-5 w-5" strokeWidth={2} />
-                  <span className="text-lg">Compartilhar</span>
-                </DropdownMenuItem>
+                <Facebook className="h-6 w-6" strokeWidth={2.5} />
+              </a>
+            )}
 
-                {config.navbar_social_facebook && (
-                  <DropdownMenuItem asChild className="flex items-center space-x-3 p-3 cursor-pointer hover:bg-opacity-30 rounded-md">
-                    <a href={config.navbar_social_facebook} target="_blank" rel="noopener noreferrer" className="w-full" style={{ color: config.text_color }}>
-                      <Facebook className="h-5 w-5" strokeWidth={2} />
-                      <span className="text-lg">Facebook</span>
-                    </a>
-                  </DropdownMenuItem>
-                )}
+            {config.navbar_social_instagram && (
+              <a
+                href={config.navbar_social_instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="transition-all duration-300 ease-out hover:scale-110 p-2 rounded-full hover:bg-primary/20"
+                style={{ 
+                  color: config.text_color,
+                }}
+                aria-label="Instagram"
+              >
+                <Instagram className="h-6 w-6" strokeWidth={2.5} />
+              </a>
+            )}
 
-                {config.navbar_social_instagram && (
-                  <DropdownMenuItem asChild className="flex items-center space-x-3 p-3 cursor-pointer hover:bg-opacity-30 rounded-md">
-                    <a href={config.navbar_social_instagram} target="_blank" rel="noopener noreferrer" className="w-full" style={{ color: config.text_color }}>
-                      <Instagram className="h-5 w-5" strokeWidth={2} />
-                      <span className="text-lg">Instagram</span>
-                    </a>
-                  </DropdownMenuItem>
-                )}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleShare}
+              className="transition-all duration-300 ease-out hover:scale-110 rounded-full p-2 hover:bg-primary/20"
+              style={{ 
+                color: config.text_color,
+              }}
+              aria-label="Compartilhar"
+            >
+              <Share2 className="h-6 w-6" strokeWidth={2.5} />
+            </Button>
 
-                <DropdownMenuItem asChild className="flex items-center space-x-3 p-3 cursor-pointer hover:bg-opacity-30 rounded-md">
-                  <a href="/perfil" className="w-full" style={{ color: config.text_color }}>
-                    <User className="h-5 w-5" strokeWidth={2} />
-                    <span className="text-lg">Perfil</span>
-                  </a>
-                </DropdownMenuItem>
-
-                {/* Botão de modo escuro dentro do menu */}
-                <DropdownMenuItem className="flex items-center space-x-3 p-3 cursor-pointer hover:bg-opacity-30 rounded-md">
-                  <Moon className="h-5 w-5" strokeWidth={2} />
-                  <ThemeToggle />
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <ThemeToggle />
           </div>
         </div>
       </div>
