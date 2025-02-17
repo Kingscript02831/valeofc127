@@ -29,13 +29,12 @@ const ProductDetails = () => {
         .eq("id", id)
         .single();
 
-      if (error) throw error;
-      return data as Product & {
-        profiles: {
-          full_name: string;
-          avatar_url: string;
-        };
-      };
+      if (error) {
+        console.error("Error fetching product:", error);
+        throw error;
+      }
+      
+      return data as Product;
     },
   });
 
@@ -100,7 +99,7 @@ const ProductDetails = () => {
 
       <MediaCarousel
         images={product.images}
-        videoUrls={[]}
+        videoUrls={product.video_urls || []}
         title={product.title}
       />
 
@@ -139,20 +138,20 @@ const ProductDetails = () => {
               <h2 className="font-semibold mb-1">Vendedor</h2>
               <div className="flex items-center gap-2">
                 <div className="w-10 h-10 rounded-full bg-muted overflow-hidden">
-                  {product.profiles.avatar_url ? (
+                  {product.profiles?.avatar_url ? (
                     <img
                       src={product.profiles.avatar_url}
-                      alt={product.profiles.full_name}
+                      alt={product.profiles.full_name || ''}
                       className="w-full h-full object-cover"
                     />
                   ) : (
                     <div className="w-full h-full bg-primary/10 flex items-center justify-center text-primary">
-                      {product.profiles.full_name?.[0]?.toUpperCase()}
+                      {product.profiles?.full_name?.[0]?.toUpperCase() || '?'}
                     </div>
                   )}
                 </div>
                 <span className="font-medium">
-                  {product.profiles.full_name}
+                  {product.profiles?.full_name || 'Usuário'}
                 </span>
               </div>
             </div>
