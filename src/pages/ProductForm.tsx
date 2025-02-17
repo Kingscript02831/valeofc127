@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Plus, Trash2, Upload } from "lucide-react";
+import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,12 +15,13 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "../integrations/supabase/client";
-import type { ProductFormData } from "@/types/products";
+import type { ProductFormData } from "../types/products";
 
 const ProductForm = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [images, setImages] = useState<File[]>([]);
+  const [newImageUrl, setNewImageUrl] = useState("");
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [newVideoUrl, setNewVideoUrl] = useState("");
   const [videoUrls, setVideoUrls] = useState<string[]>([]);
   const [formData, setFormData] = useState<ProductFormData>({
@@ -31,9 +32,34 @@ const ProductForm = () => {
     images: [],
   });
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    setImages(files);
+  const handleAddImage = () => {
+    if (!newImageUrl) {
+      toast.error("Por favor, insira uma URL de imagem válida");
+      return;
+    }
+
+    if (!newImageUrl.includes('dropbox.com')) {
+      toast.error("Por favor, insira uma URL válida do Dropbox");
+      return;
+    }
+
+    let directImageUrl = newImageUrl;
+    if (newImageUrl.includes('www.dropbox.com')) {
+      directImageUrl = newImageUrl.replace('www.dropbox.com', 'dl.dropboxusercontent.com');
+    }
+
+    if (!imageUrls.includes(directImageUrl)) {
+      setImageUrls([...imageUrls, directImageUrl]);
+      setNewImageUrl("");
+      toast.success("Imagem adicionada com sucesso!");
+    } else {
+      toast.error("Esta imagem já foi adicionada");
+    }
+  };
+
+  const handleRemoveImage = (imageUrl: string) => {
+    setImageUrls(imageUrls.filter(url => url !== imageUrl));
+    toast.success("Imagem removida com sucesso!");
   };
 
   const handleAddVideo = () => {
@@ -69,48 +95,29 @@ const ProductForm = () => {
     toast.success("Vídeo removido com sucesso!");
   };
 
-  const uploadImages = async () => {
-    const uploadedUrls: string[] = [];
-
-    for (const image of images) {
-      const fileExt = image.name.split(".").pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `products/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("public")
-        .upload(filePath, image);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from("public")
-        .getPublicUrl(filePath);
-
-      uploadedUrls.push(publicUrl);
-    }
-
-    return uploadedUrls;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast.error("Você precisa estar logado para publicar um produto");
+        return;
+      }
+
       // Get user's location
       const position = await new Promise<GeolocationPosition>((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(resolve, reject);
       });
-
-      // Upload images
-      const imageUrls = await uploadImages();
 
       // Create product
       const { error } = await supabase.from("products").insert({
         ...formData,
         images: imageUrls,
         video_urls: videoUrls,
+        user_id: user.id,
         latitude: position.coords.latitude,
         longitude: position.coords.longitude,
       });
@@ -140,63 +147,69 @@ const ProductForm = () => {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <Label htmlFor="images">Fotos do Produto</Label>
-          <div className="mt-2">
-            <Input
-              id="images"
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={handleImageChange}
-              className="hidden"
-            />
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full h-32"
-              onClick={() => document.getElementById("images")?.click()}
-            >
-              <div className="flex flex-col items-center gap-2">
-                <Upload className="h-6 w-6" />
-                <span>Adicionar fotos</span>
-                {images.length > 0 && (
-                  <span className="text-sm text-muted-foreground">
-                    {images.length} foto(s) selecionada(s)
-                  </span>
-                )}
-              </div>
-            </Button>
+        {/* Seção de Imagens do Dropbox */}
+        <div className="space-y-2">
+          <Label>Imagens do Dropbox</Label>
+          <div className="space-y-4">
+            <div className="flex gap-2">
+              <Input
+                value={newImageUrl}
+                onChange={(e) => setNewImageUrl(e.target.value)}
+                placeholder="Cole a URL compartilhada do Dropbox"
+              />
+              <Button type="button" onClick={handleAddImage}>
+                <Plus className="h-4 w-4 mr-2" />
+                Adicionar
+              </Button>
+            </div>
+            <div className="grid grid-cols-1 gap-2">
+              {imageUrls.map((url, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <Input value={url} readOnly />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    onClick={() => handleRemoveImage(url)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
+        {/* Seção de Vídeos */}
         <div className="space-y-2">
           <Label>Vídeos (Dropbox ou YouTube)</Label>
-          <div className="flex gap-2">
-            <Input
-              value={newVideoUrl}
-              onChange={(e) => setNewVideoUrl(e.target.value)}
-              placeholder="Cole a URL do Dropbox ou YouTube"
-            />
-            <Button type="button" onClick={handleAddVideo}>
-              <Plus className="h-4 w-4 mr-2" />
-              Adicionar
-            </Button>
-          </div>
-          <div className="space-y-2">
-            {videoUrls.map((url, index) => (
-              <div key={index} className="flex items-center gap-2">
-                <Input value={url} readOnly />
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="icon"
-                  onClick={() => handleRemoveVideo(url)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
+          <div className="space-y-4">
+            <div className="flex gap-2">
+              <Input
+                value={newVideoUrl}
+                onChange={(e) => setNewVideoUrl(e.target.value)}
+                placeholder="Cole a URL do Dropbox ou YouTube"
+              />
+              <Button type="button" onClick={handleAddVideo}>
+                <Plus className="h-4 w-4 mr-2" />
+                Adicionar
+              </Button>
+            </div>
+            <div className="grid grid-cols-1 gap-2">
+              {videoUrls.map((url, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <Input value={url} readOnly />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    onClick={() => handleRemoveVideo(url)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
