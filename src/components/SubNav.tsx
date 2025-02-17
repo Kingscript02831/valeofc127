@@ -31,10 +31,10 @@ const SubNav = () => {
                 <Link
                   key={link.path}
                   to={link.path}
-                  className="text-white hover:opacity-80 transition-opacity"
-                  title={link.label}
+                  className="text-white hover:opacity-80 transition-opacity flex items-center gap-2"
                 >
-                  <Icon size={24} />
+                  <Icon size={20} />
+                  {link.label}
                 </Link>
               );
             })}
@@ -60,12 +60,12 @@ const SubNav = () => {
               <Link
                 key={link.path}
                 to={link.path}
-                className={`text-white hover:opacity-80 transition-opacity ${
+                className={`text-white hover:opacity-80 transition-opacity flex items-center gap-2 ${
                   location.pathname === link.path ? "border-b-2" : ""
                 }`}
-                title={link.label}
               >
-                <Icon size={24} />
+                <Icon size={20} />
+                {link.label}
               </Link>
             );
           })}
@@ -76,3 +76,4 @@ const SubNav = () => {
 };
 
 export default SubNav;
+
