@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, MapPin, User } from "lucide-react";
@@ -91,10 +92,10 @@ const Products = () => {
                 placeholder="Buscar produtos..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pr-10 bg-card text-card-foreground"
+                className="pr-10 rounded-full bg-card/50 backdrop-blur-sm border-none shadow-lg"
               />
               <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                <Search className="h-4 w-4 text-muted-foreground" />
+                <Search className="h-5 w-5 text-primary" />
               </div>
             </div>
             <Button
@@ -112,7 +113,7 @@ const Products = () => {
                   );
                 }
               }}
-              className="hover:scale-105 transition-transform text-foreground"
+              className="hover:scale-105 transition-transform text-foreground rounded-full shadow-lg"
             >
               <MapPin className="h-4 w-4" />
             </Button>
@@ -120,11 +121,11 @@ const Products = () => {
         </div>
 
         {isLoading ? (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4">
             {[...Array(8)].map((_, i) => (
-              <Card key={i} className="animate-pulse bg-card">
-                <div className="aspect-square bg-muted" />
-                <CardContent className="p-4">
+              <Card key={i} className="animate-pulse bg-card shadow-none border-none">
+                <div className="aspect-square bg-muted rounded-lg" />
+                <CardContent className="p-3">
                   <div className="h-4 bg-muted rounded mb-2" />
                   <div className="h-4 bg-muted rounded w-1/2" />
                 </CardContent>
@@ -132,46 +133,45 @@ const Products = () => {
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4">
             {filteredProducts?.map((product) => (
               <Card 
                 key={product.id}
-                className="cursor-pointer hover:shadow-lg transition-shadow overflow-hidden"
+                className="cursor-pointer hover:scale-105 transition-transform shadow-none border-none overflow-hidden"
                 onClick={() => navigate(`/product/${product.id}`)}
                 style={{
-                  background: config ? `linear-gradient(to bottom, ${config.navbar_color}, ${config.primary_color}90)` : undefined,
-                  borderColor: config?.primary_color
+                  background: config ? `linear-gradient(to bottom, ${config.navbar_color}20, ${config.primary_color}10)` : undefined,
                 }}
               >
                 <div 
-                  className="aspect-square relative overflow-hidden"
-                  style={{
-                    background: config?.navbar_color
-                  }}
+                  className="aspect-square relative overflow-hidden rounded-lg"
                 >
                   <img
                     src={product.images[0] || "/placeholder.svg"}
                     alt={product.title}
-                    className="object-cover w-full h-full"
+                    className="object-cover w-full h-full hover:scale-110 transition-transform duration-300"
                   />
+                  <div className="absolute top-2 right-2 bg-primary/80 backdrop-blur-sm text-white px-2 py-1 rounded-full text-xs">
+                    {product.condition}
+                  </div>
                 </div>
-                <CardContent className="p-4">
-                  <h3 className="font-semibold truncate mb-2" style={{ color: config?.text_color }}>
+                <CardContent className="p-3">
+                  <h3 className="font-semibold truncate mb-1" style={{ color: config?.text_color }}>
                     {product.title}
                   </h3>
                   <div className="flex justify-between items-center" style={{ color: config?.text_color }}>
-                    <span className="text-lg font-bold">
+                    <span className="text-lg font-bold text-primary">
                       R$ {product.price.toFixed(2)}
                     </span>
                     {product.distance && (
-                      <span className="text-sm flex items-center gap-1">
+                      <span className="text-sm flex items-center gap-1 text-muted-foreground">
                         <MapPin className="w-3 h-3" />
                         {(product.distance / 1000).toFixed(1)}km
                       </span>
                     )}
                   </div>
                   {product.location_name && (
-                    <p className="text-sm truncate mt-1" style={{ color: config?.text_color }}>
+                    <p className="text-sm truncate mt-1 text-muted-foreground">
                       {product.location_name}
                     </p>
                   )}
