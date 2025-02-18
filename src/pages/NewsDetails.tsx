@@ -122,6 +122,15 @@ const NewsDetails = () => {
 
   const formattedDate = format(new Date(news.date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
 
+  // Prepare all media for the carousel
+  const allMedia = [
+    ...(news.images || []),
+    ...(news.video_urls || []),
+    ...(news.instagram_media?.map(media => 
+      typeof media === 'string' ? media : media.url
+    ) || [])
+  ].filter(Boolean);
+
   return (
     <div className="min-h-screen flex flex-col pb-[72px] md:pb-0">
       <Navbar />
@@ -171,57 +180,34 @@ const NewsDetails = () => {
                 </div>
               </div>
 
-              {/* Media content */}
-              <div className="rounded-2xl overflow-hidden shadow-xl transition-transform hover:scale-[1.01] duration-300">
-                {(news.images?.length > 0 || news.video_urls?.length > 0) && (
+              {/* All media in one carousel */}
+              {allMedia.length > 0 && (
+                <div className="rounded-2xl overflow-hidden shadow-xl transition-transform hover:scale-[1.01] duration-300">
                   <MediaCarousel
                     images={news.images || []}
                     videoUrls={news.video_urls || []}
+                    instagramUrls={news.instagram_media?.map(media => 
+                      typeof media === 'string' ? media : media.url
+                    ) || []}
                     title={news.title}
                   />
-                )}
-              </div>
-
-              {/* Instagram content */}
-              {news.instagram_media && Array.isArray(news.instagram_media) && news.instagram_media.length > 0 && (
-                <div className="space-y-4">
-                  {news.instagram_media.map((media: any, index: number) => (
-                    <div 
-                      key={index} 
-                      className="w-full bg-gray-50 rounded-2xl overflow-hidden shadow-lg transition-transform hover:scale-[1.01] duration-300"
-                    >
-                      <div className="aspect-[4/5]">
-                        <iframe
-                          src={typeof media === 'string' ? media : media.url}
-                          className="w-full h-full"
-                          frameBorder="0"
-                          scrolling="no"
-                          allowTransparency
-                          allow="encrypted-media; picture-in-picture; web-share"
-                          loading="lazy"
-                          referrerPolicy="origin"
-                          title={`Instagram post ${index + 1}`}
-                        />
-                      </div>
-                    </div>
-                  ))}
                 </div>
               )}
 
-              {/* Content */}
+              {/* Content with proper formatting */}
               <div className="prose prose-lg max-w-none">
                 {news.content.split('\n').map((paragraph, index) => (
                   paragraph.trim() ? (
                     <p 
                       key={index}
-                      className="animate-fade-in text-base leading-relaxed"
+                      className="animate-fade-in whitespace-pre-line text-base leading-relaxed mb-4"
                       style={{
                         animationDelay: `${index * 100}ms`
                       }}
                     >
                       {paragraph}
                     </p>
-                  ) : null
+                  ) : <br key={index} />
                 ))}
               </div>
             </div>

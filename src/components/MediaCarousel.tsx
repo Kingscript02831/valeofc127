@@ -7,15 +7,16 @@ import { cn } from "@/lib/utils";
 interface MediaCarouselProps {
   images: string[];
   videoUrls: string[];
+  instagramUrls?: string[];
   title: string;
 }
 
 type MediaItem = {
-  type: "image" | "video";
+  type: "image" | "video" | "instagram";
   url: string;
 };
 
-export const MediaCarousel = ({ images, videoUrls, title }: MediaCarouselProps) => {
+export const MediaCarousel = ({ images, videoUrls, instagramUrls = [], title }: MediaCarouselProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -28,6 +29,32 @@ export const MediaCarousel = ({ images, videoUrls, title }: MediaCarouselProps) 
         type: "video" as const, 
         url: isYoutubeUrl ? url : url.replace('www.dropbox.com', 'dl.dropboxusercontent.com')
       };
+    }) || []),
+    ...(instagramUrls?.map(url => {
+      let embedUrl = url;
+      // Remove parâmetros e trailing slashes
+      embedUrl = embedUrl.split('?')[0].replace(/\/+$/, '');
+      
+      // Garantir que a URL começa com https://
+      if (!embedUrl.startsWith('http')) {
+        embedUrl = 'https://' + embedUrl;
+      }
+      
+      // Remover www. se existir
+      embedUrl = embedUrl.replace('www.', '');
+      
+      // Transformar URLs de reel em post
+      embedUrl = embedUrl.replace('/reel/', '/p/');
+      
+      // Garantir que termina com /embed
+      if (!embedUrl.endsWith('/embed')) {
+        embedUrl = embedUrl + '/embed';
+      }
+
+      // Adicionar parâmetros necessários
+      embedUrl = `${embedUrl}?cr=1&v=14&wp=540&rd=https%3A%2F%2Finstagram.com`;
+
+      return { type: "instagram" as const, url: embedUrl };
     }) || [])
   ];
 
@@ -45,7 +72,9 @@ export const MediaCarousel = ({ images, videoUrls, title }: MediaCarouselProps) 
   };
 
   const toggleFullscreen = () => {
-    setIsFullscreen(!isFullscreen);
+    if (currentMedia.type !== 'instagram') {
+      setIsFullscreen(!isFullscreen);
+    }
   };
 
   const getYoutubeVideoId = (url: string) => {
@@ -57,6 +86,24 @@ export const MediaCarousel = ({ images, videoUrls, title }: MediaCarouselProps) 
   };
 
   const renderMedia = (mediaItem: MediaItem, isFullscreen: boolean = false) => {
+    if (mediaItem.type === 'instagram') {
+      return (
+        <div className="w-full aspect-square">
+          <iframe
+            src={mediaItem.url}
+            className="w-full h-full"
+            frameBorder="0"
+            scrolling="no"
+            allowTransparency
+            allow="encrypted-media; picture-in-picture; web-share"
+            loading="lazy"
+            referrerPolicy="origin"
+            title={`Instagram post ${currentIndex + 1}`}
+          />
+        </div>
+      );
+    }
+    
     if (mediaItem.type === 'video') {
       const isYoutubeUrl = mediaItem.url.includes('youtube.com') || mediaItem.url.includes('youtu.be');
       
@@ -64,7 +111,7 @@ export const MediaCarousel = ({ images, videoUrls, title }: MediaCarouselProps) 
         const videoId = getYoutubeVideoId(mediaItem.url);
         return (
           <div className={cn(
-            "relative w-full h-48",
+            "relative w-full aspect-video",
             isFullscreen && "h-[80vh]"
           )}>
             <iframe
@@ -78,7 +125,7 @@ export const MediaCarousel = ({ images, videoUrls, title }: MediaCarouselProps) 
       } else {
         return (
           <div className={cn(
-            "relative w-full h-48",
+            "relative w-full aspect-video",
             isFullscreen && "h-[80vh]"
           )}>
             <video
@@ -98,8 +145,8 @@ export const MediaCarousel = ({ images, videoUrls, title }: MediaCarouselProps) 
         src={mediaItem.url}
         alt={title}
         className={cn(
-          "h-full w-full object-cover cursor-pointer",
-          isFullscreen ? "max-h-[90vh] max-w-[90vw] object-contain" : "h-48"
+          "w-full object-contain cursor-pointer",
+          isFullscreen ? "max-h-[90vh]" : "max-h-[600px]"
         )}
         onClick={toggleFullscreen}
       />
@@ -110,7 +157,7 @@ export const MediaCarousel = ({ images, videoUrls, title }: MediaCarouselProps) 
 
   return (
     <>
-      <div className="relative">
+      <div className="relative bg-gray-100">
         {renderMedia(currentMedia)}
         {hasMultipleMedia && (
           <>
@@ -137,7 +184,7 @@ export const MediaCarousel = ({ images, videoUrls, title }: MediaCarouselProps) 
         )}
       </div>
 
-      {isFullscreen && currentMedia && (
+      {isFullscreen && currentMedia && currentMedia.type !== 'instagram' && (
         <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center">
           <div className="relative w-full h-full flex items-center justify-center">
             {renderMedia(currentMedia, true)}
