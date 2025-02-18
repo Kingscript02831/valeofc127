@@ -127,6 +127,10 @@ const Admin = () => {
     }
   };
 
+  const handleChange = (key: string, value: any) => {
+    setConfig({ ...config, [key]: value });
+  };
+
   useEffect(() => {
     if (config) {
       updateMetaTags(
@@ -787,14 +791,14 @@ const Admin = () => {
                     <Input
                       id="favorite_heart_color"
                       type="color"
-                      value={config.favorite_heart_color}
-                      onChange={(e) => setConfig({ ...config, favorite_heart_color: e.target.value })}
+                      value={config.favorite_heart_color || "#FF0000"}
+                      onChange={(e) => handleChange("favorite_heart_color", e.target.value)}
                       className="w-20"
                     />
                     <Input
                       type="text"
-                      value={config.favorite_heart_color}
-                      onChange={(e) => setConfig({ ...config, favorite_heart_color: e.target.value })}
+                      value={config.favorite_heart_color || "#FF0000"}
+                      onChange={(e) => handleChange("favorite_heart_color", e.target.value)}
                     />
                   </div>
                 </div>
@@ -805,14 +809,14 @@ const Admin = () => {
                     <Input
                       id="buy_button_color"
                       type="color"
-                      value={config.buy_button_color}
-                      onChange={(e) => setConfig({ ...config, buy_button_color: e.target.value })}
+                      value={config.buy_button_color || "#000000"}
+                      onChange={(e) => handleChange("buy_button_color", e.target.value)}
                       className="w-20"
                     />
                     <Input
                       type="text"
-                      value={config.buy_button_color}
-                      onChange={(e) => setConfig({ ...config, buy_button_color: e.target.value })}
+                      value={config.buy_button_color || "#000000"}
+                      onChange={(e) => handleChange("buy_button_color", e.target.value)}
                     />
                   </div>
                 </div>
@@ -821,8 +825,8 @@ const Admin = () => {
                   <Label htmlFor="buy_button_text">Texto do Botão "Comprar Agora"</Label>
                   <Input
                     id="buy_button_text"
-                    value={config.buy_button_text}
-                    onChange={(e) => setConfig({ ...config, buy_button_text: e.target.value })}
+                    value={config.buy_button_text || "Comprar agora"}
+                    onChange={(e) => handleChange("buy_button_text", e.target.value)}
                     placeholder="Ex: Comprar agora"
                   />
                 </div>
@@ -831,13 +835,17 @@ const Admin = () => {
                   <Label htmlFor="whatsapp_message">Mensagem do WhatsApp</Label>
                   <Textarea
                     id="whatsapp_message"
-                    value={config.whatsapp_message || "Olá, gostaria de mais informações sobre o produto:"}
-                    onChange={(e) => setConfig({ ...config, whatsapp_message: e.target.value })}
+                    value={config.whatsapp_message || 'Olá! Vi seu anúncio "{title}" por R$ {price} no Vale OFC e gostaria de mais informações.'}
+                    onChange={(e) => handleChange("whatsapp_message", e.target.value)}
                     placeholder="Mensagem que será enviada no WhatsApp"
                     className="min-h-[100px]"
                   />
                   <p className="text-sm text-gray-500 mt-1">
-                    Use {'{title}'} para incluir o título do produto e {'{price}'} para incluir o preço.
+                    Você pode usar:
+                    <br />
+                    {'{title}'} - para incluir o título do produto
+                    <br />
+                    {'{price}'} - para incluir o preço do produto
                   </p>
                 </div>
               </div>

@@ -15,6 +15,10 @@ export type SiteConfig = {
   navbar_color: string;
   primary_color: string;
   text_color: string;
+  buy_button_color: string;
+  buy_button_text: string;
+  favorite_heart_color: string;
+  whatsapp_message: string;
 };
 
 export function useSiteConfig() {
