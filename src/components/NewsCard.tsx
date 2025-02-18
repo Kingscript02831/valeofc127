@@ -7,7 +7,6 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import MediaCarousel from "./MediaCarousel";
-import { Link } from "react-router-dom";
 
 interface InstagramMedia {
   url: string;
@@ -15,7 +14,6 @@ interface InstagramMedia {
 }
 
 interface NewsCardProps {
-  id: string;
   title: string;
   content: string;
   date?: string;
@@ -33,7 +31,6 @@ interface NewsCardProps {
 }
 
 const NewsCard = ({
-  id,
   title,
   content,
   date,
@@ -102,7 +99,7 @@ const NewsCard = ({
 
   return (
     <Card className="overflow-hidden transition-transform hover:scale-[1.02]">
-      {/* Instagram Media Section */}
+      {/* Instagram Media Section - Moved to top */}
       {processedInstagramUrls.length > 0 && (
         <div className="space-y-4">
           {processedInstagramUrls.map((url, index) => (
@@ -134,9 +131,7 @@ const NewsCard = ({
       )}
 
       <div className="p-4">
-        <Link to={`/news/${id}`}>
-          <h3 className="text-xl font-bold mb-2 hover:text-primary transition-colors">{title}</h3>
-        </Link>
+        <h3 className="text-xl font-bold mb-2">{title}</h3>
 
         {category && (
           <span 
@@ -162,35 +157,24 @@ const NewsCard = ({
           ))}
         </div>
 
-        <div className="flex gap-2 mt-2">
-          <Button
-            variant="ghost"
-            className="flex-1 flex items-center justify-center gap-1 text-sm hover:bg-gray-100"
-            onClick={() => setIsExpanded(!isExpanded)}
-            style={buttonStyle}
-          >
-            {isExpanded ? (
-              <>
-                Ver menos
-                <ChevronUp className="h-4 w-4" />
-              </>
-            ) : (
-              <>
-                Ver mais
-                <ChevronDown className="h-4 w-4" />
-              </>
-            )}
-          </Button>
-
-          <Button
-            variant="ghost"
-            className="flex-1 flex items-center justify-center gap-1 text-sm hover:bg-gray-100"
-            onClick={() => window.location.href = `/news/${id}`}
-            style={buttonStyle}
-          >
-            Ler mais
-          </Button>
-        </div>
+        <Button
+          variant="ghost"
+          className="mt-2 w-full flex items-center justify-center gap-1 text-sm hover:bg-gray-100"
+          onClick={() => setIsExpanded(!isExpanded)}
+          style={buttonStyle}
+        >
+          {isExpanded ? (
+            <>
+              Ver menos
+              <ChevronUp className="h-4 w-4" />
+            </>
+          ) : (
+            <>
+              Ver mais
+              <ChevronDown className="h-4 w-4" />
+            </>
+          )}
+        </Button>
       </div>
     </Card>
   );
