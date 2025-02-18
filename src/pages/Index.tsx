@@ -14,10 +14,10 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/types/supabase";
 import NewsCard from "@/components/NewsCard";
-import Navbar from "@/components/Navbar";
-import SubNav from "@/components/SubNav";
-import Footer from "@/components/Footer";
-import BottomNav from "@/components/BottomNav";
+import Navbar from "../components/Navbar";
+import SubNav from "../components/SubNav";
+import Footer from "../components/Footer";
+import BottomNav from "../components/BottomNav";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import { useNavigate } from "react-router-dom";
 
