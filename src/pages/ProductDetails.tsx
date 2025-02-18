@@ -14,11 +14,13 @@ import { ptBR } from "date-fns/locale";
 import Navbar from "@/components/Navbar";
 import SubNav from "@/components/SubNav";
 import BottomNav from "@/components/BottomNav";
+import { useState, useEffect } from "react";
 
 const ProductDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [isFavorite, setIsFavorite] = useState(false);
 
   const { data: product, isLoading, error } = useQuery({
     queryKey: ["product", id],
@@ -54,6 +56,36 @@ const ProductDetails = () => {
     },
   });
 
+  // Check if product is favorited
+  useEffect(() => {
+    const checkFavoriteStatus = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) return;
+
+        const { data: favorite, error } = await supabase
+          .from('favorites')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .eq('product_id', id)
+          .single();
+
+        if (error && error.code !== 'PGRST116') {
+          console.error("Error checking favorite status:", error);
+          return;
+        }
+
+        setIsFavorite(!!favorite);
+      } catch (error) {
+        console.error("Error checking favorite status:", error);
+      }
+    };
+
+    if (id) {
+      checkFavoriteStatus();
+    }
+  }, [id]);
+
   const handleShare = async () => {
     if (navigator.share) {
       try {
@@ -87,10 +119,53 @@ const ProductDetails = () => {
   };
 
   const handleFavorite = async () => {
-    // TODO: Implement favorites functionality
-    toast({
-      description: "Funcionalidade de favoritos em desenvolvimento",
-    });
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        toast({
+          description: "Faça login para favoritar produtos",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (isFavorite) {
+        const { error } = await supabase
+          .from('favorites')
+          .delete()
+          .eq('user_id', session.user.id)
+          .eq('product_id', id);
+
+        if (error) throw error;
+
+        setIsFavorite(false);
+        toast({
+          description: "Produto removido dos favoritos",
+        });
+      } else {
+        const { error } = await supabase
+          .from('favorites')
+          .insert([
+            {
+              user_id: session.user.id,
+              product_id: id,
+            },
+          ]);
+
+        if (error) throw error;
+
+        setIsFavorite(true);
+        toast({
+          description: "Produto adicionado aos favoritos",
+        });
+      }
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+      toast({
+        description: "Erro ao atualizar favoritos",
+        variant: "destructive",
+      });
+    }
   };
 
   if (isLoading) {
@@ -141,12 +216,12 @@ const ProductDetails = () => {
           </Button>
           <div className="flex gap-2">
             <Button
-              variant="ghost"
+              variant={isFavorite ? "default" : "ghost"}
               size="icon"
               onClick={handleFavorite}
               className="hover:scale-105 transition-transform"
             >
-              <Heart className="h-6 w-6" />
+              <Heart className={`h-6 w-6 ${isFavorite ? 'fill-current' : ''}`} />
             </Button>
             <Button
               variant="ghost"
@@ -159,8 +234,8 @@ const ProductDetails = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 transition-all duration-300 hover:shadow-xl">
-          <div className="p-4 border-b border-gray-100">
+        <div className="bg-card text-card-foreground rounded-xl shadow-lg overflow-hidden border border-border transition-all duration-300 hover:shadow-xl">
+          <div className="p-4 border-b border-border">
             <div className="flex items-center gap-4 mb-4">
               <div className="w-12 h-12 rounded-full bg-muted overflow-hidden shadow-md">
                 {product?.profiles?.avatar_url ? (
@@ -197,7 +272,7 @@ const ProductDetails = () => {
           <div className="p-6 space-y-6">
             <div>
               <div className="flex justify-between items-start mb-2">
-                <h1 className="text-2xl font-bold">{product?.title}</h1>
+                <h1 className="text-2xl font-bold text-foreground">{product?.title}</h1>
                 <Badge variant="outline" className="capitalize shadow-sm hover:shadow-md transition-shadow">
                   {product?.condition}
                 </Badge>
@@ -207,7 +282,7 @@ const ProductDetails = () => {
               </p>
             </div>
             
-            <Card className="border-none shadow-none bg-gray-50">
+            <Card className="bg-muted/50">
               <CardContent className="p-4">
                 <h2 className="text-lg font-semibold mb-2">Descrição</h2>
                 <p className="text-muted-foreground whitespace-pre-line">
@@ -217,7 +292,7 @@ const ProductDetails = () => {
             </Card>
 
             {product?.location_name && (
-              <Card className="border-none shadow-none bg-gray-50">
+              <Card className="bg-muted/50">
                 <CardContent className="p-4">
                   <h2 className="text-lg font-semibold mb-2">Localização</h2>
                   <p className="text-muted-foreground">
@@ -229,7 +304,7 @@ const ProductDetails = () => {
           </div>
         </div>
 
-        <div className="fixed bottom-16 left-0 right-0 p-4 bg-background/80 backdrop-blur-md border-t">
+        <div className="fixed bottom-16 left-0 right-0 p-4 bg-background/80 backdrop-blur-md border-t border-border">
           <Button 
             className="w-full h-12 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
             onClick={handleContact}
