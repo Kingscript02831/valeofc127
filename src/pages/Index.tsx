@@ -73,6 +73,7 @@ const Index = () => {
           return [];
         }
         
+        console.log('Fetched news:', data); // Debug log
         return data as News[];
       } catch (err) {
         console.error('Error fetching news:', err);
@@ -215,6 +216,7 @@ const Index = () => {
                 return (
                   <NewsCard
                     key={item.id}
+                    id={item.id}
                     title={item.title}
                     content={item.content}
                     date={item.date}
