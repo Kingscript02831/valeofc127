@@ -7,6 +7,7 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import MediaCarousel from "./MediaCarousel";
+import { Link } from "react-router-dom";
 
 interface InstagramMedia {
   url: string;
@@ -14,6 +15,7 @@ interface InstagramMedia {
 }
 
 interface NewsCardProps {
+  id: string;
   title: string;
   content: string;
   date?: string;
@@ -31,6 +33,7 @@ interface NewsCardProps {
 }
 
 const NewsCard = ({
+  id,
   title,
   content,
   date,
@@ -99,67 +102,71 @@ const NewsCard = ({
 
   return (
     <Card className="overflow-hidden transition-transform hover:scale-[1.02]">
-      {/* Instagram Media Section - Moved to top */}
-      {processedInstagramUrls.length > 0 && (
-        <div className="space-y-4">
-          {processedInstagramUrls.map((url, index) => (
-            <div key={index} className="aspect-square w-full bg-gray-50">
-              <iframe
-                key={url}
-                src={url}
-                className="w-full h-full"
-                frameBorder="0"
-                scrolling="no"
-                allowTransparency
-                allow="encrypted-media; picture-in-picture; web-share"
-                loading="lazy"
-                referrerPolicy="origin"
-                title={`Instagram post ${index + 1}`}
-              />
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Media Carousel Section */}
-      {(images?.length > 0 || processedVideoUrls.length > 0) && (
-        <MediaCarousel 
-          images={images}
-          videoUrls={processedVideoUrls}
-          title={title}
-        />
-      )}
-
-      <div className="p-4">
-        <h3 className="text-xl font-bold mb-2">{title}</h3>
-
-        {category && (
-          <span 
-            className="inline-block px-2 py-0.5 rounded-full text-xs mb-2"
-            style={{
-              backgroundColor: category.background_color ? `${category.background_color}40` : '#D6BCFA40',
-              color: category.background_color || '#1A1F2C'
-            }}
-          >
-            {category.name}
-          </span>
-        )}
-
-        {formattedCreatedAt && (
-          <div className="text-xs text-gray-500 mb-2">
-            Publicado em {formattedCreatedAt}
+      <Link to={`/noticias/${id}`} className="block">
+        {/* Instagram Media Section - Moved to top */}
+        {processedInstagramUrls.length > 0 && (
+          <div className="space-y-4">
+            {processedInstagramUrls.map((url, index) => (
+              <div key={index} className="aspect-square w-full bg-gray-50">
+                <iframe
+                  key={url}
+                  src={url}
+                  className="w-full h-full"
+                  frameBorder="0"
+                  scrolling="no"
+                  allowTransparency
+                  allow="encrypted-media; picture-in-picture; web-share"
+                  loading="lazy"
+                  referrerPolicy="origin"
+                  title={`Instagram post ${index + 1}`}
+                />
+              </div>
+            ))}
           </div>
         )}
 
-        <div className={cn("prose prose-sm max-w-none", !isExpanded && "line-clamp-3")}>
-          {content.split('\n').map((paragraph, index) => (
-            paragraph.trim() ? <p key={index} className="mb-2">{paragraph}</p> : null
-          ))}
-        </div>
+        {/* Media Carousel Section */}
+        {(images?.length > 0 || processedVideoUrls.length > 0) && (
+          <MediaCarousel 
+            images={images}
+            videoUrls={processedVideoUrls}
+            title={title}
+          />
+        )}
 
+        <div className="p-4">
+          <h3 className="text-xl font-bold mb-2">{title}</h3>
+
+          {category && (
+            <span 
+              className="inline-block px-2 py-0.5 rounded-full text-xs mb-2"
+              style={{
+                backgroundColor: category.background_color ? `${category.background_color}40` : '#D6BCFA40',
+                color: category.background_color || '#1A1F2C'
+              }}
+            >
+              {category.name}
+            </span>
+          )}
+
+          {formattedCreatedAt && (
+            <div className="text-xs text-gray-500 mb-2">
+              Publicado em {formattedCreatedAt}
+            </div>
+          )}
+
+          <div className={cn("prose prose-sm max-w-none", !isExpanded && "line-clamp-3")}>
+            {content.split('\n').map((paragraph, index) => (
+              paragraph.trim() ? <p key={index} className="mb-2">{paragraph}</p> : null
+            ))}
+          </div>
+        </div>
+      </Link>
+
+      <div className="px-4 pb-4">
         <Button
           variant="ghost"
-          className="mt-2 w-full flex items-center justify-center gap-1 text-sm hover:bg-gray-100"
+          className="w-full flex items-center justify-center gap-1 text-sm hover:bg-gray-100"
           onClick={() => setIsExpanded(!isExpanded)}
           style={buttonStyle}
         >

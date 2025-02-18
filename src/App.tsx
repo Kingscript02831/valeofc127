@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -29,6 +30,7 @@ import NotFound from "./pages/NotFound";
 import ResetPassword from "./pages/ResetPassword";
 import UpdatePassword from "./pages/UpdatePassword";
 import UserProducts from "./pages/UserProducts";
+import NewsDetails from "./pages/NewsDetails";
 
 const queryClient = new QueryClient();
 
@@ -66,6 +68,7 @@ const App: React.FC = () => {
                     <Route path="sistema" element={<AdminSistema />} />
                   </Route> 
                   <Route path="/user-products" element={<UserProducts />} />
+                  <Route path="/noticias/:id" element={<NewsDetails />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </AuthWrapper>
