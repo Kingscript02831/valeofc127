@@ -1,7 +1,7 @@
+
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Phone, Globe, MapPin, Clock, User2, Facebook, Instagram, MessageCircle, Search, ChevronDown, ChevronUp, Wallet, Bell, Menu } from "lucide-react";
-import type { Database } from "@/types/supabase";
+import { Search, Bell, Menu } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import MediaCarousel from "../components/MediaCarousel";
+import { PlaceCard } from "@/components/PlaceCard";
 import Navbar from "../components/Navbar";
 import SubNav from "../components/SubNav";
 import Footer from "../components/Footer";
@@ -19,15 +19,10 @@ import BottomNav from "../components/BottomNav";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
-type Place = Database["public"]["Tables"]["places"]["Row"];
-type Category = Database["public"]["Tables"]["categories"]["Row"];
-type SocialMedia = { facebook?: string; instagram?: string };
-
 const Places = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [expandedPlaces, setExpandedPlaces] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     document.title = "Lugares | Vale Notícias";
@@ -64,14 +59,13 @@ const Places = () => {
         query = query.eq("category_id", selectedCategory);
       }
 
-      const { data, error } = await query;
+      const { data, error } = await query.order('name');
       
       if (error) {
         console.error("Error fetching places:", error);
         throw error;
       }
 
-      console.log("Places data:", data); // Para debug
       return data;
     },
   });
@@ -85,7 +79,6 @@ const Places = () => {
         return;
       }
 
-      // Verifica se já existe uma configuração de notificação
       const { data: existing } = await supabase
         .from('notifications')
         .select('enabled')
@@ -95,7 +88,6 @@ const Places = () => {
 
       const newStatus = !existing?.enabled;
 
-      // Atualiza ou cria a configuração de notificação
       const { error } = await supabase
         .from('notifications')
         .upsert({
@@ -117,29 +109,11 @@ const Places = () => {
         ? 'Notificações de lugares ativadas!' 
         : 'Notificações de lugares desativadas');
 
-      // Redireciona para mostrar a notificação
       navigate('/notify');
     } catch (error) {
       console.error('Error handling notifications:', error);
       toast.error('Erro ao configurar notificações');
     }
-  };
-
-  const parseVideoUrls = (urls: string[] | null) => {
-    if (!urls) return [];
-    return urls.map(url => {
-      if (url.includes('dropbox.com')) {
-        return url.replace('www.dropbox.com', 'dl.dropboxusercontent.com');
-      }
-      return url;
-    });
-  };
-
-  const toggleExpand = (placeId: string) => {
-    setExpandedPlaces(prev => ({
-      ...prev,
-      [placeId]: !prev[placeId]
-    }));
   };
 
   return (
@@ -205,153 +179,9 @@ const Places = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {places?.map((place) => {
-              const socialMedia = place.social_media as SocialMedia;
-              const processedVideoUrls = parseVideoUrls(place.video_urls);
-
-              return (
-                <div
-                  key={place.id}
-                  className="bg-card text-card-foreground rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow border border-border"
-                >
-                  {(place.images?.length > 0 || processedVideoUrls.length > 0) && (
-                    <MediaCarousel 
-                      images={place.images || []}
-                      videoUrls={processedVideoUrls}
-                      title={place.name}
-                    />
-                  )}
-                  
-                  <div className="p-4 space-y-4">
-                    <div className="flex justify-between items-start">
-                      <h2 className="text-xl font-semibold text-foreground">{place.name}</h2>
-                      {place.description && place.description.length > 150 && (
-                        <button
-                          onClick={() => toggleExpand(place.id)}
-                          className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
-                        >
-                          {expandedPlaces[place.id] ? (
-                            <>
-                              Ver menos
-                              <ChevronUp className="h-4 w-4" />
-                            </>
-                          ) : (
-                            <>
-                              Ver mais
-                              <ChevronDown className="h-4 w-4" />
-                            </>
-                          )}
-                        </button>
-                      )}
-                    </div>
-                    
-                    {place.description && (
-                      <p className={`text-muted-foreground text-sm ${!expandedPlaces[place.id] && "line-clamp-3"}`}>
-                        {place.description}
-                      </p>
-                    )}
-
-                    <div className={`space-y-2 ${!expandedPlaces[place.id] && "line-clamp-3"}`}>
-                      {place.address && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <MapPin className="w-4 h-4 text-muted-foreground" />
-                          <span className="text-muted-foreground">{place.address}</span>
-                        </div>
-                      )}
-
-                      {place.owner_name && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <User2 className="w-4 h-4 text-muted-foreground" />
-                          <span className="text-muted-foreground">{place.owner_name}</span>
-                        </div>
-                      )}
-
-                      {place.opening_hours && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <Clock className="w-4 h-4 text-muted-foreground" />
-                          <span className="text-muted-foreground">{place.opening_hours}</span>
-                        </div>
-                      )}
-
-                      {place.entrance_fee && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <Wallet className="w-4 h-4 text-muted-foreground" />
-                          <span className="text-muted-foreground">
-                            Entrada: {place.entrance_fee}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="pt-4 border-t border-border flex flex-wrap gap-3">
-                      {place.phone && (
-                        <a
-                          href={`tel:${place.phone}`}
-                          className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                        >
-                          <Phone className="w-4 h-4" />
-                        </a>
-                      )}
-
-                      {place.whatsapp && (
-                        <a
-                          href={`https://wa.me/${place.whatsapp.replace(/\D/g, '')}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-1 text-sm text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300"
-                        >
-                          <MessageCircle className="w-4 h-4" />
-                        </a>
-                      )}
-
-                      {place.website && (
-                        <a
-                          href={place.website}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-1 text-sm text-purple-600 hover:text-purple-800 dark:text-purple-400 dark:hover:text-purple-300"
-                        >
-                          <Globe className="w-4 h-4" />
-                        </a>
-                      )}
-
-                      {socialMedia?.facebook && (
-                        <a
-                          href={socialMedia.facebook}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                        >
-                          <Facebook className="w-4 h-4" />
-                        </a>
-                      )}
-
-                      {socialMedia?.instagram && (
-                        <a
-                          href={socialMedia.instagram}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-1 text-sm text-pink-600 hover:text-pink-800 dark:text-pink-400 dark:hover:text-pink-300"
-                        >
-                          <Instagram className="w-4 h-4" />
-                        </a>
-                      )}
-
-                      {place.maps_url && (
-                        <a
-                          href={place.maps_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-1 text-sm text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
-                        >
-                          <MapPin className="w-4 h-4" />
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+            {places?.map((place) => (
+              <PlaceCard key={place.id} place={place} />
+            ))}
             {!isLoading && (!places || places.length === 0) && (
               <p className="text-muted-foreground col-span-full text-center py-8">
                 Nenhum lugar encontrado.
