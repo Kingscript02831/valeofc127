@@ -826,6 +826,20 @@ const Admin = () => {
                     placeholder="Ex: Comprar agora"
                   />
                 </div>
+
+                <div className="col-span-2">
+                  <Label htmlFor="whatsapp_message">Mensagem do WhatsApp</Label>
+                  <Textarea
+                    id="whatsapp_message"
+                    value={config.whatsapp_message || "Olá, gostaria de mais informações sobre o produto:"}
+                    onChange={(e) => setConfig({ ...config, whatsapp_message: e.target.value })}
+                    placeholder="Mensagem que será enviada no WhatsApp"
+                    className="min-h-[100px]"
+                  />
+                  <p className="text-sm text-gray-500 mt-1">
+                    Use {'{title}'} para incluir o título do produto e {'{price}'} para incluir o preço.
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -842,3 +856,33 @@ const Admin = () => {
 };
 
 export default Admin;
+
+<style jsx global>{`
+  .tabs-content {
+    transition: all 0.3s ease-in-out;
+  }
+  
+  [data-state='inactive'] {
+    display: none;
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  
+  [data-state='active'] {
+    display: block;
+    opacity: 1;
+    transform: translateX(0);
+    animation: slideIn 0.3s ease-in-out;
+  }
+  
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateX(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+`}</style>
