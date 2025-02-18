@@ -54,7 +54,13 @@ const Stores = () => {
     queryFn: async () => {
       let query = supabase
         .from("stores")
-        .select("*, categories(name, background_color)");
+        .select(`
+          *,
+          categories (
+            name,
+            background_color
+          )
+        `);
 
       if (searchTerm) {
         query = query.ilike("name", `%${searchTerm}%`);
@@ -64,7 +70,7 @@ const Stores = () => {
         query = query.eq("category_id", selectedCategory);
       }
 
-      const { data, error } = await query;
+      const { data, error } = await query.order('name');
       
       if (error) {
         console.error("Error fetching stores:", error);
