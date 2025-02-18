@@ -928,6 +928,7 @@ export type Database = {
           updated_at: string | null
           version: number | null
           weather_api_key: string | null
+          whatsapp_message: string | null
         }
         Insert: {
           admin_accent_color?: string | null
@@ -1004,6 +1005,7 @@ export type Database = {
           updated_at?: string | null
           version?: number | null
           weather_api_key?: string | null
+          whatsapp_message?: string | null
         }
         Update: {
           admin_accent_color?: string | null
@@ -1080,6 +1082,7 @@ export type Database = {
           updated_at?: string | null
           version?: number | null
           weather_api_key?: string | null
+          whatsapp_message?: string | null
         }
         Relationships: []
       }

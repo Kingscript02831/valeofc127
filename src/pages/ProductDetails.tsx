@@ -22,6 +22,20 @@ const ProductDetails = () => {
   const { toast } = useToast();
   const [isFavorite, setIsFavorite] = useState(false);
 
+  // Buscar configuração do site
+  const { data: siteConfig } = useQuery({
+    queryKey: ["site-configuration"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("site_configuration")
+        .select("*")
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const { data: product, isLoading, error } = useQuery({
     queryKey: ["product", id],
     queryFn: async () => {
@@ -107,7 +121,13 @@ const ProductDetails = () => {
 
   const handleContact = () => {
     if (product?.whatsapp) {
-      const message = `Olá! Vi seu anúncio "${product.title}" por R$ ${product.price.toFixed(2)} no Vale OFC e gostaria de mais informações.`;
+      let message = siteConfig?.whatsapp_message || 'Olá! Vi seu anúncio "{title}" por R$ {price} no Vale OFC e gostaria de mais informações.';
+      
+      // Substituir as variáveis na mensagem
+      message = message
+        .replace('{title}', product.title)
+        .replace('{price}', product.price.toFixed(2));
+
       const whatsappLink = `https://wa.me/${product.whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
       window.open(whatsappLink, '_blank');
     } else {
@@ -308,8 +328,9 @@ const ProductDetails = () => {
           <Button 
             className="w-full h-12 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
             onClick={handleContact}
+            style={{ backgroundColor: siteConfig?.buy_button_color }}
           >
-            Comprar agora
+            {siteConfig?.buy_button_text || "Comprar agora"}
           </Button>
         </div>
       </div>
