@@ -2,21 +2,21 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Phone, Globe, MapPin, Clock, User2, Facebook, Instagram, MessageCircle, Search, ChevronDown, ChevronUp, Wallet, Bell, Menu } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import type { StoreWithCategory } from "@/types/stores";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { supabase } from "../integrations/supabase/client";
+import type { StoreWithCategory } from "../types/stores";
+import { Input } from "../components/ui/input";
+import { Button } from "../components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import MediaCarousel from "@/components/MediaCarousel";
-import Navbar from "@/components/Navbar";
-import SubNav from "@/components/SubNav";
-import Footer from "@/components/Footer";
-import BottomNav from "@/components/BottomNav";
+} from "../components/ui/dropdown-menu";
+import MediaCarousel from "../components/MediaCarousel";
+import Navbar from "../components/Navbar";
+import SubNav from "../components/SubNav";
+import Footer from "../components/Footer";
+import BottomNav from "../components/BottomNav";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
@@ -52,13 +52,27 @@ const Stores = () => {
       let query = supabase
         .from("stores")
         .select(`
-          *,
+          id,
+          name,
+          description,
+          address,
+          owner_name,
+          opening_hours,
+          entrance_fee,
+          maps_url,
+          phone,
+          whatsapp,
+          website,
+          image,
+          images,
+          video_urls,
+          category_id,
+          social_media,
           categories (
             name,
             background_color
           )
-        `)
-        .returns<StoreWithCategory[]>();
+        `);
 
       if (searchTerm) {
         query = query.ilike("name", `%${searchTerm}%`);
@@ -76,7 +90,7 @@ const Stores = () => {
       }
 
       console.log("Stores data:", data);
-      return data;
+      return data as StoreWithCategory[];
     },
   });
 
