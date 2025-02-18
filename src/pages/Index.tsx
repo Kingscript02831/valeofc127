@@ -14,10 +14,10 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/types/supabase";
 import NewsCard from "@/components/NewsCard";
-import Navbar from "@/components/Navbar";
-import SubNav from "@/components/SubNav";
-import Footer from "@/components/Footer";
-import BottomNav from "@/components/BottomNav";
+import Navbar from "../components/Navbar";
+import SubNav from "../components/SubNav";
+import Footer from "../components/Footer";
+import BottomNav from "../components/BottomNav";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import { useNavigate } from "react-router-dom";
 
@@ -143,7 +143,7 @@ const Index = () => {
                 variant="ghost"
                 size="icon"
                 onClick={handleNotificationClick}
-                className="hover:scale-105 transition-transform text-white"
+                className="hover:scale-105 transition-transform text-foreground"
               >
                 <Bell className="h-5 w-5" />
               </Button>
@@ -163,7 +163,7 @@ const Index = () => {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="hover:scale-105 transition-transform text-white rounded-full shadow-lg"
+                    className="hover:scale-105 transition-transform text-foreground rounded-full shadow-lg"
                   >
                     <Menu className="h-4 w-4" />
                   </Button>
