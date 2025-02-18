@@ -176,7 +176,7 @@ const AdminCategories = () => {
             <Label htmlFor="page_type">Tipo de Página</Label>
             <Select
               value={newCategory.page_type}
-              onValueChange={(value: "events" | "places" | "stores" | "news") => 
+              onValueChange={(value: "events" | "places" | "news") => 
                 setNewCategory({ ...newCategory, page_type: value })
               }
             >
@@ -186,7 +186,6 @@ const AdminCategories = () => {
               <SelectContent>
                 <SelectItem value="events">Eventos</SelectItem>
                 <SelectItem value="places">Lugares</SelectItem>
-                <SelectItem value="stores">Lojas</SelectItem>
                 <SelectItem value="news">Notícias</SelectItem>
               </SelectContent>
             </Select>
@@ -234,7 +233,6 @@ const AdminCategories = () => {
                   <p className="text-sm text-gray-500">
                     {category.page_type === "events" && "Eventos"}
                     {category.page_type === "places" && "Lugares"}
-                    {category.page_type === "stores" && "Lojas"}
                     {category.page_type === "news" && "Notícias"}
                   </p>
                   {category.description && (

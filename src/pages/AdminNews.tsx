@@ -464,41 +464,21 @@ const AdminNews = () => {
                 className="min-h-[200px]"
               />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="category">Categoria</Label>
-                <select
-                  id="category"
-                  className="w-full border border-gray-300 rounded-md p-2"
-                  value={newNews.category_id || ""}
-                  onChange={(e) => setNewNews({ ...newNews, category_id: e.target.value || null })}
-                >
-                  <option value="">Selecione uma categoria</option>
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <Label htmlFor="button_color">Cor do Botão</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="button_color"
-                    type="color"
-                    value={newNews.button_color || "#9b87f5"}
-                    onChange={(e) => setNewNews({ ...newNews, button_color: e.target.value })}
-                    className="w-20"
-                  />
-                  <Input
-                    type="text"
-                    value={newNews.button_color || "#9b87f5"}
-                    onChange={(e) => setNewNews({ ...newNews, button_color: e.target.value })}
-                    placeholder="#9b87f5"
-                  />
-                </div>
-              </div>
+            <div>
+              <Label htmlFor="category">Categoria</Label>
+              <select
+                id="category"
+                className="w-full border border-gray-300 rounded-md p-2"
+                value={newNews.category_id || ""}
+                onChange={(e) => setNewNews({ ...newNews, category_id: e.target.value || null })}
+              >
+                <option value="">Selecione uma categoria</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
             </div>
             {renderMediaFields(newNews)}
             {renderInstagramMediaFields(newNews)}
@@ -526,41 +506,21 @@ const AdminNews = () => {
                 className="min-h-[200px]"
               />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="edit-category">Categoria</Label>
-                <select
-                  id="edit-category"
-                  className="w-full border border-gray-300 rounded-md p-2"
-                  value={editingNews.category_id || ""}
-                  onChange={(e) => setEditingNews({ ...editingNews, category_id: e.target.value || null })}
-                >
-                  <option value="">Selecione uma categoria</option>
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <Label htmlFor="edit-button_color">Cor do Botão</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="edit-button_color"
-                    type="color"
-                    value={editingNews.button_color || "#9b87f5"}
-                    onChange={(e) => setEditingNews({ ...editingNews, button_color: e.target.value })}
-                    className="w-20"
-                  />
-                  <Input
-                    type="text"
-                    value={editingNews.button_color || "#9b87f5"}
-                    onChange={(e) => setEditingNews({ ...editingNews, button_color: e.target.value })}
-                    placeholder="#9b87f5"
-                  />
-                </div>
-              </div>
+            <div>
+              <Label htmlFor="edit-category">Categoria</Label>
+              <select
+                id="edit-category"
+                className="w-full border border-gray-300 rounded-md p-2"
+                value={editingNews.category_id || ""}
+                onChange={(e) => setEditingNews({ ...editingNews, category_id: e.target.value || null })}
+              >
+                <option value="">Selecione uma categoria</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
             </div>
             {renderMediaFields(editingNews)}
             {renderInstagramMediaFields(editingNews)}
