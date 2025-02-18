@@ -14,11 +14,12 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/types/supabase";
 import NewsCard from "@/components/NewsCard";
-import Navbar from "../components/Navbar";
-import SubNav from "../components/SubNav";
-import Footer from "../components/Footer";
-import BottomNav from "../components/BottomNav";
+import Navbar from "@/components/Navbar";
+import SubNav from "@/components/SubNav";
+import Footer from "@/components/Footer";
+import BottomNav from "@/components/BottomNav";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
+import { useNavigate } from "react-router-dom";
 
 type News = Database['public']['Tables']['news']['Row'] & {
   categories: Database['public']['Tables']['categories']['Row'] | null;
@@ -26,6 +27,7 @@ type News = Database['public']['Tables']['news']['Row'] & {
 type Category = Database['public']['Tables']['categories']['Row'];
 
 const Index = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
@@ -81,45 +83,8 @@ const Index = () => {
   });
 
   const handleNotificationClick = async () => {
-    try {
-      if (!("Notification" in window)) {
-        toast.error("Este navegador não suporta notificações");
-        return;
-      }
-
-      const permission = await Notification.requestPermission();
-      
-      if (permission === "granted") {
-        // Subscribe to notifications
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (user) {
-          const { error } = await supabase
-            .from('notifications')
-            .upsert({
-              user_id: user.id,
-              type: 'news',
-              enabled: true,
-              updated_at: new Date().toISOString()
-            });
-
-          if (error) {
-            console.error('Error subscribing to notifications:', error);
-            toast.error('Erro ao ativar notificações');
-            return;
-          }
-
-          toast.success('Notificações ativadas com sucesso!');
-        } else {
-          toast.error('Faça login para ativar as notificações');
-        }
-      } else {
-        toast.error('Permissão para notificações negada');
-      }
-    } catch (error) {
-      console.error('Error handling notifications:', error);
-      toast.error('Erro ao configurar notificações');
-    }
+    // Redireciona para a página de notificações
+    navigate('/notify');
   };
 
   return (
@@ -127,9 +92,9 @@ const Index = () => {
       <Navbar />
       <SubNav />
       <main className="flex-1 container mx-auto py-8 px-4">
-        <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-4">
           <div className="sticky top-16 z-10 bg-background/80 backdrop-blur-sm pb-4">
-            <div className="flex gap-2 mb-4">
+            <div className="flex gap-2">
               <Button
                 variant="ghost"
                 size="icon"
