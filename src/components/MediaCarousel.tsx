@@ -7,15 +7,21 @@ import { cn } from "@/lib/utils";
 interface MediaCarouselProps {
   images: string[];
   videoUrls: string[];
+  instagramMedia?: InstagramMedia[];
   title: string;
 }
 
+interface InstagramMedia {
+  url: string;
+  type: 'post' | 'video';
+}
+
 type MediaItem = {
-  type: "image" | "video";
+  type: "image" | "video" | "instagram";
   url: string;
 };
 
-export const MediaCarousel = ({ images, videoUrls, title }: MediaCarouselProps) => {
+export const MediaCarousel = ({ images, videoUrls, instagramMedia = [], title }: MediaCarouselProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const allMedia: MediaItem[] = [
@@ -26,6 +32,32 @@ export const MediaCarousel = ({ images, videoUrls, title }: MediaCarouselProps) 
         type: "video" as const, 
         url: isYoutubeUrl ? url : url.replace('www.dropbox.com', 'dl.dropboxusercontent.com')
       };
+    }) || []),
+    ...(instagramMedia?.map(media => {
+      let embedUrl = typeof media === 'string' ? media : media.url;
+      // Remove parâmetros e trailing slashes
+      embedUrl = embedUrl.split('?')[0].replace(/\/+$/, '');
+      
+      // Garantir que a URL começa com https://
+      if (!embedUrl.startsWith('http')) {
+        embedUrl = 'https://' + embedUrl;
+      }
+      
+      // Remover www. se existir
+      embedUrl = embedUrl.replace('www.', '');
+      
+      // Transformar URLs de reel em post
+      embedUrl = embedUrl.replace('/reel/', '/p/');
+      
+      // Garantir que termina com /embed
+      if (!embedUrl.endsWith('/embed')) {
+        embedUrl = embedUrl + '/embed';
+      }
+
+      // Adicionar parâmetros necessários
+      embedUrl = `${embedUrl}?cr=1&v=14&wp=540&rd=https%3A%2F%2Finstagram.com`;
+
+      return { type: "instagram" as const, url: embedUrl };
     }) || [])
   ];
 
@@ -51,29 +83,44 @@ export const MediaCarousel = ({ images, videoUrls, title }: MediaCarouselProps) 
   };
 
   const renderMedia = (mediaItem: MediaItem) => {
+    if (mediaItem.type === 'instagram') {
+      return (
+        <div className="relative w-full aspect-[4/5]">
+          <iframe
+            src={mediaItem.url}
+            className="absolute inset-0 w-full h-full"
+            frameBorder="0"
+            scrolling="no"
+            allowTransparency
+            allow="encrypted-media; picture-in-picture; web-share"
+          />
+        </div>
+      );
+    }
+
     if (mediaItem.type === 'video') {
       const isYoutubeUrl = mediaItem.url.includes('youtube.com') || mediaItem.url.includes('youtu.be');
       
       if (isYoutubeUrl) {
         const videoId = getYoutubeVideoId(mediaItem.url);
         return (
-          <div className="absolute inset-0">
+          <div className="relative w-full aspect-video">
             <iframe
               src={`https://www.youtube.com/embed/${videoId}`}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
-              className="w-full h-full"
+              className="absolute inset-0 w-full h-full"
             />
           </div>
         );
       } else {
         return (
-          <div className="absolute inset-0">
+          <div className="relative w-full aspect-video">
             <video
               src={mediaItem.url}
               controls
               playsInline
-              className="w-full h-full object-cover"
+              className="absolute inset-0 w-full h-full object-cover"
             >
               Seu navegador não suporta a reprodução de vídeos.
             </video>
@@ -83,11 +130,13 @@ export const MediaCarousel = ({ images, videoUrls, title }: MediaCarouselProps) 
     }
 
     return (
-      <img
-        src={mediaItem.url}
-        alt={title}
-        className="absolute inset-0 w-full h-full object-cover"
-      />
+      <div className="relative w-full aspect-[4/3]">
+        <img
+          src={mediaItem.url}
+          alt={title}
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+      </div>
     );
   };
 
