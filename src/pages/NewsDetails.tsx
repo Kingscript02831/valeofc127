@@ -9,29 +9,10 @@ import { ptBR } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import MediaCarousel from "@/components/MediaCarousel";
+import type { Database } from "@/types/supabase";
 
-interface Category {
-  id: string;
-  name: string;
-  background_color?: string;
-}
-
-interface InstagramMedia {
-  url: string;
-  type: 'post' | 'video';
-}
-
-interface News {
-  id: string;
-  title: string;
-  content: string;
-  date: string;
-  category_id: string | null;
-  images: string[] | null;
-  video_urls: string[] | null;
-  button_color: string | null;
-  instagram_media: InstagramMedia[] | null;
-}
+type News = Database['public']['Tables']['news']['Row'];
+type Category = Database['public']['Tables']['categories']['Row'];
 
 const NewsDetails = () => {
   const { id } = useParams();
