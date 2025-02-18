@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Phone, Globe, MapPin, Clock, User2, Facebook, Instagram, MessageCircle, Search, ChevronDown, ChevronUp, Wallet, Bell, Menu } from "lucide-react";
@@ -34,14 +33,17 @@ const Stores = () => {
   }, []);
 
   const { data: categories } = useQuery({
-    queryKey: ["categories", "stores"],
+    queryKey: ["categories-stores"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("categories")
         .select("*")
         .eq('page_type', 'stores')
         .order("name");
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching categories:", error);
+        throw error;
+      }
       return data;
     },
   });
@@ -51,8 +53,7 @@ const Stores = () => {
     queryFn: async () => {
       let query = supabase
         .from("stores")
-        .select("*")
-        .order("name");
+        .select("*, categories(name, background_color)");
 
       if (searchTerm) {
         query = query.ilike("name", `%${searchTerm}%`);
@@ -63,7 +64,13 @@ const Stores = () => {
       }
 
       const { data, error } = await query;
-      if (error) throw error;
+      
+      if (error) {
+        console.error("Error fetching stores:", error);
+        throw error;
+      }
+
+      console.log("Stores data:", data); // Para debug
       return data;
     },
   });

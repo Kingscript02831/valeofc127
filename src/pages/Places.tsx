@@ -41,7 +41,10 @@ const Places = () => {
         .select("*")
         .eq('page_type', 'places')
         .order("name");
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching categories:", error);
+        throw error;
+      }
       return data;
     },
   });
@@ -51,8 +54,7 @@ const Places = () => {
     queryFn: async () => {
       let query = supabase
         .from("places")
-        .select("*")
-        .order("name");
+        .select("*, categories(name, background_color)");
 
       if (searchTerm) {
         query = query.ilike("name", `%${searchTerm}%`);
@@ -63,7 +65,13 @@ const Places = () => {
       }
 
       const { data, error } = await query;
-      if (error) throw error;
+      
+      if (error) {
+        console.error("Error fetching places:", error);
+        throw error;
+      }
+
+      console.log("Places data:", data); // Para debug
       return data;
     },
   });
