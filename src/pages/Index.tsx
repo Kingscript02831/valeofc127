@@ -143,7 +143,7 @@ const Index = () => {
                 variant="ghost"
                 size="icon"
                 onClick={handleNotificationClick}
-                className="hover:scale-105 transition-transform text-foreground"
+                className="hover:scale-105 transition-transform text-white"
               >
                 <Bell className="h-5 w-5" />
               </Button>
@@ -163,7 +163,7 @@ const Index = () => {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="hover:scale-105 transition-transform text-foreground rounded-full shadow-lg"
+                    className="hover:scale-105 transition-transform text-white rounded-full shadow-lg"
                   >
                     <Menu className="h-4 w-4" />
                   </Button>
