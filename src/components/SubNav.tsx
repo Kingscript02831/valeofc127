@@ -1,4 +1,3 @@
-
 import { Link, useLocation } from "react-router-dom";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { useEffect, useRef, useState } from "react";
@@ -14,11 +13,9 @@ const SubNav = () => {
     { path: "/", label: "Notícias" },
     { path: "/eventos", label: "Eventos" },
     { path: "/lugares", label: "Lugares" },
-    { path: "/lojas", label: "Lojas" },
     { path: "/products", label: "Marketplace" },
   ];
 
-  // Minimum swipe distance in pixels
   const minSwipeDistance = 50;
 
   const onTouchStart = (e: React.TouchEvent) => {

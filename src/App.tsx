@@ -10,7 +10,6 @@ import AuthWrapper from "./components/AuthWrapper";
 import Index from "./pages/Index";
 import Events from "./pages/Events";
 import Places from "./pages/Places";
-import Stores from "./pages/Stores";
 import Products from "./pages/Products";
 import ProductDetails from "./pages/ProductDetails";
 import ProductForm from "./pages/ProductForm";
@@ -21,7 +20,6 @@ import Config from "./pages/config";
 import Admin from "./pages/Admin";
 import AdminPlaces from "./pages/AdminPlaces";
 import AdminEvents from "./pages/AdminEvents";
-import AdminStores from "./pages/AdminStores";
 import AdminNews from "./pages/AdminNews";
 import AdminCategories from "./pages/AdminCategories";
 import AdminSistema from "./pages/AdminSistema";
@@ -48,7 +46,6 @@ const App: React.FC = () => {
                   <Route path="/" element={<Index />} />
                   <Route path="/eventos" element={<Events />} />
                   <Route path="/lugares" element={<Places />} />
-                  <Route path="/lojas" element={<Stores />} />
                   <Route path="/products" element={<Products />} />
                   <Route path="/product/:id" element={<ProductDetails />} />
                   <Route path="/products/new" element={<ProductForm />} />
@@ -62,7 +59,6 @@ const App: React.FC = () => {
                   <Route path="/admin" element={<Admin />}>    
                     <Route path="lugares" element={<AdminPlaces />} />
                     <Route path="eventos" element={<AdminEvents />} />
-                    <Route path="lojas" element={<AdminStores />} />
                     <Route path="noticias" element={<AdminNews />} />
                     <Route path="categorias" element={<AdminCategories />} />
                     <Route path="sistema" element={<AdminSistema />} />

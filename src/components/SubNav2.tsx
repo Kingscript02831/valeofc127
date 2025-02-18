@@ -10,7 +10,6 @@ const SubNav2 = () => {
     { path: "/admin/noticias", label: "Notícias" },
     { path: "/admin/eventos", label: "Eventos" },
     { path: "/admin/lugares", label: "Lugares" },
-    { path: "/admin/lojas", label: "Lojas" },
     { path: "/admin/categorias", label: "Categorias" },
     { path: "/admin/sistema", label: "Sistema" },
     { path: "/config", label: "Configurações" },
