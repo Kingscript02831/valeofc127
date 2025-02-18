@@ -54,9 +54,12 @@ export interface Database {
           user_id?: string
           category_id?: string
           button_color?: string
+          button_secondary_color?: string
           images?: string[]
           video_urls?: string[]
           instagram_media?: InstagramMedia[]
+          file_metadata?: Json
+          files_metadata?: Json[]
         }
       }
       categories: {
@@ -64,6 +67,12 @@ export interface Database {
           id: string
           name: string
           background_color?: string
+          slug?: string
+          description?: string
+          page_type?: string
+          parent_id?: string
+          created_at?: string
+          updated_at?: string
         }
       }
     }
@@ -74,4 +83,3 @@ export interface InstagramMedia {
   url: string;
   type: 'post' | 'video';
 }
-
