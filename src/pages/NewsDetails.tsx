@@ -1,7 +1,7 @@
 
 import { useParams } from "react-router-dom";
 import { supabase } from "../integrations/supabase/client";
-import { Share2 } from "lucide-react";
+import { Share2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -10,14 +10,17 @@ import { toast } from "sonner";
 import MediaCarousel from "../components/MediaCarousel";
 import type { Database } from "../types/supabase";
 import { useQuery } from "@tanstack/react-query";
+import Navbar from "@/components/Navbar";
+import SubNav from "@/components/SubNav";
+import Footer from "@/components/Footer";
+import BottomNav from "@/components/BottomNav";
+import { Link } from "react-router-dom";
 
 type News = Database['public']['Tables']['news']['Row'];
 type Category = Database['public']['Tables']['categories']['Row'];
 
 const NewsDetails = () => {
   const { id } = useParams();
-
-  console.log("News ID:", id); // Debug log
 
   const { data: news, isLoading: isLoadingNews } = useQuery({
     queryKey: ['news', id],
@@ -26,15 +29,11 @@ const NewsDetails = () => {
         throw new Error("ID da notícia não encontrado");
       }
 
-      console.log("Fetching news with ID:", id); // Debug log
-
       const { data, error } = await supabase
         .from("news")
         .select("*")
         .eq("id", id)
         .single();
-
-      console.log("Supabase response:", { data, error }); // Debug log
 
       if (error) {
         console.error("Supabase error:", error);
@@ -91,23 +90,35 @@ const NewsDetails = () => {
 
   if (isLoadingNews) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-3/4 mb-4"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/4 mb-8"></div>
-          <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
-          <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
-          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <SubNav />
+        <div className="container mx-auto px-4 py-8 flex-1">
+          <div className="animate-pulse max-w-4xl mx-auto">
+            <div className="h-8 bg-gray-200 rounded w-3/4 mb-4"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/4 mb-8"></div>
+            <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+          </div>
         </div>
+        <Footer />
+        <BottomNav />
       </div>
     );
   }
 
   if (!news) {
     return (
-      <div className="container mx-auto px-4 py-8 text-center">
-        <h1 className="text-2xl font-bold mb-4">Notícia não encontrada</h1>
-        <p className="text-gray-600">A notícia que você está procurando não existe ou foi removida.</p>
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <SubNav />
+        <div className="container mx-auto px-4 py-8 text-center flex-1">
+          <h1 className="text-2xl font-bold mb-4">Notícia não encontrada</h1>
+          <p className="text-gray-600">A notícia que você está procurando não existe ou foi removida.</p>
+        </div>
+        <Footer />
+        <BottomNav />
       </div>
     );
   }
@@ -115,71 +126,111 @@ const NewsDetails = () => {
   const formattedDate = format(new Date(news.date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex justify-between items-start mb-6">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">{news.title}</h1>
-            <div className="flex items-center gap-3">
-              {category && (
-                <Badge
-                  style={{
-                    backgroundColor: category.background_color ? `${category.background_color}40` : '#D6BCFA40',
-                    color: category.background_color || '#1A1F2C'
-                  }}
+    <div className="min-h-screen flex flex-col pb-[72px] md:pb-0">
+      <Navbar />
+      <SubNav />
+      <main className="flex-1">
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-4xl mx-auto">
+            <div className="mb-8 space-y-6 animate-fade-in">
+              {/* Back button and Share button */}
+              <div className="flex items-center justify-between">
+                <Link
+                  to="/"
+                  className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  {category.name}
-                </Badge>
+                  <ArrowLeft className="h-4 w-4" />
+                  <span>Voltar</span>
+                </Link>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleShare}
+                  className="rounded-full hover:scale-105 transition-all duration-300 shadow-lg"
+                >
+                  <Share2 className="h-4 w-4 mr-2" />
+                  Compartilhar
+                </Button>
+              </div>
+
+              {/* Title and metadata */}
+              <div className="space-y-4">
+                <h1 className="text-4xl font-bold leading-tight animate-slide-in-right">
+                  {news.title}
+                </h1>
+                <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                  {category && (
+                    <Badge
+                      className="transition-all duration-300 hover:scale-105"
+                      style={{
+                        backgroundColor: category.background_color ? `${category.background_color}40` : '#D6BCFA40',
+                        color: category.background_color || '#1A1F2C'
+                      }}
+                    >
+                      {category.name}
+                    </Badge>
+                  )}
+                  <span>{formattedDate}</span>
+                </div>
+              </div>
+
+              {/* Media content */}
+              <div className="rounded-2xl overflow-hidden shadow-xl transition-transform hover:scale-[1.01] duration-300">
+                {(news.images?.length > 0 || news.video_urls?.length > 0) && (
+                  <MediaCarousel
+                    images={news.images || []}
+                    videoUrls={news.video_urls || []}
+                    title={news.title}
+                  />
+                )}
+              </div>
+
+              {/* Instagram content */}
+              {news.instagram_media && news.instagram_media.length > 0 && (
+                <div className="space-y-4">
+                  {news.instagram_media.map((media: any, index: number) => (
+                    <div 
+                      key={index} 
+                      className="aspect-square w-full bg-gray-50 rounded-2xl overflow-hidden shadow-lg transition-transform hover:scale-[1.01] duration-300"
+                    >
+                      <iframe
+                        src={media.url}
+                        className="w-full h-full"
+                        frameBorder="0"
+                        scrolling="no"
+                        allowTransparency
+                        allow="encrypted-media; picture-in-picture; web-share"
+                        loading="lazy"
+                        referrerPolicy="origin"
+                        title={`Instagram post ${index + 1}`}
+                      />
+                    </div>
+                  ))}
+                </div>
               )}
-              <span className="text-sm text-gray-500">{formattedDate}</span>
+
+              {/* Content */}
+              <div className="prose prose-lg max-w-none">
+                {news.content.split('\n').map((paragraph, index) => (
+                  paragraph.trim() ? (
+                    <p 
+                      key={index}
+                      className="animate-fade-in"
+                      style={{
+                        animationDelay: `${index * 100}ms`
+                      }}
+                    >
+                      {paragraph}
+                    </p>
+                  ) : null
+                ))}
+              </div>
             </div>
           </div>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handleShare}
-            className="rounded-full"
-          >
-            <Share2 className="h-4 w-4" />
-          </Button>
         </div>
-
-        {(news.images?.length > 0 || news.video_urls?.length > 0) && (
-          <div className="mb-6">
-            <MediaCarousel
-              images={news.images || []}
-              videoUrls={news.video_urls || []}
-              title={news.title}
-            />
-          </div>
-        )}
-
-        {news.instagram_media && news.instagram_media.length > 0 && (
-          <div className="mb-6 space-y-4">
-            {news.instagram_media.map((media, index) => (
-              <div key={index} className="aspect-square w-full bg-gray-50">
-                <iframe
-                  src={media.url}
-                  className="w-full h-full"
-                  frameBorder="0"
-                  scrolling="no"
-                  allowTransparency
-                  allow="encrypted-media; picture-in-picture; web-share"
-                  loading="lazy"
-                  referrerPolicy="origin"
-                  title={`Instagram post ${index + 1}`}
-                />
-              </div>
-            ))}
-          </div>
-        )}
-
-        <div className="prose prose-lg max-w-none">
-          {news.content.split('\n').map((paragraph, index) => (
-            paragraph.trim() ? <p key={index}>{paragraph}</p> : null
-          ))}
-        </div>
-      </div>
+      </main>
+      <Footer />
+      <BottomNav />
     </div>
   );
 };
