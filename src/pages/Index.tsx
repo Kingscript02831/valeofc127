@@ -14,10 +14,10 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/types/supabase";
 import NewsCard from "@/components/NewsCard";
-import Navbar from "@/components/Navbar";
-import SubNav from "@/components/SubNav";
-import Footer from "@/components/Footer";
-import BottomNav from "@/components/BottomNav";
+import Navbar from "../components/Navbar";
+import SubNav from "../components/SubNav";
+import Footer from "../components/Footer";
+import BottomNav from "../components/BottomNav";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import { useNavigate } from "react-router-dom";
 
@@ -83,8 +83,52 @@ const Index = () => {
   });
 
   const handleNotificationClick = async () => {
-    // Redireciona para a página de notificações
-    navigate('/notify');
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast.error('Faça login para ativar as notificações');
+        return;
+      }
+
+      // Verifica se já existe uma configuração de notificação
+      const { data: existing } = await supabase
+        .from('notifications')
+        .select('enabled')
+        .eq('user_id', user.id)
+        .eq('type', 'news')
+        .single();
+
+      const newStatus = !existing?.enabled;
+
+      // Atualiza ou cria a configuração de notificação
+      const { error } = await supabase
+        .from('notifications')
+        .upsert({
+          user_id: user.id,
+          type: 'news',
+          enabled: newStatus,
+          title: 'Notificações de Notícias',
+          message: newStatus ? 'Você receberá notificações de novas notícias' : 'Notificações de notícias desativadas',
+          read: false
+        });
+
+      if (error) {
+        console.error('Error updating notification settings:', error);
+        toast.error('Erro ao atualizar notificações');
+        return;
+      }
+
+      toast.success(newStatus 
+        ? 'Notificações de notícias ativadas!' 
+        : 'Notificações de notícias desativadas');
+
+      // Redireciona para mostrar a notificação
+      navigate('/notify');
+    } catch (error) {
+      console.error('Error handling notifications:', error);
+      toast.error('Erro ao configurar notificações');
+    }
   };
 
   return (
