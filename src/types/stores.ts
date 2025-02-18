@@ -1,5 +1,5 @@
 
-import { Database } from "../types/supabase";
+import { Database } from "./supabase";
 
 export type Store = Database["public"]["Tables"]["stores"]["Row"];
 
