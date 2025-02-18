@@ -21,6 +21,11 @@ const NewsDetails = () => {
 
   useEffect(() => {
     const fetchNews = async () => {
+      if (!id) {
+        toast.error("ID da notícia não encontrado");
+        return;
+      }
+
       try {
         const { data: newsData, error: newsError } = await supabase
           .from("news")
@@ -29,6 +34,8 @@ const NewsDetails = () => {
           .single();
 
         if (newsError) throw newsError;
+        if (!newsData) throw new Error("Notícia não encontrada");
+        
         setNews(newsData);
 
         if (newsData.category_id) {
@@ -47,9 +54,7 @@ const NewsDetails = () => {
       }
     };
 
-    if (id) {
-      fetchNews();
-    }
+    fetchNews();
   }, [id]);
 
   const handleShare = async () => {

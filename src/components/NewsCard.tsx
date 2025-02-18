@@ -102,7 +102,7 @@ const NewsCard = ({
 
   return (
     <Card className="overflow-hidden transition-transform hover:scale-[1.02]">
-      <Link to={`/noticias/${id}`} className="block">
+      <div className="block">
         {/* Instagram Media Section - Moved to top */}
         {processedInstagramUrls.length > 0 && (
           <div className="space-y-4">
@@ -126,62 +126,64 @@ const NewsCard = ({
         )}
 
         {/* Media Carousel Section */}
-        {(images?.length > 0 || processedVideoUrls.length > 0) && (
+        {(images?.length > 0 || video_urls?.length > 0) && (
           <MediaCarousel 
             images={images}
-            videoUrls={processedVideoUrls}
+            videoUrls={video_urls}
             title={title}
           />
         )}
 
-        <div className="p-4">
-          <h3 className="text-xl font-bold mb-2">{title}</h3>
+        <Link to={`/noticias/${id}`} className="block">
+          <div className="p-4">
+            <h3 className="text-xl font-bold mb-2">{title}</h3>
 
-          {category && (
-            <span 
-              className="inline-block px-2 py-0.5 rounded-full text-xs mb-2"
-              style={{
-                backgroundColor: category.background_color ? `${category.background_color}40` : '#D6BCFA40',
-                color: category.background_color || '#1A1F2C'
-              }}
-            >
-              {category.name}
-            </span>
-          )}
+            {category && (
+              <span 
+                className="inline-block px-2 py-0.5 rounded-full text-xs mb-2"
+                style={{
+                  backgroundColor: category.background_color ? `${category.background_color}40` : '#D6BCFA40',
+                  color: category.background_color || '#1A1F2C'
+                }}
+              >
+                {category.name}
+              </span>
+            )}
 
-          {formattedCreatedAt && (
-            <div className="text-xs text-gray-500 mb-2">
-              Publicado em {formattedCreatedAt}
+            {formattedCreatedAt && (
+              <div className="text-xs text-gray-500 mb-2">
+                Publicado em {formattedCreatedAt}
+              </div>
+            )}
+
+            <div className={cn("prose prose-sm max-w-none", !isExpanded && "line-clamp-3")}>
+              {content.split('\n').map((paragraph, index) => (
+                paragraph.trim() ? <p key={index} className="mb-2">{paragraph}</p> : null
+              ))}
             </div>
-          )}
-
-          <div className={cn("prose prose-sm max-w-none", !isExpanded && "line-clamp-3")}>
-            {content.split('\n').map((paragraph, index) => (
-              paragraph.trim() ? <p key={index} className="mb-2">{paragraph}</p> : null
-            ))}
           </div>
-        </div>
-      </Link>
+        </Link>
 
-      <div className="px-4 pb-4">
-        <Button
-          variant="ghost"
-          className="w-full flex items-center justify-center gap-1 text-sm hover:bg-gray-100"
-          onClick={() => setIsExpanded(!isExpanded)}
-          style={buttonStyle}
-        >
-          {isExpanded ? (
-            <>
-              Ver menos
-              <ChevronUp className="h-4 w-4" />
-            </>
-          ) : (
-            <>
-              Ver mais
-              <ChevronDown className="h-4 w-4" />
-            </>
-          )}
-        </Button>
+        <div className="px-4 pb-4">
+          <Button
+            variant="ghost"
+            className="w-full flex items-center justify-center gap-1 text-sm hover:bg-gray-100"
+            onClick={() => setIsExpanded(!isExpanded)}
+            style={buttonStyle}
+          >
+            {isExpanded ? (
+              <>
+                Ver menos
+                <ChevronUp className="h-4 w-4" />
+              </>
+            ) : (
+              <>
+                Ver mais
+                <ChevronDown className="h-4 w-4" />
+              </>
+            )}
+          </Button>
+        </div>
       </div>
     </Card>
   );
