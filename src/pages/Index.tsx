@@ -1,12 +1,18 @@
 
 import { useState } from "react";
-import type { Database } from "@/types/supabase";
-import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
 import { Search, Bell, Menu } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/types/supabase";
 import NewsCard from "@/components/NewsCard";
 import Navbar from "../components/Navbar";
 import SubNav from "../components/SubNav";
@@ -74,14 +80,46 @@ const Index = () => {
     retry: false
   });
 
-  const handleNotificationClick = () => {
-    // TODO: Implement notification functionality
-    toast.info("Funcionalidade de notificações em desenvolvimento");
-  };
+  const handleNotificationClick = async () => {
+    try {
+      if (!("Notification" in window)) {
+        toast.error("Este navegador não suporta notificações");
+        return;
+      }
 
-  const handleMenuClick = () => {
-    // TODO: Implement menu functionality
-    toast.info("Menu em desenvolvimento");
+      const permission = await Notification.requestPermission();
+      
+      if (permission === "granted") {
+        // Subscribe to notifications
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+          const { error } = await supabase
+            .from('notifications')
+            .upsert({
+              user_id: user.id,
+              type: 'news',
+              enabled: true,
+              updated_at: new Date().toISOString()
+            });
+
+          if (error) {
+            console.error('Error subscribing to notifications:', error);
+            toast.error('Erro ao ativar notificações');
+            return;
+          }
+
+          toast.success('Notificações ativadas com sucesso!');
+        } else {
+          toast.error('Faça login para ativar as notificações');
+        }
+      } else {
+        toast.error('Permissão para notificações negada');
+      }
+    } catch (error) {
+      console.error('Error handling notifications:', error);
+      toast.error('Erro ao configurar notificações');
+    }
   };
 
   return (
@@ -90,8 +128,6 @@ const Index = () => {
       <SubNav />
       <main className="flex-1 container mx-auto py-8 px-4">
         <div className="flex flex-col gap-8">
-          <h1 className="text-3xl font-bold">Últimas Notícias</h1>
-          
           <div className="sticky top-16 z-10 bg-background/80 backdrop-blur-sm pb-4">
             <div className="flex gap-2 mb-4">
               <Button
@@ -113,47 +149,35 @@ const Index = () => {
                   <Search className="h-5 w-5 text-foreground" />
                 </div>
               </div>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handleMenuClick}
-                className="hover:scale-105 transition-transform text-foreground rounded-full shadow-lg"
-              >
-                <Menu className="h-4 w-4" />
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="hover:scale-105 transition-transform text-foreground rounded-full shadow-lg"
+                  >
+                    <Menu className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem
+                    onClick={() => setSelectedCategory(null)}
+                    className={`${!selectedCategory ? "bg-accent" : ""}`}
+                  >
+                    Todas as categorias
+                  </DropdownMenuItem>
+                  {categories?.map((category) => (
+                    <DropdownMenuItem
+                      key={category.id}
+                      onClick={() => setSelectedCategory(category.id)}
+                      className={`${selectedCategory === category.id ? "bg-accent" : ""}`}
+                    >
+                      {category.name}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
-          </div>
-
-          <div className="flex gap-2 overflow-x-auto pb-4 mb-6 scrollbar-hide">
-            <button
-              onClick={() => setSelectedCategory(null)}
-              className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${
-                !selectedCategory
-                  ? "bg-[#F1F1F1] text-gray-800 dark:bg-gray-700 dark:text-white"
-                  : "bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-200"
-              }`}
-            >
-              Todas
-            </button>
-            {categories?.map((category) => (
-              <button
-                key={category.id}
-                onClick={() => setSelectedCategory(category.id)}
-                className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${
-                  selectedCategory === category.id
-                    ? "bg-[#F1F1F1] text-gray-800 dark:bg-gray-700 dark:text-white"
-                    : "hover:opacity-80"
-                }`}
-                style={{
-                  backgroundColor:
-                    selectedCategory === category.id
-                      ? "#F1F1F1"
-                      : category.background_color + "40" || "#D6BCFA40",
-                }}
-              >
-                {category.name}
-              </button>
-            ))}
           </div>
 
           {isLoading ? (
