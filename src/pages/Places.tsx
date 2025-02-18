@@ -1,22 +1,30 @@
-
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Phone, Globe, MapPin, Clock, User2, Facebook, Instagram, MessageCircle, Search, ChevronDown, ChevronUp, Wallet } from "lucide-react";
-import type { Database } from "@/integrations/supabase/types";
+import { Phone, Globe, MapPin, Clock, User2, Facebook, Instagram, MessageCircle, Search, ChevronDown, ChevronUp, Wallet, Bell, Menu } from "lucide-react";
+import type { Database } from "@/types/supabase";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import MediaCarousel from "../components/MediaCarousel";
 import Navbar from "../components/Navbar";
 import SubNav from "../components/SubNav";
 import Footer from "../components/Footer";
 import BottomNav from "../components/BottomNav";
+import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 type Place = Database["public"]["Tables"]["places"]["Row"];
 type Category = Database["public"]["Tables"]["categories"]["Row"];
 type SocialMedia = { facebook?: string; instagram?: string };
 
 const Places = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [expandedPlaces, setExpandedPlaces] = useState<Record<string, boolean>>({});
@@ -60,6 +68,55 @@ const Places = () => {
     },
   });
 
+  const handleNotificationClick = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast.error('Faça login para ativar as notificações');
+        return;
+      }
+
+      // Verifica se já existe uma configuração de notificação
+      const { data: existing } = await supabase
+        .from('notifications')
+        .select('enabled')
+        .eq('user_id', user.id)
+        .eq('type', 'places')
+        .single();
+
+      const newStatus = !existing?.enabled;
+
+      // Atualiza ou cria a configuração de notificação
+      const { error } = await supabase
+        .from('notifications')
+        .upsert({
+          user_id: user.id,
+          type: 'places',
+          enabled: newStatus,
+          title: 'Notificações de Lugares',
+          message: newStatus ? 'Você receberá notificações de novos lugares' : 'Notificações de lugares desativadas',
+          read: false
+        });
+
+      if (error) {
+        console.error('Error updating notification settings:', error);
+        toast.error('Erro ao atualizar notificações');
+        return;
+      }
+
+      toast.success(newStatus 
+        ? 'Notificações de lugares ativadas!' 
+        : 'Notificações de lugares desativadas');
+
+      // Redireciona para mostrar a notificação
+      navigate('/notify');
+    } catch (error) {
+      console.error('Error handling notifications:', error);
+      toast.error('Erro ao configurar notificações');
+    }
+  };
+
   const parseVideoUrls = (urls: string[] | null) => {
     if (!urls) return [];
     return urls.map(url => {
@@ -82,52 +139,58 @@ const Places = () => {
       <Navbar />
       <SubNav />
       <main className="flex-1 container mx-auto py-8 px-4">
-        <div className="flex flex-col md:flex-row md:items-center gap-4 mb-8">
-          <h1 className="text-3xl font-bold text-foreground">Lugares</h1>
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input
-              type="search"
-              placeholder="Buscar lugares..."
-              className="pl-8 bg-background text-foreground border-border"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+        <div className="sticky top-16 z-10 bg-background/80 backdrop-blur-sm pb-4">
+          <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleNotificationClick}
+              className="hover:scale-105 transition-transform text-foreground"
+            >
+              <Bell className="h-5 w-5" />
+            </Button>
+            <div className="relative flex-1">
+              <Input
+                placeholder="Buscar lugares..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pr-10 rounded-full bg-card/50 backdrop-blur-sm border-none shadow-lg"
+              />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                <Search className="h-5 w-5 text-foreground" />
+              </div>
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="hover:scale-105 transition-transform text-foreground rounded-full shadow-lg"
+                >
+                  <Menu className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem
+                  onClick={() => setSelectedCategory(null)}
+                  className={`${!selectedCategory ? "bg-accent" : ""}`}
+                >
+                  Todas as categorias
+                </DropdownMenuItem>
+                {categories?.map((category) => (
+                  <DropdownMenuItem
+                    key={category.id}
+                    onClick={() => setSelectedCategory(category.id)}
+                    className={`${selectedCategory === category.id ? "bg-accent" : ""}`}
+                  >
+                    {category.name}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
-        <div className="flex gap-2 overflow-x-auto pb-4 mb-6 scrollbar-hide">
-          <button
-            onClick={() => setSelectedCategory(null)}
-            className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${
-              !selectedCategory
-                ? "bg-primary text-primary-foreground dark:bg-gray-700 dark:text-gray-100"
-                : "bg-secondary text-secondary-foreground hover:bg-secondary/80 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-            }`}
-          >
-            Todas
-          </button>
-          {categories?.map((category) => (
-            <button
-              key={category.id}
-              onClick={() => setSelectedCategory(category.id)}
-              className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${
-                selectedCategory === category.id
-                  ? "text-primary-foreground dark:text-gray-100"
-                  : "hover:opacity-80 dark:text-gray-300"
-              }`}
-              style={{
-                backgroundColor:
-                  selectedCategory === category.id
-                    ? category.background_color || "#D6BCFA"
-                    : category.background_color + "40" || "#D6BCFA40",
-              }}
-            >
-              {category.name}
-            </button>
-          ))}
-        </div>
-        
         {isLoading ? (
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
@@ -296,4 +359,3 @@ const Places = () => {
 };
 
 export default Places;
-
