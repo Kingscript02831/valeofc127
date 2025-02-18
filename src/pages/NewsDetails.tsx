@@ -1,6 +1,5 @@
 
 import { useParams } from "react-router-dom";
-import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,52 +9,57 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import MediaCarousel from "@/components/MediaCarousel";
 import type { Database } from "@/types/supabase";
+import { useQuery } from "@tanstack/react-query";
 
 type News = Database['public']['Tables']['news']['Row'];
 type Category = Database['public']['Tables']['categories']['Row'];
 
 const NewsDetails = () => {
   const { id } = useParams();
-  const [news, setNews] = useState<News | null>(null);
-  const [category, setCategory] = useState<Category | null>(null);
 
-  useEffect(() => {
-    const fetchNews = async () => {
+  const { data: news, isLoading: isLoadingNews } = useQuery({
+    queryKey: ['news', id],
+    queryFn: async () => {
       if (!id) {
-        toast.error("ID da notícia não encontrado");
-        return;
+        throw new Error("ID da notícia não encontrado");
       }
 
-      try {
-        const { data: newsData, error: newsError } = await supabase
-          .from("news")
-          .select("*")
-          .eq("id", id)
-          .single();
+      const { data, error } = await supabase
+        .from("news")
+        .select("*")
+        .eq("id", id)
+        .single();
 
-        if (newsError) throw newsError;
-        if (!newsData) throw new Error("Notícia não encontrada");
-        
-        setNews(newsData);
+      if (error) throw error;
+      if (!data) throw new Error("Notícia não encontrada");
 
-        if (newsData.category_id) {
-          const { data: categoryData, error: categoryError } = await supabase
-            .from("categories")
-            .select("*")
-            .eq("id", newsData.category_id)
-            .single();
+      return data as News;
+    },
+    onError: (error) => {
+      console.error("Error fetching news:", error);
+      toast.error("Erro ao carregar a notícia");
+    }
+  });
 
-          if (categoryError) throw categoryError;
-          setCategory(categoryData);
-        }
-      } catch (error) {
-        console.error("Error fetching news:", error);
-        toast.error("Erro ao carregar a notícia");
-      }
-    };
+  const { data: category } = useQuery({
+    queryKey: ['category', news?.category_id],
+    enabled: !!news?.category_id,
+    queryFn: async () => {
+      if (!news?.category_id) return null;
 
-    fetchNews();
-  }, [id]);
+      const { data, error } = await supabase
+        .from("categories")
+        .select("*")
+        .eq("id", news.category_id)
+        .single();
+
+      if (error) throw error;
+      return data as Category;
+    },
+    onError: (error) => {
+      console.error("Error fetching category:", error);
+    }
+  });
 
   const handleShare = async () => {
     if (!news) return;
@@ -77,7 +81,7 @@ const NewsDetails = () => {
     }
   };
 
-  if (!news) {
+  if (isLoadingNews || !news) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="animate-pulse">
