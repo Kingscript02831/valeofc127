@@ -4,7 +4,7 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { supabase } from "../integrations/supabase/client";
 import { toast } from "sonner";
-import type { Database } from "../integrations/supabase/types";
+import type { Database } from "../types/supabase";
 import { Textarea } from "../components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { updateMetaTags } from "../utils/updateMetaTags";
@@ -79,7 +79,10 @@ const Admin = () => {
     admin_header_color: "#D6BCFA",
     admin_hover_color: "#E2E8F0",
     admin_sidebar_color: "#1A1F2C",
-    admin_text_color: "#FFFFFF"
+    admin_text_color: "#FFFFFF",
+    favorite_heart_color: "#ea384c",
+    buy_button_color: "#9b87f5",
+    buy_button_text: "Comprar agora"
   });
 
   useEffect(() => {
@@ -143,12 +146,13 @@ const Admin = () => {
         <h1 className="text-3xl font-bold text-gray-900 mb-8">Painel De Configurações</h1>
 
         <Tabs defaultValue="config" className="space-y-6">
-          <TabsList>
+          <TabsList className="flex flex-wrap gap-2">
             <TabsTrigger value="config">Navbar</TabsTrigger>
             <TabsTrigger value="footer">Rodapé</TabsTrigger>
             <TabsTrigger value="bottom-nav">Barra</TabsTrigger>
             <TabsTrigger value="login">Login/Registro</TabsTrigger>
             <TabsTrigger value="pwa">PWA</TabsTrigger>
+            <TabsTrigger value="products">Produtos</TabsTrigger>
           </TabsList>
 
           <TabsContent value="config" className="bg-white rounded-lg shadow p-6 space-y-6">
@@ -762,6 +766,65 @@ const Admin = () => {
                       onChange={(e) => setConfig({ ...config, pwa_background_color: e.target.value })}
                     />
                   </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <Button onClick={handleConfigUpdate}>
+                Salvar Configurações
+              </Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="products" className="bg-white rounded-lg shadow p-6 space-y-6">
+            <div>
+              <h2 className="text-xl font-semibold mb-4">Configurações de Produtos</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <Label htmlFor="favorite_heart_color">Cor do Coração (Favoritos)</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="favorite_heart_color"
+                      type="color"
+                      value={config.favorite_heart_color}
+                      onChange={(e) => setConfig({ ...config, favorite_heart_color: e.target.value })}
+                      className="w-20"
+                    />
+                    <Input
+                      type="text"
+                      value={config.favorite_heart_color}
+                      onChange={(e) => setConfig({ ...config, favorite_heart_color: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="buy_button_color">Cor do Botão "Comprar Agora"</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="buy_button_color"
+                      type="color"
+                      value={config.buy_button_color}
+                      onChange={(e) => setConfig({ ...config, buy_button_color: e.target.value })}
+                      className="w-20"
+                    />
+                    <Input
+                      type="text"
+                      value={config.buy_button_color}
+                      onChange={(e) => setConfig({ ...config, buy_button_color: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="col-span-2">
+                  <Label htmlFor="buy_button_text">Texto do Botão "Comprar Agora"</Label>
+                  <Input
+                    id="buy_button_text"
+                    value={config.buy_button_text}
+                    onChange={(e) => setConfig({ ...config, buy_button_text: e.target.value })}
+                    placeholder="Ex: Comprar agora"
+                  />
                 </div>
               </div>
             </div>

@@ -868,9 +868,12 @@ export type Database = {
           bottom_nav_text_color: string | null
           button_primary_color: string | null
           button_secondary_color: string | null
+          buy_button_color: string | null
+          buy_button_text: string | null
           created_at: string | null
           enable_dark_mode: boolean | null
           enable_weather: boolean | null
+          favorite_heart_color: string | null
           font_size: string | null
           footer_address: string | null
           footer_address_cep: string | null
@@ -941,9 +944,12 @@ export type Database = {
           bottom_nav_text_color?: string | null
           button_primary_color?: string | null
           button_secondary_color?: string | null
+          buy_button_color?: string | null
+          buy_button_text?: string | null
           created_at?: string | null
           enable_dark_mode?: boolean | null
           enable_weather?: boolean | null
+          favorite_heart_color?: string | null
           font_size?: string | null
           footer_address?: string | null
           footer_address_cep?: string | null
@@ -1014,9 +1020,12 @@ export type Database = {
           bottom_nav_text_color?: string | null
           button_primary_color?: string | null
           button_secondary_color?: string | null
+          buy_button_color?: string | null
+          buy_button_text?: string | null
           created_at?: string | null
           enable_dark_mode?: boolean | null
           enable_weather?: boolean | null
+          favorite_heart_color?: string | null
           font_size?: string | null
           footer_address?: string | null
           footer_address_cep?: string | null
