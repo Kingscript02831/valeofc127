@@ -1,14 +1,8 @@
-
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../integrations/supabase/client";
-import type { Database } from "../integrations/supabase/types";
+import type { Database } from "../types/supabase";
 import { toast } from "sonner";
-import EventCard from "../components/EventCard";
-import Navbar from "../components/Navbar";
-import SubNav from "../components/SubNav";
-import BottomNav from "../components/BottomNav";
-import Footer from "../components/Footer";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Search, Bell, Menu } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -18,32 +12,23 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import EventCard from "../components/EventCard";
+import Navbar from "../components/Navbar";
+import SubNav from "../components/SubNav";
+import Footer from "../components/Footer";
+import BottomNav from "../components/BottomNav";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
 
-type Event = Database['public']['Tables']['events']['Row'];
+type Event = Database['public']['Tables']['events']['Row'] & {
+  categories: Database['public']['Tables']['categories']['Row'] | null;
+};
 type Category = Database['public']['Tables']['categories']['Row'];
 
-const LoadingEventCard = () => (
-  <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-    <Skeleton className="h-48 w-full" />
-    <div className="p-4 space-y-3">
-      <Skeleton className="h-6 w-3/4" />
-      <div className="space-y-2">
-        <Skeleton className="h-4 w-1/2" />
-        <Skeleton className="h-4 w-1/3" />
-      </div>
-      <Skeleton className="h-20 w-full" />
-      <Skeleton className="h-8 w-full" />
-    </div>
-  </div>
-);
-
-export default function Events() {
+const Events = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  
+
   const { data: categories = [] } = useQuery<Category[]>({
     queryKey: ['categories', 'events'],
     queryFn: async () => {
@@ -62,14 +47,14 @@ export default function Events() {
     retry: false
   });
 
-  const { data: events = [], isLoading } = useQuery<Event[]>({
+  const { data: events = [], isLoading, error } = useQuery<Event[]>({
     queryKey: ['events', searchTerm, selectedCategory],
     queryFn: async () => {
       try {
         let query = supabase
           .from('events')
-          .select('*')
-          .order('event_date', { ascending: true });
+          .select('*, categories(*)')
+          .order('event_date', { ascending: false });
 
         if (searchTerm) {
           query = query.ilike('title', `%${searchTerm}%`);
@@ -80,12 +65,12 @@ export default function Events() {
         }
 
         const { data, error } = await query;
-
+        
         if (error) {
           console.error('Supabase query error:', error);
           return [];
         }
-
+        
         return data as Event[];
       } catch (err) {
         console.error('Error fetching events:', err);
@@ -145,7 +130,7 @@ export default function Events() {
     <div className="min-h-screen flex flex-col pb-[72px] md:pb-0">
       <Navbar />
       <SubNav />
-      <main className="flex-1 container mx-auto px-4 py-8">
+      <main className="flex-1 container mx-auto py-8 px-4">
         <div className="flex flex-col gap-4">
           <div className="sticky top-16 z-10 bg-background/80 backdrop-blur-sm pb-4">
             <div className="flex gap-2">
@@ -201,42 +186,35 @@ export default function Events() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {isLoading ? (
-              Array(6).fill(0).map((_, index) => (
-                <LoadingEventCard key={index} />
-              ))
+              <p>Carregando...</p>
             ) : events.length > 0 ? (
-              events.map((event) => {
-                const category = categories.find(cat => cat.id === event.category_id);
-                
-                return (
-                  <EventCard
-                    key={event.id}
-                    title={event.title}
-                    description={event.description}
-                    eventDate={event.event_date}
-                    eventTime={event.event_time}
-                    endTime={event.end_time}
-                    image={event.file_path || event.image}
-                    images={event.images || []}
-                    location={event.location}
-                    mapsUrl={event.url_maps_events}
-                    entranceFee={event.entrance_fee}
-                    createdAt={event.created_at}
-                    buttonColor={event.button_color}
-                    buttonSecondaryColor={event.button_secondary_color}
-                    videoUrl={event.video_url}
-                    video_urls={event.video_urls}
-                    category={category ? {
-                      id: category.id,
-                      name: category.name,
-                      background_color: category.background_color
-                    } : null}
-                  />
-                );
-              })
+              events.map((event) => (
+                <EventCard
+                  key={event.id}
+                  id={event.id}
+                  title={event.title}
+                  description={event.description}
+                  event_date={event.event_date}
+                  event_time={event.event_time}
+                  end_time={event.end_time}
+                  location={event.location}
+                  maps_url={event.maps_url}
+                  entrance_fee={event.entrance_fee}
+                  image={event.image}
+                  images={event.images}
+                  video_url={event.video_url}
+                  category={event.categories ? {
+                    name: event.categories.name,
+                    slug: event.categories.slug,
+                    background_color: event.categories.background_color
+                  } : null}
+                  buttonColor={event.button_color || undefined}
+                  buttonSecondaryColor={event.button_secondary_color || undefined}
+                />
+              ))
             ) : (
-              <p className="col-span-full text-center py-8 text-muted-foreground">
-                Nenhum evento encontrado
+              <p className="text-gray-500 col-span-full text-center py-8">
+                Nenhum evento encontrado.
               </p>
             )}
           </div>
@@ -246,4 +224,6 @@ export default function Events() {
       <BottomNav />
     </div>
   );
-}
+};
+
+export default Events;
