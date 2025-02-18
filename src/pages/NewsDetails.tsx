@@ -1,14 +1,14 @@
 
 import { useParams } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "../integrations/supabase/client";
 import { Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import MediaCarousel from "@/components/MediaCarousel";
-import type { Database } from "@/types/supabase";
+import MediaCarousel from "../components/MediaCarousel";
+import type { Database } from "../types/supabase";
 import { useQuery } from "@tanstack/react-query";
 
 type News = Database['public']['Tables']['news']['Row'];
@@ -17,6 +17,8 @@ type Category = Database['public']['Tables']['categories']['Row'];
 const NewsDetails = () => {
   const { id } = useParams();
 
+  console.log("News ID:", id); // Debug log
+
   const { data: news, isLoading: isLoadingNews } = useQuery({
     queryKey: ['news', id],
     queryFn: async () => {
@@ -24,21 +26,27 @@ const NewsDetails = () => {
         throw new Error("ID da notícia não encontrado");
       }
 
+      console.log("Fetching news with ID:", id); // Debug log
+
       const { data, error } = await supabase
         .from("news")
         .select("*")
         .eq("id", id)
         .single();
 
-      if (error) throw error;
-      if (!data) throw new Error("Notícia não encontrada");
+      console.log("Supabase response:", { data, error }); // Debug log
+
+      if (error) {
+        console.error("Supabase error:", error);
+        throw error;
+      }
+      
+      if (!data) {
+        throw new Error("Notícia não encontrada");
+      }
 
       return data as News;
     },
-    onError: (error) => {
-      console.error("Error fetching news:", error);
-      toast.error("Erro ao carregar a notícia");
-    }
   });
 
   const { data: category } = useQuery({
@@ -53,12 +61,12 @@ const NewsDetails = () => {
         .eq("id", news.category_id)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Category fetch error:", error);
+        throw error;
+      }
       return data as Category;
     },
-    onError: (error) => {
-      console.error("Error fetching category:", error);
-    }
   });
 
   const handleShare = async () => {
