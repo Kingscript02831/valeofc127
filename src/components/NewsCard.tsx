@@ -92,14 +92,6 @@ const NewsCard = ({
     border: 'none'
   } : undefined;
 
-  // Handle both Dropbox and YouTube videos
-  const processedVideoUrls = video_urls?.map(url => {
-    if (url.includes('dropbox.com')) {
-      return url.replace('www.dropbox.com', 'dl.dropboxusercontent.com');
-    }
-    return url;
-  }) || [];
-
   return (
     <Card className="overflow-hidden transition-transform hover:scale-[1.02]">
       <div className="block">

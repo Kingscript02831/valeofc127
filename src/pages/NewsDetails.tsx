@@ -81,7 +81,7 @@ const NewsDetails = () => {
     }
   };
 
-  if (isLoadingNews || !news) {
+  if (isLoadingNews) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="animate-pulse">
@@ -91,6 +91,15 @@ const NewsDetails = () => {
           <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
           <div className="h-4 bg-gray-200 rounded w-3/4"></div>
         </div>
+      </div>
+    );
+  }
+
+  if (!news) {
+    return (
+      <div className="container mx-auto px-4 py-8 text-center">
+        <h1 className="text-2xl font-bold mb-4">Notícia não encontrada</h1>
+        <p className="text-gray-600">A notícia que você está procurando não existe ou foi removida.</p>
       </div>
     );
   }
