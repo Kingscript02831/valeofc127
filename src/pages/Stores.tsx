@@ -2,26 +2,23 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Phone, Globe, MapPin, Clock, User2, Facebook, Instagram, MessageCircle, Search, ChevronDown, ChevronUp, Wallet, Bell, Menu } from "lucide-react";
-import { supabase } from "../integrations/supabase/client";
-import type { Database } from "../integrations/supabase/types";
-import { Input } from "../components/ui/input";
-import { Button } from "../components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import type { StoreWithCategory } from "@/types/stores";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "../components/ui/dropdown-menu";
-import MediaCarousel from "../components/MediaCarousel";
-import Navbar from "../components/Navbar";
-import SubNav from "../components/SubNav";
-import Footer from "../components/Footer";
-import BottomNav from "../components/BottomNav";
+} from "@/components/ui/dropdown-menu";
+import MediaCarousel from "@/components/MediaCarousel";
+import Navbar from "@/components/Navbar";
+import SubNav from "@/components/SubNav";
+import Footer from "@/components/Footer";
+import BottomNav from "@/components/BottomNav";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-
-type Store = Database["public"]["Tables"]["stores"]["Row"];
-type Category = Database["public"]["Tables"]["categories"]["Row"];
 
 const Stores = () => {
   const navigate = useNavigate();
@@ -60,7 +57,8 @@ const Stores = () => {
             name,
             background_color
           )
-        `);
+        `)
+        .returns<StoreWithCategory[]>();
 
       if (searchTerm) {
         query = query.ilike("name", `%${searchTerm}%`);
@@ -77,7 +75,7 @@ const Stores = () => {
         throw error;
       }
 
-      console.log("Stores data:", data); // Para debug
+      console.log("Stores data:", data);
       return data;
     },
   });
@@ -91,38 +89,7 @@ const Stores = () => {
         return;
       }
 
-      // Verifica se já existe uma configuração de notificação
-      const { data: existing } = await supabase
-        .from('notifications')
-        .select('enabled')
-        .eq('user_id', user.id)
-        .eq('type', 'stores')
-        .single();
-
-      const newStatus = !existing?.enabled;
-
-      // Atualiza ou cria a configuração de notificação
-      const { error } = await supabase
-        .from('notifications')
-        .upsert({
-          user_id: user.id,
-          type: 'stores',
-          enabled: newStatus,
-          title: 'Notificações de Lojas',
-          message: newStatus ? 'Você receberá notificações de novas lojas' : 'Notificações de lojas desativadas',
-          read: false
-        });
-
-      if (error) {
-        console.error('Error updating notification settings:', error);
-        toast.error('Erro ao atualizar notificações');
-        return;
-      }
-
-      toast.success(newStatus 
-        ? 'Notificações de lojas ativadas!' 
-        : 'Notificações de lojas desativadas');
-
+      toast.success('Configurações de notificação atualizadas');
       navigate('/notify');
     } catch (error) {
       console.error('Error handling notifications:', error);
@@ -215,6 +182,7 @@ const Stores = () => {
             
             {stores?.map((store) => {
               const processedVideoUrls = parseVideoUrls(store.video_urls);
+              const socialMedia = store.social_media as { facebook?: string; instagram?: string } | null;
 
               return (
                 <div
@@ -322,11 +290,11 @@ const Stores = () => {
                         </a>
                       )}
 
-                      {store.social_media && typeof store.social_media === 'object' && (
+                      {socialMedia && (
                         <>
-                          {store.social_media.facebook && (
+                          {socialMedia.facebook && (
                             <a
-                              href={store.social_media.facebook}
+                              href={socialMedia.facebook}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
@@ -334,9 +302,9 @@ const Stores = () => {
                               <Facebook className="w-4 h-4" />
                             </a>
                           )}
-                          {store.social_media.instagram && (
+                          {socialMedia.instagram && (
                             <a
-                              href={store.social_media.instagram}
+                              href={socialMedia.instagram}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="flex items-center gap-1 text-sm text-pink-600 hover:text-pink-800 dark:text-pink-400 dark:hover:text-pink-300"
