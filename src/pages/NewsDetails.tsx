@@ -1,22 +1,23 @@
 
 import { useParams } from "react-router-dom";
-import { supabase } from "../integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { Share2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import MediaCarousel from "../components/MediaCarousel";
-import type { Database } from "../types/supabase";
+import MediaCarousel from "@/components/MediaCarousel";
+import type { Database } from "@/types/supabase";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import Navbar from "../components/Navbar";
-import SubNav from "../components/SubNav";
-import BottomNav from "../components/BottomNav";
+import Navbar from "@/components/Navbar";
+import SubNav from "@/components/SubNav";
+import BottomNav from "@/components/BottomNav";
 
-type News = Database['public']['Tables']['news']['Row'];
-type Category = Database['public']['Tables']['categories']['Row'];
+type News = Database['public']['Tables']['news']['Row'] & {
+  categories: Database['public']['Tables']['categories']['Row'] | null;
+};
 
 const NewsDetails = () => {
   const { id } = useParams();
@@ -30,7 +31,7 @@ const NewsDetails = () => {
 
       const { data, error } = await supabase
         .from("news")
-        .select("*")
+        .select("*, categories(*)")
         .eq("id", id)
         .single();
 
@@ -44,26 +45,6 @@ const NewsDetails = () => {
       }
 
       return data as News;
-    },
-  });
-
-  const { data: category } = useQuery({
-    queryKey: ['category', news?.category_id],
-    enabled: !!news?.category_id,
-    queryFn: async () => {
-      if (!news?.category_id) return null;
-
-      const { data, error } = await supabase
-        .from("categories")
-        .select("*")
-        .eq("id", news.category_id)
-        .single();
-
-      if (error) {
-        console.error("Category fetch error:", error);
-        throw error;
-      }
-      return data as Category;
     },
   });
 
@@ -122,14 +103,13 @@ const NewsDetails = () => {
 
   const formattedDate = format(new Date(news.date), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
 
-  // Prepare all media for the carousel
-  const allMedia = [
-    ...(news.images || []),
-    ...(news.video_urls || []),
-    ...(news.instagram_media?.map(media => 
-      typeof media === 'string' ? media : media.url
-    ) || [])
-  ].filter(Boolean);
+  const instagramMedia = news.instagram_media 
+    ? (typeof news.instagram_media === 'string' 
+        ? JSON.parse(news.instagram_media) 
+        : news.instagram_media)
+    : [];
+
+  const hasMedia = news.images?.length > 0 || news.video_urls?.length > 0 || instagramMedia?.length > 0;
 
   return (
     <div className="min-h-screen flex flex-col pb-[72px] md:pb-0">
@@ -165,36 +145,34 @@ const NewsDetails = () => {
                   {news.title}
                 </h1>
                 <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                  {category && (
+                  {news.categories && (
                     <Badge
                       className="transition-all duration-300 hover:scale-105"
                       style={{
-                        backgroundColor: category.background_color ? `${category.background_color}40` : '#D6BCFA40',
-                        color: category.background_color || '#1A1F2C'
+                        backgroundColor: news.categories.background_color ? `${news.categories.background_color}40` : '#D6BCFA40',
+                        color: news.categories.background_color || '#1A1F2C'
                       }}
                     >
-                      {category.name}
+                      {news.categories.name}
                     </Badge>
                   )}
                   <span>{formattedDate}</span>
                 </div>
               </div>
 
-              {/* All media in one carousel */}
-              {allMedia.length > 0 && (
-                <div className="rounded-2xl overflow-hidden shadow-xl transition-transform hover:scale-[1.01] duration-300">
+              {/* Media Section */}
+              {hasMedia && (
+                <div className="rounded-2xl overflow-hidden shadow-xl">
                   <MediaCarousel
                     images={news.images || []}
                     videoUrls={news.video_urls || []}
-                    instagramUrls={news.instagram_media?.map(media => 
-                      typeof media === 'string' ? media : media.url
-                    ) || []}
+                    instagramMedia={instagramMedia}
                     title={news.title}
                   />
                 </div>
               )}
 
-              {/* Content with proper formatting */}
+              {/* Content */}
               <div className="prose prose-lg max-w-none">
                 {news.content.split('\n').map((paragraph, index) => (
                   paragraph.trim() ? (
