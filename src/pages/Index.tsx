@@ -3,8 +3,9 @@ import { useState } from "react";
 import type { Database } from "@/types/supabase";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { Search } from "lucide-react";
+import { Search, Bell, Menu } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import NewsCard from "@/components/NewsCard";
 import Navbar from "../components/Navbar";
@@ -73,6 +74,16 @@ const Index = () => {
     retry: false
   });
 
+  const handleNotificationClick = () => {
+    // TODO: Implement notification functionality
+    toast.info("Funcionalidade de notificações em desenvolvimento");
+  };
+
+  const handleMenuClick = () => {
+    // TODO: Implement menu functionality
+    toast.info("Menu em desenvolvimento");
+  };
+
   return (
     <div className="min-h-screen flex flex-col pb-[72px] md:pb-0">
       <Navbar />
@@ -81,16 +92,35 @@ const Index = () => {
         <div className="flex flex-col gap-8">
           <h1 className="text-3xl font-bold">Últimas Notícias</h1>
           
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 h-4 w-4" />
-              <Input
-                type="search"
-                placeholder="Buscar notícias..."
-                className="pl-8"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+          <div className="sticky top-16 z-10 bg-background/80 backdrop-blur-sm pb-4">
+            <div className="flex gap-2 mb-4">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleNotificationClick}
+                className="hover:scale-105 transition-transform text-foreground"
+              >
+                <Bell className="h-5 w-5" />
+              </Button>
+              <div className="relative flex-1">
+                <Input
+                  placeholder="Buscar notícias..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pr-10 rounded-full bg-card/50 backdrop-blur-sm border-none shadow-lg"
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <Search className="h-5 w-5 text-foreground" />
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleMenuClick}
+                className="hover:scale-105 transition-transform text-foreground rounded-full shadow-lg"
+              >
+                <Menu className="h-4 w-4" />
+              </Button>
             </div>
           </div>
 
