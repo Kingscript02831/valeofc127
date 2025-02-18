@@ -10,11 +10,10 @@ import { toast } from "sonner";
 import MediaCarousel from "../components/MediaCarousel";
 import type { Database } from "../types/supabase";
 import { useQuery } from "@tanstack/react-query";
-import Navbar from "@/components/Navbar";
-import SubNav from "@/components/SubNav";
-import Footer from "@/components/Footer";
-import BottomNav from "@/components/BottomNav";
 import { Link } from "react-router-dom";
+import Navbar from "../components/Navbar";
+import SubNav from "../components/SubNav";
+import BottomNav from "../components/BottomNav";
 
 type News = Database['public']['Tables']['news']['Row'];
 type Category = Database['public']['Tables']['categories']['Row'];
@@ -102,7 +101,6 @@ const NewsDetails = () => {
             <div className="h-4 bg-gray-200 rounded w-3/4"></div>
           </div>
         </div>
-        <Footer />
         <BottomNav />
       </div>
     );
@@ -117,7 +115,6 @@ const NewsDetails = () => {
           <h1 className="text-2xl font-bold mb-4">Notícia não encontrada</h1>
           <p className="text-gray-600">A notícia que você está procurando não existe ou foi removida.</p>
         </div>
-        <Footer />
         <BottomNav />
       </div>
     );
@@ -131,7 +128,7 @@ const NewsDetails = () => {
       <SubNav />
       <main className="flex-1">
         <div className="container mx-auto px-4 py-8">
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-3xl mx-auto">
             <div className="mb-8 space-y-6 animate-fade-in">
               {/* Back button and Share button */}
               <div className="flex items-center justify-between">
@@ -155,7 +152,7 @@ const NewsDetails = () => {
 
               {/* Title and metadata */}
               <div className="space-y-4">
-                <h1 className="text-4xl font-bold leading-tight animate-slide-in-right">
+                <h1 className="text-2xl md:text-3xl font-bold leading-tight animate-slide-in-right">
                   {news.title}
                 </h1>
                 <div className="flex items-center gap-3 text-sm text-muted-foreground">
@@ -186,24 +183,26 @@ const NewsDetails = () => {
               </div>
 
               {/* Instagram content */}
-              {news.instagram_media && news.instagram_media.length > 0 && (
+              {news.instagram_media && Array.isArray(news.instagram_media) && news.instagram_media.length > 0 && (
                 <div className="space-y-4">
                   {news.instagram_media.map((media: any, index: number) => (
                     <div 
                       key={index} 
-                      className="aspect-square w-full bg-gray-50 rounded-2xl overflow-hidden shadow-lg transition-transform hover:scale-[1.01] duration-300"
+                      className="w-full bg-gray-50 rounded-2xl overflow-hidden shadow-lg transition-transform hover:scale-[1.01] duration-300"
                     >
-                      <iframe
-                        src={media.url}
-                        className="w-full h-full"
-                        frameBorder="0"
-                        scrolling="no"
-                        allowTransparency
-                        allow="encrypted-media; picture-in-picture; web-share"
-                        loading="lazy"
-                        referrerPolicy="origin"
-                        title={`Instagram post ${index + 1}`}
-                      />
+                      <div className="aspect-[4/5]">
+                        <iframe
+                          src={typeof media === 'string' ? media : media.url}
+                          className="w-full h-full"
+                          frameBorder="0"
+                          scrolling="no"
+                          allowTransparency
+                          allow="encrypted-media; picture-in-picture; web-share"
+                          loading="lazy"
+                          referrerPolicy="origin"
+                          title={`Instagram post ${index + 1}`}
+                        />
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -215,7 +214,7 @@ const NewsDetails = () => {
                   paragraph.trim() ? (
                     <p 
                       key={index}
-                      className="animate-fade-in"
+                      className="animate-fade-in text-base leading-relaxed"
                       style={{
                         animationDelay: `${index * 100}ms`
                       }}
@@ -229,7 +228,6 @@ const NewsDetails = () => {
           </div>
         </div>
       </main>
-      <Footer />
       <BottomNav />
     </div>
   );
