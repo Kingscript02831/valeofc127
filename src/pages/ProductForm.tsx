@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
@@ -16,6 +15,8 @@ import {
 import { toast } from "sonner";
 import { supabase } from "../integrations/supabase/client";
 import type { ProductFormData } from "../types/products";
+import type { Location } from "../types/locations";
+import { useQuery } from "@tanstack/react-query";
 
 const ProductForm = () => {
   const navigate = useNavigate();
@@ -28,12 +29,50 @@ const ProductForm = () => {
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [newVideoUrl, setNewVideoUrl] = useState("");
   const [videoUrls, setVideoUrls] = useState<string[]>([]);
+  const [userLocationId, setUserLocationId] = useState<string | null>(null);
+
   const [formData, setFormData] = useState<ProductFormData>({
     title: "",
     description: "",
     price: 0,
     condition: "novo",
     images: [],
+  });
+
+  useEffect(() => {
+    const fetchUserLocation = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('location_id')
+          .eq('id', user.id)
+          .single();
+        
+        if (profile?.location_id) {
+          setUserLocationId(profile.location_id);
+          setFormData(prev => ({ ...prev, location_id: profile.location_id }));
+        }
+      }
+    };
+
+    fetchUserLocation();
+  }, []);
+
+  const { data: location_details } = useQuery({
+    queryKey: ['location', userLocationId],
+    queryFn: async () => {
+      if (!userLocationId) return null;
+      const { data, error } = await supabase
+        .from('locations')
+        .select('*')
+        .eq('id', userLocationId)
+        .single();
+      
+      if (error) throw error;
+      return data as Location;
+    },
+    enabled: !!userLocationId
   });
 
   useEffect(() => {
@@ -57,9 +96,13 @@ const ProductForm = () => {
             condition: product.condition,
             images: product.images,
             whatsapp: product.whatsapp,
+            location_id: product.location_id
           });
           setImageUrls(product.images || []);
           setVideoUrls(product.video_urls || []);
+          if (product.location_id) {
+            setUserLocationId(product.location_id);
+          }
         }
       } catch (error) {
         toast.error("Erro ao carregar produto");
@@ -144,26 +187,13 @@ const ProductForm = () => {
         return;
       }
 
-      // Tenta obter a localização, mas continua mesmo se não conseguir
-      let locationData = {};
-      try {
-        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject);
-        });
-        locationData = {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        };
-      } catch (error) {
-        console.log("Geolocalização não disponível ou negada");
-      }
-
       const productData = {
         ...formData,
         images: imageUrls,
         video_urls: videoUrls,
         user_id: user.id,
-        ...locationData,
+        location_id: userLocationId,
+        location_name: location_details?.name
       };
 
       let error;
@@ -204,6 +234,13 @@ const ProductForm = () => {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        {location_details && (
+          <div className="p-4 bg-primary/10 rounded-lg">
+            <Label className="text-primary font-medium">Localização do produto</Label>
+            <p className="text-sm mt-1">{location_details.name} - {location_details.state}</p>
+          </div>
+        )}
+
         <div className="space-y-2">
           <Label>Imagens do Dropbox</Label>
           <div className="space-y-4">
