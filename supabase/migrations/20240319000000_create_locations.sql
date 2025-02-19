@@ -36,41 +36,22 @@ for delete
 to authenticated
 using (true);
 
--- Add location_id to profiles table
-alter table public.profiles 
-add column if not exists location_id uuid references public.locations(id);
-
--- Function to validate password confirmation
-create or replace function check_password_confirmation(
-    email text,
-    password text,
-    password_confirmation text,
-    user_metadata jsonb
-) returns void as $$
-begin
-    if password != password_confirmation then
-        raise exception 'Password confirmation does not match';
-    end if;
-end;
-$$ language plpgsql security definer;
-
--- Trigger function to validate password before sign up
-create or replace function public.handle_sign_up()
-returns trigger as $$
-begin
-    -- You can add additional validation logic here if needed
-    return new;
-end;
-$$ language plpgsql security definer;
-
--- Create trigger for sign up
-create trigger on_auth_user_created
-    after insert on auth.users
-    for each row
-    execute function public.handle_sign_up();
+-- Add location_id to profiles table if it doesn't exist
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 
+        FROM information_schema.columns 
+        WHERE table_schema = 'public' 
+        AND table_name = 'profiles' 
+        AND column_name = 'location_id'
+    ) THEN
+        ALTER TABLE public.profiles 
+        ADD COLUMN location_id uuid references public.locations(id);
+    END IF;
+END $$;
 
 -- Grant necessary permissions
 grant usage on schema public to anon, authenticated;
 grant all on public.locations to anon, authenticated;
 grant all on public.profiles to anon, authenticated;
-
