@@ -27,7 +27,7 @@ export interface ProfileUpdateData {
   username?: string;
   full_name?: string;
   avatar_url?: string;
-  cover_url?: string | null;
+  cover_url?: string;
   bio?: string;
   email?: string;
   phone?: string;
