@@ -723,7 +723,6 @@ export type Database = {
           id: string
           images: string[] | null
           latitude: number | null
-          location_id: string | null
           location_name: string | null
           longitude: number | null
           price: number
@@ -741,7 +740,6 @@ export type Database = {
           id?: string
           images?: string[] | null
           latitude?: number | null
-          location_id?: string | null
           location_name?: string | null
           longitude?: number | null
           price: number
@@ -759,7 +757,6 @@ export type Database = {
           id?: string
           images?: string[] | null
           latitude?: number | null
-          location_id?: string | null
           location_name?: string | null
           longitude?: number | null
           price?: number
@@ -782,13 +779,6 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "categories"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "products_location_id_fkey"
-            columns: ["location_id"]
-            isOneToOne: false
-            referencedRelation: "locations"
             referencedColumns: ["id"]
           },
         ]
