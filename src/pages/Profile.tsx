@@ -77,10 +77,7 @@ const profileSchema = z.object({
 
 const convertDropboxUrl = (url: string) => {
   if (!url) return "";
-  // Se já for uma URL raw, retorna ela mesma
   if (url.includes("?raw=1")) return url;
-  
-  // Converte URL normal do Dropbox para URL raw
   return url.replace("www.dropbox.com", "dl.dropboxusercontent.com").replace("?dl=0", "?raw=1");
 };
 
@@ -131,7 +128,6 @@ export default function Profile() {
 
       if (error) throw error;
       
-      // Converte URLs do Dropbox para URLs raw
       if (data) {
         if (data.avatar_url) {
           data.avatar_url = convertDropboxUrl(data.avatar_url);
@@ -184,7 +180,6 @@ export default function Profile() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Não autenticado");
 
-      // Converte URLs do Dropbox antes de salvar
       if (values.avatar_url) {
         values.avatar_url = convertDropboxUrl(values.avatar_url);
       }
@@ -366,6 +361,12 @@ export default function Profile() {
                 {profile?.status && (
                   <p className="text-yellow-500 text-sm mt-1">
                     {profile.status} 👍
+                  </p>
+                )}
+                {profile?.city && (
+                  <p className="text-gray-400 text-sm mt-1 flex items-center gap-1">
+                    <MapPin className="h-4 w-4" />
+                    {profile.city}
                   </p>
                 )}
               </div>
@@ -698,7 +699,6 @@ export default function Profile() {
 
             <TabsContent value="posts" className="min-h-[200px]">
               <div className="grid grid-cols-3 gap-1">
-                {/* Grid de posts */}
                 <div className="aspect-square bg-gray-800 flex items-center justify-center">
                   <p className="text-gray-500">Sem posts</p>
                 </div>
@@ -732,7 +732,6 @@ export default function Profile() {
 
             <TabsContent value="reels" className="min-h-[200px]">
               <div className="grid grid-cols-3 gap-1">
-                {/* Grid de reels */}
                 <div className="aspect-square bg-gray-800 flex items-center justify-center">
                   <p className="text-gray-500">Sem reels</p>
                 </div>
