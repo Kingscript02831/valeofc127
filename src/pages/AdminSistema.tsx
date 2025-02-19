@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -29,7 +29,6 @@ const AdminSistema = () => {
     queryKey: ["locations"],
     queryFn: async () => {
       console.log("Fetching locations...");
-      // @ts-ignore
       const { data, error } = await supabase
         .from("locations")
         .select("*")
@@ -48,7 +47,6 @@ const AdminSistema = () => {
   const addLocationMutation = useMutation({
     mutationFn: async (locationData: LocationInput) => {
       console.log("Attempting to add location:", locationData);
-      // @ts-ignore
       const { data, error } = await supabase
         .from("locations")
         .insert([locationData])
