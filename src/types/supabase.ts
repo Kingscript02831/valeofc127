@@ -81,26 +81,6 @@ export type Database = {
           buy_button_color: string;
           buy_button_text: string;
         }
-      },
-      locations: {
-        Row: {
-          id: string;
-          name: string;
-          state: string;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          name: string;
-          state: string;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          name?: string;
-          state?: string;
-          created_at?: string;
-        };
       }
     }
   }
@@ -110,4 +90,3 @@ export interface InstagramMedia {
   url: string;
   type: 'post' | 'video';
 }
-
