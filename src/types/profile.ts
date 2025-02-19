@@ -19,6 +19,7 @@ export interface Profile {
   status?: string | null;
   basic_info_updated_at?: string | null;
   location_id?: string | null;
+  is_admin?: boolean;
 }
 
 export interface ProfileUpdateData {

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -74,14 +75,23 @@ const profileSchema = z.object({
   basic_info_updated_at: z.string().optional(),
 });
 
+const convertDropboxUrl = (url: string) => {
+  if (!url) return "";
+  // Se já for uma URL raw, retorna ela mesma
+  if (url.includes("?raw=1")) return url;
+  
+  // Converte URL normal do Dropbox para URL raw
+  return url.replace("www.dropbox.com", "dl.dropboxusercontent.com").replace("?dl=0", "?raw=1");
+};
+
 export default function Profile() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [isLoading, setIsLoading] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [activeTab, setActiveTab] = useState("posts");
+  const [isLoadingImage, setIsLoadingImage] = useState(false);
 
   const form = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
@@ -116,9 +126,19 @@ export default function Profile() {
         .single();
 
       if (error) throw error;
+      
+      // Converte URLs do Dropbox para URLs raw
+      if (data) {
+        if (data.avatar_url) {
+          data.avatar_url = convertDropboxUrl(data.avatar_url);
+        }
+        if (data.cover_url) {
+          data.cover_url = convertDropboxUrl(data.cover_url);
+        }
+      }
+      
       return data;
     },
-    enabled: !isLoading,
   });
 
   const { data: userProducts } = useQuery({
@@ -136,6 +156,16 @@ export default function Profile() {
     },
   });
 
+  const handleImageError = (error: any) => {
+    console.error("Erro ao carregar a imagem", error);
+    toast({
+      title: "Erro ao carregar a imagem",
+      description: "Verifique se o link do Dropbox está correto",
+      variant: "destructive",
+    });
+    setIsLoadingImage(false);
+  };
+
   const copyProfileLink = () => {
     const profileUrl = `${window.location.origin}/perfil/${profile?.username}`;
     navigator.clipboard.writeText(profileUrl);
@@ -149,6 +179,14 @@ export default function Profile() {
     mutationFn: async (values: z.infer<typeof profileSchema>) => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Não autenticado");
+
+      // Converte URLs do Dropbox antes de salvar
+      if (values.avatar_url) {
+        values.avatar_url = convertDropboxUrl(values.avatar_url);
+      }
+      if (values.cover_url) {
+        values.cover_url = convertDropboxUrl(values.cover_url);
+      }
 
       const isUpdatingRestricted = 
         values.username !== profile?.username ||
@@ -224,7 +262,7 @@ export default function Profile() {
     }
   }, [profile, form]);
 
-  if (isLoading || isProfileLoading) {
+  if (isProfileLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-black text-white">
         <p>Carregando...</p>
