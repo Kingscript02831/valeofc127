@@ -727,7 +727,7 @@ export default function Profile() {
 
               <TabsContent value="posts" className="min-h-[200px]">
                 <div className="grid grid-cols-3 gap-1">
-                  <div className="aspect-square bg-gray-800 flex items-center justify-center">
+                  <div className="aspect-square bg-gray-800/50 flex items-center justify-center">
                     <p className="text-gray-500">Ainda não há Posts</p>
                   </div>
                 </div>
@@ -737,7 +737,7 @@ export default function Profile() {
                 {userProducts && userProducts.length > 0 ? (
                   <div className="grid grid-cols-2 gap-4 p-4">
                     {userProducts.map((product) => (
-                      <Card key={product.id} className="bg-gray-900 border-gray-800">
+                      <Card key={product.id} className={`${theme === 'light' ? 'bg-white' : 'bg-black'} shadow-none border-0`}>
                         <CardContent className="p-3">
                           {product.images?.[0] && (
                             <img
@@ -746,7 +746,7 @@ export default function Profile() {
                               className="w-full aspect-square object-cover rounded-lg mb-2"
                             />
                           )}
-                          <h3 className="font-medium text-white">{product.title}</h3>
+                          <h3 className={`font-medium ${theme === 'light' ? 'text-black' : 'text-white'}`}>{product.title}</h3>
                           <p className="text-green-500">
                             {new Intl.NumberFormat('pt-BR', {
                               style: 'currency',
@@ -766,7 +766,7 @@ export default function Profile() {
 
               <TabsContent value="reels" className="min-h-[200px]">
                 <div className="grid grid-cols-3 gap-1">
-                  <div className="aspect-square bg-gray-800 flex items-center justify-center">
+                  <div className="aspect-square bg-gray-800/50 flex items-center justify-center">
                     <p className="text-gray-500">Ainda não há Reels</p>
                   </div>
                 </div>
