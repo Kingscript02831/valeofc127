@@ -1,40 +1,27 @@
-
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Share2, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import type { Product } from "@/types/products";
+import { supabase } from "../integrations/supabase/client";
+import type { Product } from "../types/products";
 import { useQuery } from "@tanstack/react-query";
-import { MediaCarousel } from "@/components/MediaCarousel";
+import { MediaCarousel } from "../components/MediaCarousel";
 import { Badge } from "@/components/ui/badge";
 import { formatDistance } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import Navbar from "@/components/Navbar";
-import SubNav from "@/components/SubNav";
-import BottomNav from "@/components/BottomNav";
+import Navbar from "../components/Navbar";
+import SubNav from "../components/SubNav";
+import BottomNav from "../components/BottomNav";
 import { useState, useEffect } from "react";
+import { useSiteConfig } from "../hooks/useSiteConfig";
 
 const ProductDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isFavorite, setIsFavorite] = useState(false);
-
-  // Buscar configuração do site
-  const { data: siteConfig } = useQuery({
-    queryKey: ["site-configuration"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("site_configuration")
-        .select("*")
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-  });
+  const { data: siteConfig } = useSiteConfig();
 
   const { data: product, isLoading, error } = useQuery({
     queryKey: ["product", id],
@@ -70,7 +57,6 @@ const ProductDetails = () => {
     },
   });
 
-  // Check if product is favorited
   useEffect(() => {
     const checkFavoriteStatus = async () => {
       try {
@@ -123,7 +109,6 @@ const ProductDetails = () => {
     if (product?.whatsapp) {
       let message = siteConfig?.whatsapp_message || 'Olá! Vi seu anúncio "{title}" por R$ {price} no Vale OFC e gostaria de mais informações.';
       
-      // Substituir as variáveis na mensagem
       message = message
         .replace('{title}', product.title)
         .replace('{price}', product.price.toFixed(2));
@@ -240,8 +225,12 @@ const ProductDetails = () => {
               size="icon"
               onClick={handleFavorite}
               className="hover:scale-105 transition-transform"
+              style={isFavorite ? { backgroundColor: siteConfig?.favorite_heart_color || '#FF0000' } : undefined}
             >
-              <Heart className={`h-6 w-6 ${isFavorite ? 'fill-current' : ''}`} />
+              <Heart 
+                className={`h-6 w-6 ${isFavorite ? 'fill-current' : ''}`}
+                style={!isFavorite ? { color: siteConfig?.favorite_heart_color || '#FF0000' } : undefined}
+              />
             </Button>
             <Button
               variant="ghost"
