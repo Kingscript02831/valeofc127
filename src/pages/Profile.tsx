@@ -181,8 +181,9 @@ export default function Profile() {
   };
 
   const handleDeleteCover = async () => {
-    form.setValue("cover_url", null);
-    updateProfile.mutate(form.getValues());
+    const values = form.getValues();
+    values.cover_url = null;
+    updateProfile.mutate(values);
     setShowDeleteCoverDialog(false);
     toast({
       title: "Foto de capa removida",
@@ -193,8 +194,9 @@ export default function Profile() {
   const handleCoverImageClick = () => {
     const coverUrl = prompt("Cole aqui o link do Dropbox para a imagem de capa:");
     if (coverUrl) {
-      form.setValue("cover_url", coverUrl);
-      updateProfile.mutate(form.getValues());
+      const values = form.getValues();
+      values.cover_url = coverUrl;
+      updateProfile.mutate(values);
     }
   };
 
