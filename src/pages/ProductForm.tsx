@@ -36,7 +36,6 @@ const ProductForm = () => {
     images: [],
   });
 
-  // Carregar dados do produto se estiver em modo de edição
   useEffect(() => {
     const loadProduct = async () => {
       if (!editProductId) return;
@@ -145,30 +144,36 @@ const ProductForm = () => {
         return;
       }
 
-      // Get user's location
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject);
-      });
+      // Tenta obter a localização, mas continua mesmo se não conseguir
+      let locationData = {};
+      try {
+        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject);
+        });
+        locationData = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        };
+      } catch (error) {
+        console.log("Geolocalização não disponível ou negada");
+      }
 
       const productData = {
         ...formData,
         images: imageUrls,
         video_urls: videoUrls,
         user_id: user.id,
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude,
+        ...locationData,
       };
 
       let error;
 
       if (editProductId) {
-        // Atualizar produto existente
         ({ error } = await supabase
           .from("products")
           .update(productData)
           .eq('id', editProductId));
       } else {
-        // Criar novo produto
         ({ error } = await supabase
           .from("products")
           .insert(productData));
@@ -199,7 +204,6 @@ const ProductForm = () => {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Seção de Imagens do Dropbox */}
         <div className="space-y-2">
           <Label>Imagens do Dropbox</Label>
           <div className="space-y-4">
@@ -232,7 +236,6 @@ const ProductForm = () => {
           </div>
         </div>
 
-        {/* Seção de Vídeos */}
         <div className="space-y-2">
           <Label>Vídeos (Dropbox ou YouTube)</Label>
           <div className="space-y-4">
