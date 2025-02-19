@@ -1,8 +1,9 @@
+
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { supabase } from "../integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { Camera, Home } from "lucide-react";
 import {
   Form,
@@ -11,13 +12,13 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "../components/ui/form";
+} from "@/components/ui/form";
 import { useQuery } from "@tanstack/react-query";
-import BottomNav from "../components/BottomNav";
-import { Button } from "../components/ui/button";
-import MediaCarousel from "../components/MediaCarousel";
-import { useTheme } from "../components/ThemeProvider";
-import type { Profile } from "../types/profile";
+import BottomNav from "@/components/BottomNav";
+import { Button } from "@/components/ui/button";
+import MediaCarousel from "@/components/MediaCarousel";
+import { useTheme } from "@/components/ThemeProvider";
+import type { Profile } from "@/types/profile";
 
 export default function Profile() {
   const navigate = useNavigate();
