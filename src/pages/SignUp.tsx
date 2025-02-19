@@ -6,26 +6,58 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { useToast } from "../components/ui/use-toast";
 import { useSiteConfig } from "../hooks/useSiteConfig";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useQuery } from "@tanstack/react-query";
 
 const SignUp = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordConfirmation, setPasswordConfirmation] = useState("");
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
   const [phone, setPhone] = useState("");
   const [birthDate, setBirthDate] = useState("");
+  const [locationId, setLocationId] = useState("");
   const [loading, setLoading] = useState(false);
   const { data: config, isLoading: configLoading } = useSiteConfig();
+
+  // Fetch locations
+  const { data: locations } = useQuery({
+    queryKey: ['locations'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('locations')
+        .select('*')
+        .order('name');
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!email || !password || !name || !username || !phone || !birthDate) {
+    if (!email || !password || !name || !username || !phone || !birthDate || !locationId) {
       toast({
         title: "Erro ao criar conta",
         description: "Por favor, preencha todos os campos obrigatórios",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (password !== passwordConfirmation) {
+      toast({
+        title: "Erro ao criar conta",
+        description: "As senhas não coincidem",
         variant: "destructive",
       });
       return;
@@ -43,6 +75,7 @@ const SignUp = () => {
             username: username,
             phone: phone,
             birth_date: birthDate,
+            location_id: locationId,
           },
         },
       });
@@ -141,6 +174,29 @@ const SignUp = () => {
             placeholder="(00) 00000-0000"
             config={config}
           />
+          
+          <div>
+            <label 
+              htmlFor="location" 
+              className="text-sm font-medium block mb-1"
+              style={{ color: config.signup_text_color }}
+            >
+              Localização
+            </label>
+            <Select onValueChange={setLocationId} value={locationId}>
+              <SelectTrigger className="bg-white/50 border-gray-200">
+                <SelectValue placeholder="Selecione sua localização" />
+              </SelectTrigger>
+              <SelectContent>
+                {locations?.map((location) => (
+                  <SelectItem key={location.id} value={location.id}>
+                    {location.name} - {location.state}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           <InputField 
             label="Data de Nascimento" 
             id="birthDate" 
@@ -155,6 +211,15 @@ const SignUp = () => {
             type="password" 
             value={password} 
             setValue={setPassword} 
+            placeholder="******"
+            config={config}
+          />
+          <InputField 
+            label="Confirmar Senha" 
+            id="passwordConfirmation" 
+            type="password" 
+            value={passwordConfirmation} 
+            setValue={setPasswordConfirmation} 
             placeholder="******"
             config={config}
           />
