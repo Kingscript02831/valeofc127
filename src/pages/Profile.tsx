@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { supabase } from "../integrations/supabase/client";
-import { Camera, Home } from "lucide-react";
+import { Camera, Home, ChevronLeft } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -15,9 +15,10 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import BottomNav from "../components/BottomNav";
 import { Button } from "../components/ui/button";
-import MediaCarousel from "../components/MediaCarousel";
+import { Card } from "../components/ui/card";
 import { useTheme } from "../components/ThemeProvider";
 import type { Profile } from "../types/profile";
+import type { ProductWithDistance } from "../types/products";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -25,6 +26,7 @@ export default function Profile() {
   const [isPreviewMode, setIsPreviewMode] = useState(true);
   const { theme } = useTheme();
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [userProducts, setUserProducts] = useState<ProductWithDistance[]>([]);
 
   const form = useForm({
     defaultValues: {
@@ -74,6 +76,26 @@ export default function Profile() {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    const loadUserProducts = async () => {
+      if (session?.user?.id) {
+        const { data } = await supabase
+          .from('products')
+          .select('*')
+          .eq('user_id', session.user.id);
+        
+        setUserProducts(data?.map(product => ({
+          ...product,
+          distance: 0
+        })) || []);
+      }
+    };
+
+    if (session?.user?.id) {
+      loadUserProducts();
+    }
+  }, [session?.user?.id]);
 
   const loadProfile = async (userId: string) => {
     try {
@@ -137,6 +159,13 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen pb-20">
+      <div className="sticky top-0 z-10 p-4 flex items-center gap-3 bg-background">
+        <button onClick={() => navigate(-1)} className="p-2">
+          <ChevronLeft className="h-6 w-6" />
+        </button>
+        <span className="text-lg">{profile?.username || "Perfil"}</span>
+      </div>
+
       <div className="relative w-full h-48">
         {profile?.cover_url ? (
           <img
@@ -176,7 +205,7 @@ export default function Profile() {
 
         <div className="mt-4">
           <h1 className="text-2xl font-bold">{profile?.full_name}</h1>
-          <p className="text-gray-500">@{profile?.username}</p>
+          <p className="text-gray-500">{profile?.username}</p>
           {profile?.city && (
             <div className="flex items-center gap-2 text-gray-400">
               <Home className="h-4 w-4" />
@@ -189,7 +218,7 @@ export default function Profile() {
           {isPreviewMode ? (
             <Button
               onClick={() => setIsPreviewMode(false)}
-              className="bg-blue-500 hover:bg-blue-600 text-white"
+              className={`bg-blue-500 hover:bg-blue-600 ${theme === 'light' ? 'text-black' : 'text-white'}`}
             >
               Editar Perfil
             </Button>
@@ -210,6 +239,42 @@ export default function Profile() {
               </Button>
             </>
           )}
+        </div>
+
+        <div className="mt-8">
+          <h2 className="text-xl font-semibold mb-4">Produtos</h2>
+          {userProducts.length === 0 ? (
+            <p className="text-center text-gray-500">Ainda não há Produtos</p>
+          ) : (
+            <div className="grid grid-cols-2 gap-4">
+              {userProducts.map((product) => (
+                <Card 
+                  key={product.id}
+                  className="cursor-pointer hover:shadow-lg transition-shadow"
+                  onClick={() => navigate(`/product/${product.id}`)}
+                >
+                  <div className="aspect-square relative overflow-hidden">
+                    <img
+                      src={product.images[0] || "/placeholder.svg"}
+                      alt={product.title}
+                      className="object-cover w-full h-full"
+                    />
+                  </div>
+                  <div className="p-4">
+                    <h3 className="font-semibold truncate">{product.title}</h3>
+                    <p className="text-lg font-bold">
+                      R$ {product.price.toFixed(2)}
+                    </p>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="mt-8">
+          <h2 className="text-xl font-semibold mb-4">Reels</h2>
+          <p className="text-center text-gray-500">Ainda não há Reels</p>
         </div>
 
         {!isPreviewMode && (
