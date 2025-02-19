@@ -27,10 +27,10 @@ const Products = () => {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [userLocation, setUserLocation] = useState<{lat: number; lon: number} | null>(null);
-  const [cityName, setCityName] = useState("Grão Mogol");
+  const { data: config } = useSiteConfig();
+  const [cityName, setCityName] = useState(config?.default_location || "Grão Mogol");
   const [radiusType, setRadiusType] = useState<"suggested" | "custom">("custom");
   const [customRadius, setCustomRadius] = useState("5");
-  const { data: config } = useSiteConfig();
   const [showLocationDialog, setShowLocationDialog] = useState(false);
 
   useEffect(() => {
@@ -141,7 +141,11 @@ const Products = () => {
           <h1 className="text-2xl font-bold text-foreground">Seleções de hoje</h1>
           <Dialog open={showLocationDialog} onOpenChange={setShowLocationDialog}>
             <DialogTrigger asChild>
-              <Button variant="ghost" className="text-primary flex items-center gap-2">
+              <Button 
+                variant="ghost" 
+                className="flex items-center gap-2"
+                style={{ color: config?.navbar_color }}
+              >
                 <MapPin className="h-5 w-5" />
                 <span>{cityName} · {customRadius} km</span>
                 <ChevronDown className="h-4 w-4" />

@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import { updateMetaTags } from "../utils/updateMetaTags";
 import Navbar2 from "../components/Navbar2";
 import SubNav2 from "../components/SubNav2";
+import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/card";
 
 type SiteConfig = Database['public']['Tables']['site_configuration']['Row'];
 
@@ -82,7 +83,8 @@ const Admin = () => {
     admin_text_color: "#FFFFFF",
     favorite_heart_color: "#ea384c",
     buy_button_color: "#9b87f5",
-    buy_button_text: "Comprar agora"
+    buy_button_text: "Comprar agora",
+    default_location: ""
   });
 
   useEffect(() => {
@@ -781,81 +783,39 @@ const Admin = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="products" className="bg-white rounded-lg shadow p-6 space-y-6">
-            <div>
-              <h2 className="text-xl font-semibold mb-4">Configurações de Produtos</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <Label htmlFor="favorite_heart_color">Cor do Coração (Favoritos)</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="favorite_heart_color"
-                      type="color"
-                      value={config.favorite_heart_color || "#FF0000"}
-                      onChange={(e) => handleChange("favorite_heart_color", e.target.value)}
-                      className="w-20"
-                    />
-                    <Input
-                      type="text"
-                      value={config.favorite_heart_color || "#FF0000"}
-                      onChange={(e) => handleChange("favorite_heart_color", e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="buy_button_color">Cor do Botão "Comprar Agora"</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="buy_button_color"
-                      type="color"
-                      value={config.buy_button_color || "#000000"}
-                      onChange={(e) => handleChange("buy_button_color", e.target.value)}
-                      className="w-20"
-                    />
-                    <Input
-                      type="text"
-                      value={config.buy_button_color || "#000000"}
-                      onChange={(e) => handleChange("buy_button_color", e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div className="col-span-2">
-                  <Label htmlFor="buy_button_text">Texto do Botão "Comprar Agora"</Label>
+          <TabsContent value="products" className="bg-white rounded-lg shadow p-6 space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Configurações de Produtos</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Cor do coração dos favoritos</Label>
                   <Input
-                    id="buy_button_text"
-                    value={config.buy_button_text || "Comprar agora"}
-                    onChange={(e) => handleChange("buy_button_text", e.target.value)}
-                    placeholder="Ex: Comprar agora"
+                    type="color"
+                    value={config.favorite_heart_color}
+                    onChange={(e) =>
+                      setConfig({ ...config, favorite_heart_color: e.target.value })
+                    }
                   />
                 </div>
 
-                <div className="col-span-2">
-                  <Label htmlFor="whatsapp_message">Mensagem do WhatsApp</Label>
-                  <Textarea
-                    id="whatsapp_message"
-                    value={config.whatsapp_message || 'Olá! Vi seu anúncio "{title}" por R$ {price} no Vale OFC e gostaria de mais informações.'}
-                    onChange={(e) => handleChange("whatsapp_message", e.target.value)}
-                    placeholder="Mensagem que será enviada no WhatsApp"
-                    className="min-h-[100px]"
+                <div className="space-y-2">
+                  <Label>Localização padrão</Label>
+                  <Input
+                    type="text"
+                    value={config.default_location}
+                    onChange={(e) =>
+                      setConfig({ ...config, default_location: e.target.value })
+                    }
+                    placeholder="Ex: Grão Mogol"
                   />
-                  <p className="text-sm text-gray-500 mt-1">
-                    Você pode usar:
-                    <br />
-                    {'{title}'} - para incluir o título do produto
-                    <br />
-                    {'{price}'} - para incluir o preço do produto
+                  <p className="text-sm text-muted-foreground">
+                    Esta será a localização padrão mostrada na página de produtos
                   </p>
                 </div>
-              </div>
-            </div>
-
-            <div className="flex justify-end">
-              <Button onClick={handleConfigUpdate}>
-                Salvar Configurações
-              </Button>
-            </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
