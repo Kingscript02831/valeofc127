@@ -19,7 +19,6 @@ export type SiteConfig = {
   buy_button_text: string;
   favorite_heart_color: string;
   whatsapp_message: string;
-  default_location: string;
 };
 
 export function useSiteConfig() {
