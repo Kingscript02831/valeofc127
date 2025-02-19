@@ -20,6 +20,7 @@ export interface Profile {
   basic_info_updated_at?: string | null;
   location_id?: string | null;
   is_admin?: boolean;
+  theme_preference?: "dark" | "light" | "system";
 }
 
 export interface ProfileUpdateData {
@@ -39,4 +40,5 @@ export interface ProfileUpdateData {
   status?: string;
   basic_info_updated_at?: string;
   location_id?: string;
+  theme_preference?: "dark" | "light" | "system";
 }
