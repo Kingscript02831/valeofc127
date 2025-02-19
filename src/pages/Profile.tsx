@@ -19,6 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -92,6 +93,8 @@ export default function Profile() {
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [activeTab, setActiveTab] = useState("posts");
   const [isLoadingImage, setIsLoadingImage] = useState(false);
+  const [showDeletePhotoDialog, setShowDeletePhotoDialog] = useState(false);
+  const [showDeleteCoverDialog, setShowDeleteCoverDialog] = useState(false);
   const { theme } = useTheme();
 
   const form = useForm<z.infer<typeof profileSchema>>({
@@ -166,6 +169,26 @@ export default function Profile() {
       return data || [];
     },
   });
+
+  const handleDeleteAvatar = async () => {
+    form.setValue("avatar_url", null);
+    updateProfile.mutate(form.getValues());
+    setShowDeletePhotoDialog(false);
+    toast({
+      title: "Foto de perfil removida",
+      description: "Sua foto de perfil foi removida com sucesso",
+    });
+  };
+
+  const handleDeleteCover = async () => {
+    form.setValue("cover_url", null);
+    updateProfile.mutate(form.getValues());
+    setShowDeleteCoverDialog(false);
+    toast({
+      title: "Foto de capa removida",
+      description: "Sua foto de capa foi removida com sucesso",
+    });
+  };
 
   const handleCoverImageClick = () => {
     const coverUrl = prompt("Cole aqui o link do Dropbox para a imagem de capa:");
@@ -327,12 +350,20 @@ export default function Profile() {
               </div>
             )}
             {!isPreviewMode && (
-              <label 
-                className="absolute right-4 bottom-4 bg-black/50 p-2 rounded-full cursor-pointer hover:bg-black/70 transition-colors"
-                onClick={handleCoverImageClick}
-              >
-                <Camera className="h-5 w-5 text-white" />
-              </label>
+              <div className="absolute right-4 bottom-4 flex gap-2">
+                <button 
+                  onClick={() => setShowDeleteCoverDialog(true)}
+                  className="bg-black/50 p-2 rounded-full cursor-pointer hover:bg-black/70 transition-colors"
+                >
+                  <Trash2 className="h-5 w-5 text-white" />
+                </button>
+                <button 
+                  onClick={handleCoverImageClick}
+                  className="bg-black/50 p-2 rounded-full cursor-pointer hover:bg-black/70 transition-colors"
+                >
+                  <Camera className="h-5 w-5 text-white" />
+                </button>
+              </div>
             )}
           </div>
 
@@ -355,12 +386,20 @@ export default function Profile() {
                 )}
               </div>
               {!isPreviewMode && (
-                <label 
-                  className="absolute bottom-2 right-2 bg-blue-500 p-2 rounded-full cursor-pointer hover:bg-blue-600 transition-colors"
-                  onClick={handleAvatarImageClick}
-                >
-                  <Camera className="h-5 w-5 text-white" />
-                </label>
+                <div className="absolute bottom-2 right-2 flex gap-2">
+                  <button 
+                    onClick={() => setShowDeletePhotoDialog(true)}
+                    className="bg-blue-500 p-2 rounded-full cursor-pointer hover:bg-blue-600 transition-colors"
+                  >
+                    <Trash2 className="h-5 w-5 text-white" />
+                  </button>
+                  <button 
+                    onClick={handleAvatarImageClick}
+                    className="bg-blue-500 p-2 rounded-full cursor-pointer hover:bg-blue-600 transition-colors"
+                  >
+                    <Camera className="h-5 w-5 text-white" />
+                  </button>
+                </div>
               )}
             </div>
           </div>
@@ -637,7 +676,11 @@ export default function Profile() {
                     </DropdownMenu>
                   </>
                 ) : (
-                  <Button onClick={() => setIsPreviewMode(false)} variant="outline" className="text-white border-gray-700">
+                  <Button 
+                    onClick={() => setIsPreviewMode(false)} 
+                    variant="outline" 
+                    className={`${theme === 'light' ? 'text-black border-gray-300' : 'text-white border-gray-700'}`}
+                  >
                     Sair do modo preview
                   </Button>
                 )}
@@ -645,26 +688,38 @@ export default function Profile() {
             </div>
 
             {profile?.bio && (
-              <p className="text-gray-300 mb-4">{profile.bio}</p>
+              <p className={`mb-4 ${theme === 'light' ? 'text-black' : 'text-gray-300'}`}>{profile.bio}</p>
             )}
 
             <Tabs defaultValue="posts" className="w-full">
               <TabsList className="w-full justify-start border-b border-gray-800 bg-transparent">
                 <TabsTrigger
                   value="posts"
-                  className="flex-1 data-[state=active]:text-white data-[state=active]:border-b-2 data-[state=active]:border-white"
+                  className={`flex-1 data-[state=active]:border-b-2 ${
+                    theme === 'light' 
+                      ? 'data-[state=active]:text-black data-[state=active]:border-black' 
+                      : 'data-[state=active]:text-white data-[state=active]:border-white'
+                  }`}
                 >
                   Posts
                 </TabsTrigger>
                 <TabsTrigger
                   value="products"
-                  className="flex-1 data-[state=active]:text-white data-[state=active]:border-b-2 data-[state=active]:border-white"
+                  className={`flex-1 data-[state=active]:border-b-2 ${
+                    theme === 'light' 
+                      ? 'data-[state=active]:text-black data-[state=active]:border-black' 
+                      : 'data-[state=active]:text-white data-[state=active]:border-white'
+                  }`}
                 >
                   Produtos
                 </TabsTrigger>
                 <TabsTrigger
                   value="reels"
-                  className="flex-1 data-[state=active]:text-white data-[state=active]:border-b-2 data-[state=active]:border-white"
+                  className={`flex-1 data-[state=active]:border-b-2 ${
+                    theme === 'light' 
+                      ? 'data-[state=active]:text-black data-[state=active]:border-black' 
+                      : 'data-[state=active]:text-white data-[state=active]:border-white'
+                  }`}
                 >
                   Reels
                 </TabsTrigger>
@@ -720,6 +775,40 @@ export default function Profile() {
           </div>
         </div>
       </div>
+
+      <Dialog open={showDeletePhotoDialog} onOpenChange={setShowDeletePhotoDialog}>
+        <DialogContent className="bg-gray-900 border-gray-800">
+          <DialogHeader>
+            <DialogTitle className="text-white">Remover foto de perfil</DialogTitle>
+          </DialogHeader>
+          <p className="text-gray-300">Tem certeza que deseja remover sua foto de perfil?</p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDeletePhotoDialog(false)}>
+              Cancelar
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteAvatar}>
+              Remover
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showDeleteCoverDialog} onOpenChange={setShowDeleteCoverDialog}>
+        <DialogContent className="bg-gray-900 border-gray-800">
+          <DialogHeader>
+            <DialogTitle className="text-white">Remover foto de capa</DialogTitle>
+          </DialogHeader>
+          <p className="text-gray-300">Tem certeza que deseja remover sua foto de capa?</p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDeleteCoverDialog(false)}>
+              Cancelar
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteCover}>
+              Remover
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <BottomNav />
     </div>
