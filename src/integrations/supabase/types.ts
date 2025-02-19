@@ -800,7 +800,6 @@ export type Database = {
           bio: string | null
           birth_date: string | null
           city: string | null
-          cover_url: string | null
           created_at: string | null
           email: string | null
           full_name: string | null
@@ -819,7 +818,6 @@ export type Database = {
           phone: string | null
           postal_code: string | null
           scheduled_deletion_date: string | null
-          status: string | null
           street: string | null
           theme_preference: string | null
           updated_at: string | null
@@ -832,7 +830,6 @@ export type Database = {
           bio?: string | null
           birth_date?: string | null
           city?: string | null
-          cover_url?: string | null
           created_at?: string | null
           email?: string | null
           full_name?: string | null
@@ -851,7 +848,6 @@ export type Database = {
           phone?: string | null
           postal_code?: string | null
           scheduled_deletion_date?: string | null
-          status?: string | null
           street?: string | null
           theme_preference?: string | null
           updated_at?: string | null
@@ -864,7 +860,6 @@ export type Database = {
           bio?: string | null
           birth_date?: string | null
           city?: string | null
-          cover_url?: string | null
           created_at?: string | null
           email?: string | null
           full_name?: string | null
@@ -883,7 +878,6 @@ export type Database = {
           phone?: string | null
           postal_code?: string | null
           scheduled_deletion_date?: string | null
-          status?: string | null
           street?: string | null
           theme_preference?: string | null
           updated_at?: string | null
