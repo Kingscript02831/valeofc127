@@ -298,12 +298,13 @@ export default function Profile() {
 
   return (
     <div className={`min-h-screen ${theme === 'light' ? 'bg-white text-black' : 'bg-black text-white'}`}>
-      <div className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between p-4 ${theme === 'light' ? 'bg-white/90' : 'bg-black/90'} backdrop-blur`}>
-        <button onClick={() => navigate(-1)} className={theme === 'light' ? 'text-black' : 'text-white'}>
+      <div className={`fixed top-0 left-0 right-0 z-50 flex items-center p-4 ${theme === 'light' ? 'bg-white/90' : 'bg-black/90'} backdrop-blur`}>
+        <button onClick={() => navigate(-1)} className="mr-2">
           <ArrowLeft className="h-6 w-6" />
         </button>
-        <h1 className="text-lg font-semibold">{profile?.username}</h1>
-        <button className={theme === 'light' ? 'text-black' : 'text-white'}>
+        <h1 className="text-lg font-semibold">{profile?.full_name}</h1>
+        <div className="flex-1" />
+        <button>
           <Search className="h-6 w-6" />
         </button>
       </div>
@@ -321,11 +322,9 @@ export default function Profile() {
                 }}
               />
             ) : (
-              <img
-                src={defaultCoverImage}
-                alt="Capa padrão"
-                className="w-full h-full object-cover"
-              />
+              <div className={`w-full h-full flex items-center justify-center ${theme === 'light' ? 'bg-white' : 'bg-black'}`}>
+                <p className="text-gray-500">Sem Capa de Perfil</p>
+              </div>
             )}
             {!isPreviewMode && (
               <label 
@@ -339,7 +338,7 @@ export default function Profile() {
 
           <div className="relative -mt-16 px-4">
             <div className="relative inline-block">
-              <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white dark:border-black bg-gray-200 dark:bg-gray-800">
+              <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white dark:border-black">
                 {profile?.avatar_url ? (
                   <img
                     src={profile.avatar_url}
@@ -350,11 +349,9 @@ export default function Profile() {
                     }}
                   />
                 ) : (
-                  <img
-                    src={defaultAvatarImage}
-                    alt="Avatar padrão"
-                    className="w-full h-full object-cover"
-                  />
+                  <div className={`w-full h-full flex items-center justify-center ${theme === 'light' ? 'bg-white' : 'bg-black'}`}>
+                    <p className="text-gray-500">Sem foto de perfil</p>
+                  </div>
                 )}
               </div>
               {!isPreviewMode && (
@@ -391,7 +388,7 @@ export default function Profile() {
                   <>
                     <Dialog>
                       <DialogTrigger asChild>
-                        <Button variant="outline" className="text-white border-gray-700">
+                        <Button variant="outline" className={`${theme === 'light' ? 'text-black border-gray-300' : 'text-white border-gray-700'}`}>
                           Editar perfil
                         </Button>
                       </DialogTrigger>
@@ -651,87 +648,76 @@ export default function Profile() {
               <p className="text-gray-300 mb-4">{profile.bio}</p>
             )}
 
-            <div className="space-y-2 mb-6">
-              {profile?.city && (
-                <div className="flex items-center gap-2 text-gray-400">
-                  <Home className="h-4 w-4" />
-                  <span>Mora em {profile.city}</span>
+            <Tabs defaultValue="posts" className="w-full">
+              <TabsList className="w-full justify-start border-b border-gray-800 bg-transparent">
+                <TabsTrigger
+                  value="posts"
+                  className="flex-1 data-[state=active]:text-white data-[state=active]:border-b-2 data-[state=active]:border-white"
+                >
+                  Posts
+                </TabsTrigger>
+                <TabsTrigger
+                  value="products"
+                  className="flex-1 data-[state=active]:text-white data-[state=active]:border-b-2 data-[state=active]:border-white"
+                >
+                  Produtos
+                </TabsTrigger>
+                <TabsTrigger
+                  value="reels"
+                  className="flex-1 data-[state=active]:text-white data-[state=active]:border-b-2 data-[state=active]:border-white"
+                >
+                  Reels
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="posts" className="min-h-[200px]">
+                <div className="grid grid-cols-3 gap-1">
+                  <div className="aspect-square bg-gray-800 flex items-center justify-center">
+                    <p className="text-gray-500">Ainda não há Posts</p>
+                  </div>
                 </div>
-              )}
-              {profile?.website && (
-                <div className="flex items-center gap-2 text-blue-400">
-                  <Globe className="h-4 w-4" />
-                  <a href={profile.website} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                    {profile.website.replace(/^https?:\/\//, '')}
-                  </a>
+              </TabsContent>
+
+              <TabsContent value="products" className="min-h-[200px]">
+                {userProducts && userProducts.length > 0 ? (
+                  <div className="grid grid-cols-2 gap-4 p-4">
+                    {userProducts.map((product) => (
+                      <Card key={product.id} className="bg-gray-900 border-gray-800">
+                        <CardContent className="p-3">
+                          {product.images?.[0] && (
+                            <img
+                              src={product.images[0]}
+                              alt={product.title}
+                              className="w-full aspect-square object-cover rounded-lg mb-2"
+                            />
+                          )}
+                          <h3 className="font-medium text-white">{product.title}</h3>
+                          <p className="text-green-500">
+                            {new Intl.NumberFormat('pt-BR', {
+                              style: 'currency',
+                              currency: 'BRL'
+                            }).format(Number(product.price))}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-[200px]">
+                    <p className="text-gray-500">Ainda não há Produtos</p>
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="reels" className="min-h-[200px]">
+                <div className="grid grid-cols-3 gap-1">
+                  <div className="aspect-square bg-gray-800 flex items-center justify-center">
+                    <p className="text-gray-500">Ainda não há Reels</p>
+                  </div>
                 </div>
-              )}
-            </div>
+              </TabsContent>
+            </Tabs>
           </div>
-
-          <Tabs defaultValue="posts" className="w-full">
-            <TabsList className="w-full justify-start border-b border-gray-800 bg-transparent">
-              <TabsTrigger
-                value="posts"
-                className="flex-1 data-[state=active]:text-white data-[state=active]:border-b-2 data-[state=active]:border-white"
-              >
-                Posts
-              </TabsTrigger>
-              <TabsTrigger
-                value="products"
-                className="flex-1 data-[state=active]:text-white data-[state=active]:border-b-2 data-[state=active]:border-white"
-              >
-                Produtos
-              </TabsTrigger>
-              <TabsTrigger
-                value="reels"
-                className="flex-1 data-[state=active]:text-white data-[state=active]:border-b-2 data-[state=active]:border-white"
-              >
-                Reels
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="posts" className="min-h-[200px]">
-              <div className="grid grid-cols-3 gap-1">
-                <div className="aspect-square bg-gray-800 flex items-center justify-center">
-                  <p className="text-gray-500">Sem posts</p>
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="products" className="min-h-[200px]">
-              <div className="grid grid-cols-2 gap-4 p-4">
-                {userProducts?.map((product) => (
-                  <Card key={product.id} className="bg-gray-900 border-gray-800">
-                    <CardContent className="p-3">
-                      {product.images?.[0] && (
-                        <img
-                          src={product.images[0]}
-                          alt={product.title}
-                          className="w-full aspect-square object-cover rounded-lg mb-2"
-                        />
-                      )}
-                      <h3 className="font-medium text-white">{product.title}</h3>
-                      <p className="text-green-500">
-                        {new Intl.NumberFormat('pt-BR', {
-                          style: 'currency',
-                          currency: 'BRL'
-                        }).format(Number(product.price))}
-                      </p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="reels" className="min-h-[200px]">
-              <div className="grid grid-cols-3 gap-1">
-                <div className="aspect-square bg-gray-800 flex items-center justify-center">
-                  <p className="text-gray-500">Sem reels</p>
-                </div>
-              </div>
-            </TabsContent>
-          </Tabs>
         </div>
       </div>
 
