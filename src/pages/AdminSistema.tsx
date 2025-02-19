@@ -237,13 +237,20 @@ const AdminSistema = () => {
 
   const addLocationMutation = useMutation({
     mutationFn: async (location: Omit<Location, "id" | "created_at">) => {
+      console.log('Attempting to add location:', location);
+      
       const { data, error } = await supabase
-        .from("locations")
+        .from('locations')
         .insert(location)
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw new Error(error.message);
+      }
+      
+      console.log('Location added successfully:', data);
       return data;
     },
     onSuccess: () => {
@@ -255,10 +262,11 @@ const AdminSistema = () => {
         description: "A localização foi adicionada com sucesso",
       });
     },
-    onError: (error) => {
+    onError: (error: Error) => {
+      console.error('Mutation error:', error);
       toast({
         title: "Erro ao adicionar localização",
-        description: error.message,
+        description: error.message || "Ocorreu um erro ao adicionar a localização",
         variant: "destructive",
       });
     },
