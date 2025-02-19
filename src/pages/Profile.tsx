@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -14,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Camera, Trash2, Link2, ArrowLeft, Search } from "lucide-react";
+import type { Profile } from "../types/profile";
 
 const defaultAvatarImage = "/placeholder.svg";
 const defaultCoverImage = "/placeholder.svg";
@@ -23,33 +25,40 @@ export default function Profile() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [isPreviewMode, setIsPreviewMode] = useState(false);
-  const [showDeletePhotoDialog, setShowDeletePhotoDialog] = useState(false);
-  const [showDeleteCoverDialog, setShowDeleteCoverDialog] = useState(false);
   const [showDropboxInput, setShowDropboxInput] = useState(false);
   const [dropboxLink, setDropboxLink] = useState("");
   const [isForProfile, setIsForProfile] = useState(true);
 
-  const { data: profile, isLoading: isProfileLoading } = useQuery({
+  const { data: profile, isLoading: isProfileLoading, error: profileError } = useQuery({
     queryKey: ['profile'],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('No user');
-      
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-        
-      if (error) throw error;
-      return data;
+      try {
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (authError) throw authError;
+        if (!user) throw new Error('No user found');
+
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+
+        if (error) throw error;
+        if (!data) throw new Error('No profile found');
+
+        return data as Profile;
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+        throw error;
+      }
     }
   });
 
   const updateProfile = useMutation({
-    mutationFn: async (newData: any) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('No user');
+    mutationFn: async (newData: Partial<Profile>) => {
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      if (!user) throw new Error('No user found');
 
       const { error } = await supabase
         .from('profiles')
@@ -64,6 +73,14 @@ export default function Profile() {
         title: "Perfil atualizado",
         description: "Suas alterações foram salvas com sucesso",
       });
+    },
+    onError: (error) => {
+      console.error('Error updating profile:', error);
+      toast({
+        title: "Erro ao atualizar perfil",
+        description: "Ocorreu um erro ao salvar suas alterações",
+        variant: "destructive",
+      });
     }
   });
 
@@ -75,10 +92,6 @@ export default function Profile() {
   const handleDeleteImage = (isProfile: boolean) => {
     const field = isProfile ? 'avatar_url' : 'cover_url';
     updateProfile.mutate({ [field]: null });
-    toast({
-      title: `${isProfile ? 'Foto de perfil' : 'Foto de capa'} removida`,
-      description: `Sua ${isProfile ? 'foto de perfil' : 'foto de capa'} foi removida com sucesso`,
-    });
   };
 
   const handleDropboxSubmit = () => {
@@ -90,7 +103,29 @@ export default function Profile() {
   };
 
   if (isProfileLoading) {
-    return <div className="flex items-center justify-center min-h-screen">Carregando...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p>Carregando perfil...</p>
+      </div>
+    );
+  }
+
+  if (profileError) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+        <p>Erro ao carregar perfil</p>
+        <Button onClick={() => navigate('/')}>Voltar para início</Button>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+        <p>Perfil não encontrado</p>
+        <Button onClick={() => navigate('/')}>Voltar para início</Button>
+      </div>
+    );
   }
 
   return (
