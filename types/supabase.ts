@@ -10,6 +10,26 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      locations: {
+        Row: {
+          id: string;
+          name: string;
+          state: string;
+          created_at: string;
+        }
+        Insert: {
+          id?: string;
+          name: string;
+          state: string;
+          created_at?: string;
+        }
+        Update: {
+          id?: string;
+          name?: string;
+          state?: string;
+          created_at?: string;
+        }
+      }
       site_configuration: {
         Row: {
           id: string;

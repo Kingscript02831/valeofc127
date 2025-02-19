@@ -279,6 +279,27 @@ export type Database = {
         }
         Relationships: []
       }
+      locations: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          state: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          state: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          state?: string
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           chat_id: string | null
@@ -779,6 +800,7 @@ export type Database = {
           last_basic_info_update: string | null
           last_seen: string | null
           location: unknown | null
+          location_id: string | null
           location_updated_at: string | null
           name: string | null
           notifications_enabled: boolean | null
@@ -808,6 +830,7 @@ export type Database = {
           last_basic_info_update?: string | null
           last_seen?: string | null
           location?: unknown | null
+          location_id?: string | null
           location_updated_at?: string | null
           name?: string | null
           notifications_enabled?: boolean | null
@@ -837,6 +860,7 @@ export type Database = {
           last_basic_info_update?: string | null
           last_seen?: string | null
           location?: unknown | null
+          location_id?: string | null
           location_updated_at?: string | null
           name?: string | null
           notifications_enabled?: boolean | null
@@ -850,7 +874,15 @@ export type Database = {
           username?: string | null
           website?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       site_configuration: {
         Row: {
