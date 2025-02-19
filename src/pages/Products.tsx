@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { Product, ProductWithDistance } from "@/types/products";
+import type { Location } from "@/types/locations";
 import { useQuery } from "@tanstack/react-query";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import Navbar from "@/components/Navbar";
@@ -27,11 +28,25 @@ const Products = () => {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [userLocation, setUserLocation] = useState<{lat: number; lon: number} | null>(null);
-  const [cityName, setCityName] = useState("Grão Mogol");
+  const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const [radiusType, setRadiusType] = useState<"suggested" | "custom">("custom");
   const [customRadius, setCustomRadius] = useState("5");
   const { data: config } = useSiteConfig();
   const [showLocationDialog, setShowLocationDialog] = useState(false);
+
+  // Query to fetch locations from Supabase
+  const { data: locations } = useQuery({
+    queryKey: ['locations'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('locations')
+        .select('*')
+        .order('name');
+      
+      if (error) throw error;
+      return data as Location[];
+    }
+  });
 
   useEffect(() => {
     if ("geolocation" in navigator) {
@@ -85,8 +100,10 @@ const Products = () => {
   );
 
   const handleSaveLocation = () => {
-    // Aqui você pode implementar a lógica para salvar a localização
-    setShowLocationDialog(false);
+    if (selectedLocation) {
+      // Here you could add logic to update user's preferred location if needed
+      setShowLocationDialog(false);
+    }
   };
 
   return (
@@ -143,7 +160,7 @@ const Products = () => {
             <DialogTrigger asChild>
               <Button variant="ghost" className="text-primary flex items-center gap-2">
                 <MapPin className="h-5 w-5" />
-                <span>{cityName} · {customRadius} km</span>
+                <span>{selectedLocation?.name || 'Selecionar localização'} · {customRadius} km</span>
                 <ChevronDown className="h-4 w-4" />
               </Button>
             </DialogTrigger>
@@ -154,11 +171,20 @@ const Products = () => {
               <div className="space-y-6">
                 <div className="space-y-2">
                   <Label>Localização</Label>
-                  <Input 
-                    value={cityName}
-                    onChange={(e) => setCityName(e.target.value)}
-                    placeholder="Digite o nome da cidade"
-                  />
+                  <RadioGroup 
+                    value={selectedLocation?.id} 
+                    onValueChange={(value) => {
+                      const location = locations?.find(loc => loc.id === value);
+                      setSelectedLocation(location || null);
+                    }}
+                  >
+                    {locations?.map((location) => (
+                      <div key={location.id} className="flex items-center space-x-2">
+                        <RadioGroupItem value={location.id} id={location.id} />
+                        <Label htmlFor={location.id}>{location.name} - {location.state}</Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
                 </div>
 
                 <div className="space-y-2">
