@@ -350,16 +350,10 @@ export default function Profile() {
               </div>
             )}
             {!isPreviewMode && (
-              <div className="absolute right-4 bottom-4 flex gap-2">
-                <button 
-                  onClick={() => setShowDeleteCoverDialog(true)}
-                  className="bg-black/50 p-2 rounded-full cursor-pointer hover:bg-black/70 transition-colors"
-                >
-                  <Trash2 className="h-5 w-5 text-white" />
-                </button>
-                <button 
+              <div className="absolute right-4 bottom-4">
+                <button
                   onClick={handleCoverImageClick}
-                  className="bg-black/50 p-2 rounded-full cursor-pointer hover:bg-black/70 transition-colors"
+                  className="bg-blue-500 p-2 rounded-full cursor-pointer hover:bg-blue-600 transition-colors"
                 >
                   <Camera className="h-5 w-5 text-white" />
                 </button>
