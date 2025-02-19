@@ -33,7 +33,6 @@ export function ThemeProvider({
   )
 
   useEffect(() => {
-    // Carregar a preferência de tema do usuário do Supabase quando autenticado
     const loadUserThemePreference = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       if (session?.user?.id) {
@@ -62,20 +61,26 @@ export function ThemeProvider({
         ? "dark"
         : "light"
       root.classList.add(systemTheme)
-      return
+    } else {
+      root.classList.add(theme)
     }
 
-    root.classList.add(theme)
+    // Atualizar as cores do fundo e texto com base no tema
+    if (theme === "light") {
+      document.body.style.backgroundColor = "white"
+      document.body.style.color = "black"
+    } else {
+      document.body.style.backgroundColor = "black"
+      document.body.style.color = "white"
+    }
   }, [theme])
 
   const value = {
     theme,
     setTheme: async (newTheme: Theme) => {
-      // Salvar no localStorage
       localStorage.setItem(storageKey, newTheme)
       setTheme(newTheme)
 
-      // Salvar no Supabase se o usuário estiver autenticado
       const { data: { session } } = await supabase.auth.getSession()
       if (session?.user?.id) {
         await supabase

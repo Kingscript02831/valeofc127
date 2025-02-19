@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -56,6 +55,7 @@ import { Card, CardContent } from "../components/ui/card";
 import BottomNav from "../components/BottomNav";
 import type { Profile } from "../types/profile";
 import MediaCarousel from "../components/MediaCarousel";
+import { useTheme } from "../components/ThemeProvider";
 
 const profileSchema = z.object({
   full_name: z.string().min(1, "Nome completo é obrigatório"),
@@ -84,6 +84,9 @@ const convertDropboxUrl = (url: string) => {
   return url.replace("www.dropbox.com", "dl.dropboxusercontent.com").replace("?dl=0", "?raw=1");
 };
 
+const defaultCoverImage = "/placeholder-cover.jpg"
+const defaultAvatarImage = "/placeholder-avatar.jpg"
+
 export default function Profile() {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -92,6 +95,7 @@ export default function Profile() {
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [activeTab, setActiveTab] = useState("posts");
   const [isLoadingImage, setIsLoadingImage] = useState(false);
+  const { theme } = useTheme();
 
   const form = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
@@ -271,53 +275,85 @@ export default function Profile() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between p-4 bg-black/90 backdrop-blur">
-        <button onClick={() => navigate(-1)} className="text-white">
+    <div className={`min-h-screen ${theme === 'light' ? 'bg-white text-black' : 'bg-black text-white'}`}>
+      <div className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between p-4 ${theme === 'light' ? 'bg-white/90' : 'bg-black/90'} backdrop-blur`}>
+        <button onClick={() => navigate(-1)} className={theme === 'light' ? 'text-black' : 'text-white'}>
           <ArrowLeft className="h-6 w-6" />
         </button>
         <h1 className="text-lg font-semibold">{profile?.username}</h1>
-        <button className="text-white">
+        <button className={theme === 'light' ? 'text-black' : 'text-white'}>
           <Search className="h-6 w-6" />
         </button>
       </div>
 
       <div className="pt-16 pb-20">
         <div className="relative">
-          <div className="h-32 bg-gray-800">
-            {profile?.cover_url && (
+          <div className="h-32 bg-gray-200 dark:bg-gray-800 relative">
+            {profile?.cover_url ? (
               <img
                 src={profile.cover_url}
                 alt="Capa"
                 className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.src = defaultCoverImage;
+                }}
+              />
+            ) : (
+              <img
+                src={defaultCoverImage}
+                alt="Capa padrão"
+                className="w-full h-full object-cover"
               />
             )}
             {!isPreviewMode && (
-              <button className="absolute right-4 bottom-4 bg-black/50 p-2 rounded-full">
-                <Camera className="h-5 w-5" />
-              </button>
+              <label className="absolute right-4 bottom-4 bg-black/50 p-2 rounded-full cursor-pointer hover:bg-black/70 transition-colors">
+                <Camera className="h-5 w-5 text-white" />
+                <input
+                  type="url"
+                  placeholder="Cole o link do Dropbox aqui"
+                  className="hidden"
+                  onChange={(e) => {
+                    form.setValue('cover_url', e.target.value);
+                    updateProfile.mutate(form.getValues());
+                  }}
+                />
+              </label>
             )}
           </div>
 
           <div className="relative -mt-16 px-4">
             <div className="relative inline-block">
-              <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-black bg-gray-800">
+              <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white dark:border-black bg-gray-200 dark:bg-gray-800">
                 {profile?.avatar_url ? (
                   <img
                     src={profile.avatar_url}
                     alt="Avatar"
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src = defaultAvatarImage;
+                    }}
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <User className="h-16 w-16 text-gray-400" />
-                  </div>
+                  <img
+                    src={defaultAvatarImage}
+                    alt="Avatar padrão"
+                    className="w-full h-full object-cover"
+                  />
                 )}
               </div>
               {!isPreviewMode && (
-                <button className="absolute bottom-2 right-2 bg-blue-500 p-2 rounded-full">
-                  <Camera className="h-5 w-5" />
-                </button>
+                <label className="absolute bottom-2 right-2 bg-blue-500 p-2 rounded-full cursor-pointer hover:bg-blue-600 transition-colors">
+                  <Camera className="h-5 w-5 text-white" />
+                  <input
+                    type="url"
+                    placeholder="Cole o link do Dropbox aqui"
+                    className="hidden"
+                    onChange={(e) => {
+                      form.setValue('avatar_url', e.target.value);
+                      updateProfile.mutate(form.getValues());
+                    }}
+                  />
+                </label>
               )}
             </div>
           </div>
