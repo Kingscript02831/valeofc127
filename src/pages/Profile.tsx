@@ -156,6 +156,33 @@ export default function Profile() {
     },
   });
 
+  const { data: locations } = useQuery({
+    queryKey: ["locations"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("locations")
+        .select("*")
+        .order("name");
+      return data || [];
+    },
+  });
+
+  const handleCoverImageClick = () => {
+    const coverUrl = prompt("Cole aqui o link do Dropbox para a imagem de capa:");
+    if (coverUrl) {
+      form.setValue("cover_url", coverUrl);
+      updateProfile.mutate(form.getValues());
+    }
+  };
+
+  const handleAvatarImageClick = () => {
+    const avatarUrl = prompt("Cole aqui o link do Dropbox para a foto de perfil:");
+    if (avatarUrl) {
+      form.setValue("avatar_url", avatarUrl);
+      updateProfile.mutate(form.getValues());
+    }
+  };
+
   const handleImageError = (error: any) => {
     console.error("Erro ao carregar a imagem", error);
     toast({
@@ -301,17 +328,11 @@ export default function Profile() {
               />
             )}
             {!isPreviewMode && (
-              <label className="absolute right-4 bottom-4 bg-black/50 p-2 rounded-full cursor-pointer hover:bg-black/70 transition-colors">
+              <label 
+                className="absolute right-4 bottom-4 bg-black/50 p-2 rounded-full cursor-pointer hover:bg-black/70 transition-colors"
+                onClick={handleCoverImageClick}
+              >
                 <Camera className="h-5 w-5 text-white" />
-                <input
-                  type="url"
-                  placeholder="Cole o link do Dropbox aqui"
-                  className="hidden"
-                  onChange={(e) => {
-                    form.setValue('cover_url', e.target.value);
-                    updateProfile.mutate(form.getValues());
-                  }}
-                />
               </label>
             )}
           </div>
@@ -337,17 +358,11 @@ export default function Profile() {
                 )}
               </div>
               {!isPreviewMode && (
-                <label className="absolute bottom-2 right-2 bg-blue-500 p-2 rounded-full cursor-pointer hover:bg-blue-600 transition-colors">
+                <label 
+                  className="absolute bottom-2 right-2 bg-blue-500 p-2 rounded-full cursor-pointer hover:bg-blue-600 transition-colors"
+                  onClick={handleAvatarImageClick}
+                >
                   <Camera className="h-5 w-5 text-white" />
-                  <input
-                    type="url"
-                    placeholder="Cole o link do Dropbox aqui"
-                    className="hidden"
-                    onChange={(e) => {
-                      form.setValue('avatar_url', e.target.value);
-                      updateProfile.mutate(form.getValues());
-                    }}
-                  />
                 </label>
               )}
             </div>
@@ -366,7 +381,7 @@ export default function Profile() {
                 {profile?.city && (
                   <p className="text-gray-400 text-sm mt-1 flex items-center gap-1">
                     <MapPin className="h-4 w-4" />
-                    {profile.city}
+                    Mora em {profile.city}
                   </p>
                 )}
               </div>
@@ -557,11 +572,20 @@ export default function Profile() {
                                 <FormItem>
                                   <FormLabel className="text-white">Cidade</FormLabel>
                                   <FormControl>
-                                    <Input
+                                    <select
                                       {...field}
-                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
-                                      placeholder="Sua cidade"
-                                    />
+                                      className="w-full bg-transparent border-white text-white placeholder:text-gray-400 rounded-md p-2"
+                                    >
+                                      {locations?.map((location) => (
+                                        <option 
+                                          key={location.id} 
+                                          value={location.name}
+                                          selected={location.name === profile?.city}
+                                        >
+                                          {location.name}
+                                        </option>
+                                      ))}
+                                    </select>
                                   </FormControl>
                                   <FormMessage />
                                 </FormItem>
@@ -581,36 +605,6 @@ export default function Profile() {
                                       placeholder="00000-000"
                                     />
                                   </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-
-                            <FormField
-                              control={form.control}
-                              name="avatar_url"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-white">URL do Avatar</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
-                                      placeholder="Cole o link do Dropbox aqui"
-                                    />
-                                  </FormControl>
-                                  <div className="mt-2 p-4 bg-gray-800 rounded-lg border border-gray-700">
-                                    <p className="text-sm text-gray-300">
-                                      <strong className="text-white block mb-2">Como usar uma imagem do Dropbox:</strong>
-                                      1. Faça upload da imagem no Dropbox<br />
-                                      2. Clique com botão direito na imagem e selecione "Copiar link de compartilhamento"<br />
-                                      3. Cole aqui o link exatamente como está, o sistema irá convertê-lo automaticamente
-                                    </p>
-                                    <p className="text-xs text-gray-400 mt-2">
-                                      Exemplo de link válido:<br />
-                                      https://www.dropbox.com/scl/fi/xxxxx/imagem.jpg?rlkey=xxxxx
-                                    </p>
-                                  </div>
                                   <FormMessage />
                                 </FormItem>
                               )}
