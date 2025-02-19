@@ -6,6 +6,20 @@ import { supabase } from "../integrations/supabase/client";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { useToast } from "../hooks/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -30,12 +44,17 @@ import {
   Building,
   Home,
   Trash2,
+  MoreHorizontal,
+  Link2,
+  Eye,
+  ArrowLeft,
+  Camera,
+  Search
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Card, CardContent } from "../components/ui/card";
 import BottomNav from "../components/BottomNav";
-import Navbar from "../components/Navbar";
-import SubNav from "../components/SubNav";
-import type { ProfileUpdateData } from "../types/profile";
+import type { Profile } from "../types/profile";
+import MediaCarousel from "../components/MediaCarousel";
 
 const profileSchema = z.object({
   full_name: z.string().min(1, "Nome completo é obrigatório"),
@@ -46,43 +65,12 @@ const profileSchema = z.object({
   house_number: z.string().min(1, "Número é obrigatório"),
   city: z.string().min(1, "Cidade é obrigatória"),
   postal_code: z.string().min(1, "CEP é obrigatório"),
-  avatar_url: z.string()
-    .nullable()
-    .transform(url => {
-      if (!url) return "";
-      console.log("URL original do Dropbox:", url);
-      
-      let directUrl = url;
-      if (url.includes('dropbox.com')) {
-        try {
-          // Remove todos os parâmetros da URL
-          let cleanUrl = url.split('?')[0];
-          
-          // Verifica se é um link compartilhável do Dropbox
-          if (cleanUrl.includes('www.dropbox.com/s/')) {
-            // Converte para formato dl.dropboxusercontent.com
-            directUrl = cleanUrl
-              .replace('www.dropbox.com/s/', 'dl.dropboxusercontent.com/s/') 
-              + '?raw=1';
-          } else if (cleanUrl.includes('www.dropbox.com/scl/')) {
-            // Converte novo formato de link do Dropbox
-            directUrl = cleanUrl
-              .replace('www.dropbox.com/scl/', 'dl.dropboxusercontent.com/scl/') 
-              + '?raw=1';
-          }
-          
-          console.log("URL convertida para download direto:", directUrl);
-        } catch (error) {
-          console.error("Erro ao processar URL do Dropbox:", error);
-          return url;
-        }
-      }
-      return directUrl;
-    })
-    .optional(),
+  avatar_url: z.string().nullable().optional(),
+  cover_url: z.string().nullable().optional(),
   username: z.string().min(3, "Username deve ter pelo menos 3 caracteres"),
   bio: z.string().optional(),
   website: z.string().url("URL inválida").optional().or(z.literal("")),
+  status: z.string().optional(),
   basic_info_updated_at: z.string().optional(),
 });
 
@@ -92,6 +80,8 @@ export default function Profile() {
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
+  const [activeTab, setActiveTab] = useState("posts");
 
   const form = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
@@ -105,69 +95,13 @@ export default function Profile() {
       city: "",
       postal_code: "",
       avatar_url: "",
+      cover_url: "",
       username: "",
       bio: "",
       website: "",
+      status: "",
     },
   });
-
-  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    const imgElement = e.target as HTMLImageElement;
-    console.error("Erro ao carregar a imagem do avatar:", {
-      urlTentada: imgElement.src,
-      urlOriginal: profile?.avatar_url,
-      headers: {
-        'Content-Type': 'image/jpeg',
-        'Cache-Control': 'no-cache',
-      }
-    });
-
-    toast({
-      title: "Erro ao carregar imagem",
-      description: "Por favor, verifique se:\n1. O link do Dropbox está correto\n2. A imagem é pública\n3. O link é de compartilhamento",
-      variant: "destructive",
-    });
-  };
-
-  useEffect(() => {
-    const checkSession = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          navigate("/login");
-          return;
-        }
-
-        const { data, error } = await supabase
-          .from("profiles")
-          .select("scheduled_deletion_date")
-          .eq("id", session.user.id)
-          .single();
-
-        if (error) throw error;
-        if (data?.scheduled_deletion_date) {
-          const { error } = await supabase
-            .from("profiles")
-            .update({ scheduled_deletion_date: null })
-            .eq("id", session.user.id);
-
-          if (!error) {
-            toast({
-              title: "Bem-vindo de volta!",
-              description: "A exclusão da sua conta foi cancelada.",
-              duration: 5000,
-            });
-          }
-        }
-
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Error checking session:", error);
-        navigate("/login");
-      }
-    };
-    checkSession();
-  }, [navigate, toast]);
 
   const { data: profile, isLoading: isProfileLoading } = useQuery({
     queryKey: ["profile"],
@@ -179,7 +113,7 @@ export default function Profile() {
         .from("profiles")
         .select("*")
         .eq("id", session.user.id)
-        .maybeSingle();
+        .single();
 
       if (error) throw error;
       return data;
@@ -187,24 +121,29 @@ export default function Profile() {
     enabled: !isLoading,
   });
 
-  useEffect(() => {
-    if (profile) {
-      form.reset({
-        full_name: profile.full_name || "",
-        email: profile.email || "",
-        phone: profile.phone || "",
-        birth_date: profile.birth_date ? format(new Date(profile.birth_date), "yyyy-MM-dd") : "",
-        street: profile.street || "",
-        house_number: profile.house_number || "",
-        city: profile.city || "",
-        postal_code: profile.postal_code || "",
-        avatar_url: profile.avatar_url || "",
-        username: profile.username || "",
-        bio: profile.bio || "",
-        website: profile.website || "",
-      });
-    }
-  }, [profile, form]);
+  const { data: userProducts } = useQuery({
+    queryKey: ["userProducts"],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return [];
+
+      const { data } = await supabase
+        .from("products")
+        .select("*")
+        .eq("user_id", session.user.id);
+
+      return data || [];
+    },
+  });
+
+  const copyProfileLink = () => {
+    const profileUrl = `${window.location.origin}/perfil/${profile?.username}`;
+    navigator.clipboard.writeText(profileUrl);
+    toast({
+      title: "Link copiado!",
+      description: "O link do seu perfil foi copiado para a área de transferência.",
+    });
+  };
 
   const updateProfile = useMutation({
     mutationFn: async (values: z.infer<typeof profileSchema>) => {
@@ -240,6 +179,7 @@ export default function Profile() {
         title: "Perfil atualizado",
         description: "Suas informações foram atualizadas com sucesso",
       });
+      setShowSettings(false);
     },
     onError: (error: Error) => {
       toast({
@@ -249,32 +189,6 @@ export default function Profile() {
       });
     },
   });
-
-  const handleAccountDeletion = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("Não autenticado");
-
-      const { error } = await supabase
-        .rpc('schedule_account_deletion', { user_id: session.user.id });
-
-      if (error) throw error;
-
-      toast({
-        title: "Conta programada para exclusão",
-        description: "Sua conta será excluída em 30 dias. Você pode cancelar este processo fazendo login novamente.",
-      });
-      
-      await supabase.auth.signOut();
-      navigate("/login");
-    } catch (error: any) {
-      toast({
-        title: "Erro ao programar exclusão da conta",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
 
   const handleLogout = async () => {
     try {
@@ -289,6 +203,27 @@ export default function Profile() {
     }
   };
 
+  useEffect(() => {
+    if (profile) {
+      form.reset({
+        full_name: profile.full_name || "",
+        email: profile.email || "",
+        phone: profile.phone || "",
+        birth_date: profile.birth_date ? format(new Date(profile.birth_date), "yyyy-MM-dd") : "",
+        street: profile.street || "",
+        house_number: profile.house_number || "",
+        city: profile.city || "",
+        postal_code: profile.postal_code || "",
+        avatar_url: profile.avatar_url || "",
+        cover_url: profile.cover_url || "",
+        username: profile.username || "",
+        bio: profile.bio || "",
+        website: profile.website || "",
+        status: profile.status || "",
+      });
+    }
+  }, [profile, form]);
+
   if (isLoading || isProfileLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-black text-white">
@@ -299,413 +234,437 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <Navbar />
-      <SubNav />
-      <div className="container max-w-4xl mx-auto p-4 pb-20 pt-4">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-semibold text-white">
-              {profile?.username ? `@${profile.username}` : 'Perfil'}
-            </h1>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setShowSettings(!showSettings)}
-              className="hover:bg-gray-800"
-            >
-              <Settings className="h-5 w-5 text-white" />
-            </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={handleLogout}
-              className="bg-red-600 hover:bg-red-700 text-white"
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              Sair
-            </Button>
-          </div>
-        </div>
+      <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between p-4 bg-black/90 backdrop-blur">
+        <button onClick={() => navigate(-1)} className="text-white">
+          <ArrowLeft className="h-6 w-6" />
+        </button>
+        <h1 className="text-lg font-semibold">{profile?.username}</h1>
+        <button className="text-white">
+          <Search className="h-6 w-6" />
+        </button>
+      </div>
 
-        <div className="space-y-4">
-          <Card className="border-none bg-gray-900 shadow-xl">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-6">
-                <div className="relative group">
-                  {profile?.avatar_url ? (
-                    <div className="w-24 h-24 rounded-full overflow-hidden ring-2 ring-gray-700">
-                      <img
-                        src={profile.avatar_url}
-                        alt="Avatar"
-                        className="w-full h-full object-cover"
-                        onError={handleImageError}
-                        onLoad={() => {
-                          console.log("Imagem carregada com sucesso:", {
-                            url: profile.avatar_url
-                          });
-                        }}
-                        crossOrigin="anonymous"
-                      />
-                    </div>
-                  ) : (
-                    <div className="w-24 h-24 rounded-full bg-gray-800 ring-2 ring-gray-700 flex items-center justify-center">
-                      <User className="w-12 h-12 text-gray-400" />
-                    </div>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <h2 className="text-2xl font-semibold text-white">{profile?.full_name}</h2>
-                  {profile?.username && (
-                    <p className="text-gray-400 flex items-center gap-1 text-sm">
-                      <AtSign className="h-4 w-4" />
-                      {profile.username}
-                    </p>
-                  )}
-                  {profile?.bio && (
-                    <p className="text-sm text-gray-400">{profile.bio}</p>
-                  )}
-                </div>
+      <div className="pt-16 pb-20">
+        <div className="relative">
+          <div className="h-32 bg-gray-800">
+            {profile?.cover_url && (
+              <img
+                src={profile.cover_url}
+                alt="Capa"
+                className="w-full h-full object-cover"
+              />
+            )}
+            {!isPreviewMode && (
+              <button className="absolute right-4 bottom-4 bg-black/50 p-2 rounded-full">
+                <Camera className="h-5 w-5" />
+              </button>
+            )}
+          </div>
+
+          <div className="relative -mt-16 px-4">
+            <div className="relative inline-block">
+              <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-black bg-gray-800">
+                {profile?.avatar_url ? (
+                  <img
+                    src={profile.avatar_url}
+                    alt="Avatar"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <User className="h-16 w-16 text-gray-400" />
+                  </div>
+                )}
               </div>
-            </CardContent>
-          </Card>
-
-          {showSettings ? (
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit((data) => updateProfile.mutate(data))} className="space-y-4">
-                <Card className="border-none bg-gray-900 shadow-xl">
-                  <CardContent className="space-y-4 pt-6">
-                    <FormField
-                      control={form.control}
-                      name="username"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-white">Username</FormLabel>
-                          <FormControl>
-                            <Input 
-                              {...field} 
-                              className="bg-transparent border-white text-white placeholder:text-gray-400"
-                              placeholder="Seu username"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="full_name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-white">Nome completo</FormLabel>
-                          <FormControl>
-                            <Input 
-                              {...field} 
-                              className="bg-transparent border-white text-white placeholder:text-gray-400"
-                              placeholder="Seu nome completo"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="bio"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-white">Bio</FormLabel>
-                          <FormControl>
-                            <Input 
-                              {...field} 
-                              className="bg-transparent border-white text-white placeholder:text-gray-400"
-                              placeholder="Sua biografia"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="website"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-white">Website</FormLabel>
-                          <FormControl>
-                            <Input 
-                              {...field} 
-                              className="bg-transparent border-white text-white placeholder:text-gray-400"
-                              placeholder="https://seu-site.com"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="phone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-white">Telefone</FormLabel>
-                          <FormControl>
-                            <Input 
-                              {...field} 
-                              type="tel"
-                              className="bg-transparent border-white text-white placeholder:text-gray-400"
-                              placeholder="(00) 00000-0000"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="birth_date"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-white">Data de Nascimento</FormLabel>
-                          <FormControl>
-                            <Input 
-                              {...field} 
-                              type="date"
-                              className="bg-transparent border-white text-white"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-white">Email</FormLabel>
-                          <FormControl>
-                            <Input 
-                              {...field} 
-                              type="email"
-                              className="bg-transparent border-white text-white placeholder:text-gray-400"
-                              placeholder="seu@email.com"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="street"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-white">Rua</FormLabel>
-                          <FormControl>
-                            <Input 
-                              {...field} 
-                              className="bg-transparent border-white text-white placeholder:text-gray-400"
-                              placeholder="Nome da rua"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="house_number"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-white">Número</FormLabel>
-                          <FormControl>
-                            <Input 
-                              {...field} 
-                              className="bg-transparent border-white text-white placeholder:text-gray-400"
-                              placeholder="123"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="city"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-white">Cidade</FormLabel>
-                          <FormControl>
-                            <Input 
-                              {...field} 
-                              className="bg-transparent border-white text-white placeholder:text-gray-400"
-                              placeholder="Sua cidade"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="postal_code"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-white">CEP</FormLabel>
-                          <FormControl>
-                            <Input 
-                              {...field} 
-                              className="bg-transparent border-white text-white placeholder:text-gray-400"
-                              placeholder="00000-000"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="avatar_url"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-white">URL do Avatar</FormLabel>
-                          <FormControl>
-                            <Input 
-                              {...field} 
-                              className="bg-transparent border-white text-white placeholder:text-gray-400"
-                              placeholder="Cole o link do Dropbox aqui"
-                            />
-                          </FormControl>
-                          <div className="mt-2 p-4 bg-gray-800 rounded-lg border border-gray-700">
-                            <p className="text-sm text-gray-300">
-                              <strong className="text-white block mb-2">Como usar uma imagem do Dropbox:</strong>
-                              1. Faça upload da imagem no Dropbox<br />
-                              2. Clique com botão direito na imagem e selecione "Copiar link de compartilhamento"<br />
-                              3. Cole aqui o link exatamente como está, o sistema irá convertê-lo automaticamente
-                            </p>
-                            <p className="text-xs text-gray-400 mt-2">
-                              Exemplo de link válido:<br />
-                              https://www.dropbox.com/scl/fi/xxxxx/imagem.jpg?rlkey=xxxxx
-                            </p>
-                          </div>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </CardContent>
-                </Card>
-
-                <div className="space-y-4">
-                  <Button
-                    type="submit"
-                    disabled={updateProfile.isPending}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                  >
-                    {updateProfile.isPending ? "Salvando..." : "Salvar alterações"}
-                  </Button>
-
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    onClick={handleAccountDeletion}
-                    className="w-full bg-red-600 hover:bg-red-700"
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Excluir conta
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          ) : (
-            <div className="grid gap-4">
-              <Card className="border-none bg-gray-900 shadow-xl">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg text-white">
-                    Informações Pessoais
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {profile?.email && (
-                    <div className="flex items-center gap-3 text-gray-300">
-                      <Mail className="h-4 w-4" />
-                      <span>{profile.email}</span>
-                    </div>
-                  )}
-                  {profile?.phone && (
-                    <div className="flex items-center gap-3 text-gray-300">
-                      <Phone className="h-4 w-4" />
-                      <span>{profile.phone}</span>
-                    </div>
-                  )}
-                  {profile?.birth_date && (
-                    <div className="flex items-center gap-3 text-gray-300">
-                      <Calendar className="h-4 w-4" />
-                      <span>{format(new Date(profile.birth_date), "dd/MM/yyyy")}</span>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card className="border-none bg-gray-900 shadow-xl">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg text-white">
-                    Endereço
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {profile?.street && (
-                    <div className="flex items-center gap-3 text-gray-300">
-                      <Home className="h-4 w-4" />
-                      <span>{profile.street}</span>
-                    </div>
-                  )}
-                  {profile?.house_number && (
-                    <div className="flex items-center gap-3 text-gray-300">
-                      <MapPin className="h-4 w-4" />
-                      <span>{profile.house_number}</span>
-                    </div>
-                  )}
-                  {profile?.city && (
-                    <div className="flex items-center gap-3 text-gray-300">
-                      <Building className="h-4 w-4" />
-                      <span>{profile.city}</span>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {profile?.website && (
-                <Card className="border-none bg-gray-900 shadow-xl">
-                  <CardContent className="pt-6">
-                    <div className="flex items-center gap-3 text-gray-300">
-                      <Globe className="h-4 w-4" />
-                      <a
-                        href={profile.website}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-400 hover:underline"
-                      >
-                        {profile.website}
-                      </a>
-                    </div>
-                  </CardContent>
-                </Card>
+              {!isPreviewMode && (
+                <button className="absolute bottom-2 right-2 bg-blue-500 p-2 rounded-full">
+                  <Camera className="h-5 w-5" />
+                </button>
               )}
             </div>
-          )}
+          </div>
+
+          <div className="px-4 mt-4">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-2xl font-bold">{profile?.full_name}</h2>
+                <p className="text-gray-400">@{profile?.username}</p>
+                {profile?.status && (
+                  <p className="text-yellow-500 text-sm mt-1">
+                    {profile.status} 👍
+                  </p>
+                )}
+              </div>
+
+              <div className="flex gap-2">
+                {!isPreviewMode ? (
+                  <>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" className="text-white border-gray-700">
+                          Editar perfil
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="bg-gray-900 border-gray-800">
+                        <DialogHeader>
+                          <DialogTitle className="text-white">Editar perfil</DialogTitle>
+                        </DialogHeader>
+                        <Form {...form}>
+                          <form onSubmit={form.handleSubmit((data) => updateProfile.mutate(data))} className="space-y-4">
+                            <FormField
+                              control={form.control}
+                              name="username"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-white">Username</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      {...field}
+                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
+                                      placeholder="Seu username"
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="full_name"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-white">Nome completo</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      {...field}
+                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
+                                      placeholder="Seu nome completo"
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="bio"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-white">Bio</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      {...field}
+                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
+                                      placeholder="Sua biografia"
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="website"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-white">Website</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      {...field}
+                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
+                                      placeholder="https://seu-site.com"
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="phone"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-white">Telefone</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      {...field}
+                                      type="tel"
+                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
+                                      placeholder="(00) 00000-0000"
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="birth_date"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-white">Data de Nascimento</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      {...field}
+                                      type="date"
+                                      className="bg-transparent border-white text-white"
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="email"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-white">Email</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      {...field}
+                                      type="email"
+                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
+                                      placeholder="seu@email.com"
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="street"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-white">Rua</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      {...field}
+                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
+                                      placeholder="Nome da rua"
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="house_number"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-white">Número</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      {...field}
+                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
+                                      placeholder="123"
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="city"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-white">Cidade</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      {...field}
+                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
+                                      placeholder="Sua cidade"
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="postal_code"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-white">CEP</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      {...field}
+                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
+                                      placeholder="00000-000"
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="avatar_url"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-white">URL do Avatar</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      {...field}
+                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
+                                      placeholder="Cole o link do Dropbox aqui"
+                                    />
+                                  </FormControl>
+                                  <div className="mt-2 p-4 bg-gray-800 rounded-lg border border-gray-700">
+                                    <p className="text-sm text-gray-300">
+                                      <strong className="text-white block mb-2">Como usar uma imagem do Dropbox:</strong>
+                                      1. Faça upload da imagem no Dropbox<br />
+                                      2. Clique com botão direito na imagem e selecione "Copiar link de compartilhamento"<br />
+                                      3. Cole aqui o link exatamente como está, o sistema irá convertê-lo automaticamente
+                                    </p>
+                                    <p className="text-xs text-gray-400 mt-2">
+                                      Exemplo de link válido:<br />
+                                      https://www.dropbox.com/scl/fi/xxxxx/imagem.jpg?rlkey=xxxxx
+                                    </p>
+                                  </div>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <Button 
+                              type="submit" 
+                              className="w-full bg-blue-600 hover:bg-blue-700"
+                              disabled={updateProfile.isPending}
+                            >
+                              {updateProfile.isPending ? "Salvando..." : "Salvar alterações"}
+                            </Button>
+                          </form>
+                        </Form>
+                      </DialogContent>
+                    </Dialog>
+
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="icon" className="border-gray-700">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="bg-gray-900 border-gray-800">
+                        <DropdownMenuItem onClick={copyProfileLink} className="text-white cursor-pointer">
+                          <Link2 className="h-4 w-4 mr-2" />
+                          Copiar link do perfil
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setIsPreviewMode(true)} className="text-white cursor-pointer">
+                          <Eye className="h-4 w-4 mr-2" />
+                          Ver como
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </>
+                ) : (
+                  <Button onClick={() => setIsPreviewMode(false)} variant="outline" className="text-white border-gray-700">
+                    Sair do modo preview
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {profile?.bio && (
+              <p className="text-gray-300 mb-4">{profile.bio}</p>
+            )}
+
+            <div className="space-y-2 mb-6">
+              {profile?.city && (
+                <div className="flex items-center gap-2 text-gray-400">
+                  <Home className="h-4 w-4" />
+                  <span>Mora em {profile.city}</span>
+                </div>
+              )}
+              {profile?.website && (
+                <div className="flex items-center gap-2 text-blue-400">
+                  <Globe className="h-4 w-4" />
+                  <a href={profile.website} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                    {profile.website.replace(/^https?:\/\//, '')}
+                  </a>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <Tabs defaultValue="posts" className="w-full">
+            <TabsList className="w-full justify-start border-b border-gray-800 bg-transparent">
+              <TabsTrigger
+                value="posts"
+                className="flex-1 data-[state=active]:text-white data-[state=active]:border-b-2 data-[state=active]:border-white"
+              >
+                Posts
+              </TabsTrigger>
+              <TabsTrigger
+                value="products"
+                className="flex-1 data-[state=active]:text-white data-[state=active]:border-b-2 data-[state=active]:border-white"
+              >
+                Produtos
+              </TabsTrigger>
+              <TabsTrigger
+                value="reels"
+                className="flex-1 data-[state=active]:text-white data-[state=active]:border-b-2 data-[state=active]:border-white"
+              >
+                Reels
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="posts" className="min-h-[200px]">
+              <div className="grid grid-cols-3 gap-1">
+                {/* Grid de posts */}
+                <div className="aspect-square bg-gray-800 flex items-center justify-center">
+                  <p className="text-gray-500">Sem posts</p>
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="products" className="min-h-[200px]">
+              <div className="grid grid-cols-2 gap-4 p-4">
+                {userProducts?.map((product) => (
+                  <Card key={product.id} className="bg-gray-900 border-gray-800">
+                    <CardContent className="p-3">
+                      {product.images?.[0] && (
+                        <img
+                          src={product.images[0]}
+                          alt={product.title}
+                          className="w-full aspect-square object-cover rounded-lg mb-2"
+                        />
+                      )}
+                      <h3 className="font-medium text-white">{product.title}</h3>
+                      <p className="text-green-500">
+                        {new Intl.NumberFormat('pt-BR', {
+                          style: 'currency',
+                          currency: 'BRL'
+                        }).format(Number(product.price))}
+                      </p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="reels" className="min-h-[200px]">
+              <div className="grid grid-cols-3 gap-1">
+                {/* Grid de reels */}
+                <div className="aspect-square bg-gray-800 flex items-center justify-center">
+                  <p className="text-gray-500">Sem reels</p>
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
 

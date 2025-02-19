@@ -4,6 +4,7 @@ export interface Profile {
   username?: string | null;
   full_name?: string | null;
   avatar_url?: string | null;
+  cover_url?: string | null;
   created_at?: string | null;
   updated_at?: string | null;
   bio?: string | null;
@@ -15,6 +16,7 @@ export interface Profile {
   street?: string | null;
   house_number?: string | null;
   postal_code?: string | null;
+  status?: string | null;
   basic_info_updated_at?: string | null;
   location_id?: string | null;
 }
@@ -23,6 +25,7 @@ export interface ProfileUpdateData {
   username?: string;
   full_name?: string;
   avatar_url?: string;
+  cover_url?: string;
   bio?: string;
   email?: string;
   phone?: string;
@@ -32,6 +35,7 @@ export interface ProfileUpdateData {
   street?: string;
   house_number?: string;
   postal_code?: string;
+  status?: string;
   basic_info_updated_at?: string;
   location_id?: string;
 }
