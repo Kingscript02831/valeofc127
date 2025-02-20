@@ -1,13 +1,13 @@
 
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, MapPin, User, ArrowLeft, ChevronDown } from "lucide-react";
+import { Search, User, ArrowLeft, ChevronDown, Grid2X2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import type { Product, ProductWithDistance } from "@/types/products";
+import type { Product } from "@/types/products";
 import type { Location } from "@/types/locations";
 import { useQuery } from "@tanstack/react-query";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
@@ -22,17 +22,36 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Products = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
-  const [userLocation, setUserLocation] = useState<{lat: number; lon: number} | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
-  const [radiusType, setRadiusType] = useState<"suggested" | "custom">("custom");
-  const [customRadius, setCustomRadius] = useState("5");
   const { data: config } = useSiteConfig();
   const [showLocationDialog, setShowLocationDialog] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
+  // Query para buscar categorias
+  const { data: categories } = useQuery({
+    queryKey: ["categories-products"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("categories")
+        .select("*")
+        .eq('page_type', 'products')
+        .order("name");
+      
+      if (error) throw error;
+      return data;
+    },
+  });
 
   // Query to fetch locations from Supabase
   const { data: locations } = useQuery({
@@ -48,50 +67,23 @@ const Products = () => {
     }
   });
 
-  useEffect(() => {
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation({
-            lat: position.coords.latitude,
-            lon: position.coords.longitude
-          });
-        },
-        () => {
-          toast({
-            title: "Localização não disponível",
-            description: "Ative a localização para ver produtos próximos",
-            variant: "destructive",
-          });
-        }
-      );
-    }
-  }, [toast]);
-
   const { data: products, isLoading } = useQuery({
-    queryKey: ["products", userLocation, customRadius],
+    queryKey: ["products"],
     queryFn: async () => {
-      if (!userLocation) {
-        const { data, error } = await supabase
-          .from("products")
-          .select("*")
-          .order("created_at", { ascending: false });
+      let query = supabase
+        .from("products")
+        .select("*, profiles(full_name, avatar_url)")
+        .order("created_at", { ascending: false });
 
-        if (error) throw error;
-        return data as ProductWithDistance[];
+      if (selectedCategory) {
+        query = query.eq("category_id", selectedCategory);
       }
 
-      const { data, error } = await supabase
-        .rpc("search_products_by_location", {
-          search_lat: userLocation.lat,
-          search_lon: userLocation.lon,
-          radius_in_meters: parseInt(customRadius) * 1000
-        });
+      const { data, error } = await query;
 
       if (error) throw error;
-      return data as ProductWithDistance[];
+      return data as Product[];
     },
-    enabled: true,
   });
 
   const filteredProducts = products?.filter(product =>
@@ -101,7 +93,6 @@ const Products = () => {
 
   const handleSaveLocation = () => {
     if (selectedLocation) {
-      // Here you could add logic to update user's preferred location if needed
       setShowLocationDialog(false);
     }
   };
@@ -132,25 +123,34 @@ const Products = () => {
                 <Search className="h-5 w-5 text-foreground" />
               </div>
             </div>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => {
-                if ("geolocation" in navigator) {
-                  navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                      setUserLocation({
-                        lat: position.coords.latitude,
-                        lon: position.coords.longitude
-                      });
-                    }
-                  );
-                }
-              }}
-              className="hover:scale-105 transition-transform text-foreground rounded-full shadow-lg"
-            >
-              <MapPin className="h-4 w-4" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="hover:scale-105 transition-transform text-foreground rounded-full shadow-lg"
+                >
+                  <Grid2X2 className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem
+                  onClick={() => setSelectedCategory(null)}
+                  className={!selectedCategory ? "bg-accent" : ""}
+                >
+                  Todas as categorias
+                </DropdownMenuItem>
+                {categories?.map((category) => (
+                  <DropdownMenuItem
+                    key={category.id}
+                    onClick={() => setSelectedCategory(category.id)}
+                    className={selectedCategory === category.id ? "bg-accent" : ""}
+                  >
+                    {category.name}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
@@ -159,14 +159,13 @@ const Products = () => {
           <Dialog open={showLocationDialog} onOpenChange={setShowLocationDialog}>
             <DialogTrigger asChild>
               <Button variant="ghost" className="text-primary flex items-center gap-2">
-                <MapPin className="h-5 w-5" />
-                <span>{selectedLocation?.name || 'Selecionar localização'} · {customRadius} km</span>
+                <span>{selectedLocation?.name || 'Selecionar localização'}</span>
                 <ChevronDown className="h-4 w-4" />
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Localização e raio</DialogTitle>
+                <DialogTitle>Localização</DialogTitle>
               </DialogHeader>
               <div className="space-y-6">
                 <div className="space-y-2">
@@ -185,37 +184,6 @@ const Products = () => {
                       </div>
                     ))}
                   </RadioGroup>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Raio</Label>
-                  <RadioGroup value={radiusType} onValueChange={(value: "suggested" | "custom") => setRadiusType(value)}>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="suggested" id="suggested" />
-                      <Label htmlFor="suggested">Raio sugerido</Label>
-                    </div>
-                    <div className="text-sm text-muted-foreground ml-6">
-                      Mostre-me classificados desta área geral.
-                    </div>
-
-                    <div className="flex items-center space-x-2 mt-4">
-                      <RadioGroupItem value="custom" id="custom" />
-                      <Label htmlFor="custom">Raio personalizado</Label>
-                    </div>
-                    <div className="text-sm text-muted-foreground ml-6">
-                      Mostre-me apenas classificados dentro de uma distância específica.
-                    </div>
-                  </RadioGroup>
-
-                  {radiusType === "custom" && (
-                    <Input
-                      type="number"
-                      value={customRadius}
-                      onChange={(e) => setCustomRadius(e.target.value)}
-                      placeholder="Digite o raio em quilômetros"
-                      className="mt-2"
-                    />
-                  )}
                 </div>
 
                 <Button className="w-full" onClick={handleSaveLocation}>
@@ -255,10 +223,9 @@ const Products = () => {
                   <div className="absolute top-2 right-2 bg-primary/80 backdrop-blur-sm text-white px-2 py-1 rounded-full text-xs">
                     {product.condition}
                   </div>
-                  {product.distance && (
-                    <div className="absolute top-2 left-2 bg-primary/80 backdrop-blur-sm text-white px-2 py-1 rounded-full text-xs flex items-center gap-1">
-                      <MapPin className="w-3 h-3" />
-                      {(product.distance / 1000).toFixed(1)}km
+                  {product.location_name && (
+                    <div className="absolute top-2 left-2 bg-primary/80 backdrop-blur-sm text-white px-2 py-1 rounded-full text-xs">
+                      {product.location_name}
                     </div>
                   )}
                 </div>
