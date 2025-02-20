@@ -1,17 +1,12 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { format } from "date-fns";
-import { supabase } from "../integrations/supabase/client";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
-import { useToast } from "../hooks/use-toast";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
+  DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
   Dialog,
@@ -19,42 +14,21 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "../components/ui/form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
-import {
-  LogOut,
-  User,
-  AtSign,
-  Settings,
-  MapPin,
-  Mail,
-  Phone,
-  Calendar,
-  Globe,
-  Building,
-  Home,
-  Trash2,
-  MoreHorizontal,
-  Link2,
-  Eye,
-  ArrowLeft,
-  Camera
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
+import { 
+  Camera, 
+  MapPin, 
+  MoreVertical, 
+  Trash2, 
+  LogOut, 
+  Settings 
 } from "lucide-react";
-import { Card, CardContent } from "../components/ui/card";
 import BottomNav from "../components/BottomNav";
-import type { Profile } from "../types/profile";
-import MediaCarousel from "../components/MediaCarousel";
+import { Profile } from "../types/profile";
+import { MediaCarousel } from "../components/MediaCarousel";
 import { useTheme } from "../components/ThemeProvider";
 
 const profileSchema = z.object({
@@ -85,7 +59,7 @@ const defaultCoverImage = "/placeholder-cover.jpg"
 const defaultAvatarImage = "/placeholder-avatar.jpg"
 
 export default function Profile() {
-  const { toast } = useToast();
+  const { toast } = toast;
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [showSettings, setShowSettings] = useState(false);
@@ -430,22 +404,25 @@ export default function Profile() {
                   <>
                     <Dialog>
                       <DialogTrigger asChild>
-                        <Button variant="outline" className={`${theme === 'light' ? 'text-black border-gray-300' : 'text-white border-gray-700'}`}>
+                        <Button 
+                          variant="outline" 
+                          className="bg-background hover:bg-accent text-foreground border-border"
+                        >
                           Editar fotos
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="bg-gray-900 border-gray-800">
+                      <DialogContent className="bg-background border-border">
                         <DialogHeader>
-                          <DialogTitle className="text-white">Editar fotos</DialogTitle>
+                          <DialogTitle className="text-foreground">Editar fotos</DialogTitle>
                         </DialogHeader>
                         <div className="space-y-4">
                           <div>
-                            <h3 className="text-white mb-2">Foto de Perfil</h3>
+                            <h3 className="text-foreground mb-2">Foto de Perfil</h3>
                             <div className="flex gap-2">
                               <Button
                                 onClick={handleAvatarImageClick}
                                 variant="outline"
-                                className="text-white border-gray-700"
+                                className="bg-background hover:bg-accent text-foreground border-border"
                               >
                                 <Camera className="h-4 w-4 mr-2" />
                                 Alterar foto
@@ -460,12 +437,12 @@ export default function Profile() {
                             </div>
                           </div>
                           <div>
-                            <h3 className="text-white mb-2">Foto de Capa</h3>
+                            <h3 className="text-foreground mb-2">Foto de Capa</h3>
                             <div className="flex gap-2">
                               <Button
                                 onClick={handleCoverImageClick}
                                 variant="outline"
-                                className="text-white border-gray-700"
+                                className="bg-background hover:bg-accent text-foreground border-border"
                               >
                                 <Camera className="h-4 w-4 mr-2" />
                                 Alterar capa
@@ -727,7 +704,7 @@ export default function Profile() {
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="outline" size="icon" className="border-gray-700">
-                          <MoreHorizontal className="h-4 w-4" />
+                          <MoreVertical className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent className="bg-gray-900 border-gray-800">
