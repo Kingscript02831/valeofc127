@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
+import { supabase } from "../integrations/supabase/client";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { useToast } from "../hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   DropdownMenu,
@@ -28,16 +28,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogCancel,
-} from "@/components/ui/alert-dialog";
+} from "../components/ui/form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -60,11 +51,11 @@ import {
   ArrowLeft,
   Camera
 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import BottomNav from "@/components/BottomNav";
-import type { Profile } from "@/types/profile";
-import MediaCarousel from "@/components/MediaCarousel";
-import { useTheme } from "@/components/ThemeProvider";
+import { Card, CardContent } from "../components/ui/card";
+import BottomNav from "../components/BottomNav";
+import type { Profile } from "../types/profile";
+import MediaCarousel from "../components/MediaCarousel";
+import { useTheme } from "../components/ThemeProvider";
 
 const profileSchema = z.object({
   full_name: z.string().min(1, "Nome completo é obrigatório"),
