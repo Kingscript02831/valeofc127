@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../integrations/supabase/client";
@@ -6,6 +5,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { useToast } from "../components/ui/use-toast";
 import { useSiteConfig } from "../hooks/useSiteConfig";
+import { getAuthErrorMessage } from "../utils/auth-errors";
 import {
   Select,
   SelectContent,
@@ -67,7 +67,7 @@ const SignUp = () => {
 
     try {
       const { error } = await supabase.auth.signUp({
-        email,
+        email: email.trim().toLowerCase(),
         password,
         options: {
           data: {
@@ -84,14 +84,14 @@ const SignUp = () => {
 
       toast({
         title: "Conta criada com sucesso",
-        description: "Bem-vindo ao sistema!",
+        description: "Verifique seu e-mail para confirmar sua conta",
       });
 
       navigate("/");
     } catch (error: any) {
       toast({
         title: "Erro ao criar conta",
-        description: error.message,
+        description: getAuthErrorMessage(error),
         variant: "destructive",
       });
     } finally {
