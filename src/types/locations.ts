@@ -5,8 +5,3 @@ export interface Location {
   state: string;
   created_at: string;
 }
-
-export interface LocationInput {
-  name: string;
-  state: string;
-}

@@ -112,7 +112,7 @@ const Products = () => {
 
   const handleCustomRadiusChange = (value: string) => {
     const number = parseInt(value);
-    if (!isNaN(number) && number >= 1 && number <= 100) {
+    if (!isNaN(number) && number >= 1 && number <= 1000) {
       setRadiusValue([number]);
     }
     setCustomRadius(value);
@@ -213,7 +213,7 @@ const Products = () => {
                     <Input
                       type="number"
                       min="1"
-                      max="100"
+                      max="1000"
                       value={customRadius}
                       onChange={(e) => handleCustomRadiusChange(e.target.value)}
                       placeholder="Digite o raio"
@@ -226,7 +226,7 @@ const Products = () => {
                       setRadiusValue(value);
                       setCustomRadius(value[0].toString());
                     }}
-                    max={100}
+                    max={1000}
                     min={1}
                     step={1}
                   />
