@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -68,15 +67,25 @@ const profileSchema = z.object({
 const defaultCoverImage = "/placeholder-cover.jpg";
 const defaultAvatarImage = "/placeholder-avatar.jpg";
 
+const locations = [
+  { id: 1, name: 'São Paulo' },
+  { id: 2, name: 'Rio de Janeiro' },
+  { id: 3, name: 'Minas Gerais' },
+];
+
 export default function Profile() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { theme } = useTheme();
+  
+  // Group all useState hooks together
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [showDeleteCoverDialog, setShowDeleteCoverDialog] = useState(false);
   const [showAddCoverDialog, setShowAddCoverDialog] = useState(false);
   const [newCoverUrl, setNewCoverUrl] = useState("");
-  const { theme } = useTheme();
+  const [showSettings, setShowSettings] = useState(false);
+  const [userProducts, setUserProducts] = useState([]);
 
   const form = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
@@ -143,6 +152,15 @@ export default function Profile() {
     },
   });
 
+  useEffect(() => {
+    if (profile) {
+      form.reset({
+        ...profile,
+        birth_date: profile.birth_date ? format(new Date(profile.birth_date), "yyyy-MM-dd") : "",
+      });
+    }
+  }, [profile, form]);
+
   const handleAddCover = async () => {
     try {
       const values = {
@@ -181,7 +199,6 @@ export default function Profile() {
   };
 
   const copyProfileLink = () => {
-    // Replace with your actual profile URL structure
     const profileUrl = `${window.location.origin}/perfil/${profile?.id}`;
     navigator.clipboard.writeText(profileUrl);
     toast({
@@ -190,15 +207,7 @@ export default function Profile() {
     });
   };
 
-  useEffect(() => {
-    if (profile) {
-      form.reset({
-        ...profile,
-        birth_date: profile.birth_date ? format(new Date(profile.birth_date), "yyyy-MM-dd") : "",
-      });
-    }
-  }, [profile, form]);
-
+  // Loading state after all hooks
   if (isProfileLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-black text-white">
@@ -206,15 +215,6 @@ export default function Profile() {
       </div>
     );
   }
-
-  const locations = [
-    { id: 1, name: 'São Paulo' },
-    { id: 2, name: 'Rio de Janeiro' },
-    { id: 3, name: 'Minas Gerais' },
-  ];
-
-  const [showSettings, setShowSettings] = useState(false);
-  const userProducts = [];
 
   return (
     <div className={`min-h-screen ${theme === 'light' ? 'bg-white text-black' : 'bg-black text-white'}`}>
