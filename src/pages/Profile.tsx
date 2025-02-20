@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Camera, Trash2, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useForm } from "react-hook-form";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -16,20 +16,10 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import type { Profile } from "@/types/profile";
 
 const defaultAvatarImage = "/placeholder.svg";
 const defaultCoverImage = "/placeholder.svg";
-
-interface Profile {
-  id: string;
-  username?: string | null;
-  full_name?: string | null;
-  avatar_url?: string | null;
-  cover_url?: string | null;
-  created_at?: string | null;
-  updated_at?: string | null;
-  theme_preference?: "dark" | "light" | "system";
-}
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -136,26 +126,6 @@ export default function Profile() {
                 <p className="text-gray-500">Sem Capa de Perfil</p>
               </div>
             )}
-            {!isPreviewMode && (
-              <div className="absolute bottom-2 right-2 flex gap-2">
-                <Button 
-                  onClick={() => setIsDeleteDialogOpen(true)}
-                  variant="destructive"
-                  size="icon"
-                  className="rounded-full"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-                <Button 
-                  onClick={() => setIsPhotoDialogOpen(true)}
-                  variant="default"
-                  size="icon"
-                  className="rounded-full bg-blue-500 hover:bg-blue-600"
-                >
-                  <Camera className="h-4 w-4" />
-                </Button>
-              </div>
-            )}
           </div>
 
           <div className="relative -mt-16 px-4">
@@ -176,26 +146,6 @@ export default function Profile() {
                   </div>
                 )}
               </div>
-              {!isPreviewMode && (
-                <div className="absolute bottom-2 right-2 flex gap-2">
-                  <Button 
-                    onClick={() => setIsDeleteDialogOpen(true)}
-                    variant="destructive"
-                    size="icon"
-                    className="rounded-full"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    onClick={() => setIsPhotoDialogOpen(true)}
-                    variant="default"
-                    size="icon"
-                    className="rounded-full bg-blue-500 hover:bg-blue-600"
-                  >
-                    <Camera className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
             </div>
 
             <div className="mt-4 space-y-2">
@@ -273,6 +223,18 @@ export default function Profile() {
                 onChange={(e) => form.setValue("cover_url", e.target.value)}
                 className="w-full"
               />
+            </div>
+            <div className="space-y-2">
+              <Button 
+                variant="destructive"
+                onClick={() => {
+                  setIsPhotoDialogOpen(false);
+                  setIsDeleteDialogOpen(true);
+                }}
+                className="w-full"
+              >
+                Excluir fotos
+              </Button>
             </div>
           </div>
           <DialogFooter>
