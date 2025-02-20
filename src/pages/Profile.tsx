@@ -1,12 +1,17 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { format } from "date-fns";
+import { supabase } from "../integrations/supabase/client";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { useToast } from "../hooks/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   DropdownMenu,
-  DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
   Dialog,
@@ -23,821 +28,856 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "sonner";
-import { useQueryClient, useQuery, useMutation } from "@tanstack/react-query";
+} from "../components/ui/form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { format } from "date-fns";
-import { 
-  Camera, 
-  MapPin, 
-  MoreVertical, 
-  Trash2, 
-  LogOut, 
+import * as z from "zod";
+import {
+  LogOut,
+  User,
+  AtSign,
   Settings,
-  ArrowLeft,
+  MapPin,
+  Mail,
+  Phone,
+  Calendar,
+  Globe,
+  Building,
+  Home,
+  Trash2,
+  MoreHorizontal,
   Link2,
-  Eye 
+  Eye,
+  ArrowLeft,
+  Camera
 } from "lucide-react";
+import { Card, CardContent } from "../components/ui/card";
+import BottomNav from "../components/BottomNav";
 import type { Profile } from "../types/profile";
-import { z } from "zod";
+import MediaCarousel from "../components/MediaCarousel";
+import { useTheme } from "../components/ThemeProvider";
 
 const profileSchema = z.object({
-  username: z
-    .string()
-    .min(2, {
-      message: "Username must be at least 2 characters.",
-    })
-    .max(30, {
-      message: "Username must not be longer than 30 characters.",
-    }),
-  full_name: z
-    .string()
-    .min(2, {
-      message: "Full name must be at least 2 characters.",
-    })
-    .max(50, {
-      message: "Full name must not be longer than 50 characters.",
-    }),
-  bio: z.string().max(160, {
-    message: "Bio must not be longer than 160 characters.",
-  }),
-  website: z.string().url({ message: "Please enter a valid URL." }).optional(),
-  email: z.string().email({ message: "Please enter a valid email." }),
-  phone: z
-    .string()
-    .regex(
-      /^\+?[1-9]\d{1,14}$/,
-      "Phone number must start with a country code and contain only digits."
-    )
-    .optional(),
-  birth_date: z.date().optional(),
-  city: z.string().optional(),
-  street: z.string().optional(),
-  house_number: z.string().optional(),
-  postal_code: z.string().optional(),
+  full_name: z.string().min(1, "Nome completo é obrigatório"),
+  email: z.string().email("Email inválido"),
+  phone: z.string().min(1, "Telefone é obrigatório"),
+  birth_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida"),
+  street: z.string().min(1, "Rua é obrigatória"),
+  house_number: z.string().min(1, "Número é obrigatório"),
+  city: z.string().min(1, "Cidade é obrigatória"),
+  postal_code: z.string().min(1, "CEP é obrigatório"),
+  avatar_url: z.string().nullable().optional(),
+  cover_url: z.string().nullable().optional(),
+  username: z.string().min(3, "Username deve ter pelo menos 3 caracteres"),
+  bio: z.string().optional(),
+  website: z.string().url("URL inválida").optional().or(z.literal("")),
   status: z.string().optional(),
+  basic_info_updated_at: z.string().optional(),
 });
 
-type ProfileFormValues = z.infer<typeof profileSchema>;
+const convertDropboxUrl = (url: string) => {
+  if (!url) return "";
+  if (url.includes("?raw=1")) return url;
+  return url.replace("www.dropbox.com", "dl.dropboxusercontent.com").replace("?dl=0", "?raw=1");
+};
+
+const defaultCoverImage = "/placeholder-cover.jpg"
+const defaultAvatarImage = "/placeholder-avatar.jpg"
 
 export default function Profile() {
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [coverUrl, setCoverUrl] = useState<string | null>(null);
-  const [showDeletePhotoDialog, setShowDeletePhotoDialog] = useState(false);
-  const [showDeleteCoverDialog, setShowDeleteCoverDialog] = useState(false);
-  const [isPreviewMode, setIsPreviewMode] = useState(false);
-  const [locationName, setLocationName] = useState<string | null>(null);
-  const [theme, setTheme] = useState<"light" | "dark" | "system">("system");
-
+  const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [showSettings, setShowSettings] = useState(false);
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
+  const [activeTab, setActiveTab] = useState("posts");
+  const [isLoadingImage, setIsLoadingImage] = useState(false);
+  const [showDeletePhotoDialog, setShowDeletePhotoDialog] = useState(false);
+  const [showDeleteCoverDialog, setShowDeleteCoverDialog] = useState(false);
+  const { theme } = useTheme();
 
-  const user = supabase.auth.user();
+  const form = useForm<z.infer<typeof profileSchema>>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: {
+      full_name: "",
+      email: "",
+      phone: "",
+      birth_date: "",
+      street: "",
+      house_number: "",
+      city: "",
+      postal_code: "",
+      avatar_url: "",
+      cover_url: "",
+      username: "",
+      bio: "",
+      website: "",
+      status: "",
+    },
+  });
 
-  const { data: profileData, refetch: refetchProfile } = useQuery(
-    ["profile"],
-    async () => {
-      if (!user) return null;
+  const { data: profile, isLoading: isProfileLoading } = useQuery({
+    queryKey: ["profile"],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Não autenticado");
 
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
-        .eq("id", user.id)
+        .eq("id", session.user.id)
         .single();
 
-      if (error) {
-        console.error("Error fetching profile:", error);
-        return null;
+      if (error) throw error;
+      
+      if (data) {
+        if (data.avatar_url) {
+          data.avatar_url = convertDropboxUrl(data.avatar_url);
+        }
+        if (data.cover_url) {
+          data.cover_url = convertDropboxUrl(data.cover_url);
+        }
       }
-
-      return data as Profile;
-    },
-    {
-      enabled: !!user,
-    }
-  );
-
-  useEffect(() => {
-    if (profileData) {
-      setProfile(profileData);
-      setAvatarUrl(profileData.avatar_url || null);
-      setCoverUrl(profileData.cover_url || null);
-    }
-  }, [profileData]);
-
-  useEffect(() => {
-    const getTheme = () => {
-      const storedTheme = localStorage.getItem("theme") as
-        | "light"
-        | "dark"
-        | "system"
-        | null;
-      return storedTheme || "system";
-    };
-
-    const initialTheme = getTheme();
-    setTheme(initialTheme);
-  }, []);
-
-  const { data: locationData } = useQuery(
-    ["location", profile?.location_id],
-    async () => {
-      if (!profile?.location_id) return null;
-
-      const { data, error } = await supabase
-        .from("locations")
-        .select("name")
-        .eq("id", profile.location_id)
-        .single();
-
-      if (error) {
-        console.error("Error fetching location:", error);
-        return null;
-      }
-
+      
       return data;
     },
-    {
-      enabled: !!profile?.location_id,
-    }
-  );
-
-  useEffect(() => {
-    if (locationData) {
-      setLocationName(locationData.name || null);
-    }
-  }, [locationData]);
-
-  const updateProfileMutation = useMutation(
-    async (values: ProfileFormValues) => {
-      if (!user) throw new Error("Not authenticated");
-      if (!profile) throw new Error("Profile not loaded");
-
-      const updates = {
-        id: user.id,
-        updated_at: new Date(),
-        username: values.username,
-        full_name: values.full_name,
-        bio: values.bio,
-        website: values.website,
-        email: values.email,
-        phone: values.phone,
-        birth_date: values.birth_date ? format(values.birth_date, 'yyyy-MM-dd') : null,
-        city: values.city,
-        street: values.street,
-        house_number: values.house_number,
-        postal_code: values.postal_code,
-        status: values.status,
-      };
-
-      const { error } = await supabase.from("profiles").upsert(updates);
-
-      if (error) {
-        throw new Error(error.message);
-      }
-      return values;
-    },
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries(["profile"]);
-        toast.success("Profile updated successfully!");
-      },
-      onError: (error: any) => {
-        toast.error(error.message);
-      },
-    }
-  );
-
-  const form = useForm<ProfileFormValues>({
-    resolver: zodResolver(profileSchema),
-    defaultValues: {
-      username: profile?.username || "",
-      full_name: profile?.full_name || "",
-      bio: profile?.bio || "",
-      website: profile?.website || "",
-      email: profile?.email || "",
-      phone: profile?.phone || "",
-      birth_date: profile?.birth_date ? new Date(profile.birth_date) : undefined,
-      city: profile?.city || "",
-      street: profile?.street || "",
-      house_number: profile?.house_number || "",
-      postal_code: profile?.postal_code || "",
-      status: profile?.status || "",
-    },
-    mode: "onChange",
   });
 
-  useEffect(() => {
-    form.reset({
-      username: profile?.username || "",
-      full_name: profile?.full_name || "",
-      bio: profile?.bio || "",
-      website: profile?.website || "",
-      email: profile?.email || "",
-      phone: profile?.phone || "",
-      birth_date: profile?.birth_date ? new Date(profile.birth_date) : undefined,
-      city: profile?.city || "",
-      street: profile?.street || "",
-      house_number: profile?.house_number || "",
-      postal_code: profile?.postal_code || "",
-      status: profile?.status || "",
-    });
-  }, [profile]);
+  const { data: userProducts } = useQuery({
+    queryKey: ["userProducts"],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return [];
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate("/login");
-  };
+      const { data } = await supabase
+        .from("products")
+        .select("*")
+        .eq("user_id", session.user.id);
 
-  const handleAvatarImageClick = () => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = "image/*";
-    input.onchange = async (event: any) => {
-      const file = event.target.files[0];
-      if (file) {
-        try {
-          const { data, error } = await supabase.storage
-            .from("avatars")
-            .upload(`avatars/${user?.id}/avatar`, file, {
-              cacheControl: "3600",
-              upsert: false,
-            });
+      return data || [];
+    },
+  });
 
-          if (error) {
-            console.error("Error uploading avatar:", error);
-            toast.error("Failed to update avatar.");
-          } else {
-            const avatarURL = `${
-              import.meta.env.VITE_SUPABASE_URL
-            }/storage/v1/object/public/${data.Key}`;
-
-            const { error: profileUpdateError } = await supabase
-              .from("profiles")
-              .update({ avatar_url: avatarURL })
-              .eq("id", user?.id);
-
-            if (profileUpdateError) {
-              console.error("Error updating profile:", profileUpdateError);
-              toast.error("Failed to update profile with new avatar.");
-            } else {
-              setAvatarUrl(avatarURL);
-              refetchProfile();
-              toast.success("Avatar updated successfully!");
-            }
-          }
-        } catch (error) {
-          console.error("Unexpected error:", error);
-          toast.error("An unexpected error occurred.");
-        }
-      }
-    };
-    input.click();
-  };
-
-  const handleCoverImageClick = () => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = "image/*";
-    input.onchange = async (event: any) => {
-      const file = event.target.files[0];
-      if (file) {
-        try {
-          const { data, error } = await supabase.storage
-            .from("covers")
-            .upload(`covers/${user?.id}/cover`, file, {
-              cacheControl: "3600",
-              upsert: false,
-            });
-
-          if (error) {
-            console.error("Error uploading cover:", error);
-            toast.error("Failed to update cover.");
-          } else {
-            const coverURL = `${
-              import.meta.env.VITE_SUPABASE_URL
-            }/storage/v1/object/public/${data.Key}`;
-
-            const { error: profileUpdateError } = await supabase
-              .from("profiles")
-              .update({ cover_url: coverURL })
-              .eq("id", user?.id);
-
-            if (profileUpdateError) {
-              console.error("Error updating profile:", profileUpdateError);
-              toast.error("Failed to update profile with new cover.");
-            } else {
-              setCoverUrl(coverURL);
-              refetchProfile();
-              toast.success("Cover updated successfully!");
-            }
-          }
-        } catch (error) {
-          console.error("Unexpected error:", error);
-          toast.error("An unexpected error occurred.");
-        }
-      }
-    };
-    input.click();
-  };
+  const { data: locations } = useQuery({
+    queryKey: ["locations"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("locations")
+        .select("*")
+        .order("name");
+      return data || [];
+    },
+  });
 
   const handleDeleteAvatar = async () => {
-    try {
-      const { error } = await supabase.storage
-        .from("avatars")
-        .remove([`avatars/${user?.id}/avatar`]);
-
-      if (error) {
-        console.error("Error deleting avatar:", error);
-        toast.error("Failed to delete avatar.");
-      } else {
-        const { error: profileUpdateError } = await supabase
-          .from("profiles")
-          .update({ avatar_url: null })
-          .eq("id", user?.id);
-
-        if (profileUpdateError) {
-          console.error("Error updating profile:", profileUpdateError);
-          toast.error("Failed to update profile.");
-        } else {
-          setAvatarUrl(null);
-          refetchProfile();
-          toast.success("Avatar deleted successfully!");
-        }
-      }
-    } catch (error) {
-      console.error("Unexpected error:", error);
-      toast.error("An unexpected error occurred.");
-    } finally {
-      setShowDeletePhotoDialog(false);
-    }
+    form.setValue("avatar_url", null);
+    updateProfile.mutate(form.getValues());
+    setShowDeletePhotoDialog(false);
+    toast({
+      title: "Foto de perfil removida",
+      description: "Sua foto de perfil foi removida com sucesso",
+    });
   };
 
   const handleDeleteCover = async () => {
-    try {
-      const { error } = await supabase.storage
-        .from("covers")
-        .remove([`covers/${user?.id}/cover`]);
+    form.setValue("cover_url", null);
+    updateProfile.mutate(form.getValues());
+    setShowDeleteCoverDialog(false);
+    toast({
+      title: "Foto de capa removida",
+      description: "Sua foto de capa foi removida com sucesso",
+    });
+  };
 
-      if (error) {
-        console.error("Error deleting cover:", error);
-        toast.error("Failed to delete cover.");
-      } else {
-        const { error: profileUpdateError } = await supabase
-          .from("profiles")
-          .update({ cover_url: null })
-          .eq("id", user?.id);
-
-        if (profileUpdateError) {
-          console.error("Error updating profile:", profileUpdateError);
-          toast.error("Failed to update profile.");
-        } else {
-          setCoverUrl(null);
-          refetchProfile();
-          toast.success("Cover deleted successfully!");
-        }
-      }
-    } catch (error) {
-      console.error("Unexpected error:", error);
-      toast.error("An unexpected error occurred.");
-    } finally {
-      setShowDeleteCoverDialog(false);
+  const handleCoverImageClick = () => {
+    const dialog = window.prompt('Cole aqui o link do Dropbox para a imagem de capa:', profile?.cover_url || '');
+    if (dialog !== null) {
+      const values = {
+        ...form.getValues(),
+        cover_url: dialog
+      };
+      updateProfile.mutate(values);
     }
   };
 
+  const handleAvatarImageClick = () => {
+    const dialog = window.prompt('Cole aqui o link do Dropbox para a foto de perfil:', profile?.avatar_url || '');
+    if (dialog !== null) {
+      form.setValue("avatar_url", dialog);
+      updateProfile.mutate(form.getValues());
+    }
+  };
+
+  const handleImageError = (error: any) => {
+    console.error("Erro ao carregar a imagem", error);
+    toast({
+      title: "Erro ao carregar a imagem",
+      description: "Verifique se o link do Dropbox está correto",
+      variant: "destructive",
+    });
+    setIsLoadingImage(false);
+  };
+
+  const copyProfileLink = () => {
+    const profileUrl = `${window.location.origin}/perfil/${profile?.username}`;
+    navigator.clipboard.writeText(profileUrl);
+    toast({
+      title: "Link copiado!",
+      description: "O link do seu perfil foi copiado para a área de transferência.",
+    });
+  };
+
+  const updateProfile = useMutation({
+    mutationFn: async (values: z.infer<typeof profileSchema>) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Não autenticado");
+
+      if (values.avatar_url) {
+        values.avatar_url = convertDropboxUrl(values.avatar_url);
+      }
+      if (values.cover_url) {
+        values.cover_url = convertDropboxUrl(values.cover_url);
+      }
+
+      const isUpdatingRestricted = 
+        values.username !== profile?.username ||
+        values.phone !== profile?.phone;
+
+      if (isUpdatingRestricted) {
+        const { data: canUpdate, error: checkError } = await supabase
+          .rpc('can_update_basic_info', { profile_id: session.user.id });
+
+        if (checkError) throw checkError;
+        if (!canUpdate) {
+          throw new Error("Você só pode alterar seu @ ou telefone após 30 dias da última atualização.");
+        }
+
+        values.basic_info_updated_at = new Date().toISOString();
+      }
+
+      const { error } = await supabase
+        .from("profiles")
+        .update(values)
+        .eq("id", session.user.id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      toast({
+        title: "Perfil atualizado",
+        description: "Suas informações foram atualizadas com sucesso",
+      });
+      setShowSettings(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro ao atualizar perfil",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      navigate("/login");
+    } catch (error: any) {
+      toast({
+        title: "Erro ao sair",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (profile) {
+      form.reset({
+        full_name: profile.full_name || "",
+        email: profile.email || "",
+        phone: profile.phone || "",
+        birth_date: profile.birth_date ? format(new Date(profile.birth_date), "yyyy-MM-dd") : "",
+        street: profile.street || "",
+        house_number: profile.house_number || "",
+        city: profile.city || "",
+        postal_code: profile.postal_code || "",
+        avatar_url: profile.avatar_url || "",
+        cover_url: profile.cover_url || "",
+        username: profile.username || "",
+        bio: profile.bio || "",
+        website: profile.website || "",
+        status: profile.status || "",
+      });
+    }
+  }, [profile, form]);
+
+  if (isProfileLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-black text-white">
+        <p>Carregando...</p>
+      </div>
+    );
+  }
+
   return (
     <div className={`min-h-screen ${theme === 'light' ? 'bg-white text-black' : 'bg-black text-white'}`}>
-      <div
-        className="relative h-56 w-full bg-muted"
-        style={{
-          backgroundImage: coverUrl ? `url(${coverUrl})` : "none",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      >
-        <div className="absolute top-2 left-2">
-          <Button variant="ghost" onClick={() => navigate(-1)}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar
-          </Button>
+      <div className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between p-4 ${theme === 'light' ? 'bg-white/90' : 'bg-black/90'} backdrop-blur`}>
+        <div className="flex items-center">
+          <button onClick={() => navigate(-1)} className="mr-2">
+            <ArrowLeft className="h-6 w-6" />
+          </button>
+          <h1 className="text-lg font-semibold">{profile?.full_name}</h1>
         </div>
-        <div className="absolute bottom-2 left-2 text-white">
-          {locationName && (
-            <Button variant="secondary">
-              <MapPin className="h-4 w-4 mr-2" />
-              {locationName}
-            </Button>
-          )}
-        </div>
-        <div className="absolute bottom-2 right-2 text-white">
-          {profile?.website && (
-            <Button variant="secondary" asChild>
-              <a href={profile.website} target="_blank" rel="noopener noreferrer">
-                <Link2 className="h-4 w-4 mr-2" />
-                Website
-              </a>
-            </Button>
-          )}
-        </div>
+        <button onClick={handleLogout} className="flex items-center">
+          <LogOut className="h-6 w-6" />
+        </button>
       </div>
 
-      <div className="container mx-auto p-4">
-        <div className="flex items-start">
-          <div className="relative w-32 h-32 rounded-full overflow-hidden mt-[-4rem]">
-            <img
-              src={avatarUrl || "/placeholder-avatar.jpg"}
-              alt="Avatar"
-              className="object-cover w-full h-full"
-            />
+      <div className="pt-16 pb-20">
+        <div className="relative">
+          <div className="h-32 bg-gray-200 dark:bg-gray-800 relative">
+            {profile?.cover_url ? (
+              <img
+                src={profile.cover_url}
+                alt="Capa"
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.src = defaultCoverImage;
+                }}
+              />
+            ) : (
+              <div className={`w-full h-full flex items-center justify-center ${theme === 'light' ? 'bg-white' : 'bg-black'}`}>
+                <p className="text-gray-500">Sem Capa de Perfil</p>
+              </div>
+            )}
+            {!isPreviewMode && (
+              <div className="absolute right-4 bottom-4 flex gap-2">
+                <button
+                  onClick={() => setShowDeleteCoverDialog(true)}
+                  className="bg-blue-500 p-2 rounded-full cursor-pointer hover:bg-blue-600 transition-colors"
+                >
+                  <Trash2 className="h-5 w-5 text-white" />
+                </button>
+                <button
+                  onClick={handleCoverImageClick}
+                  className="bg-blue-500 p-2 rounded-full cursor-pointer hover:bg-blue-600 transition-colors"
+                >
+                  <Camera className="h-5 w-5 text-white" />
+                </button>
+              </div>
+            )}
           </div>
-          
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2 ml-auto">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    className="h-8 w-8 p-0"
-                  >
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={handleLogout}>
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Sair
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/config")}>
-                    <Settings className="h-4 w-4 mr-2" />
-                    Configurações
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
 
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    className="bg-background hover:bg-accent text-foreground border-border"
-                  >
-                    Editar perfil
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="bg-background border-border">
-                  <DialogHeader>
-                    <DialogTitle className="text-foreground">Editar Perfil</DialogTitle>
-                  </DialogHeader>
-                  <Form {...form}>
-                    <form
-                      onSubmit={form.handleSubmit((values) =>
-                        updateProfileMutation.mutate(values)
-                      )}
-                      className="space-y-4"
-                    >
-                      <FormField
-                        control={form.control}
-                        name="username"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Username</FormLabel>
-                            <FormControl>
-                              <Input placeholder="shadcn" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="full_name"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Full Name</FormLabel>
-                            <FormControl>
-                              <Input placeholder="John Doe" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="bio"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Bio</FormLabel>
-                            <FormControl>
-                              <Textarea
-                                placeholder="Write something about yourself."
-                                className="resize-none"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="website"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Website</FormLabel>
-                            <FormControl>
-                              <Input placeholder="https://example.com" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Email</FormLabel>
-                            <FormControl>
-                              <Input placeholder="example@example.com" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="phone"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Phone</FormLabel>
-                            <FormControl>
-                              <Input placeholder="+15551234567" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="birth_date"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Birth Date</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="date"
-                                {...field}
-                                value={
-                                  field.value
-                                    ? format(field.value, "yyyy-MM-dd")
-                                    : ""
-                                }
-                                onChange={(e) => {
-                                  field.onChange(new Date(e.target.value));
-                                }}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="city"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>City</FormLabel>
-                            <FormControl>
-                              <Input placeholder="New York" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="street"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Street</FormLabel>
-                            <FormControl>
-                              <Input placeholder="5th Avenue" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="house_number"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>House Number</FormLabel>
-                            <FormControl>
-                              <Input placeholder="123" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="postal_code"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Postal Code</FormLabel>
-                            <FormControl>
-                              <Input placeholder="10001" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="status"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Status</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Active" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <DialogFooter>
-                        <Button type="submit">Salvar</Button>
-                      </DialogFooter>
-                    </form>
-                  </Form>
-                </DialogContent>
-              </Dialog>
-
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    className="h-8 w-8 p-0"
-                    title="Editar fotos"
-                  >
-                    <Camera className="h-4 w-4" />
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="bg-background border-border">
-                  <DialogHeader>
-                    <DialogTitle className="text-foreground">Editar fotos</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div>
-                      <h3 className="text-foreground mb-2">Foto de Perfil</h3>
-                      <div className="flex gap-2">
-                        <Button
-                          onClick={handleAvatarImageClick}
-                          variant="outline"
-                          className="bg-background hover:bg-accent text-foreground border-border"
-                        >
-                          <Camera className="h-4 w-4 mr-2" />
-                          Alterar foto
-                        </Button>
-                        <Button
-                          onClick={() => setShowDeletePhotoDialog(true)}
-                          variant="destructive"
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Excluir
-                        </Button>
-                      </div>
-                    </div>
-                    <div>
-                      <h3 className="text-foreground mb-2">Foto de Capa</h3>
-                      <div className="flex gap-2">
-                        <Button
-                          onClick={handleCoverImageClick}
-                          variant="outline"
-                          className="bg-background hover:bg-accent text-foreground border-border"
-                        >
-                          <Camera className="h-4 w-4 mr-2" />
-                          Alterar capa
-                        </Button>
-                        <Button
-                          onClick={() => setShowDeleteCoverDialog(true)}
-                          variant="destructive"
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Excluir
-                        </Button>
-                      </div>
-                    </div>
+          <div className="relative -mt-16 px-4">
+            <div className="relative inline-block">
+              <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white dark:border-black">
+                {profile?.avatar_url ? (
+                  <img
+                    src={profile.avatar_url}
+                    alt="Avatar"
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src = defaultAvatarImage;
+                    }}
+                  />
+                ) : (
+                  <div className={`w-full h-full flex items-center justify-center ${theme === 'light' ? 'bg-white' : 'bg-black'}`}>
+                    <p className="text-gray-500">Sem foto de perfil</p>
                   </div>
-                </DialogContent>
-              </Dialog>
+                )}
+              </div>
+              {!isPreviewMode && (
+                <div className="absolute bottom-2 right-2 flex gap-2">
+                  <button 
+                    onClick={() => setShowDeletePhotoDialog(true)}
+                    className="bg-blue-500 p-2 rounded-full cursor-pointer hover:bg-blue-600 transition-colors"
+                  >
+                    <Trash2 className="h-5 w-5 text-white" />
+                  </button>
+                  <button 
+                    onClick={handleAvatarImageClick}
+                    className="bg-blue-500 p-2 rounded-full cursor-pointer hover:bg-blue-600 transition-colors"
+                  >
+                    <Camera className="h-5 w-5 text-white" />
+                  </button>
+                </div>
+              )}
             </div>
-          </>
-        ) : (
-          <Button onClick={() => setIsPreviewMode(false)}>
-            <Eye className="h-4 w-4 mr-2" />
-            Sair do modo de visualização
-          </Button>
-        )}
-      </div>
+          </div>
 
-        <div className="mt-4">
-          <h1 className="text-2xl font-bold">{profile?.full_name}</h1>
-          <p className="text-muted-foreground">@{profile?.username}</p>
-          <p className="mt-2">{profile?.bio}</p>
-        </div>
+          <div className="px-4 mt-4">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-2xl font-bold">{profile?.full_name}</h2>
+                <p className="text-gray-400">@{profile?.username}</p>
+                {profile?.status && (
+                  <p className="text-yellow-500 text-sm mt-1">
+                    {profile.status} 👍
+                  </p>
+                )}
+                {profile?.city && (
+                  <p className="text-gray-400 text-sm mt-1 flex items-center gap-1">
+                    <MapPin className="h-4 w-4" />
+                    Mora em {profile.city}
+                  </p>
+                )}
+              </div>
 
-        <Tabs defaultValue="about" className="w-full mt-4">
-          <TabsList>
-            <TabsTrigger value="about">Sobre</TabsTrigger>
-            <TabsTrigger value="settings">Configurações</TabsTrigger>
-          </TabsList>
-          <TabsContent value="about" className="space-y-2">
-            <Card>
-              <CardContent className="p-4">
-                <h2 className="text-lg font-semibold">Detalhes Pessoais</h2>
-                <div className="grid gap-4 mt-4">
-                  <div>
-                    <p className="text-sm font-medium leading-none">Email</p>
-                    <p className="text-muted-foreground">{profile?.email}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium leading-none">Telefone</p>
-                    <p className="text-muted-foreground">{profile?.phone || "Não informado"}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium leading-none">Data de Nascimento</p>
-                    <p className="text-muted-foreground">
-                      {profile?.birth_date
-                        ? format(new Date(profile.birth_date), "dd/MM/yyyy")
-                        : "Não informada"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium leading-none">Status</p>
-                    <p className="text-muted-foreground">{profile?.status || "Não informado"}</p>
+              <div className="flex flex-col gap-2">
+                {!isPreviewMode ? (
+                  <>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" className={`${theme === 'light' ? 'text-black border-gray-300' : 'text-white border-gray-700'}`}>
+                          Editar fotos
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="bg-gray-900 border-gray-800">
+                        <DialogHeader>
+                          <DialogTitle className="text-white">Editar fotos</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          <div>
+                            <h3 className="text-white mb-2">Foto de Perfil</h3>
+                            <div className="flex gap-2">
+                              <Button
+                                onClick={handleAvatarImageClick}
+                                variant="outline"
+                                className="text-white border-gray-700"
+                              >
+                                <Camera className="h-4 w-4 mr-2" />
+                                Alterar foto
+                              </Button>
+                              <Button
+                                onClick={() => setShowDeletePhotoDialog(true)}
+                                variant="destructive"
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Excluir
+                              </Button>
+                            </div>
+                          </div>
+                          <div>
+                            <h3 className="text-white mb-2">Foto de Capa</h3>
+                            <div className="flex gap-2">
+                              <Button
+                                onClick={handleCoverImageClick}
+                                variant="outline"
+                                className="text-white border-gray-700"
+                              >
+                                <Camera className="h-4 w-4 mr-2" />
+                                Alterar capa
+                              </Button>
+                              <Button
+                                onClick={() => setShowDeleteCoverDialog(true)}
+                                variant="destructive"
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Excluir
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" className={`${theme === 'light' ? 'text-black border-gray-300' : 'text-white border-gray-700'}`}>
+                          Editar perfil
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="bg-gray-900 border-gray-800">
+                        <DialogHeader>
+                          <DialogTitle className="text-white">Editar perfil</DialogTitle>
+                        </DialogHeader>
+                        <Form {...form}>
+                          <form onSubmit={form.handleSubmit((data) => updateProfile.mutate(data))} className="space-y-4">
+                            <FormField
+                              control={form.control}
+                              name="username"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-white">Username</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      {...field}
+                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
+                                      placeholder="Seu username"
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="full_name"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-white">Nome completo</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      {...field}
+                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
+                                      placeholder="Seu nome completo"
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="bio"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-white">Bio</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      {...field}
+                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
+                                      placeholder="Sua biografia"
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="website"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-white">Website</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      {...field}
+                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
+                                      placeholder="https://seu-site.com"
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="phone"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-white">Telefone</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      {...field}
+                                      type="tel"
+                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
+                                      placeholder="(00) 00000-0000"
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="birth_date"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-white">Data de Nascimento</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      {...field}
+                                      type="date"
+                                      className="bg-transparent border-white text-white"
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="email"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-white">Email</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      {...field}
+                                      type="email"
+                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
+                                      placeholder="seu@email.com"
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="street"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-white">Rua</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      {...field}
+                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
+                                      placeholder="Nome da rua"
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="house_number"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-white">Número</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      {...field}
+                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
+                                      placeholder="123"
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="city"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-white">Cidade</FormLabel>
+                                  <FormControl>
+                                    <select
+                                      {...field}
+                                      className="w-full bg-transparent border-white text-white placeholder:text-gray-400 rounded-md p-2"
+                                    >
+                                      {locations?.map((location) => (
+                                        <option 
+                                          key={location.id} 
+                                          value={location.name}
+                                          selected={location.name === profile?.city}
+                                        >
+                                          {location.name}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={form.control}
+                              name="postal_code"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-white">CEP</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      {...field}
+                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
+                                      placeholder="00000-000"
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <div className="flex gap-2 justify-end">
+                              <Button 
+                                type="button" 
+                                variant="outline" 
+                                onClick={() => setShowSettings(false)}
+                              >
+                                Cancelar
+                              </Button>
+                              <Button 
+                                type="submit" 
+                                className="bg-blue-600 hover:bg-blue-700"
+                                disabled={updateProfile.isPending}
+                              >
+                                {updateProfile.isPending ? "Salvando..." : "Salvar alterações"}
+                              </Button>
+                            </div>
+                          </form>
+                        </Form>
+                      </DialogContent>
+                    </Dialog>
+
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="icon" className="border-gray-700">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="bg-gray-900 border-gray-800">
+                        <DropdownMenuItem onClick={copyProfileLink} className="text-white cursor-pointer">
+                          <Link2 className="h-4 w-4 mr-2" />
+                          Copiar link do perfil
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setIsPreviewMode(true)} className="text-white cursor-pointer">
+                          <Eye className="h-4 w-4 mr-2" />
+                          Ver como
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </>
+                ) : (
+                  <Button 
+                    onClick={() => setIsPreviewMode(false)} 
+                    variant="outline" 
+                    className={`${theme === 'light' ? 'text-black border-gray-300' : 'text-white border-gray-700'}`}
+                  >
+                    Sair do modo preview
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {profile?.bio && (
+              <p className={`mb-4 ${theme === 'light' ? 'text-black' : 'text-gray-300'}`}>{profile.bio}</p>
+            )}
+
+            <Tabs defaultValue="posts" className="w-full">
+              <TabsList className="w-full justify-start border-b border-gray-800 bg-transparent">
+                <TabsTrigger
+                  value="posts"
+                  className={`flex-1 text-xl py-4 border-0 data-[state=active]:border-b-2 ${
+                    theme === 'light' 
+                      ? 'data-[state=active]:text-black data-[state=active]:border-black' 
+                      : 'data-[state=active]:text-white data-[state=active]:border-white'
+                  }`}
+                >
+                  Posts
+                </TabsTrigger>
+                <TabsTrigger
+                  value="products"
+                  className={`flex-1 text-xl py-4 border-0 data-[state=active]:border-b-2 ${
+                    theme === 'light' 
+                      ? 'data-[state=active]:text-black data-[state=active]:border-black' 
+                      : 'data-[state=active]:text-white data-[state=active]:border-white'
+                  }`}
+                >
+                  Produtos
+                </TabsTrigger>
+                <TabsTrigger
+                  value="reels"
+                  className={`flex-1 text-xl py-4 border-0 data-[state=active]:border-b-2 ${
+                    theme === 'light' 
+                      ? 'data-[state=active]:text-black data-[state=active]:border-black' 
+                      : 'data-[state=active]:text-white data-[state=active]:border-white'
+                  }`}
+                >
+                  Reels
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="posts" className="min-h-[200px]">
+                <div className="grid grid-cols-3 gap-1">
+                  <div className="aspect-square bg-gray-800/50 flex items-center justify-center">
+                    <p className="text-gray-500">Ainda não há Posts</p>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="settings">
-            <Card>
-              <CardContent>
-                <h2 className="text-lg font-semibold">Configurações da Conta</h2>
-                <Button onClick={() => navigate("/config")} className="mt-4">
-                  Gerenciar Configurações
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+              </TabsContent>
+
+              <TabsContent value="products" className="min-h-[200px]">
+                {userProducts && userProducts.length > 0 ? (
+                  <div className="grid grid-cols-2 gap-4 p-4">
+                    {userProducts.map((product) => (
+                      <Card key={product.id} className={`${theme === 'light' ? 'bg-white' : 'bg-black'} shadow-none border-0`}>
+                        <CardContent className="p-3">
+                          {product.images?.[0] && (
+                            <img
+                              src={product.images[0]}
+                              alt={product.title}
+                              className="w-full aspect-square object-cover rounded-lg mb-2"
+                            />
+                          )}
+                          <h3 className={`font-medium ${theme === 'light' ? 'text-black' : 'text-white'}`}>{product.title}</h3>
+                          <p className="text-green-500">
+                            {new Intl.NumberFormat('pt-BR', {
+                              style: 'currency',
+                              currency: 'BRL'
+                            }).format(Number(product.price))}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-[200px]">
+                    <p className="text-gray-500">Ainda não há Produtos</p>
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="reels" className="min-h-[200px]">
+                <div className="grid grid-cols-3 gap-1">
+                  <div className="aspect-square bg-gray-800/50 flex items-center justify-center">
+                    <p className="text-gray-500">Ainda não há Reels</p>
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
+          </div>
+        </div>
       </div>
 
       <Dialog open={showDeletePhotoDialog} onOpenChange={setShowDeletePhotoDialog}>
-        <DialogContent>
+        <DialogContent className="bg-gray-900 border-gray-800">
           <DialogHeader>
-            <DialogTitle>Excluir Foto de Perfil</DialogTitle>
-            <DialogDescription>
-              Tem certeza de que deseja excluir sua foto de perfil?
-            </DialogDescription>
+            <DialogTitle className="text-white">Remover foto de perfil</DialogTitle>
           </DialogHeader>
+          <p className="text-gray-300">Tem certeza que deseja remover sua foto de perfil?</p>
           <DialogFooter>
-            <Button variant="secondary" onClick={() => setShowDeletePhotoDialog(false)}>
+            <Button variant="outline" onClick={() => setShowDeletePhotoDialog(false)}>
               Cancelar
             </Button>
             <Button variant="destructive" onClick={handleDeleteAvatar}>
-              Excluir
+              Remover
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       <Dialog open={showDeleteCoverDialog} onOpenChange={setShowDeleteCoverDialog}>
-        <DialogContent>
+        <DialogContent className="bg-gray-900 border-gray-800">
           <DialogHeader>
-            <DialogTitle>Excluir Foto de Capa</DialogTitle>
-            <DialogDescription>
-              Tem certeza de que deseja excluir sua foto de capa?
-            </DialogDescription>
+            <DialogTitle className="text-white">Remover foto de capa</DialogTitle>
           </DialogHeader>
+          <p className="text-gray-300">Tem certeza que deseja remover sua foto de capa?</p>
           <DialogFooter>
-            <Button variant="secondary" onClick={() => setShowDeleteCoverDialog(false)}>
+            <Button variant="outline" onClick={() => setShowDeleteCoverDialog(false)}>
               Cancelar
             </Button>
             <Button variant="destructive" onClick={handleDeleteCover}>
-              Excluir
+              Remover
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <BottomNav />
     </div>
   );
 }
