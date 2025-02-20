@@ -425,9 +425,64 @@ export default function Profile() {
                 )}
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2">
                 {!isPreviewMode ? (
                   <>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" className={`${theme === 'light' ? 'text-black border-gray-300' : 'text-white border-gray-700'}`}>
+                          Editar fotos
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="bg-gray-900 border-gray-800">
+                        <DialogHeader>
+                          <DialogTitle className="text-white">Editar fotos</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          <div>
+                            <h3 className="text-white mb-2">Foto de Perfil</h3>
+                            <div className="flex gap-2">
+                              <Button
+                                onClick={handleAvatarImageClick}
+                                variant="outline"
+                                className="text-white border-gray-700"
+                              >
+                                <Camera className="h-4 w-4 mr-2" />
+                                Alterar foto
+                              </Button>
+                              <Button
+                                onClick={() => setShowDeletePhotoDialog(true)}
+                                variant="destructive"
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Excluir
+                              </Button>
+                            </div>
+                          </div>
+                          <div>
+                            <h3 className="text-white mb-2">Foto de Capa</h3>
+                            <div className="flex gap-2">
+                              <Button
+                                onClick={handleCoverImageClick}
+                                variant="outline"
+                                className="text-white border-gray-700"
+                              >
+                                <Camera className="h-4 w-4 mr-2" />
+                                Alterar capa
+                              </Button>
+                              <Button
+                                onClick={() => setShowDeleteCoverDialog(true)}
+                                variant="destructive"
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Excluir
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button variant="outline" className={`${theme === 'light' ? 'text-black border-gray-300' : 'text-white border-gray-700'}`}>
