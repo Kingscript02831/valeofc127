@@ -107,11 +107,10 @@ export default function Profile() {
     });
   }, []);
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ["profile", userId],
     queryFn: async () => {
       if (!userId) return null;
-
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
@@ -121,11 +120,14 @@ export default function Profile() {
       if (error) throw error;
       return data as Profile;
     },
-    enabled: !!userId,
-    onSuccess: (data) => {
-      setProfile(data);
-    },
+    enabled: !!userId
   });
+
+  useEffect(() => {
+    if (data) {
+      setProfile(data);
+    }
+  }, [data]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -146,47 +148,30 @@ export default function Profile() {
       avatar_url: profile?.avatar_url || "",
       cover_url: profile?.cover_url || "",
       theme_preference: profile?.theme_preference || "system",
-    },
-    mode: "onChange",
-    values: {
-      full_name: profile?.full_name || "",
-      username: profile?.username || "",
-      website: profile?.website || "",
-      bio: profile?.bio || "",
-      email: profile?.email || "",
-      phone: profile?.phone || "",
-      birth_date: profile?.birth_date || "",
-      city: profile?.city || "",
-      street: profile?.street || "",
-      house_number: profile?.house_number || "",
-      postal_code: profile?.postal_code || "",
-      status: profile?.status || "",
-      location_id: profile?.location_id || "",
-      avatar_url: profile?.avatar_url || "",
-      cover_url: profile?.cover_url || "",
-      theme_preference: profile?.theme_preference || "system",
-    },
+    }
   });
 
   useEffect(() => {
-    form.reset({
-      full_name: profile?.full_name || "",
-      username: profile?.username || "",
-      website: profile?.website || "",
-      bio: profile?.bio || "",
-      email: profile?.email || "",
-      phone: profile?.phone || "",
-      birth_date: profile?.birth_date || "",
-      city: profile?.city || "",
-      street: profile?.street || "",
-      house_number: profile?.house_number || "",
-      postal_code: profile?.postal_code || "",
-      status: profile?.status || "",
-      location_id: profile?.location_id || "",
-      avatar_url: profile?.avatar_url || "",
-      cover_url: profile?.cover_url || "",
-      theme_preference: profile?.theme_preference || "system",
-    });
+    if (profile) {
+      form.reset({
+        full_name: profile.full_name || "",
+        username: profile.username || "",
+        website: profile.website || "",
+        bio: profile.bio || "",
+        email: profile.email || "",
+        phone: profile.phone || "",
+        birth_date: profile.birth_date || "",
+        city: profile.city || "",
+        street: profile.street || "",
+        house_number: profile.house_number || "",
+        postal_code: profile.postal_code || "",
+        status: profile.status || "",
+        location_id: profile.location_id || "",
+        avatar_url: profile.avatar_url || "",
+        cover_url: profile.cover_url || "",
+        theme_preference: profile.theme_preference || "system",
+      });
+    }
   }, [profile]);
 
   const updateProfile = useMutation({
