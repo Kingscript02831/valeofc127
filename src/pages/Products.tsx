@@ -13,6 +13,13 @@ import { useSiteConfig } from "@/hooks/useSiteConfig";
 import Navbar from "@/components/Navbar";
 import BottomNav from "@/components/BottomNav";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -24,6 +31,8 @@ const Products = () => {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedCity, setSelectedCity] = useState<string>("");
+  const [searchRadius, setSearchRadius] = useState<string>("50");
   const { data: config } = useSiteConfig();
 
   // Query para buscar as categorias
@@ -41,6 +50,20 @@ const Products = () => {
     }
   });
 
+  // Query para buscar as localizações
+  const { data: locations } = useQuery({
+    queryKey: ['locations'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('locations')
+        .select('*')
+        .order('name');
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+
   // Query para buscar os produtos
   const { data: products, isLoading } = useQuery({
     queryKey: ["products", selectedCategory],
@@ -52,6 +75,10 @@ const Products = () => {
 
       if (selectedCategory) {
         query = query.eq("category_id", selectedCategory);
+      }
+
+      if (selectedCity) {
+        query = query.eq("location_id", selectedCity);
       }
 
       const { data, error } = await query;
@@ -125,6 +152,32 @@ const Products = () => {
 
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl font-bold text-foreground">Seleções de hoje</h1>
+          <div className="flex items-center gap-2">
+            <Select value={selectedCity} onValueChange={setSelectedCity}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Selecione a cidade" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Todas as cidades</SelectItem>
+                {locations?.map((location) => (
+                  <SelectItem key={location.id} value={location.id}>
+                    {location.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={searchRadius} onValueChange={setSearchRadius}>
+              <SelectTrigger className="w-[120px]">
+                <SelectValue placeholder="Raio" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10 km</SelectItem>
+                <SelectItem value="25">25 km</SelectItem>
+                <SelectItem value="50">50 km</SelectItem>
+                <SelectItem value="100">100 km</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {isLoading ? (
