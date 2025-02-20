@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -6,7 +7,6 @@ import { supabase } from "../integrations/supabase/client";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { useToast } from "../hooks/use-toast";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,23 +35,17 @@ import * as z from "zod";
 import {
   LogOut,
   User,
-  AtSign,
   Settings,
   MapPin,
-  Mail,
-  Phone,
-  Calendar,
-  Globe,
-  Building,
-  Home,
   Link2,
   Eye,
   ArrowLeft,
+  Camera,
+  Pencil,
 } from "lucide-react";
-import { Card, CardContent } from "../components/ui/card";
+import { Card } from "../components/ui/card";
 import BottomNav from "../components/BottomNav";
 import type { Profile } from "../types/profile";
-import MediaCarousel from "../components/MediaCarousel";
 import { useTheme } from "../components/ThemeProvider";
 import ProfileTabs from "../components/ProfileTabs";
 
@@ -335,6 +329,7 @@ export default function Profile() {
 
       <div className="pt-16 pb-20">
         <div className="relative">
+          {/* Cover Image Section */}
           <div className="h-32 bg-gray-200 dark:bg-gray-800 relative">
             {profile?.cover_url ? (
               <img
@@ -350,8 +345,19 @@ export default function Profile() {
                 <p className="text-gray-500">Sem Capa de Perfil</p>
               </div>
             )}
+            {!isPreviewMode && (
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleCoverImageClick}
+                className="absolute bottom-2 right-2 bg-white/80 hover:bg-white/90"
+              >
+                <Camera className="h-4 w-4" />
+              </Button>
+            )}
           </div>
 
+          {/* Profile Info Section */}
           <div className="relative -mt-16 px-4">
             <div className="relative inline-block">
               <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white dark:border-black">
@@ -370,6 +376,16 @@ export default function Profile() {
                   </div>
                 )}
               </div>
+              {!isPreviewMode && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleAvatarImageClick}
+                  className="absolute bottom-0 right-0 bg-white/80 hover:bg-white/90 rounded-full"
+                >
+                  <Camera className="h-4 w-4" />
+                </Button>
+              )}
             </div>
           </div>
 
@@ -394,6 +410,28 @@ export default function Profile() {
               <div className="flex flex-col gap-2">
                 {!isPreviewMode ? (
                   <>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          className={`${theme === 'light' ? 'text-black border-gray-300' : 'text-white border-gray-700'}`}
+                        >
+                          <Pencil className="h-4 w-4 mr-2" />
+                          Editar fotos
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuItem onClick={handleAvatarImageClick}>
+                          <Camera className="h-4 w-4 mr-2" />
+                          Alterar foto de perfil
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={handleCoverImageClick}>
+                          <Camera className="h-4 w-4 mr-2" />
+                          Alterar capa
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button variant="outline" className={`${theme === 'light' ? 'text-black border-gray-300' : 'text-white border-gray-700'}`}>
