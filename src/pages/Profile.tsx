@@ -16,10 +16,20 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import type { Profile } from "@/types/profile";
 
 const defaultAvatarImage = "/placeholder.svg";
 const defaultCoverImage = "/placeholder.svg";
+
+interface Profile {
+  id: string;
+  username?: string | null;
+  full_name?: string | null;
+  avatar_url?: string | null;
+  cover_url?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  theme_preference?: "dark" | "light" | "system";
+}
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -96,17 +106,6 @@ export default function Profile() {
     }
   }, [profile, form]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const values = form.getValues();
-    updateProfile.mutate({
-      avatar_url: values.avatar_url,
-      cover_url: values.cover_url,
-      full_name: values.full_name,
-      username: values.username
-    });
-  };
-
   return (
     <div className={`min-h-screen ${theme === 'light' ? 'bg-white text-black' : 'bg-black text-white'}`}>
       <div className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between p-4 ${theme === 'light' ? 'bg-white/90' : 'bg-black/90'} backdrop-blur`}>
@@ -137,6 +136,26 @@ export default function Profile() {
                 <p className="text-gray-500">Sem Capa de Perfil</p>
               </div>
             )}
+            {!isPreviewMode && (
+              <div className="absolute bottom-2 right-2 flex gap-2">
+                <Button 
+                  onClick={() => setIsDeleteDialogOpen(true)}
+                  variant="destructive"
+                  size="icon"
+                  className="rounded-full"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+                <Button 
+                  onClick={() => setIsPhotoDialogOpen(true)}
+                  variant="default"
+                  size="icon"
+                  className="rounded-full bg-blue-500 hover:bg-blue-600"
+                >
+                  <Camera className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
           </div>
 
           <div className="relative -mt-16 px-4">
@@ -157,6 +176,26 @@ export default function Profile() {
                   </div>
                 )}
               </div>
+              {!isPreviewMode && (
+                <div className="absolute bottom-2 right-2 flex gap-2">
+                  <Button 
+                    onClick={() => setIsDeleteDialogOpen(true)}
+                    variant="destructive"
+                    size="icon"
+                    className="rounded-full"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    onClick={() => setIsPhotoDialogOpen(true)}
+                    variant="default"
+                    size="icon"
+                    className="rounded-full bg-blue-500 hover:bg-blue-600"
+                  >
+                    <Camera className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
             </div>
 
             <div className="mt-4 space-y-2">
@@ -178,7 +217,10 @@ export default function Profile() {
 
           {!isPreviewMode && (
             <div className="mt-8 px-4">
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                updateProfile.mutate(form.getValues());
+              }} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Nome de usuário
@@ -232,17 +274,6 @@ export default function Profile() {
                 className="w-full"
               />
             </div>
-            <Button 
-              variant="destructive"
-              onClick={() => {
-                setIsPhotoDialogOpen(false);
-                setIsDeleteDialogOpen(true);
-              }}
-              className="w-full"
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Excluir fotos
-            </Button>
           </div>
           <DialogFooter>
             <Button onClick={() => updateProfile.mutate({
