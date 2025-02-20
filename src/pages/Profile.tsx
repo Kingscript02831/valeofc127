@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Camera, Trash2, X } from "lucide-react";
@@ -15,18 +16,10 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import type { Profile } from "@/types/profile";
 
 const defaultAvatarImage = "/placeholder.svg";
 const defaultCoverImage = "/placeholder.svg";
-
-interface Profile {
-  id: string;
-  username?: string | null;
-  full_name?: string | null;
-  avatar_url?: string | null;
-  cover_url?: string | null;
-  theme_preference?: "dark" | "light" | "system";
-}
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -79,7 +72,7 @@ export default function Profile() {
 
   const handleDeleteAvatar = async () => {
     form.setValue("avatar_url", null);
-    updateProfile.mutate(form.getValues());
+    updateProfile.mutate({ avatar_url: null });
     setIsDeleteDialogOpen(false);
     toast({
       title: "Foto de perfil removida",
@@ -89,7 +82,7 @@ export default function Profile() {
 
   const handleDeleteCover = async () => {
     form.setValue("cover_url", null);
-    updateProfile.mutate(form.getValues());
+    updateProfile.mutate({ cover_url: null });
     setIsDeleteDialogOpen(false);
     toast({
       title: "Foto de capa removida",
@@ -105,7 +98,13 @@ export default function Profile() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    updateProfile.mutate(form.getValues());
+    const values = form.getValues();
+    updateProfile.mutate({
+      avatar_url: values.avatar_url,
+      cover_url: values.cover_url,
+      full_name: values.full_name,
+      username: values.username
+    });
   };
 
   return (
@@ -163,7 +162,7 @@ export default function Profile() {
             <div className="mt-4 space-y-2">
               <Button
                 onClick={() => setIsPhotoDialogOpen(true)}
-                className="w-full bg-blue-500 hover:bg-blue-600 text-white"
+                className="w-full"
               >
                 Editar Foto
               </Button>
@@ -177,76 +176,25 @@ export default function Profile() {
             </div>
           </div>
 
-          {!isPreviewMode ? (
+          {!isPreviewMode && (
             <div className="mt-8 px-4">
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label
-                    htmlFor="username"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Nome de usuário
                   </label>
                   <Input
-                    type="text"
-                    id="username"
                     {...form.register("username")}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    className="mt-1"
                   />
                 </div>
                 <div>
-                  <label
-                    htmlFor="full_name"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Nome Completo
                   </label>
                   <Input
-                    type="text"
-                    id="full_name"
                     {...form.register("full_name")}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="email"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
-                    Email
-                  </label>
-                  <Input
-                    type="email"
-                    id="email"
-                    {...form.register("email")}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="website"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
-                    Website
-                  </label>
-                  <Input
-                    type="url"
-                    id="website"
-                    {...form.register("website")}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor="bio"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
-                  >
-                    Bio
-                  </label>
-                  <Input
-                    id="bio"
-                    {...form.register("bio")}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                    className="mt-1"
                   />
                 </div>
                 <div>
@@ -256,7 +204,7 @@ export default function Profile() {
                 </div>
               </form>
             </div>
-          ) : null}
+          )}
         </div>
       </div>
 
@@ -297,7 +245,10 @@ export default function Profile() {
             </Button>
           </div>
           <DialogFooter>
-            <Button onClick={() => updateProfile.mutate(form.getValues())}>
+            <Button onClick={() => updateProfile.mutate({
+              avatar_url: form.getValues("avatar_url"),
+              cover_url: form.getValues("cover_url")
+            })}>
               Salvar alterações
             </Button>
           </DialogFooter>
