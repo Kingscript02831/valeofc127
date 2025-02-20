@@ -49,8 +49,7 @@ import {
   Link2,
   Eye,
   ArrowLeft,
-  Camera,
-  Search
+  Camera
 } from "lucide-react";
 import { Card, CardContent } from "../components/ui/card";
 import BottomNav from "../components/BottomNav";
@@ -191,17 +190,22 @@ export default function Profile() {
   };
 
   const handleCoverImageClick = () => {
-    const coverUrl = prompt("Cole aqui o link do Dropbox para a imagem de capa:");
-    if (coverUrl) {
-      form.setValue("cover_url", coverUrl);
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.placeholder = 'Cole o link do Dropbox aqui';
+    input.value = profile?.cover_url || '';
+    
+    const dialog = window.prompt('Cole aqui o link do Dropbox para a imagem de capa:', profile?.cover_url || '');
+    if (dialog !== null) {
+      form.setValue("cover_url", dialog);
       updateProfile.mutate(form.getValues());
     }
   };
 
   const handleAvatarImageClick = () => {
-    const avatarUrl = prompt("Cole aqui o link do Dropbox para a foto de perfil:");
-    if (avatarUrl) {
-      form.setValue("avatar_url", avatarUrl);
+    const dialog = window.prompt('Cole aqui o link do Dropbox para a foto de perfil:', profile?.avatar_url || '');
+    if (dialog !== null) {
+      form.setValue("avatar_url", dialog);
       updateProfile.mutate(form.getValues());
     }
   };
@@ -321,14 +325,15 @@ export default function Profile() {
 
   return (
     <div className={`min-h-screen ${theme === 'light' ? 'bg-white text-black' : 'bg-black text-white'}`}>
-      <div className={`fixed top-0 left-0 right-0 z-50 flex items-center p-4 ${theme === 'light' ? 'bg-white/90' : 'bg-black/90'} backdrop-blur`}>
-        <button onClick={() => navigate(-1)} className="mr-2">
-          <ArrowLeft className="h-6 w-6" />
-        </button>
-        <h1 className="text-lg font-semibold">{profile?.full_name}</h1>
-        <div className="flex-1" />
-        <button>
-          <Search className="h-6 w-6" />
+      <div className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between p-4 ${theme === 'light' ? 'bg-white/90' : 'bg-black/90'} backdrop-blur`}>
+        <div className="flex items-center">
+          <button onClick={() => navigate(-1)} className="mr-2">
+            <ArrowLeft className="h-6 w-6" />
+          </button>
+          <h1 className="text-lg font-semibold">{profile?.full_name}</h1>
+        </div>
+        <button onClick={handleLogout} className="flex items-center">
+          <LogOut className="h-6 w-6" />
         </button>
       </div>
 
@@ -645,13 +650,22 @@ export default function Profile() {
                                 </FormItem>
                               )}
                             />
-                            <Button 
-                              type="submit" 
-                              className="w-full bg-blue-600 hover:bg-blue-700"
-                              disabled={updateProfile.isPending}
-                            >
-                              {updateProfile.isPending ? "Salvando..." : "Salvar alterações"}
-                            </Button>
+                            <div className="flex gap-2 justify-end">
+                              <Button 
+                                type="button" 
+                                variant="outline" 
+                                onClick={() => setShowSettings(false)}
+                              >
+                                Cancelar
+                              </Button>
+                              <Button 
+                                type="submit" 
+                                className="bg-blue-600 hover:bg-blue-700"
+                                disabled={updateProfile.isPending}
+                              >
+                                {updateProfile.isPending ? "Salvando..." : "Salvar alterações"}
+                              </Button>
+                            </div>
                           </form>
                         </Form>
                       </DialogContent>
@@ -695,7 +709,7 @@ export default function Profile() {
               <TabsList className="w-full justify-start border-b border-gray-800 bg-transparent">
                 <TabsTrigger
                   value="posts"
-                  className={`flex-1 data-[state=active]:border-b-2 ${
+                  className={`flex-1 text-xl py-4 border-0 data-[state=active]:border-b-2 ${
                     theme === 'light' 
                       ? 'data-[state=active]:text-black data-[state=active]:border-black' 
                       : 'data-[state=active]:text-white data-[state=active]:border-white'
@@ -705,7 +719,7 @@ export default function Profile() {
                 </TabsTrigger>
                 <TabsTrigger
                   value="products"
-                  className={`flex-1 data-[state=active]:border-b-2 ${
+                  className={`flex-1 text-xl py-4 border-0 data-[state=active]:border-b-2 ${
                     theme === 'light' 
                       ? 'data-[state=active]:text-black data-[state=active]:border-black' 
                       : 'data-[state=active]:text-white data-[state=active]:border-white'
@@ -715,7 +729,7 @@ export default function Profile() {
                 </TabsTrigger>
                 <TabsTrigger
                   value="reels"
-                  className={`flex-1 data-[state=active]:border-b-2 ${
+                  className={`flex-1 text-xl py-4 border-0 data-[state=active]:border-b-2 ${
                     theme === 'light' 
                       ? 'data-[state=active]:text-black data-[state=active]:border-black' 
                       : 'data-[state=active]:text-white data-[state=active]:border-white'
