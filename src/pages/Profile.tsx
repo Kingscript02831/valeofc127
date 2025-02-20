@@ -1,10 +1,9 @@
-
 import { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
+import { supabase } from "../../integrations/supabase/client";
+import { Button } from "../components/ui/button";
 import {
   Form,
   FormControl,
@@ -12,8 +11,8 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+} from "../components/ui/form";
+import { Input } from "../components/ui/input";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { Camera, LogOut, Trash2 } from "lucide-react";
@@ -26,13 +25,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+} from "../components/ui/alert-dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Textarea } from "@/components/ui/textarea";
-import BottomNav from "@/components/BottomNav";
-import { Profile, ProfileUpdateData } from "@/types/profile";
-import MediaCarousel from "@/components/MediaCarousel";
-import { useTheme } from "@/components/ThemeProvider";
+import { Textarea } from "../components/ui/textarea";
+import BottomNav from "../components/BottomNav";
+import { Profile, ProfileUpdateData } from "../types/profile";
+import MediaCarousel from "../components/MediaCarousel";
+import { useTheme } from "../components/ThemeProvider";
 
 const formSchema = z.object({
   username: z.string().min(2).max(50),
