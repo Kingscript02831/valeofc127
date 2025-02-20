@@ -180,35 +180,22 @@ export default function Profile() {
   };
 
   const handleDeleteCover = async () => {
-    try {
-      const values = {
-        ...form.getValues(),
-        cover_url: null
-      };
-      form.setValue('cover_url', null);
-      updateProfile.mutate(values);
-      setShowDeleteCoverDialog(false);
-      toast({
-        title: "Foto de capa removida",
-        description: "Sua foto de capa foi removida com sucesso",
-      });
-    } catch (error) {
-      toast({
-        title: "Erro ao remover foto de capa",
-        description: "Ocorreu um erro ao tentar remover sua foto de capa",
-        variant: "destructive",
-      });
-    }
+    form.setValue("cover_url", null);
+    updateProfile.mutate(form.getValues());
+    setShowDeleteCoverDialog(false);
+    toast({
+      title: "Foto de capa removida",
+      description: "Sua foto de capa foi removida com sucesso",
+    });
   };
 
-  const handleCoverImageClick = async () => {
+  const handleCoverImageClick = () => {
     const dialog = window.prompt('Cole aqui o link do Dropbox para a imagem de capa:', profile?.cover_url || '');
     if (dialog !== null) {
       const values = {
         ...form.getValues(),
         cover_url: dialog
       };
-      form.setValue('cover_url', dialog);
       updateProfile.mutate(values);
     }
   };
@@ -838,4 +825,4 @@ export default function Profile() {
       <BottomNav />
     </div>
   );
-}
+                          }
