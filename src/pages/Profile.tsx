@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -242,7 +243,6 @@ export default function Profile() {
     <div className={`min-h-screen ${theme === 'light' ? 'bg-white text-black' : 'bg-black text-white'}`}>
       <Navbar />
       <SubNav />
-      
       <div className="relative">
         <div className="h-48 relative group">
           {profile?.cover_url ? (
