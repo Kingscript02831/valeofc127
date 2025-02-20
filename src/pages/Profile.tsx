@@ -85,35 +85,15 @@ const defaultCoverImage = "/placeholder-cover.jpg"
 const defaultAvatarImage = "/placeholder-avatar.jpg"
 
 export default function Profile() {
-  const { toast } = useToast();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [showSettings, setShowSettings] = useState(false);
-  const [isPreviewMode, setIsPreviewMode] = useState(false);
-  const [activeTab, setActiveTab] = useState("posts");
-  const [isLoadingImage, setIsLoadingImage] = useState(false);
-  const [showDeletePhotoDialog, setShowDeletePhotoDialog] = useState(false);
-  const [showDeleteCoverDialog, setShowDeleteCoverDialog] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const { theme } = useTheme();
 
   const form = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
-    defaultValues: {
-      full_name: "",
-      email: "",
-      phone: "",
-      birth_date: "",
-      street: "",
-      house_number: "",
-      city: "",
-      postal_code: "",
-      avatar_url: "",
-      cover_url: "",
-      username: "",
-      bio: "",
-      website: "",
-      status: "",
-    },
   });
 
   const { data: profile, isLoading: isProfileLoading } = useQuery({
@@ -168,64 +148,6 @@ export default function Profile() {
       return data || [];
     },
   });
-
-  const handleDeleteAvatar = async () => {
-    form.setValue("avatar_url", null);
-    updateProfile.mutate(form.getValues());
-    setShowDeletePhotoDialog(false);
-    toast({
-      title: "Foto de perfil removida",
-      description: "Sua foto de perfil foi removida com sucesso",
-    });
-  };
-
-  const handleDeleteCover = async () => {
-    form.setValue("cover_url", null);
-    updateProfile.mutate(form.getValues());
-    setShowDeleteCoverDialog(false);
-    toast({
-      title: "Foto de capa removida",
-      description: "Sua foto de capa foi removida com sucesso",
-    });
-  };
-
-  const handleCoverImageClick = () => {
-    const dialog = window.prompt('Cole aqui o link do Dropbox para a imagem de capa:', profile?.cover_url || '');
-    if (dialog !== null) {
-      const values = {
-        ...form.getValues(),
-        cover_url: dialog
-      };
-      updateProfile.mutate(values);
-    }
-  };
-
-  const handleAvatarImageClick = () => {
-    const dialog = window.prompt('Cole aqui o link do Dropbox para a foto de perfil:', profile?.avatar_url || '');
-    if (dialog !== null) {
-      form.setValue("avatar_url", dialog);
-      updateProfile.mutate(form.getValues());
-    }
-  };
-
-  const handleImageError = (error: any) => {
-    console.error("Erro ao carregar a imagem", error);
-    toast({
-      title: "Erro ao carregar a imagem",
-      description: "Verifique se o link do Dropbox está correto",
-      variant: "destructive",
-    });
-    setIsLoadingImage(false);
-  };
-
-  const copyProfileLink = () => {
-    const profileUrl = `${window.location.origin}/perfil/${profile?.username}`;
-    navigator.clipboard.writeText(profileUrl);
-    toast({
-      title: "Link copiado!",
-      description: "O link do seu perfil foi copiado para a área de transferência.",
-    });
-  };
 
   const updateProfile = useMutation({
     mutationFn: async (values: z.infer<typeof profileSchema>) => {
@@ -282,11 +204,40 @@ export default function Profile() {
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
-      navigate("/login");
-    } catch (error: any) {
+      navigate("/");
+    } catch (error) {
+      console.error("Error logging out:", error);
       toast({
         title: "Erro ao sair",
-        description: error.message,
+        description: "Não foi possível fazer logout",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Não autenticado");
+
+      const { error } = await supabase
+        .from("profiles")
+        .delete()
+        .eq("id", session.user.id);
+
+      if (error) throw error;
+
+      await supabase.auth.signOut();
+      navigate("/");
+      toast({
+        title: "Conta excluída",
+        description: "Sua conta foi excluída com sucesso",
+      });
+    } catch (error) {
+      console.error("Error deleting account:", error);
+      toast({
+        title: "Erro ao excluir conta",
+        description: "Não foi possível excluir sua conta",
         variant: "destructive",
       });
     }
@@ -298,7 +249,7 @@ export default function Profile() {
         full_name: profile.full_name || "",
         email: profile.email || "",
         phone: profile.phone || "",
-        birth_date: profile.birth_date ? format(new Date(profile.birth_date), "yyyy-MM-dd") : "",
+        birth_date: profile.birth_date || "",
         street: profile.street || "",
         house_number: profile.house_number || "",
         city: profile.city || "",
@@ -315,508 +266,427 @@ export default function Profile() {
 
   if (isProfileLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-black text-white">
-        <p>Carregando...</p>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 bg-gray-200 rounded w-3/4 mx-auto" />
+          <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto" />
+          <div className="space-y-3">
+            <div className="h-10 bg-gray-200 rounded" />
+            <div className="h-10 bg-gray-200 rounded" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Perfil não encontrado</h1>
+          <p className="text-gray-600 mb-4">
+            Você precisa estar logado para acessar esta página.
+          </p>
+          <Button onClick={() => navigate("/login")}>Fazer login</Button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className={`min-h-screen ${theme === 'light' ? 'bg-white text-black' : 'bg-black text-white'}`}>
-      <div className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between p-4 ${theme === 'light' ? 'bg-white/90' : 'bg-black/90'} backdrop-blur`}>
-        <div className="flex items-center">
-          <button onClick={() => navigate(-1)} className="mr-2">
-            <ArrowLeft className="h-6 w-6" />
-          </button>
-          <h1 className="text-lg font-semibold">{profile?.full_name}</h1>
+    <div className="min-h-screen pb-[72px] md:pb-0">
+      {/* Header */}
+      <div className="relative h-48 md:h-64">
+        <img
+          src={profile.cover_url || defaultCoverImage}
+          alt="Cover"
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+        
+        {/* Back button */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute top-4 left-4 text-white hover:bg-black/20"
+          onClick={() => navigate(-1)}
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+
+        {/* Actions */}
+        <div className="absolute top-4 right-4 flex gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-white hover:bg-black/20"
+            onClick={() => setShowSettings(true)}
+          >
+            <Settings className="h-5 w-5" />
+          </Button>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-white hover:bg-black/20"
+              >
+                <MoreHorizontal className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleLogout}>
+                <LogOut className="h-4 w-4 mr-2" />
+                Sair
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="text-red-600"
+                onClick={() => setShowDeleteConfirm(true)}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Excluir conta
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
-        <button onClick={handleLogout} className="flex items-center">
-          <LogOut className="h-6 w-6" />
-        </button>
-      </div>
 
-      <div className="pt-16 pb-20">
-        <div className="relative">
-          <div className="h-32 bg-gray-200 dark:bg-gray-800 relative">
-            {profile?.cover_url ? (
-              <img
-                src={profile.cover_url}
-                alt="Capa"
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.src = defaultCoverImage;
-                }}
-              />
-            ) : (
-              <div className={`w-full h-full flex items-center justify-center ${theme === 'light' ? 'bg-white' : 'bg-black'}`}>
-                <p className="text-gray-500">Sem Capa de Perfil</p>
-              </div>
-            )}
-            {!isPreviewMode && (
-              <div className="absolute right-4 bottom-4 flex gap-2">
-                <button
-                  onClick={() => setShowDeleteCoverDialog(true)}
-                  className="bg-blue-500 p-2 rounded-full cursor-pointer hover:bg-blue-600 transition-colors"
-                >
-                  <Trash2 className="h-5 w-5 text-white" />
-                </button>
-                <button
-                  onClick={handleCoverImageClick}
-                  className="bg-blue-500 p-2 rounded-full cursor-pointer hover:bg-blue-600 transition-colors"
-                >
-                  <Camera className="h-5 w-5 text-white" />
-                </button>
-              </div>
-            )}
-          </div>
-
-          <div className="relative -mt-16 px-4">
-            <div className="relative inline-block">
-              <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white dark:border-black">
-                {profile?.avatar_url ? (
-                  <img
-                    src={profile.avatar_url}
-                    alt="Avatar"
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.currentTarget.src = defaultAvatarImage;
-                    }}
-                  />
-                ) : (
-                  <div className={`w-full h-full flex items-center justify-center ${theme === 'light' ? 'bg-white' : 'bg-black'}`}>
-                    <p className="text-gray-500">Sem foto de perfil</p>
-                  </div>
-                )}
-              </div>
-              {!isPreviewMode && (
-                <div className="absolute bottom-2 right-2 flex gap-2">
-                  <button 
-                    onClick={() => setShowDeletePhotoDialog(true)}
-                    className="bg-blue-500 p-2 rounded-full cursor-pointer hover:bg-blue-600 transition-colors"
-                  >
-                    <Trash2 className="h-5 w-5 text-white" />
-                  </button>
-                  <button 
-                    onClick={handleAvatarImageClick}
-                    className="bg-blue-500 p-2 rounded-full cursor-pointer hover:bg-blue-600 transition-colors"
-                  >
-                    <Camera className="h-5 w-5 text-white" />
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="px-4 mt-4">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h2 className="text-2xl font-bold">{profile?.full_name}</h2>
-                <p className="text-gray-400">@{profile?.username}</p>
-                {profile?.status && (
-                  <p className="text-yellow-500 text-sm mt-1">
-                    {profile.status} 👍
-                  </p>
-                )}
-                {profile?.city && (
-                  <p className="text-gray-400 text-sm mt-1 flex items-center gap-1">
-                    <MapPin className="h-4 w-4" />
-                    Mora em {profile.city}
-                  </p>
-                )}
-              </div>
-
-              <div className="flex gap-2">
-                {!isPreviewMode ? (
-                  <>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" className={`${theme === 'light' ? 'text-black border-gray-300' : 'text-white border-gray-700'}`}>
-                          Editar perfil
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="bg-gray-900 border-gray-800">
-                        <DialogHeader>
-                          <DialogTitle className="text-white">Editar perfil</DialogTitle>
-                        </DialogHeader>
-                        <Form {...form}>
-                          <form onSubmit={form.handleSubmit((data) => updateProfile.mutate(data))} className="space-y-4">
-                            <FormField
-                              control={form.control}
-                              name="username"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-white">Username</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
-                                      placeholder="Seu username"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-
-                            <FormField
-                              control={form.control}
-                              name="full_name"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-white">Nome completo</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
-                                      placeholder="Seu nome completo"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-
-                            <FormField
-                              control={form.control}
-                              name="bio"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-white">Bio</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
-                                      placeholder="Sua biografia"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-
-                            <FormField
-                              control={form.control}
-                              name="website"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-white">Website</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
-                                      placeholder="https://seu-site.com"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-
-                            <FormField
-                              control={form.control}
-                              name="phone"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-white">Telefone</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      type="tel"
-                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
-                                      placeholder="(00) 00000-0000"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-
-                            <FormField
-                              control={form.control}
-                              name="birth_date"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-white">Data de Nascimento</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      type="date"
-                                      className="bg-transparent border-white text-white"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-
-                            <FormField
-                              control={form.control}
-                              name="email"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-white">Email</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      type="email"
-                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
-                                      placeholder="seu@email.com"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-
-                            <FormField
-                              control={form.control}
-                              name="street"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-white">Rua</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
-                                      placeholder="Nome da rua"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-
-                            <FormField
-                              control={form.control}
-                              name="house_number"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-white">Número</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
-                                      placeholder="123"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-
-                            <FormField
-                              control={form.control}
-                              name="city"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-white">Cidade</FormLabel>
-                                  <FormControl>
-                                    <select
-                                      {...field}
-                                      className="w-full bg-transparent border-white text-white placeholder:text-gray-400 rounded-md p-2"
-                                    >
-                                      {locations?.map((location) => (
-                                        <option 
-                                          key={location.id} 
-                                          value={location.name}
-                                          selected={location.name === profile?.city}
-                                        >
-                                          {location.name}
-                                        </option>
-                                      ))}
-                                    </select>
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-
-                            <FormField
-                              control={form.control}
-                              name="postal_code"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-white">CEP</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
-                                      placeholder="00000-000"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            <div className="flex gap-2 justify-end">
-                              <Button 
-                                type="button" 
-                                variant="outline" 
-                                onClick={() => setShowSettings(false)}
-                              >
-                                Cancelar
-                              </Button>
-                              <Button 
-                                type="submit" 
-                                className="bg-blue-600 hover:bg-blue-700"
-                                disabled={updateProfile.isPending}
-                              >
-                                {updateProfile.isPending ? "Salvando..." : "Salvar alterações"}
-                              </Button>
-                            </div>
-                          </form>
-                        </Form>
-                      </DialogContent>
-                    </Dialog>
-
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="icon" className="border-gray-700">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent className="bg-gray-900 border-gray-800">
-                        <DropdownMenuItem onClick={copyProfileLink} className="text-white cursor-pointer">
-                          <Link2 className="h-4 w-4 mr-2" />
-                          Copiar link do perfil
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setIsPreviewMode(true)} className="text-white cursor-pointer">
-                          <Eye className="h-4 w-4 mr-2" />
-                          Ver como
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </>
-                ) : (
-                  <Button 
-                    onClick={() => setIsPreviewMode(false)} 
-                    variant="outline" 
-                    className={`${theme === 'light' ? 'text-black border-gray-300' : 'text-white border-gray-700'}`}
-                  >
-                    Sair do modo preview
-                  </Button>
-                )}
-              </div>
-            </div>
-
-            {profile?.bio && (
-              <p className={`mb-4 ${theme === 'light' ? 'text-black' : 'text-gray-300'}`}>{profile.bio}</p>
-            )}
-
-            <Tabs defaultValue="posts" className="w-full">
-              <TabsList className="w-full justify-start border-b border-gray-800 bg-transparent">
-                <TabsTrigger
-                  value="posts"
-                  className={`flex-1 text-xl py-4 border-0 data-[state=active]:border-b-2 ${
-                    theme === 'light' 
-                      ? 'data-[state=active]:text-black data-[state=active]:border-black' 
-                      : 'data-[state=active]:text-white data-[state=active]:border-white'
-                  }`}
-                >
-                  Posts
-                </TabsTrigger>
-                <TabsTrigger
-                  value="products"
-                  className={`flex-1 text-xl py-4 border-0 data-[state=active]:border-b-2 ${
-                    theme === 'light' 
-                      ? 'data-[state=active]:text-black data-[state=active]:border-black' 
-                      : 'data-[state=active]:text-white data-[state=active]:border-white'
-                  }`}
-                >
-                  Produtos
-                </TabsTrigger>
-                <TabsTrigger
-                  value="reels"
-                  className={`flex-1 text-xl py-4 border-0 data-[state=active]:border-b-2 ${
-                    theme === 'light' 
-                      ? 'data-[state=active]:text-black data-[state=active]:border-black' 
-                      : 'data-[state=active]:text-white data-[state=active]:border-white'
-                  }`}
-                >
-                  Reels
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="posts" className="min-h-[200px]">
-                <div className="grid grid-cols-3 gap-1">
-                  <div className="aspect-square bg-gray-800/50 flex items-center justify-center">
-                    <p className="text-gray-500">Ainda não há Posts</p>
-                  </div>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="products" className="min-h-[200px]">
-                {userProducts && userProducts.length > 0 ? (
-                  <div className="grid grid-cols-2 gap-4 p-4">
-                    {userProducts.map((product) => (
-                      <Card key={product.id} className={`${theme === 'light' ? 'bg-white' : 'bg-black'} shadow-none border-0`}>
-                        <CardContent className="p-3">
-                          {product.images?.[0] && (
-                            <img
-                              src={product.images[0]}
-                              alt={product.title}
-                              className="w-full aspect-square object-cover rounded-lg mb-2"
-                            />
-                          )}
-                          <h3 className={`font-medium ${theme === 'light' ? 'text-black' : 'text-white'}`}>{product.title}</h3>
-                          <p className="text-green-500">
-                            {new Intl.NumberFormat('pt-BR', {
-                              style: 'currency',
-                              currency: 'BRL'
-                            }).format(Number(product.price))}
-                          </p>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center h-[200px]">
-                    <p className="text-gray-500">Ainda não há Produtos</p>
-                  </div>
-                )}
-              </TabsContent>
-
-              <TabsContent value="reels" className="min-h-[200px]">
-                <div className="grid grid-cols-3 gap-1">
-                  <div className="aspect-square bg-gray-800/50 flex items-center justify-center">
-                    <p className="text-gray-500">Ainda não há Reels</p>
-                  </div>
-                </div>
-              </TabsContent>
-            </Tabs>
+        {/* Avatar */}
+        <div className="absolute -bottom-16 left-4">
+          <div className="relative">
+            <img
+              src={profile.avatar_url || defaultAvatarImage}
+              alt="Avatar"
+              className="w-32 h-32 rounded-full border-4 border-background"
+            />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute bottom-0 right-0 rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
+              onClick={() => setShowSettings(true)}
+            >
+              <Camera className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </div>
 
-      <Dialog open={showDeletePhotoDialog} onOpenChange={setShowDeletePhotoDialog}>
-        <DialogContent className="bg-gray-900 border-gray-800">
+      {/* Profile Info */}
+      <div className="container mx-auto px-4 mt-20">
+        <div className="space-y-4">
+          <div>
+            <h1 className="text-2xl font-bold">{profile.full_name}</h1>
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <AtSign className="h-4 w-4" />
+              <span>{profile.username}</span>
+            </div>
+          </div>
+
+          {profile.bio && (
+            <p className="text-muted-foreground">{profile.bio}</p>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {profile.email && (
+              <Card>
+                <CardContent className="p-4 flex items-center gap-3">
+                  <Mail className="h-5 w-5 text-muted-foreground" />
+                  <span>{profile.email}</span>
+                </CardContent>
+              </Card>
+            )}
+
+            {profile.phone && (
+              <Card>
+                <CardContent className="p-4 flex items-center gap-3">
+                  <Phone className="h-5 w-5 text-muted-foreground" />
+                  <span>{profile.phone}</span>
+                </CardContent>
+              </Card>
+            )}
+
+            {profile.birth_date && (
+              <Card>
+                <CardContent className="p-4 flex items-center gap-3">
+                  <Calendar className="h-5 w-5 text-muted-foreground" />
+                  <span>
+                    {format(new Date(profile.birth_date), "dd/MM/yyyy")}
+                  </span>
+                </CardContent>
+              </Card>
+            )}
+
+            {profile.website && (
+              <Card>
+                <CardContent className="p-4 flex items-center gap-3">
+                  <Globe className="h-5 w-5 text-muted-foreground" />
+                  <a
+                    href={profile.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    {profile.website}
+                  </a>
+                </CardContent>
+              </Card>
+            )}
+
+            {profile.city && (
+              <Card>
+                <CardContent className="p-4 flex items-center gap-3">
+                  <Building className="h-5 w-5 text-muted-foreground" />
+                  <span>{profile.city}</span>
+                </CardContent>
+              </Card>
+            )}
+
+            {profile.street && profile.house_number && (
+              <Card>
+                <CardContent className="p-4 flex items-center gap-3">
+                  <Home className="h-5 w-5 text-muted-foreground" />
+                  <span>
+                    {profile.street}, {profile.house_number}
+                  </span>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Settings Dialog */}
+      <Dialog open={showSettings} onOpenChange={setShowSettings}>
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle className="text-white">Remover foto de perfil</DialogTitle>
+            <DialogTitle>Editar Perfil</DialogTitle>
           </DialogHeader>
-          <p className="text-gray-300">Tem certeza que deseja remover sua foto de perfil?</p>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDeletePhotoDialog(false)}>
-              Cancelar
-            </Button>
-            <Button variant="destructive" onClick={handleDeleteAvatar}>
-              Remover
-            </Button>
-          </DialogFooter>
+
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit((values) => updateProfile.mutate(values))}
+              className="space-y-6"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="full_name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nome completo</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="username"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Username</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="email" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Telefone</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="birth_date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Data de nascimento</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="date" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="website"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Website</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="url" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="street"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Rua</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="house_number"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Número</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="city"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Cidade</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="postal_code"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>CEP</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="avatar_url"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>URL da foto de perfil</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="cover_url"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>URL da capa</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="bio"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Bio</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowSettings(false)}
+                >
+                  Cancelar
+                </Button>
+                <Button type="submit" disabled={updateProfile.isPending}>
+                  {updateProfile.isPending ? "Salvando..." : "Salvar"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={showDeleteCoverDialog} onOpenChange={setShowDeleteCoverDialog}>
-        <DialogContent className="bg-gray-900 border-gray-800">
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-white">Remover foto de capa</DialogTitle>
+            <DialogTitle>Excluir conta</DialogTitle>
           </DialogHeader>
-          <p className="text-gray-300">Tem certeza que deseja remover sua foto de capa?</p>
+          <p>Tem certeza que deseja excluir sua conta? Esta ação não pode ser desfeita.</p>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDeleteCoverDialog(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteConfirm(false)}
+            >
               Cancelar
             </Button>
-            <Button variant="destructive" onClick={handleDeleteCover}>
-              Remover
+            <Button
+              variant="destructive"
+              onClick={handleDeleteAccount}
+            >
+              Excluir
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -825,4 +695,4 @@ export default function Profile() {
       <BottomNav />
     </div>
   );
-                          }
+}
