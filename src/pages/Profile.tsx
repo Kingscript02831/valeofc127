@@ -190,23 +190,40 @@ export default function Profile() {
   };
 
   const handleCoverImageClick = () => {
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.placeholder = 'Cole o link do Dropbox aqui';
-    input.value = profile?.cover_url || '';
-    
     const dialog = window.prompt('Cole aqui o link do Dropbox para a imagem de capa:', profile?.cover_url || '');
     if (dialog !== null) {
-      form.setValue("cover_url", dialog);
-      updateProfile.mutate(form.getValues());
+      const formData = form.getValues();
+      formData.cover_url = dialog;
+      updateProfile.mutate(formData);
+      toast({
+        title: "Imagem de capa atualizada",
+        description: "Sua imagem de capa foi atualizada com sucesso"
+      });
+    }
+  };
+
+  const handleDeleteCover = () => {
+    if (window.confirm('Tem certeza que deseja remover a imagem de capa?')) {
+      const formData = form.getValues();
+      formData.cover_url = null;
+      updateProfile.mutate(formData);
+      toast({
+        title: "Imagem de capa removida",
+        description: "Sua imagem de capa foi removida com sucesso"
+      });
     }
   };
 
   const handleAvatarImageClick = () => {
     const dialog = window.prompt('Cole aqui o link do Dropbox para a foto de perfil:', profile?.avatar_url || '');
     if (dialog !== null) {
-      form.setValue("avatar_url", dialog);
-      updateProfile.mutate(form.getValues());
+      const formData = form.getValues();
+      formData.avatar_url = dialog;
+      updateProfile.mutate(formData);
+      toast({
+        title: "Foto de perfil atualizada",
+        description: "Sua foto de perfil foi atualizada com sucesso"
+      });
     }
   };
 
@@ -346,7 +363,7 @@ export default function Profile() {
                 alt="Capa"
                 className="w-full h-full object-cover"
                 onError={(e) => {
-                  e.currentTarget.src = defaultCoverImage;
+                  e.currentTarget.src = "/placeholder-cover.jpg";
                 }}
               />
             ) : (
@@ -354,22 +371,20 @@ export default function Profile() {
                 <p className="text-gray-500">Sem Capa de Perfil</p>
               </div>
             )}
-            {!isPreviewMode && (
-              <div className="absolute right-4 bottom-4 flex gap-2">
-                <button
-                  onClick={() => setShowDeleteCoverDialog(true)}
-                  className="bg-blue-500 p-2 rounded-full cursor-pointer hover:bg-blue-600 transition-colors"
-                >
-                  <Trash2 className="h-5 w-5 text-white" />
-                </button>
-                <button
-                  onClick={handleCoverImageClick}
-                  className="bg-blue-500 p-2 rounded-full cursor-pointer hover:bg-blue-600 transition-colors"
-                >
-                  <Camera className="h-5 w-5 text-white" />
-                </button>
-              </div>
-            )}
+            <div className="absolute right-4 bottom-4 flex gap-2">
+              <button
+                onClick={handleDeleteCover}
+                className="bg-blue-500 p-2 rounded-full cursor-pointer hover:bg-blue-600 transition-colors"
+              >
+                <Trash2 className="h-5 w-5 text-white" />
+              </button>
+              <button
+                onClick={handleCoverImageClick}
+                className="bg-blue-500 p-2 rounded-full cursor-pointer hover:bg-blue-600 transition-colors"
+              >
+                <Camera className="h-5 w-5 text-white" />
+              </button>
+            </div>
           </div>
 
           <div className="relative -mt-16 px-4">
@@ -436,231 +451,234 @@ export default function Profile() {
                           Editar perfil
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="bg-gray-900 border-gray-800">
+                      <DialogContent className="bg-gray-900 border-gray-800 sm:max-w-[425px]">
                         <DialogHeader>
                           <DialogTitle className="text-white">Editar perfil</DialogTitle>
                         </DialogHeader>
                         <Form {...form}>
                           <form onSubmit={form.handleSubmit((data) => updateProfile.mutate(data))} className="space-y-4">
-                            <FormField
-                              control={form.control}
-                              name="username"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-white">Username</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
-                                      placeholder="Seu username"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
+                            <div className="grid gap-4">
+                              <FormField
+                                control={form.control}
+                                name="username"
+                                render={({ field }) => (
+                                  <FormItem className="w-full">
+                                    <FormLabel className="text-white">Username</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...field}
+                                        className="bg-transparent border-white text-white placeholder:text-gray-400 w-full"
+                                        placeholder="Seu username"
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
 
-                            <FormField
-                              control={form.control}
-                              name="full_name"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-white">Nome completo</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
-                                      placeholder="Seu nome completo"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
+                              <FormField
+                                control={form.control}
+                                name="full_name"
+                                render={({ field }) => (
+                                  <FormItem className="w-full">
+                                    <FormLabel className="text-white">Nome completo</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...field}
+                                        className="bg-transparent border-white text-white placeholder:text-gray-400 w-full"
+                                        placeholder="Seu nome completo"
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
 
-                            <FormField
-                              control={form.control}
-                              name="bio"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-white">Bio</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
-                                      placeholder="Sua biografia"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
+                              <FormField
+                                control={form.control}
+                                name="bio"
+                                render={({ field }) => (
+                                  <FormItem className="w-full">
+                                    <FormLabel className="text-white">Bio</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...field}
+                                        className="bg-transparent border-white text-white placeholder:text-gray-400 w-full"
+                                        placeholder="Sua biografia"
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
 
-                            <FormField
-                              control={form.control}
-                              name="website"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-white">Website</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
-                                      placeholder="https://seu-site.com"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
+                              <FormField
+                                control={form.control}
+                                name="website"
+                                render={({ field }) => (
+                                  <FormItem className="w-full">
+                                    <FormLabel className="text-white">Website</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...field}
+                                        className="bg-transparent border-white text-white placeholder:text-gray-400 w-full"
+                                        placeholder="https://seu-site.com"
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
 
-                            <FormField
-                              control={form.control}
-                              name="phone"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-white">Telefone</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      type="tel"
-                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
-                                      placeholder="(00) 00000-0000"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
+                              <FormField
+                                control={form.control}
+                                name="phone"
+                                render={({ field }) => (
+                                  <FormItem className="w-full">
+                                    <FormLabel className="text-white">Telefone</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...field}
+                                        type="tel"
+                                        className="bg-transparent border-white text-white placeholder:text-gray-400 w-full"
+                                        placeholder="(00) 00000-0000"
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
 
-                            <FormField
-                              control={form.control}
-                              name="birth_date"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-white">Data de Nascimento</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      type="date"
-                                      className="bg-transparent border-white text-white"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
+                              <FormField
+                                control={form.control}
+                                name="birth_date"
+                                render={({ field }) => (
+                                  <FormItem className="w-full">
+                                    <FormLabel className="text-white">Data de Nascimento</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...field}
+                                        type="date"
+                                        className="bg-transparent border-white text-white w-full"
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
 
-                            <FormField
-                              control={form.control}
-                              name="email"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-white">Email</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      type="email"
-                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
-                                      placeholder="seu@email.com"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
+                              <FormField
+                                control={form.control}
+                                name="email"
+                                render={({ field }) => (
+                                  <FormItem className="w-full">
+                                    <FormLabel className="text-white">Email</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...field}
+                                        type="email"
+                                        className="bg-transparent border-white text-white placeholder:text-gray-400 w-full"
+                                        placeholder="seu@email.com"
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
 
-                            <FormField
-                              control={form.control}
-                              name="street"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-white">Rua</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
-                                      placeholder="Nome da rua"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
+                              <FormField
+                                control={form.control}
+                                name="street"
+                                render={({ field }) => (
+                                  <FormItem className="w-full">
+                                    <FormLabel className="text-white">Rua</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...field}
+                                        className="bg-transparent border-white text-white placeholder:text-gray-400 w-full"
+                                        placeholder="Nome da rua"
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
 
-                            <FormField
-                              control={form.control}
-                              name="house_number"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-white">Número</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
-                                      placeholder="123"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
+                              <FormField
+                                control={form.control}
+                                name="house_number"
+                                render={({ field }) => (
+                                  <FormItem className="w-full">
+                                    <FormLabel className="text-white">Número</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...field}
+                                        className="bg-transparent border-white text-white placeholder:text-gray-400 w-full"
+                                        placeholder="123"
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
 
-                            <FormField
-                              control={form.control}
-                              name="city"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-white">Cidade</FormLabel>
-                                  <FormControl>
-                                    <select
-                                      {...field}
-                                      className="w-full bg-transparent border-white text-white placeholder:text-gray-400 rounded-md p-2"
-                                    >
-                                      {locations?.map((location) => (
-                                        <option 
-                                          key={location.id} 
-                                          value={location.name}
-                                          selected={location.name === profile?.city}
-                                        >
-                                          {location.name}
-                                        </option>
-                                      ))}
-                                    </select>
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
+                              <FormField
+                                control={form.control}
+                                name="city"
+                                render={({ field }) => (
+                                  <FormItem className="w-full">
+                                    <FormLabel className="text-white">Cidade</FormLabel>
+                                    <FormControl>
+                                      <select
+                                        {...field}
+                                        className="w-full bg-transparent border-white text-white placeholder:text-gray-400 rounded-md p-2"
+                                      >
+                                        {locations?.map((location) => (
+                                          <option 
+                                            key={location.id} 
+                                            value={location.name}
+                                            selected={location.name === profile?.city}
+                                          >
+                                            {location.name}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
 
-                            <FormField
-                              control={form.control}
-                              name="postal_code"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-white">CEP</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
-                                      placeholder="00000-000"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            <div className="flex gap-2 justify-end">
+                              <FormField
+                                control={form.control}
+                                name="postal_code"
+                                render={({ field }) => (
+                                  <FormItem className="w-full">
+                                    <FormLabel className="text-white">CEP</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        {...field}
+                                        className="bg-transparent border-white text-white placeholder:text-gray-400 w-full"
+                                        placeholder="00000-000"
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+                            <div className="flex flex-col sm:flex-row gap-2 justify-end mt-4">
                               <Button 
                                 type="button" 
-                                variant="outline" 
+                                variant="outline"
                                 onClick={() => setShowSettings(false)}
+                                className="w-full sm:w-auto"
                               >
                                 Cancelar
                               </Button>
                               <Button 
                                 type="submit" 
-                                className="bg-blue-600 hover:bg-blue-700"
+                                className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
                                 disabled={updateProfile.isPending}
                               >
                                 {updateProfile.isPending ? "Salvando..." : "Salvar alterações"}
@@ -709,7 +727,7 @@ export default function Profile() {
               <TabsList className="w-full justify-start border-b border-gray-800 bg-transparent">
                 <TabsTrigger
                   value="posts"
-                  className={`flex-1 text-xl py-4 border-0 data-[state=active]:border-b-2 ${
+                  className={`flex-1 text-base py-4 border-0 data-[state=active]:border-b-2 ${
                     theme === 'light' 
                       ? 'data-[state=active]:text-black data-[state=active]:border-black' 
                       : 'data-[state=active]:text-white data-[state=active]:border-white'
@@ -719,7 +737,7 @@ export default function Profile() {
                 </TabsTrigger>
                 <TabsTrigger
                   value="products"
-                  className={`flex-1 text-xl py-4 border-0 data-[state=active]:border-b-2 ${
+                  className={`flex-1 text-base py-4 border-0 data-[state=active]:border-b-2 ${
                     theme === 'light' 
                       ? 'data-[state=active]:text-black data-[state=active]:border-black' 
                       : 'data-[state=active]:text-white data-[state=active]:border-white'
@@ -729,7 +747,7 @@ export default function Profile() {
                 </TabsTrigger>
                 <TabsTrigger
                   value="reels"
-                  className={`flex-1 text-xl py-4 border-0 data-[state=active]:border-b-2 ${
+                  className={`flex-1 text-base py-4 border-0 data-[state=active]:border-b-2 ${
                     theme === 'light' 
                       ? 'data-[state=active]:text-black data-[state=active]:border-black' 
                       : 'data-[state=active]:text-white data-[state=active]:border-white'
