@@ -43,6 +43,7 @@ const Products = () => {
   const [showLocationDialog, setShowLocationDialog] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [radiusValue, setRadiusValue] = useState([5]);
+  const [customRadius, setCustomRadius] = useState("");
 
   const { data: categories } = useQuery({
     queryKey: ["categories-products"],
@@ -107,6 +108,14 @@ const Products = () => {
         description: `Buscando produtos em um raio de ${radiusValue[0]}km de ${selectedLocation.name}`,
       });
     }
+  };
+
+  const handleCustomRadiusChange = (value: string) => {
+    const number = parseInt(value);
+    if (!isNaN(number) && number >= 1 && number <= 100) {
+      setRadiusValue([number]);
+    }
+    setCustomRadius(value);
   };
 
   return (
@@ -199,11 +208,25 @@ const Products = () => {
                 </div>
 
                 <div className="space-y-4">
-                  <Label>Raio de busca: {radiusValue[0]}km</Label>
+                  <div className="flex items-center gap-2">
+                    <Label>Raio de busca: {radiusValue[0]}km</Label>
+                    <Input
+                      type="number"
+                      min="1"
+                      max="100"
+                      value={customRadius}
+                      onChange={(e) => handleCustomRadiusChange(e.target.value)}
+                      placeholder="Digite o raio"
+                      className="w-24"
+                    />
+                  </div>
                   <Slider
                     value={radiusValue}
-                    onValueChange={setRadiusValue}
-                    max={30}
+                    onValueChange={(value) => {
+                      setRadiusValue(value);
+                      setCustomRadius(value[0].toString());
+                    }}
+                    max={100}
                     min={1}
                     step={1}
                   />

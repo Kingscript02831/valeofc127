@@ -10,7 +10,6 @@ export interface Product {
   latitude?: number;
   longitude?: number;
   location_name?: string;
-  location_id?: string;
   images: string[];
   video_urls?: string[];
   whatsapp?: string;
@@ -19,7 +18,6 @@ export interface Product {
   profiles?: {
     full_name: string | null;
     avatar_url: string | null;
-    location_id?: string | null;
   };
 }
 
@@ -36,6 +34,5 @@ export interface ProductFormData {
   images: string[];
   video_urls?: string[];
   location_name?: string;
-  location_id?: string;
   whatsapp?: string;
 }

@@ -66,28 +66,28 @@ const AdminCategories = () => {
         return;
       }
 
-      const { error } = await supabase
+      console.log("Trying to add category:", newCategory); // Debug log
+
+      const { data, error } = await supabase
         .from("categories")
         .insert([{
-          ...newCategory,
-          slug: generateSlug(newCategory.name)
-        }]);
+          name: newCategory.name,
+          background_color: newCategory.background_color,
+          page_type: newCategory.page_type,
+          parent_id: newCategory.parent_id,
+          slug: generateSlug(newCategory.name),
+          description: newCategory.description,
+          updated_at: new Date().toISOString()
+        }])
+        .select();
 
       if (error) {
-        if (error.code === '23505') {
-          toast({
-            variant: "destructive",
-            title: "Erro ao adicionar categoria",
-            description: "Já existe uma categoria com este nome ou slug. Por favor, escolha outro nome.",
-          });
-        } else {
-          console.error("Error details:", error);
-          toast({
-            variant: "destructive",
-            title: "Erro ao adicionar categoria",
-            description: "Ocorreu um erro ao adicionar a categoria. Tente novamente.",
-          });
-        }
+        console.error("Supabase error:", error); // Debug log
+        toast({
+          variant: "destructive",
+          title: "Erro ao adicionar categoria",
+          description: error.message || "Ocorreu um erro ao adicionar a categoria. Tente novamente.",
+        });
         return;
       }
 
@@ -173,7 +173,7 @@ const AdminCategories = () => {
             <Label htmlFor="page_type">Tipo de Página</Label>
             <Select
               value={newCategory.page_type}
-              onValueChange={(value: "events" | "places" | "news" | "products") => 
+              onValueChange={(value) => 
                 setNewCategory({ ...newCategory, page_type: value })
               }
             >
