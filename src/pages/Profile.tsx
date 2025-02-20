@@ -23,8 +23,28 @@ import {
   Camera,
   Trash2,
   ArrowLeft,
+  MapPin,
+  Link2,
+  Eye,
+  MoreHorizontal
 } from "lucide-react";
 import { useTheme } from "../components/ThemeProvider";
+import { Card, CardContent } from "@/components/ui/card";
+import { BottomNav } from "@/components/BottomNav";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 
 const profileSchema = z.object({
   full_name: z.string().min(1, "Nome completo é obrigatório"),
@@ -41,7 +61,6 @@ const profileSchema = z.object({
   bio: z.string().optional(),
   website: z.string().url("URL inválida").optional().or(z.literal("")),
   status: z.string().optional(),
-  basic_info_updated_at: z.string().optional(),
 });
 
 const defaultCoverImage = "/placeholder-cover.jpg";
@@ -159,6 +178,16 @@ export default function Profile() {
     }
   };
 
+  const copyProfileLink = () => {
+    // Replace with your actual profile URL structure
+    const profileUrl = `${window.location.origin}/perfil/${profile?.id}`;
+    navigator.clipboard.writeText(profileUrl);
+    toast({
+      title: "Link copiado!",
+      description: "O link do seu perfil foi copiado para a área de transferência",
+    });
+  };
+
   useEffect(() => {
     if (profile) {
       form.reset({
@@ -175,6 +204,15 @@ export default function Profile() {
       </div>
     );
   }
+
+  const locations = [
+    { id: 1, name: 'São Paulo' },
+    { id: 2, name: 'Rio de Janeiro' },
+    { id: 3, name: 'Minas Gerais' },
+  ];
+
+  const [showSettings, setShowSettings] = useState(false);
+  const userProducts = [];
 
   return (
     <div className={`min-h-screen ${theme === 'light' ? 'bg-white text-black' : 'bg-black text-white'}`}>
