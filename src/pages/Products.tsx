@@ -1,13 +1,12 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, User, Grid2X2, ChevronDown } from "lucide-react";
+import { Search, User, Menu, ChevronDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import type { Product, ProductWithDistance } from "@/types/products";
+import type { Product } from "@/types/products";
 import type { Location } from "@/types/locations";
 import { useQuery } from "@tanstack/react-query";
 import Navbar from "@/components/Navbar";
@@ -34,6 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
 
 const Products = () => {
   const navigate = useNavigate();
@@ -42,9 +42,8 @@ const Products = () => {
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const [showLocationDialog, setShowLocationDialog] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [radiusType, setRadiusType] = useState<string>("5");
+  const [radiusValue, setRadiusValue] = useState([5]);
 
-  // Query para buscar categorias
   const { data: categories } = useQuery({
     queryKey: ["categories-products"],
     queryFn: async () => {
@@ -59,7 +58,6 @@ const Products = () => {
     },
   });
 
-  // Query to fetch locations from Supabase
   const { data: locations } = useQuery({
     queryKey: ['locations'],
     queryFn: async () => {
@@ -74,7 +72,7 @@ const Products = () => {
   });
 
   const { data: products, isLoading } = useQuery({
-    queryKey: ["products", selectedLocation?.id, radiusType],
+    queryKey: ["products", selectedLocation?.id, radiusValue[0]],
     queryFn: async () => {
       let query = supabase
         .from("products")
@@ -104,6 +102,10 @@ const Products = () => {
   const handleSaveLocation = () => {
     if (selectedLocation) {
       setShowLocationDialog(false);
+      toast({
+        title: "Localização salva",
+        description: `Buscando produtos em um raio de ${radiusValue[0]}km de ${selectedLocation.name}`,
+      });
     }
   };
 
@@ -140,7 +142,7 @@ const Products = () => {
                   size="icon"
                   className="hover:scale-105 transition-transform text-foreground rounded-full shadow-lg"
                 >
-                  <Grid2X2 className="h-4 w-4" />
+                  <Menu className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
@@ -196,21 +198,15 @@ const Products = () => {
                   </RadioGroup>
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Raio de busca</Label>
-                  <Select value={radiusType} onValueChange={setRadiusType}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o raio" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="5">5 km</SelectItem>
-                      <SelectItem value="10">10 km</SelectItem>
-                      <SelectItem value="15">15 km</SelectItem>
-                      <SelectItem value="20">20 km</SelectItem>
-                      <SelectItem value="25">25 km</SelectItem>
-                      <SelectItem value="30">30 km</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="space-y-4">
+                  <Label>Raio de busca: {radiusValue[0]}km</Label>
+                  <Slider
+                    value={radiusValue}
+                    onValueChange={setRadiusValue}
+                    max={30}
+                    min={1}
+                    step={1}
+                  />
                 </div>
 
                 <Button className="w-full" onClick={handleSaveLocation}>

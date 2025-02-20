@@ -13,9 +13,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import type { Database } from "../integrations/supabase/types";
-
-type Category = Database["public"]["Tables"]["categories"]["Row"];
 
 const generateSlug = (name: string): string => {
   return name
@@ -28,7 +25,7 @@ const generateSlug = (name: string): string => {
 
 const AdminCategories = () => {
   const { toast } = useToast();
-  const [newCategory, setNewCategory] = useState<Partial<Category>>({
+  const [newCategory, setNewCategory] = useState({
     name: "",
     background_color: "#000000",
     page_type: "events",
@@ -77,7 +74,7 @@ const AdminCategories = () => {
         }]);
 
       if (error) {
-        if (error.code === '23505') { // Unique constraint violation
+        if (error.code === '23505') {
           toast({
             variant: "destructive",
             title: "Erro ao adicionar categoria",
@@ -176,7 +173,7 @@ const AdminCategories = () => {
             <Label htmlFor="page_type">Tipo de Página</Label>
             <Select
               value={newCategory.page_type}
-              onValueChange={(value: "events" | "places" | "news") => 
+              onValueChange={(value: "events" | "places" | "news" | "products") => 
                 setNewCategory({ ...newCategory, page_type: value })
               }
             >
@@ -187,6 +184,7 @@ const AdminCategories = () => {
                 <SelectItem value="events">Eventos</SelectItem>
                 <SelectItem value="places">Lugares</SelectItem>
                 <SelectItem value="news">Notícias</SelectItem>
+                <SelectItem value="products">Produtos</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -197,12 +195,12 @@ const AdminCategories = () => {
               <Input
                 id="background_color"
                 type="color"
-                value={newCategory.background_color || "#000000"}
+                value={newCategory.background_color}
                 onChange={(e) => setNewCategory({ ...newCategory, background_color: e.target.value })}
                 className="w-16"
               />
               <Input
-                value={newCategory.background_color || "#000000"}
+                value={newCategory.background_color}
                 onChange={(e) => setNewCategory({ ...newCategory, background_color: e.target.value })}
                 placeholder="#000000"
               />
@@ -226,7 +224,7 @@ const AdminCategories = () => {
               <div className="flex items-center gap-4">
                 <div
                   className="w-6 h-6 rounded"
-                  style={{ backgroundColor: category.background_color || "#000000" }}
+                  style={{ backgroundColor: category.background_color }}
                 />
                 <div>
                   <p className="font-medium">{category.name}</p>
@@ -234,6 +232,7 @@ const AdminCategories = () => {
                     {category.page_type === "events" && "Eventos"}
                     {category.page_type === "places" && "Lugares"}
                     {category.page_type === "news" && "Notícias"}
+                    {category.page_type === "products" && "Produtos"}
                   </p>
                   {category.description && (
                     <p className="text-sm text-gray-500">{category.description}</p>
