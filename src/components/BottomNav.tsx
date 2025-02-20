@@ -89,7 +89,7 @@ const BottomNav = () => {
             style={{
               color: config?.bottom_nav_icon_color,
               background: `${config?.primary_color}15`,
-              opacity: session ? 1 : 0.5,
+              opacity: session ? 1 : 0.5, // Reduz a opacidade quando não está logado
             }}
           >
             <Plus 
