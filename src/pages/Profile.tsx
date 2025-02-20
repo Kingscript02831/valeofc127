@@ -189,8 +189,8 @@ export default function Profile() {
     });
   }, [profile]);
 
-  const updateProfile = useMutation(
-    async (data: z.infer<typeof formSchema>) => {
+  const updateProfile = useMutation({
+    mutationFn: async (data: z.infer<typeof formSchema>) => {
       if (!userId) throw new Error("Not authenticated");
 
       const { error } = await supabase
@@ -201,23 +201,21 @@ export default function Profile() {
       if (error) throw error;
       return data;
     },
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ["profile", userId] });
-        toast({
-          title: "Perfil atualizado com sucesso!",
-        });
-        setShowSettings(false);
-      },
-      onError: (error: any) => {
-        toast({
-          title: "Houve um erro ao atualizar o perfil.",
-          description: error.message,
-          variant: "destructive",
-        });
-      },
-    }
-  );
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["profile", userId] });
+      toast({
+        title: "Perfil atualizado com sucesso!",
+      });
+      setShowSettings(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Houve um erro ao atualizar o perfil.",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
