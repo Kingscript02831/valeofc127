@@ -1,16 +1,15 @@
 
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, User, ArrowLeft, ChevronDown, Grid2X2 } from "lucide-react";
+import { Search, User, Grid2X2, ChevronDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import type { Product } from "@/types/products";
+import type { Product, ProductWithDistance } from "@/types/products";
 import type { Location } from "@/types/locations";
 import { useQuery } from "@tanstack/react-query";
-import { useSiteConfig } from "@/hooks/useSiteConfig";
 import Navbar from "@/components/Navbar";
 import BottomNav from "@/components/BottomNav";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -28,15 +27,22 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const Products = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
-  const { data: config } = useSiteConfig();
   const [showLocationDialog, setShowLocationDialog] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [radiusType, setRadiusType] = useState<string>("5");
 
   // Query para buscar categorias
   const { data: categories } = useQuery({
@@ -68,7 +74,7 @@ const Products = () => {
   });
 
   const { data: products, isLoading } = useQuery({
-    queryKey: ["products"],
+    queryKey: ["products", selectedLocation?.id, radiusType],
     queryFn: async () => {
       let query = supabase
         .from("products")
@@ -77,6 +83,10 @@ const Products = () => {
 
       if (selectedCategory) {
         query = query.eq("category_id", selectedCategory);
+      }
+
+      if (selectedLocation) {
+        query = query.eq("location_id", selectedLocation.id);
       }
 
       const { data, error } = await query;
@@ -184,6 +194,23 @@ const Products = () => {
                       </div>
                     ))}
                   </RadioGroup>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Raio de busca</Label>
+                  <Select value={radiusType} onValueChange={setRadiusType}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o raio" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="5">5 km</SelectItem>
+                      <SelectItem value="10">10 km</SelectItem>
+                      <SelectItem value="15">15 km</SelectItem>
+                      <SelectItem value="20">20 km</SelectItem>
+                      <SelectItem value="25">25 km</SelectItem>
+                      <SelectItem value="30">30 km</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <Button className="w-full" onClick={handleSaveLocation}>
