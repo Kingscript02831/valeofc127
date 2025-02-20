@@ -190,15 +190,13 @@ export default function Profile() {
   };
 
   const handleCoverImageClick = () => {
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.placeholder = 'Cole o link do Dropbox aqui';
-    input.value = profile?.cover_url || '';
-    
     const dialog = window.prompt('Cole aqui o link do Dropbox para a imagem de capa:', profile?.cover_url || '');
     if (dialog !== null) {
-      form.setValue("cover_url", dialog);
-      updateProfile.mutate(form.getValues());
+      const values = {
+        ...form.getValues(),
+        cover_url: dialog
+      };
+      updateProfile.mutate(values);
     }
   };
 
