@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../integrations/supabase/client";
@@ -66,6 +67,23 @@ const SignUp = () => {
     setLoading(true);
 
     try {
+      const { data: existingUsers, error: checkError } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('username', username);
+
+      if (checkError) throw checkError;
+
+      if (existingUsers && existingUsers.length > 0) {
+        toast({
+          title: "Erro ao criar conta",
+          description: "Este nome de usuário já está em uso",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
       const { error } = await supabase.auth.signUp({
         email: email.trim().toLowerCase(),
         password,
