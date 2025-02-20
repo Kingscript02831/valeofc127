@@ -180,8 +180,24 @@ export default function Profile() {
   };
 
   const handleDeleteCover = async () => {
-    form.setValue("cover_url", null);
-    updateProfile.mutate(form.getValues());
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error("Não autenticado");
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({ cover_url: null })
+      .eq("id", session.user.id);
+
+    if (error) {
+      toast({
+        title: "Erro ao remover foto de capa",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    queryClient.invalidateQueries({ queryKey: ["profile"] });
     setShowDeleteCoverDialog(false);
     toast({
       title: "Foto de capa removida",
@@ -192,19 +208,28 @@ export default function Profile() {
   const handleCoverImageClick = () => {
     const dialog = window.prompt('Cole aqui o link do Dropbox para a imagem de capa:', profile?.cover_url || '');
     if (dialog !== null) {
-      const values = {
-        ...form.getValues(),
-        cover_url: dialog
-      };
-      updateProfile.mutate(values);
-    }
-  };
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Não autenticado");
 
-  const handleAvatarImageClick = () => {
-    const dialog = window.prompt('Cole aqui o link do Dropbox para a foto de perfil:', profile?.avatar_url || '');
-    if (dialog !== null) {
-      form.setValue("avatar_url", dialog);
-      updateProfile.mutate(form.getValues());
+      const { error } = await supabase
+        .from("profiles")
+        .update({ cover_url: dialog })
+        .eq("id", session.user.id);
+
+      if (error) {
+        toast({
+          title: "Erro ao atualizar foto de capa",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      toast({
+        title: "Foto de capa atualizada",
+        description: "Sua foto de capa foi atualizada com sucesso",
+      });
     }
   };
 
@@ -339,34 +364,43 @@ export default function Profile() {
         <div className="relative">
           <div className="h-32 bg-gray-200 dark:bg-gray-800 relative">
             {profile?.cover_url ? (
-              <img
-                src={profile.cover_url}
-                alt="Capa"
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.src = defaultCoverImage;
-                }}
-              />
+              <>
+                <img
+                  src={profile.cover_url}
+                  alt="Capa"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.src = defaultCoverImage;
+                  }}
+                />
+                <div className="absolute right-4 bottom-4 flex gap-2">
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    className="rounded-full"
+                    onClick={() => setShowDeleteCoverDialog(true)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    className="rounded-full"
+                    onClick={handleCoverImageClick}
+                  >
+                    <Camera className="h-4 w-4" />
+                  </Button>
+                </div>
+              </>
             ) : (
-              <div className={`w-full h-full flex items-center justify-center ${theme === 'light' ? 'bg-white' : 'bg-black'}`}>
-                <p className="text-gray-500">Sem Capa de Perfil</p>
-              </div>
-            )}
-            {!isPreviewMode && (
-              <div className="absolute right-4 bottom-4 flex gap-2">
-                <button
-                  onClick={() => setShowDeleteCoverDialog(true)}
-                  className="bg-blue-500 p-2 rounded-full cursor-pointer hover:bg-blue-600 transition-colors"
-                >
-                  <Trash2 className="h-5 w-5 text-white" />
-                </button>
-                <button
-                  onClick={handleCoverImageClick}
-                  className="bg-blue-500 p-2 rounded-full cursor-pointer hover:bg-blue-600 transition-colors"
-                >
-                  <Camera className="h-5 w-5 text-white" />
-                </button>
-              </div>
+              <Button
+                variant="ghost"
+                className="absolute inset-0 w-full h-full flex items-center justify-center"
+                onClick={handleCoverImageClick}
+              >
+                <Camera className="h-6 w-6 mr-2" />
+                Adicionar foto de capa
+              </Button>
             )}
           </div>
 
@@ -806,11 +840,11 @@ export default function Profile() {
       </Dialog>
 
       <Dialog open={showDeleteCoverDialog} onOpenChange={setShowDeleteCoverDialog}>
-        <DialogContent className="bg-gray-900 border-gray-800">
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-white">Remover foto de capa</DialogTitle>
+            <DialogTitle>Remover foto de capa</DialogTitle>
           </DialogHeader>
-          <p className="text-gray-300">Tem certeza que deseja remover sua foto de capa?</p>
+          <p>Tem certeza que deseja remover sua foto de capa?</p>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowDeleteCoverDialog(false)}>
               Cancelar
