@@ -44,18 +44,16 @@ import {
   Globe,
   Building,
   Home,
-  Trash2,
-  MoreHorizontal,
   Link2,
   Eye,
   ArrowLeft,
-  Camera
 } from "lucide-react";
 import { Card, CardContent } from "../components/ui/card";
 import BottomNav from "../components/BottomNav";
 import type { Profile } from "../types/profile";
 import MediaCarousel from "../components/MediaCarousel";
 import { useTheme } from "../components/ThemeProvider";
+import ProfileTabs from "../components/ProfileTabs";
 
 const profileSchema = z.object({
   full_name: z.string().min(1, "Nome completo é obrigatório"),
@@ -321,92 +319,6 @@ export default function Profile() {
     );
   }
 
-  const ProfileTabs = ({ userProducts }: { userProducts: any[] }) => {
-    return (
-      <Tabs defaultValue="posts" className="w-full">
-        <TabsList className="w-full justify-start border-b border-gray-800 bg-transparent">
-          <TabsTrigger
-            value="posts"
-            className={`flex-1 text-xl py-4 border-0 data-[state=active]:border-b-2 ${
-              theme === 'light' 
-                ? 'data-[state=active]:text-black data-[state=active]:border-black' 
-                : 'data-[state=active]:text-white data-[state=active]:border-white'
-            }`}
-          >
-            Posts
-          </TabsTrigger>
-          <TabsTrigger
-            value="products"
-            className={`flex-1 text-xl py-4 border-0 data-[state=active]:border-b-2 ${
-              theme === 'light' 
-                ? 'data-[state=active]:text-black data-[state=active]:border-black' 
-                : 'data-[state=active]:text-white data-[state=active]:border-white'
-            }`}
-          >
-            Produtos
-          </TabsTrigger>
-          <TabsTrigger
-            value="reels"
-            className={`flex-1 text-xl py-4 border-0 data-[state=active]:border-b-2 ${
-              theme === 'light' 
-                ? 'data-[state=active]:text-black data-[state=active]:border-black' 
-                : 'data-[state=active]:text-white data-[state=active]:border-white'
-            }`}
-          >
-            Reels
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="posts" className="min-h-[200px]">
-          <div className="grid grid-cols-3 gap-1">
-            <div className="aspect-square bg-gray-800/50 flex items-center justify-center">
-              <p className="text-gray-500">Ainda não há Posts</p>
-            </div>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="products" className="min-h-[200px]">
-          {userProducts && userProducts.length > 0 ? (
-            <div className="grid grid-cols-2 gap-4 p-4">
-              {userProducts.map((product) => (
-                <Card key={product.id} className={`${theme === 'light' ? 'bg-white' : 'bg-black'} shadow-none border-0`}>
-                  <CardContent className="p-3">
-                    {product.images?.[0] && (
-                      <img
-                        src={product.images[0]}
-                        alt={product.title}
-                        className="w-full aspect-square object-cover rounded-lg mb-2"
-                      />
-                    )}
-                    <h3 className={`font-medium ${theme === 'light' ? 'text-black' : 'text-white'}`}>{product.title}</h3>
-                    <p className="text-green-500">
-                      {new Intl.NumberFormat('pt-BR', {
-                        style: 'currency',
-                        currency: 'BRL'
-                      }).format(Number(product.price))}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <div className="flex items-center justify-center h-[200px]">
-              <p className="text-gray-500">Ainda não há Produtos</p>
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="reels" className="min-h-[200px]">
-          <div className="grid grid-cols-3 gap-1">
-            <div className="aspect-square bg-gray-800/50 flex items-center justify-center">
-              <p className="text-gray-500">Ainda não há Reels</p>
-            </div>
-          </div>
-        </TabsContent>
-      </Tabs>
-    );
-  };
-
   return (
     <div className={`min-h-screen ${theme === 'light' ? 'bg-white text-black' : 'bg-black text-white'}`}>
       <div className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between p-4 ${theme === 'light' ? 'bg-white/90' : 'bg-black/90'} backdrop-blur`}>
@@ -438,22 +350,6 @@ export default function Profile() {
                 <p className="text-gray-500">Sem Capa de Perfil</p>
               </div>
             )}
-            {!isPreviewMode && (
-              <div className="absolute right-4 bottom-4 flex gap-2">
-                <button
-                  onClick={() => setShowDeleteCoverDialog(true)}
-                  className="bg-blue-500 p-2 rounded-full cursor-pointer hover:bg-blue-600 transition-colors"
-                >
-                  <Trash2 className="h-5 w-5 text-white" />
-                </button>
-                <button
-                  onClick={handleCoverImageClick}
-                  className="bg-blue-500 p-2 rounded-full cursor-pointer hover:bg-blue-600 transition-colors"
-                >
-                  <Camera className="h-5 w-5 text-white" />
-                </button>
-              </div>
-            )}
           </div>
 
           <div className="relative -mt-16 px-4">
@@ -474,22 +370,6 @@ export default function Profile() {
                   </div>
                 )}
               </div>
-              {!isPreviewMode && (
-                <div className="absolute bottom-2 right-2 flex gap-2">
-                  <button 
-                    onClick={() => setShowDeletePhotoDialog(true)}
-                    className="bg-blue-500 p-2 rounded-full cursor-pointer hover:bg-blue-600 transition-colors"
-                  >
-                    <Trash2 className="h-5 w-5 text-white" />
-                  </button>
-                  <button 
-                    onClick={handleAvatarImageClick}
-                    className="bg-blue-500 p-2 rounded-full cursor-pointer hover:bg-blue-600 transition-colors"
-                  >
-                    <Camera className="h-5 w-5 text-white" />
-                  </button>
-                </div>
-              )}
             </div>
           </div>
 
@@ -514,61 +394,6 @@ export default function Profile() {
               <div className="flex flex-col gap-2">
                 {!isPreviewMode ? (
                   <>
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" className={`${theme === 'light' ? 'text-black border-gray-300' : 'text-white border-gray-700'}`}>
-                          Editar fotos
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="bg-gray-900 border-gray-800">
-                        <DialogHeader>
-                          <DialogTitle className="text-white">Editar fotos</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                          <div>
-                            <h3 className="text-white mb-2">Foto de Perfil</h3>
-                            <div className="flex gap-2">
-                              <Button
-                                onClick={handleAvatarImageClick}
-                                variant="outline"
-                                className="text-white border-gray-700"
-                              >
-                                <Camera className="h-4 w-4 mr-2" />
-                                Alterar foto
-                              </Button>
-                              <Button
-                                onClick={() => setShowDeletePhotoDialog(true)}
-                                variant="destructive"
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Excluir
-                              </Button>
-                            </div>
-                          </div>
-                          <div>
-                            <h3 className="text-white mb-2">Foto de Capa</h3>
-                            <div className="flex gap-2">
-                              <Button
-                                onClick={handleCoverImageClick}
-                                variant="outline"
-                                className="text-white border-gray-700"
-                              >
-                                <Camera className="h-4 w-4 mr-2" />
-                                Alterar capa
-                              </Button>
-                              <Button
-                                onClick={() => setShowDeleteCoverDialog(true)}
-                                variant="destructive"
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Excluir
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button variant="outline" className={`${theme === 'light' ? 'text-black border-gray-300' : 'text-white border-gray-700'}`}>
@@ -813,7 +638,7 @@ export default function Profile() {
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="outline" size="icon" className="border-gray-700">
-                          <MoreHorizontal className="h-4 w-4" />
+                          <Settings className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent className="bg-gray-900 border-gray-800">
@@ -844,40 +669,6 @@ export default function Profile() {
           </div>
         </div>
       </div>
-
-      <Dialog open={showDeletePhotoDialog} onOpenChange={setShowDeletePhotoDialog}>
-        <DialogContent className="bg-gray-900 border-gray-800">
-          <DialogHeader>
-            <DialogTitle className="text-white">Remover foto de perfil</DialogTitle>
-          </DialogHeader>
-          <p className="text-gray-300">Tem certeza que deseja remover sua foto de perfil?</p>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDeletePhotoDialog(false)}>
-              Cancelar
-            </Button>
-            <Button variant="destructive" onClick={handleDeleteAvatar}>
-              Remover
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={showDeleteCoverDialog} onOpenChange={setShowDeleteCoverDialog}>
-        <DialogContent className="bg-gray-900 border-gray-800">
-          <DialogHeader>
-            <DialogTitle className="text-white">Remover foto de capa</DialogTitle>
-          </DialogHeader>
-          <p className="text-gray-300">Tem certeza que deseja remover sua foto de capa?</p>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDeleteCoverDialog(false)}>
-              Cancelar
-            </Button>
-            <Button variant="destructive" onClick={handleDeleteCover}>
-              Remover
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       <BottomNav />
     </div>
