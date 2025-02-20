@@ -14,8 +14,6 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 
-type PageType = 'events' | 'places' | 'news' | 'products';
-
 const generateSlug = (name: string): string => {
   return name
     .toLowerCase()
@@ -30,7 +28,7 @@ const AdminCategories = () => {
   const [newCategory, setNewCategory] = useState({
     name: "",
     background_color: "#000000",
-    page_type: "events" as PageType,
+    page_type: "events",
     parent_id: null,
     slug: "",
     description: "",
@@ -68,6 +66,8 @@ const AdminCategories = () => {
         return;
       }
 
+      console.log("Trying to add category:", newCategory); // Debug log
+
       const { data, error } = await supabase
         .from("categories")
         .insert([{
@@ -82,17 +82,11 @@ const AdminCategories = () => {
         .select();
 
       if (error) {
-        console.error("Supabase error:", error);
-        let errorMessage = "Ocorreu um erro ao adicionar a categoria. Tente novamente.";
-        
-        if (error.message.includes("categories_page_type_check")) {
-          errorMessage = "O tipo de página 'products' ainda não está disponível. Por favor, escolha outro tipo.";
-        }
-        
+        console.error("Supabase error:", error); // Debug log
         toast({
           variant: "destructive",
           title: "Erro ao adicionar categoria",
-          description: errorMessage,
+          description: error.message || "Ocorreu um erro ao adicionar a categoria. Tente novamente.",
         });
         return;
       }
@@ -105,7 +99,7 @@ const AdminCategories = () => {
       setNewCategory({
         name: "",
         background_color: "#000000",
-        page_type: "events" as PageType,
+        page_type: "events",
         parent_id: null,
         slug: "",
         description: "",
@@ -179,7 +173,7 @@ const AdminCategories = () => {
             <Label htmlFor="page_type">Tipo de Página</Label>
             <Select
               value={newCategory.page_type}
-              onValueChange={(value: PageType) => 
+              onValueChange={(value) => 
                 setNewCategory({ ...newCategory, page_type: value })
               }
             >
