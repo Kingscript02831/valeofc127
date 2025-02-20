@@ -189,6 +189,65 @@ export default function Profile() {
     });
   };
 
+  const handleImageUploadClick = () => {
+    const dialog = new Dialog({
+      title: "Atualizar fotos",
+      content: (
+        <div className="space-y-6 py-4">
+          <div className="space-y-2">
+            <h3 className="text-lg font-medium">Foto de Perfil</h3>
+            <Input 
+              placeholder="Cole o link do Dropbox para a foto de perfil"
+              defaultValue={profile?.avatar_url || ''}
+              onChange={(e) => form.setValue("avatar_url", e.target.value)}
+              className="w-full"
+            />
+          </div>
+          <div className="space-y-2">
+            <h3 className="text-lg font-medium">Foto de Capa</h3>
+            <Input 
+              placeholder="Cole o link do Dropbox para a foto de capa"
+              defaultValue={profile?.cover_url || ''}
+              onChange={(e) => form.setValue("cover_url", e.target.value)}
+              className="w-full"
+            />
+          </div>
+          <DialogFooter>
+            <Button onClick={() => updateProfile.mutate(form.getValues())}>
+              Salvar alterações
+            </Button>
+          </DialogFooter>
+        </div>
+      ),
+    }).open();
+  };
+
+  const handleDeletePhotosClick = () => {
+    const dialog = new Dialog({
+      title: "Excluir fotos",
+      content: (
+        <div className="space-y-6 py-4">
+          <div className="space-y-4">
+            <Button
+              variant="destructive"
+              className="w-full"
+              onClick={handleDeleteAvatar}
+            >
+              Excluir foto de perfil
+            </Button>
+            <Button
+              variant="destructive"
+              className="w-full"
+              onClick={handleDeleteCover}
+            >
+              Excluir foto de capa
+            </Button>
+          </div>
+        </div>
+      ),
+    }).open();
+  };
+
   const handleCoverImageClick = () => {
     const dialog = window.prompt('Cole aqui o link do Dropbox para a imagem de capa:', profile?.cover_url || '');
     if (dialog !== null) {
@@ -352,22 +411,6 @@ export default function Profile() {
                 <p className="text-gray-500">Sem Capa de Perfil</p>
               </div>
             )}
-            {!isPreviewMode && (
-              <div className="absolute right-4 bottom-4 flex gap-2">
-                <button
-                  onClick={() => setShowDeleteCoverDialog(true)}
-                  className="bg-blue-500 p-2 rounded-full cursor-pointer hover:bg-blue-600 transition-colors"
-                >
-                  <Trash2 className="h-5 w-5 text-white" />
-                </button>
-                <button
-                  onClick={handleCoverImageClick}
-                  className="bg-blue-500 p-2 rounded-full cursor-pointer hover:bg-blue-600 transition-colors"
-                >
-                  <Camera className="h-5 w-5 text-white" />
-                </button>
-              </div>
-            )}
           </div>
 
           <div className="relative -mt-16 px-4">
@@ -390,18 +433,22 @@ export default function Profile() {
               </div>
               {!isPreviewMode && (
                 <div className="absolute bottom-2 right-2 flex gap-2">
-                  <button 
-                    onClick={() => setShowDeletePhotoDialog(true)}
-                    className="bg-blue-500 p-2 rounded-full cursor-pointer hover:bg-blue-600 transition-colors"
+                  <Button 
+                    onClick={handleDeletePhotosClick}
+                    variant="destructive"
+                    size="icon"
+                    className="rounded-full"
                   >
-                    <Trash2 className="h-5 w-5 text-white" />
-                  </button>
-                  <button 
-                    onClick={handleAvatarImageClick}
-                    className="bg-blue-500 p-2 rounded-full cursor-pointer hover:bg-blue-600 transition-colors"
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    onClick={handleImageUploadClick}
+                    variant="default"
+                    size="icon"
+                    className="rounded-full bg-blue-500 hover:bg-blue-600"
                   >
-                    <Camera className="h-5 w-5 text-white" />
-                  </button>
+                    <Camera className="h-4 w-4" />
+                  </Button>
                 </div>
               )}
             </div>
