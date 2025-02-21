@@ -21,6 +21,8 @@ export interface Profile {
   location_id?: string | null;
   is_admin?: boolean;
   theme_preference?: "dark" | "light" | "system";
+  relationship_status?: "single" | "dating" | "widowed" | null;
+  instagram_url?: string | null;
 }
 
 export interface ProfileUpdateData {
@@ -41,4 +43,6 @@ export interface ProfileUpdateData {
   basic_info_updated_at?: string;
   location_id?: string;
   theme_preference?: "dark" | "light" | "system";
+  relationship_status?: "single" | "dating" | "widowed" | null;
+  instagram_url?: string | null;
 }
