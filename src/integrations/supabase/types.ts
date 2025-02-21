@@ -910,7 +910,6 @@ export type Database = {
           admin_sidebar_color: string | null
           admin_text_color: string | null
           background_color: string | null
-          basic_info_update_interval: number | null
           bottom_nav_icon_color: string | null
           bottom_nav_primary_color: string | null
           bottom_nav_secondary_color: string | null
@@ -988,7 +987,6 @@ export type Database = {
           admin_sidebar_color?: string | null
           admin_text_color?: string | null
           background_color?: string | null
-          basic_info_update_interval?: number | null
           bottom_nav_icon_color?: string | null
           bottom_nav_primary_color?: string | null
           bottom_nav_secondary_color?: string | null
@@ -1066,7 +1064,6 @@ export type Database = {
           admin_sidebar_color?: string | null
           admin_text_color?: string | null
           background_color?: string | null
-          basic_info_update_interval?: number | null
           bottom_nav_icon_color?: string | null
           bottom_nav_primary_color?: string | null
           bottom_nav_secondary_color?: string | null
