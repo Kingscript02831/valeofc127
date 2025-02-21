@@ -2,19 +2,21 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "./ui/form";
 import { Input } from "./ui/input";
-import { Textarea } from "./ui/textarea";
 import { Button } from "./ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Profile } from "@/types/profile";
+import type { Location } from "@/types/locations";
 
 const formSchema = z.object({
   username: z.string().min(1, "Username é obrigatório"),
   full_name: z.string().min(1, "Nome completo é obrigatório"),
   email: z.string().email("Email inválido"),
   phone: z.string().optional(),
-  bio: z.string().optional(),
   website: z.string().url("URL inválida").optional().or(z.literal("")),
   birth_date: z.string().optional(),
   city: z.string().optional(),
@@ -37,7 +39,6 @@ const EditProfileDialog = ({ profile, onSubmit }: EditProfileDialogProps) => {
       full_name: profile?.full_name || "",
       email: profile?.email || "",
       phone: profile?.phone || "",
-      bio: profile?.bio || "",
       website: profile?.website || "",
       birth_date: profile?.birth_date || "",
       city: profile?.city || "",
@@ -45,6 +46,17 @@ const EditProfileDialog = ({ profile, onSubmit }: EditProfileDialogProps) => {
       house_number: profile?.house_number || "",
       postal_code: profile?.postal_code || "",
       status: profile?.status || "",
+    },
+  });
+
+  const { data: locations } = useQuery({
+    queryKey: ["locations"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("locations")
+        .select("*")
+        .order("name");
+      return data as Location[];
     },
   });
 
@@ -78,20 +90,6 @@ const EditProfileDialog = ({ profile, onSubmit }: EditProfileDialogProps) => {
                   <FormLabel className="text-white">Nome completo</FormLabel>
                   <FormControl>
                     <Input {...field} className="bg-gray-800 border-gray-700 text-white" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="bio"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-white">Biografia</FormLabel>
-                  <FormControl>
-                    <Textarea {...field} className="bg-gray-800 border-gray-700 text-white min-h-[100px]" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -163,9 +161,27 @@ const EditProfileDialog = ({ profile, onSubmit }: EditProfileDialogProps) => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-white">Cidade</FormLabel>
-                    <FormControl>
-                      <Input {...field} className="bg-gray-800 border-gray-700 text-white" />
-                    </FormControl>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
+                          <SelectValue placeholder="Selecione uma cidade" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-gray-800 border-gray-700">
+                        {locations?.map((location) => (
+                          <SelectItem
+                            key={location.id}
+                            value={location.name}
+                            className="text-white hover:bg-gray-700"
+                          >
+                            {location.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -221,7 +237,7 @@ const EditProfileDialog = ({ profile, onSubmit }: EditProfileDialogProps) => {
                 <FormItem>
                   <FormLabel className="text-white">Status</FormLabel>
                   <FormControl>
-                    <Input {...field} className="bg-gray-800 border-gray-700 text-white" />
+                    <Input {...field} className="bg-gray-800 border-gray-700 text-white" placeholder="Ex: Em linha" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
