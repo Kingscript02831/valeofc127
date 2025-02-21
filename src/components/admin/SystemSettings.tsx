@@ -1,15 +1,39 @@
 
-import React, { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import React, { useState, useEffect } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
+import type { SiteConfig } from "@/hooks/useSiteConfig";
 
 const SystemSettings = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [updateInterval, setUpdateInterval] = useState(30);
+
+  // Fetch current configuration
+  const { data: config } = useQuery({
+    queryKey: ['site-configuration'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('site_configuration')
+        .select('*')
+        .single();
+      
+      if (error) throw error;
+      if (!data) throw new Error('No site configuration found');
+      
+      return data as SiteConfig;
+    },
+  });
+
+  // Update state when config is loaded
+  useEffect(() => {
+    if (config?.basic_info_update_interval) {
+      setUpdateInterval(config.basic_info_update_interval);
+    }
+  }, [config]);
 
   const updateIntervalMutation = useMutation({
     mutationFn: async (days: number) => {
@@ -32,6 +56,7 @@ const SystemSettings = () => {
       return data;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['site-configuration'] });
       toast({
         title: "Configuração atualizada",
         description: "O intervalo de atualização foi modificado com sucesso",
