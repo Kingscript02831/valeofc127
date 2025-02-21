@@ -11,7 +11,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Profile } from "@/types/profile";
 import type { Location } from "@/types/locations";
-import { X } from "lucide-react";
 import { useToast } from "./ui/use-toast";
 
 const formSchema = z.object({
@@ -88,12 +87,8 @@ const EditProfileDialog = ({ profile, onSubmit }: EditProfileDialogProps) => {
 
   return (
     <DialogContent className="bg-card border-border sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
-      <DialogHeader className="flex flex-row items-center justify-between">
+      <DialogHeader>
         <DialogTitle className="text-foreground">Editar perfil</DialogTitle>
-        <button className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
-          <X className="h-4 w-4" />
-          <span className="sr-only">Fechar</span>
-        </button>
       </DialogHeader>
       
       <Form {...form}>
