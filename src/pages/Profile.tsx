@@ -289,7 +289,7 @@ export default function Profile() {
                 {profile?.city && (
                   <p className="text-gray-400 text-sm mt-1 flex items-center gap-1">
                     <MapPin className="h-4 w-4" />
-                    Mora em <span className="font-medium text-foreground">{profile.city}</span>
+                    Mora em {profile.city}
                   </p>
                 )}
 
@@ -297,43 +297,39 @@ export default function Profile() {
                   {profile?.relationship_status && (
                     <p className="text-gray-400 text-sm flex items-center gap-1">
                       <Heart className="h-4 w-4" />
-                      <span className="font-medium text-foreground">
-                        {formatRelationshipStatus(profile.relationship_status)}
-                      </span>
+                      {formatRelationshipStatus(profile.relationship_status)}
                     </p>
                   )}
                   
                   {profile?.birth_date && (
                     <p className="text-gray-400 text-sm flex items-center gap-1">
                       <Calendar className="h-4 w-4" />
-                      <span className="font-medium text-foreground">
-                        {formatBirthDate(profile.birth_date)}
-                      </span>
+                      {formatBirthDate(profile.birth_date)}
                     </p>
                   )}
                   
-                  <div className="flex flex-col gap-2 mt-2">
-                    {profile?.instagram_url && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex items-center gap-1 w-fit"
-                        onClick={() => window.open(profile.instagram_url, '_blank')}
-                      >
-                        <Instagram className="h-4 w-4" />
-                        Instagram
-                      </Button>
-                    )}
-                    
+                  <div className="flex items-center gap-2 mt-2">
                     {profile?.website && (
                       <Button
                         variant="outline"
                         size="sm"
-                        className="flex items-center gap-1 w-fit"
+                        className="flex items-center gap-1"
                         onClick={() => window.open(profile.website, '_blank')}
                       >
                         <Globe className="h-4 w-4" />
                         Website
+                      </Button>
+                    )}
+                    
+                    {profile?.instagram_url && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-1"
+                        onClick={() => window.open(profile.instagram_url, '_blank')}
+                      >
+                        <Instagram className="h-4 w-4" />
+                        Instagram
                       </Button>
                     )}
                   </div>
