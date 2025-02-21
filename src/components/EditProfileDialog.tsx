@@ -25,6 +25,7 @@ const formSchema = z.object({
   house_number: z.string().optional(),
   postal_code: z.string().optional(),
   status: z.string().optional(),
+  location_id: z.string().optional(),
 });
 
 interface EditProfileDialogProps {
@@ -48,6 +49,7 @@ const EditProfileDialog = ({ profile, onSubmit }: EditProfileDialogProps) => {
       house_number: profile?.house_number || "",
       postal_code: profile?.postal_code || "",
       status: profile?.status || "",
+      location_id: profile?.location_id || "",
     },
   });
 
@@ -62,27 +64,13 @@ const EditProfileDialog = ({ profile, onSubmit }: EditProfileDialogProps) => {
     },
   });
 
-  const { data: canUpdate } = useQuery({
-    queryKey: ["canUpdateBasicInfo", profile?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .rpc('can_update_basic_info', { profile_id: profile?.id });
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!profile?.id
-  });
-
-  const handleFormSubmit = async (values: z.infer<typeof formSchema>) => {
-    if (!canUpdate && (values.username !== profile?.username || values.email !== profile?.email)) {
-      toast({
-        title: "Alteração não permitida",
-        description: "Você só pode alterar seu username e email a cada 30 dias",
-        variant: "destructive"
-      });
-      return;
+  // When a location is selected, update both city and location_id
+  const handleLocationChange = (locationId: string) => {
+    const selectedLocation = locations?.find(loc => loc.id === locationId);
+    if (selectedLocation) {
+      form.setValue('location_id', locationId);
+      form.setValue('city', selectedLocation.name);
     }
-    onSubmit(values);
   };
 
   return (
@@ -92,7 +80,7 @@ const EditProfileDialog = ({ profile, onSubmit }: EditProfileDialogProps) => {
       </DialogHeader>
       
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <div className="space-y-4">
             <FormField
               control={form.control}
@@ -101,11 +89,7 @@ const EditProfileDialog = ({ profile, onSubmit }: EditProfileDialogProps) => {
                 <FormItem>
                   <FormLabel className="text-foreground">Username</FormLabel>
                   <FormControl>
-                    <Input 
-                      {...field} 
-                      className="bg-input border-input text-foreground"
-                      disabled={!canUpdate} 
-                    />
+                    <Input {...field} className="bg-input border-input text-foreground" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -119,12 +103,7 @@ const EditProfileDialog = ({ profile, onSubmit }: EditProfileDialogProps) => {
                 <FormItem>
                   <FormLabel className="text-foreground">Email</FormLabel>
                   <FormControl>
-                    <Input 
-                      {...field} 
-                      type="email" 
-                      className="bg-input border-input text-foreground"
-                      disabled={!canUpdate}
-                    />
+                    <Input {...field} type="email" className="bg-input border-input text-foreground" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -192,12 +171,12 @@ const EditProfileDialog = ({ profile, onSubmit }: EditProfileDialogProps) => {
               
               <FormField
                 control={form.control}
-                name="city"
+                name="location_id"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-foreground">Cidade</FormLabel>
                     <Select
-                      onValueChange={field.onChange}
+                      onValueChange={handleLocationChange}
                       defaultValue={field.value}
                     >
                       <FormControl>
@@ -209,7 +188,7 @@ const EditProfileDialog = ({ profile, onSubmit }: EditProfileDialogProps) => {
                         {locations?.map((location) => (
                           <SelectItem
                             key={location.id}
-                            value={location.name}
+                            value={location.id}
                             className="text-foreground hover:bg-accent"
                           >
                             {location.name}
