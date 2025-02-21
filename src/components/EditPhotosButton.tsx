@@ -8,6 +8,7 @@ import {
   DropdownMenuSeparator,
 } from "./ui/dropdown-menu";
 import { Camera, Trash2 } from "lucide-react";
+import { useTheme } from "./ThemeProvider";
 
 interface EditPhotosButtonProps {
   onAvatarClick: () => void;
@@ -26,10 +27,16 @@ const EditPhotosButton = ({
   avatarCount = 0,
   coverCount = 0
 }: EditPhotosButtonProps) => {
+  const { theme } = useTheme();
+  
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="icon" className="text-white border-gray-700">
+        <Button 
+          variant="outline" 
+          size="icon" 
+          className={`border-gray-700 ${theme === 'light' ? 'text-black' : 'text-white'}`}
+        >
           <Camera className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>

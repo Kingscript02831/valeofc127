@@ -150,7 +150,30 @@ export default function Profile() {
   };
 
   const handleSubmit = async (values: Partial<Profile>) => {
-    // Implement profile update logic here
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Não autenticado");
+
+      const { error } = await supabase
+        .from("profiles")
+        .update(values)
+        .eq("id", session.user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Perfil atualizado",
+        description: "Suas informações foram atualizadas com sucesso",
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+    } catch (error) {
+      toast({
+        title: "Erro ao atualizar perfil",
+        description: error instanceof Error ? error.message : "Ocorreu um erro ao atualizar o perfil",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleLogout = async () => {
