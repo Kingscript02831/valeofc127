@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -52,9 +51,11 @@ export default function Profile() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Não autenticado");
 
+      const updatedUrl = url ? url.replace(/0/g, '1') : url;
+
       const updates = type === 'avatar' 
-        ? { avatar_url: url }
-        : { cover_url: url };
+        ? { avatar_url: updatedUrl }
+        : { cover_url: updatedUrl };
 
       const { error } = await supabase
         .from("profiles")
@@ -82,14 +83,16 @@ export default function Profile() {
   const handleAvatarClick = () => {
     const dialog = window.prompt('Cole aqui o link do Dropbox para a foto de perfil:', profile?.avatar_url || '');
     if (dialog !== null) {
-      handlePhotoUpdate.mutate({ type: 'avatar', url: dialog });
+      const updatedUrl = dialog.replace(/0/g, '1');
+      handlePhotoUpdate.mutate({ type: 'avatar', url: updatedUrl });
     }
   };
 
   const handleCoverClick = () => {
     const dialog = window.prompt('Cole aqui o link do Dropbox para a imagem de capa:', profile?.cover_url || '');
     if (dialog !== null) {
-      handlePhotoUpdate.mutate({ type: 'cover', url: dialog });
+      const updatedUrl = dialog.replace(/0/g, '1');
+      handlePhotoUpdate.mutate({ type: 'cover', url: updatedUrl });
     }
   };
 
