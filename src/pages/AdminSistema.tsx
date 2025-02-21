@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,9 +37,9 @@ import {
   Lock,
   UserCog,
   Search,
-  MapPin,
-  Plus,
 } from "lucide-react";
+import SystemSettings from "@/components/admin/SystemSettings";
+import LocationsManagement from "@/components/admin/LocationsManagement";
 
 interface UserAuditLog {
   id: string;
@@ -61,26 +62,12 @@ interface UserProfile {
   avatar_url: string;
 }
 
-interface Location {
-  id: string;
-  name: string;
-  state: string;
-  created_at: string;
-}
-
 const AdminSistema = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [showHistory, setShowHistory] = useState(false);
-  const [showLocationDialog, setShowLocationDialog] = useState(false);
-  const [editingLocation, setEditingLocation] = useState<Location | null>(null);
-  const [newLocation, setNewLocation] = useState({
-    name: "",
-    state: "",
-  });
-  const [updateInterval, setUpdateInterval] = useState(30);
 
   const { data: users, isLoading } = useQuery({
     queryKey: ["users", searchTerm],
@@ -223,163 +210,8 @@ const AdminSistema = () => {
     },
   });
 
-  const { data: locations, isLoading: locationsLoading } = useQuery({
-    queryKey: ["locations"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("locations")
-        .select("*")
-        .order("name", { ascending: true });
-      
-      if (error) throw error;
-      return data as Location[];
-    },
-  });
-
-  const addLocationMutation = useMutation({
-    mutationFn: async (location: Omit<Location, "id" | "created_at">) => {
-      console.log('Attempting to add location:', location);
-      
-      const { data, error } = await supabase
-        .from('locations')
-        .insert(location)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Supabase error:', error);
-        throw new Error(error.message);
-      }
-      
-      console.log('Location added successfully:', data);
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["locations"] });
-      setShowLocationDialog(false);
-      setNewLocation({ name: "", state: "" });
-      toast({
-        title: "Localização adicionada",
-        description: "A localização foi adicionada com sucesso",
-      });
-    },
-    onError: (error: Error) => {
-      console.error('Mutation error:', error);
-      toast({
-        title: "Erro ao adicionar localização",
-        description: error.message || "Ocorreu um erro ao adicionar a localização",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const updateLocationMutation = useMutation({
-    mutationFn: async (location: Location) => {
-      const { data, error } = await supabase
-        .from("locations")
-        .update({
-          name: location.name,
-          state: location.state,
-        })
-        .eq("id", location.id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["locations"] });
-      setShowLocationDialog(false);
-      setEditingLocation(null);
-      toast({
-        title: "Localização atualizada",
-        description: "A localização foi atualizada com sucesso",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Erro ao atualizar localização",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const deleteLocationMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from("locations")
-        .delete()
-        .eq("id", id);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["locations"] });
-      toast({
-        title: "Localização excluída",
-        description: "A localização foi excluída com sucesso",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Erro ao excluir localização",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const updateIntervalMutation = useMutation({
-    mutationFn: async (days: number) => {
-      const { data: configData, error: fetchError } = await supabase
-        .from('site_configuration')
-        .select('id')
-        .limit(1)
-        .single();
-      
-      if (fetchError) throw fetchError;
-      if (!configData?.id) throw new Error('No configuration found');
-
-      const { data, error } = await supabase
-        .from('site_configuration')
-        .update({ basic_info_update_interval: days })
-        .eq('id', configData.id)
-        .single();
-        
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      toast({
-        title: "Configuração atualizada",
-        description: "O intervalo de atualização foi modificado com sucesso",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Erro ao atualizar configuração",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  });
-
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
-  };
-
-  const handleLocationSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (editingLocation) {
-      updateLocationMutation.mutate({
-        ...editingLocation,
-        ...newLocation,
-      });
-    } else {
-      addLocationMutation.mutate(newLocation);
-    }
   };
 
   if (isLoading) {
@@ -583,142 +415,8 @@ const AdminSistema = () => {
         </Table>
       </div>
 
-      <div className="mt-10 bg-card rounded-lg shadow p-6">
-        <h2 className="text-xl font-bold mb-6">Configurações do Sistema</h2>
-        
-        <div className="grid gap-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">
-              Intervalo para atualização de informações básicas (dias)
-            </label>
-            <div className="flex gap-2">
-              <Input
-                type="number"
-                min="1"
-                value={updateInterval}
-                onChange={(e) => setUpdateInterval(parseInt(e.target.value))}
-                className="max-w-[200px]"
-              />
-              <Button
-                onClick={() => updateIntervalMutation.mutate(updateInterval)}
-              >
-                Salvar
-              </Button>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Define o período mínimo que usuários devem esperar para atualizar username e email
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-10">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold">Localizações</h2>
-          <Dialog open={showLocationDialog} onOpenChange={setShowLocationDialog}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
-                Adicionar Localização
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>
-                  {editingLocation ? "Editar" : "Adicionar"} Localização
-                </DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleLocationSubmit} className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium">Nome da Cidade</label>
-                  <Input
-                    value={newLocation.name}
-                    onChange={(e) =>
-                      setNewLocation({ ...newLocation, name: e.target.value })
-                    }
-                    placeholder="Nome da cidade"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Estado</label>
-                  <Input
-                    value={newLocation.state}
-                    onChange={(e) =>
-                      setNewLocation({ ...newLocation, state: e.target.value })
-                    }
-                    placeholder="Estado (UF)"
-                    required
-                  />
-                </div>
-                <Button type="submit" className="w-full">
-                  {editingLocation ? "Atualizar" : "Adicionar"}
-                </Button>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </div>
-
-        <div className="bg-white rounded-lg shadow">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Cidade</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead>Criado em</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {locations?.map((location) => (
-                <TableRow key={location.id}>
-                  <TableCell className="font-medium">{location.name}</TableCell>
-                  <TableCell>{location.state}</TableCell>
-                  <TableCell>
-                    {format(new Date(location.created_at), "dd/MM/yyyy")}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setEditingLocation(location);
-                            setNewLocation({
-                              name: location.name,
-                              state: location.state,
-                            });
-                            setShowLocationDialog(true);
-                          }}
-                        >
-                          <Edit className="mr-2 h-4 w-4" />
-                          Editar
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          className="text-red-600"
-                          onClick={() => {
-                            if (window.confirm("Tem certeza que deseja excluir esta localização?")) {
-                              deleteLocationMutation.mutate(location.id);
-                            }
-                          }}
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Excluir
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </div>
+      <SystemSettings />
+      <LocationsManagement />
     </div>
   );
 };
