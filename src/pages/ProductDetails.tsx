@@ -1,5 +1,6 @@
+
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Share2, Heart } from "lucide-react";
+import { ArrowLeft, Share2, Heart, User2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
@@ -260,9 +261,19 @@ const ProductDetails = () => {
                 )}
               </div>
               <div className="flex-1">
-                <p className="font-semibold text-lg">
-                  {product?.profiles?.full_name || 'Usuário'}
-                </p>
+                <div className="flex items-center gap-2">
+                  <p className="font-semibold text-lg">
+                    {product?.profiles?.full_name || 'Usuário'}
+                  </p>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => navigate(`/perfil/${product?.user_id}`)}
+                    className="hover:scale-105 transition-transform h-8 w-8"
+                  >
+                    <User2 className="h-4 w-4" />
+                  </Button>
+                </div>
                 {product?.created_at && (
                   <p className="text-sm text-muted-foreground">
                     Anunciado há {formatDistance(new Date(product.created_at), new Date(), { locale: ptBR })}
