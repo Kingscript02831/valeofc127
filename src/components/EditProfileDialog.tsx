@@ -1,3 +1,4 @@
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "./ui/form";
 import { Input } from "./ui/input";
@@ -27,7 +28,7 @@ const formSchema = z.object({
   status: z.string().optional(),
   location_id: z.string().optional(),
   relationship_status: z.enum(["single", "dating", "widowed"]).nullable(),
-  instagram_url: z.string().url("URL do Instagram inválida").optional().or(z.literal("")),
+  instagram_url: z.string().url("URL do Instagram inválida").optional().or(z.literal(""))
 });
 
 interface EditProfileDialogProps {
