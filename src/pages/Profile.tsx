@@ -17,6 +17,7 @@ import { useTheme } from "@/components/ThemeProvider";
 import ProfileTabs from "@/components/ProfileTabs";
 import EditProfileDialog from "@/components/EditProfileDialog";
 import EditPhotosButton from "@/components/EditPhotosButton";
+import PhotoUrlDialog from "@/components/PhotoUrlDialog";
 import type { Profile } from "@/types/profile";
 
 const defaultAvatarImage = "/placeholder.svg";
@@ -30,6 +31,8 @@ export default function Profile() {
   const { theme } = useTheme();
   const [avatarCount, setAvatarCount] = useState(0);
   const [coverCount, setCoverCount] = useState(0);
+  const [isAvatarDialogOpen, setIsAvatarDialogOpen] = useState(false);
+  const [isCoverDialogOpen, setIsCoverDialogOpen] = useState(false);
 
   const { data: profile, isLoading: isProfileLoading } = useQuery({
     queryKey: ["profile"],
@@ -102,17 +105,11 @@ export default function Profile() {
   });
 
   const handleAvatarClick = () => {
-    const dialog = window.prompt('Cole aqui o link do Dropbox para a foto de perfil:', profile?.avatar_url || '');
-    if (dialog !== null) {
-      handlePhotoUpdate.mutate({ type: 'avatar', url: dialog });
-    }
+    setIsAvatarDialogOpen(true);
   };
 
   const handleCoverClick = () => {
-    const dialog = window.prompt('Cole aqui o link do Dropbox para a imagem de capa:', profile?.cover_url || '');
-    if (dialog !== null) {
-      handlePhotoUpdate.mutate({ type: 'cover', url: dialog });
-    }
+    setIsCoverDialogOpen(true);
   };
 
   const handleDeleteAvatar = () => {
@@ -304,6 +301,29 @@ export default function Profile() {
           </div>
         </div>
       </div>
+
+      <EditPhotosButton 
+        onAvatarClick={handleAvatarClick}
+        onCoverClick={handleCoverClick}
+        onDeleteAvatar={handleDeleteAvatar}
+        onDeleteCover={handleDeleteCover}
+        avatarCount={avatarCount}
+        coverCount={coverCount}
+      />
+
+      <PhotoUrlDialog
+        isOpen={isAvatarDialogOpen}
+        onClose={() => setIsAvatarDialogOpen(false)}
+        onConfirm={(url) => handlePhotoUpdate.mutate({ type: 'avatar', url })}
+        title="Alterar foto de perfil"
+      />
+
+      <PhotoUrlDialog
+        isOpen={isCoverDialogOpen}
+        onClose={() => setIsCoverDialogOpen(false)}
+        onConfirm={(url) => handlePhotoUpdate.mutate({ type: 'cover', url })}
+        title="Alterar foto de capa"
+      />
 
       <BottomNav />
     </div>
