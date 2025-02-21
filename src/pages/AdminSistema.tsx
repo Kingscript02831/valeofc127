@@ -1,9 +1,7 @@
+
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import * as z from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
 import {
   Table,
   TableBody,
@@ -19,21 +17,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -57,21 +40,6 @@ import {
 } from "lucide-react";
 import SystemSettings from "@/components/admin/SystemSettings";
 import LocationsManagement from "@/components/admin/LocationsManagement";
-import type { Location } from "@/types/locations";
-
-const formSchema = z.object({
-  username: z.string().min(1, "Username é obrigatório"),
-  full_name: z.string().min(1, "Nome completo é obrigatório"),
-  email: z.string().email("Email inválido"),
-  phone: z.string().optional(),
-  website: z.string().url("URL inválida").optional().or(z.literal("")),
-  birth_date: z.string().optional(),
-  city: z.string().optional(),
-  street: z.string().optional(),
-  house_number: z.string().optional(),
-  postal_code: z.string().optional(),
-  status: z.string().optional(),
-});
 
 interface UserAuditLog {
   id: string;
@@ -92,12 +60,6 @@ interface UserProfile {
   created_at: string;
   is_blocked: boolean;
   avatar_url: string;
-  website: string;
-  city: string;
-  street: string;
-  house_number: string;
-  postal_code: string;
-  status: string;
 }
 
 const AdminSistema = () => {
@@ -107,182 +69,146 @@ const AdminSistema = () => {
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [showHistory, setShowHistory] = useState(false);
 
-  const { data: locations } = useQuery({
-    queryKey: ["locations"],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("locations")
-        .select("*")
-        .order("name");
-      return data as Location[];
-    },
-  });
-
   const { data: users, isLoading } = useQuery({
     queryKey: ["users", searchTerm],
     queryFn: async () => {
-      let query = supabase.from("profiles").select("*");
+      let query = supabase
+        .from("profiles")
+        .select("*")
+        .order("created_at", { ascending: false });
 
       if (searchTerm) {
-        query = query.ilike("full_name", `%${searchTerm}%`);
+        query = query.or(
+          `username.ilike.%${searchTerm}%,full_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`
+        );
       }
 
       const { data, error } = await query;
-
-      if (error) {
-        throw error;
-      }
-
+      if (error) throw error;
       return data as UserProfile[];
     },
   });
 
-  const blockUserMutation = useMutation({
+  const { data: userHistory } = useQuery({
+    queryKey: ["userHistory", selectedUser?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_user_audit_history", {
+        user_id_param: selectedUser?.id,
+      });
+      if (error) throw error;
+      return data as UserAuditLog[];
+    },
+    enabled: !!selectedUser && showHistory,
+  });
+
+  const deleteUserMutation = useMutation({
     mutationFn: async (userId: string) => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .update({ is_blocked: true })
-        .eq("id", userId);
-
-      if (error) {
-        throw error;
-      }
-
-      return data;
+      const { error } = await supabase.rpc("soft_delete_user", {
+        target_user_id: userId,
+        admin_user_id: (await supabase.auth.getUser()).data.user?.id,
+      });
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       toast({
-        title: "Usuário bloqueado",
-        description: "O usuário foi bloqueado com sucesso.",
+        title: "Usuário excluído",
+        description: "O usuário foi excluído com sucesso",
       });
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast({
-        title: "Erro ao bloquear usuário",
+        title: "Erro ao excluir usuário",
         description: error.message,
         variant: "destructive",
       });
     },
   });
 
-  const unblockUserMutation = useMutation({
-    mutationFn: async (userId: string) => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .update({ is_blocked: false })
-        .eq("id", userId);
-
-      if (error) {
-        throw error;
-      }
-
-      return data;
+  const toggleBlockMutation = useMutation({
+    mutationFn: async ({
+      userId,
+      shouldBlock,
+    }: {
+      userId: string;
+      shouldBlock: boolean;
+    }) => {
+      const { error } = await supabase.rpc("toggle_user_block", {
+        target_user_id: userId,
+        should_block: shouldBlock,
+        admin_user_id: (await supabase.auth.getUser()).data.user?.id,
+      });
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       toast({
-        title: "Usuário desbloqueado",
-        description: "O usuário foi desbloqueado com sucesso.",
+        title: "Status atualizado",
+        description: "O status do usuário foi atualizado com sucesso",
       });
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast({
-        title: "Erro ao desbloquear usuário",
+        title: "Erro ao atualizar status",
         description: error.message,
         variant: "destructive",
       });
     },
   });
 
-  const fetchUserAuditLogs = async (userId: string) => {
-    const { data, error } = await supabase
-      .from("audit_log")
-      .select("*")
-      .eq("table_name", "profiles")
-      .eq("record_id", userId)
-      .order("performed_at", { ascending: false });
-
-    if (error) {
-      throw error;
-    }
-
-    return data as UserAuditLog[];
-  };
-
-  const { data: auditLogs, refetch: refetchAuditLogs } = useQuery(
-    ["userAuditLogs", selectedUser?.id],
-    () => fetchUserAuditLogs(selectedUser!.id),
-    {
-      enabled: !!selectedUser,
-    }
-  );
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      username: selectedUser?.username || "",
-      full_name: selectedUser?.full_name || "",
-      email: selectedUser?.email || "",
-      phone: selectedUser?.phone || "",
-      website: selectedUser?.website || "",
-      birth_date: selectedUser?.birth_date || "",
-      city: selectedUser?.city || "",
-      street: selectedUser?.street || "",
-      house_number: selectedUser?.house_number || "",
-      postal_code: selectedUser?.postal_code || "",
-      status: selectedUser?.status || "",
+  const updateUserMutation = useMutation({
+    mutationFn: async (userData: Partial<UserProfile>) => {
+      const { error } = await supabase
+        .from("profiles")
+        .update(userData)
+        .eq("id", userData.id);
+      if (error) throw error;
     },
-    values: {
-      username: selectedUser?.username || "",
-      full_name: selectedUser?.full_name || "",
-      email: selectedUser?.email || "",
-      phone: selectedUser?.phone || "",
-      website: selectedUser?.website || "",
-      birth_date: selectedUser?.birth_date || "",
-      city: selectedUser?.city || "",
-      street: selectedUser?.street || "",
-      house_number: selectedUser?.house_number || "",
-      postal_code: selectedUser?.postal_code || "",
-      status: selectedUser?.status || "",
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      toast({
+        title: "Usuário atualizado",
+        description: "As informações do usuário foram atualizadas com sucesso",
+      });
+      setSelectedUser(null);
     },
-    mode: "onChange",
+    onError: (error) => {
+      toast({
+        title: "Erro ao atualizar usuário",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
   });
 
-  const updateUserMutation = useMutation(
-    async (values: z.infer<typeof formSchema>) => {
-      if (!selectedUser) {
-        throw new Error("No user selected");
-      }
+  const resetPasswordMutation = useMutation({
+    mutationFn: async (email: string) => {
+      const { error: rpcError } = await supabase.rpc("request_password_reset", {
+        target_email: email,
+        admin_user_id: (await supabase.auth.getUser()).data.user?.id,
+      });
+      if (rpcError) throw rpcError;
 
-      const { data, error } = await supabase
-        .from("profiles")
-        .update(values)
-        .eq("id", selectedUser.id);
-
-      if (error) {
-        throw error;
-      }
-
-      return data;
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/update-password`,
+      });
+      if (error) throw error;
     },
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ["users"] });
-        toast({
-          title: "Usuário atualizado",
-          description: "As informações do usuário foram atualizadas com sucesso.",
-        });
-      },
-      onError: (error: any) => {
-        toast({
-          title: "Erro ao atualizar usuário",
-          description: error.message,
-          variant: "destructive",
-        });
-      },
-    }
-  );
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      toast({
+        title: "Redefinição de senha solicitada",
+        description: "Um email foi enviado para o usuário com as instruções de redefinição de senha",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao solicitar redefinição de senha",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -350,235 +276,132 @@ const AdminSistema = () => {
                             Editar
                           </DropdownMenuItem>
                         </DialogTrigger>
-                        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+                        <DialogContent>
                           <DialogHeader>
                             <DialogTitle>Editar Usuário</DialogTitle>
                           </DialogHeader>
-                          <Form {...form}>
-                            <form onSubmit={form.handleSubmit(updateUserMutation.mutate)} className="space-y-6">
-                              <div className="space-y-4">
-                                <FormField
-                                  control={form.control}
-                                  name="username"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>Username</FormLabel>
-                                      <FormControl>
-                                        <Input {...field} />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                                
-                                <FormField
-                                  control={form.control}
-                                  name="email"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>Email</FormLabel>
-                                      <FormControl>
-                                        <Input {...field} type="email" />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-
-                                <FormField
-                                  control={form.control}
-                                  name="full_name"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>Nome completo</FormLabel>
-                                      <FormControl>
-                                        <Input {...field} />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-
-                                <FormField
-                                  control={form.control}
-                                  name="phone"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>Telefone</FormLabel>
-                                      <FormControl>
-                                        <Input {...field} type="tel" />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-
-                                <FormField
-                                  control={form.control}
-                                  name="website"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>Website</FormLabel>
-                                      <FormControl>
-                                        <Input {...field} type="url" />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-
-                                <FormField
-                                  control={form.control}
-                                  name="birth_date"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>Data de Nascimento</FormLabel>
-                                      <FormControl>
-                                        <Input {...field} type="date" />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-
-                                <div className="space-y-4 pt-4 border-t">
-                                  <h3 className="font-semibold">Endereço</h3>
-                                  
-                                  <FormField
-                                    control={form.control}
-                                    name="city"
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        <FormLabel>Cidade</FormLabel>
-                                        <Select
-                                          onValueChange={field.onChange}
-                                          defaultValue={field.value}
-                                        >
-                                          <FormControl>
-                                            <SelectTrigger>
-                                              <SelectValue placeholder="Selecione uma cidade" />
-                                            </SelectTrigger>
-                                          </FormControl>
-                                          <SelectContent>
-                                            {locations?.map((location) => (
-                                              <SelectItem
-                                                key={location.id}
-                                                value={location.name}
-                                              >
-                                                {location.name}
-                                              </SelectItem>
-                                            ))}
-                                          </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                      </FormItem>
-                                    )}
-                                  />
-
-                                  <FormField
-                                    control={form.control}
-                                    name="street"
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        <FormLabel>Rua</FormLabel>
-                                        <FormControl>
-                                          <Input {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                      </FormItem>
-                                    )}
-                                  />
-
-                                  <FormField
-                                    control={form.control}
-                                    name="house_number"
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        <FormLabel>Número</FormLabel>
-                                        <FormControl>
-                                          <Input {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                      </FormItem>
-                                    )}
-                                  />
-
-                                  <FormField
-                                    control={form.control}
-                                    name="postal_code"
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        <FormLabel>CEP</FormLabel>
-                                        <FormControl>
-                                          <Input {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                      </FormItem>
-                                    )}
-                                  />
-                                </div>
-
-                                <FormField
-                                  control={form.control}
-                                  name="status"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>Status</FormLabel>
-                                      <FormControl>
-                                        <Input {...field} placeholder="Ex: Em linha" />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                              </div>
-
-                              <Button type="submit" className="w-full">
-                                Salvar alterações
-                              </Button>
-                            </form>
-                          </Form>
+                          <div className="grid gap-4 py-4">
+                            <div className="grid gap-2">
+                              <Input
+                                id="full_name"
+                                placeholder="Nome completo"
+                                defaultValue={user.full_name}
+                                onChange={(e) =>
+                                  setSelectedUser({
+                                    ...user,
+                                    full_name: e.target.value,
+                                  })
+                                }
+                              />
+                              <Input
+                                id="username"
+                                placeholder="Username"
+                                defaultValue={user.username}
+                                onChange={(e) =>
+                                  setSelectedUser({
+                                    ...user,
+                                    username: e.target.value,
+                                  })
+                                }
+                              />
+                              <Input
+                                id="phone"
+                                placeholder="Telefone"
+                                defaultValue={user.phone}
+                                onChange={(e) =>
+                                  setSelectedUser({
+                                    ...user,
+                                    phone: e.target.value,
+                                  })
+                                }
+                              />
+                              <Input
+                                id="bio"
+                                placeholder="Bio"
+                                defaultValue={user.bio}
+                                onChange={(e) =>
+                                  setSelectedUser({
+                                    ...user,
+                                    bio: e.target.value,
+                                  })
+                                }
+                              />
+                            </div>
+                            <Button
+                              onClick={() => updateUserMutation.mutate(user)}
+                            >
+                              Salvar alterações
+                            </Button>
+                          </div>
                         </DialogContent>
                       </Dialog>
 
                       <DropdownMenuItem
-                        onSelect={(e) => {
-                          e.preventDefault();
-                          setSelectedUser(user);
-                          setShowHistory(true);
-                          refetchAuditLogs();
-                        }}
+                        onClick={() => resetPasswordMutation.mutate(user.email)}
                       >
-                        <History className="mr-2 h-4 w-4" />
-                        Ver histórico
+                        <Lock className="mr-2 h-4 w-4" />
+                        Redefinir Senha
                       </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      {user.is_blocked ? (
-                        <DropdownMenuItem
-                          onSelect={(e) => {
-                            e.preventDefault();
-                            unblockUserMutation.mutate(user.id);
-                          }}
-                        >
-                          <Lock className="mr-2 h-4 w-4" />
-                          Desbloquear
-                        </DropdownMenuItem>
-                      ) : (
-                        <DropdownMenuItem
-                          onSelect={(e) => {
-                            e.preventDefault();
-                            blockUserMutation.mutate(user.id);
-                          }}
-                        >
-                          <Ban className="mr-2 h-4 w-4" />
-                          Bloquear
-                        </DropdownMenuItem>
-                      )}
+
                       <DropdownMenuItem
-                        onSelect={(e) => {
-                          e.preventDefault();
-                          // Implement delete user logic here
-                        }}
+                        onClick={() =>
+                          toggleBlockMutation.mutate({
+                            userId: user.id,
+                            shouldBlock: !user.is_blocked,
+                          })
+                        }
+                      >
+                        {user.is_blocked ? (
+                          <>
+                            <UserCog className="mr-2 h-4 w-4" />
+                            Desbloquear
+                          </>
+                        ) : (
+                          <>
+                            <Ban className="mr-2 h-4 w-4" />
+                            Bloquear
+                          </>
+                        )}
+                      </DropdownMenuItem>
+
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                            <History className="mr-2 h-4 w-4" />
+                            Histórico
+                          </DropdownMenuItem>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Histórico do Usuário</DialogTitle>
+                          </DialogHeader>
+                          <div className="mt-4 space-y-4">
+                            {userHistory?.map((log) => (
+                              <div
+                                key={log.id}
+                                className="p-4 bg-gray-50 rounded-lg"
+                              >
+                                <p className="font-medium">{log.action}</p>
+                                <p className="text-sm text-gray-500">
+                                  {format(
+                                    new Date(log.performed_at),
+                                    "dd/MM/yyyy HH:mm"
+                                  )}
+                                </p>
+                                <pre className="mt-2 text-sm">
+                                  {JSON.stringify(log.details, null, 2)}
+                                </pre>
+                              </div>
+                            ))}
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+
+                      <DropdownMenuSeparator />
+
+                      <DropdownMenuItem
+                        className="text-red-600"
+                        onClick={() => deleteUserMutation.mutate(user.id)}
                       >
                         <Trash2 className="mr-2 h-4 w-4" />
                         Excluir
