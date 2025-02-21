@@ -80,6 +80,7 @@ const AdminSistema = () => {
     name: "",
     state: "",
   });
+  const [updateInterval, setUpdateInterval] = useState(30);
 
   const { data: users, isLoading } = useQuery({
     queryKey: ["users", searchTerm],
@@ -330,6 +331,29 @@ const AdminSistema = () => {
     },
   });
 
+  const updateIntervalMutation = useMutation({
+    mutationFn: async (days: number) => {
+      const { error } = await supabase
+        .from('site_configuration')
+        .update({ basic_info_update_interval: days })
+        .eq('id', 1);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Configuração atualizada",
+        description: "O intervalo de atualização foi modificado com sucesso",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao atualizar configuração",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  });
+
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
@@ -545,6 +569,35 @@ const AdminSistema = () => {
             ))}
           </TableBody>
         </Table>
+      </div>
+
+      <div className="mt-10 bg-card rounded-lg shadow p-6">
+        <h2 className="text-xl font-bold mb-6">Configurações do Sistema</h2>
+        
+        <div className="grid gap-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">
+              Intervalo para atualização de informações básicas (dias)
+            </label>
+            <div className="flex gap-2">
+              <Input
+                type="number"
+                min="1"
+                value={updateInterval}
+                onChange={(e) => setUpdateInterval(parseInt(e.target.value))}
+                className="max-w-[200px]"
+              />
+              <Button
+                onClick={() => updateIntervalMutation.mutate(updateInterval)}
+              >
+                Salvar
+              </Button>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Define o período mínimo que usuários devem esperar para atualizar username e email
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="mt-10">

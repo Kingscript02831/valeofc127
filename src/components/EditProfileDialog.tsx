@@ -1,5 +1,4 @@
-
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "./ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "./ui/form";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
@@ -11,6 +10,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Profile } from "@/types/profile";
 import type { Location } from "@/types/locations";
+import { X } from "lucide-react";
+import { useToast } from "./ui/use-toast";
 
 const formSchema = z.object({
   username: z.string().min(1, "Username é obrigatório"),
@@ -32,6 +33,7 @@ interface EditProfileDialogProps {
 }
 
 const EditProfileDialog = ({ profile, onSubmit }: EditProfileDialogProps) => {
+  const { toast } = useToast();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -60,22 +62,54 @@ const EditProfileDialog = ({ profile, onSubmit }: EditProfileDialogProps) => {
     },
   });
 
+  const { data: canUpdate } = useQuery({
+    queryKey: ["canUpdateBasicInfo", profile?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .rpc('can_update_basic_info', { profile_id: profile?.id });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!profile?.id
+  });
+
+  const handleFormSubmit = async (values: z.infer<typeof formSchema>) => {
+    if (!canUpdate && (values.username !== profile?.username || values.email !== profile?.email)) {
+      toast({
+        title: "Alteração não permitida",
+        description: "Você só pode alterar seu username e email a cada 30 dias",
+        variant: "destructive"
+      });
+      return;
+    }
+    onSubmit(values);
+  };
+
   return (
-    <DialogContent className="bg-gray-900 border-gray-800">
-      <DialogHeader>
-        <DialogTitle className="text-white">Editar perfil</DialogTitle>
+    <DialogContent className="bg-card border-border sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+      <DialogHeader className="flex flex-row items-center justify-between pr-8">
+        <DialogTitle className="text-foreground">Editar perfil</DialogTitle>
+        <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+          <X className="h-4 w-4" />
+          <span className="sr-only">Fechar</span>
+        </DialogClose>
       </DialogHeader>
+      
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 max-h-[70vh] overflow-y-auto">
-          <div className="space-y-4 p-1">
+        <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
+          <div className="space-y-4">
             <FormField
               control={form.control}
               name="username"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-white">Username</FormLabel>
+                  <FormLabel className="text-foreground">Username</FormLabel>
                   <FormControl>
-                    <Input {...field} className="bg-gray-800 border-gray-700 text-white" />
+                    <Input 
+                      {...field} 
+                      className="bg-input border-input text-foreground"
+                      disabled={!canUpdate} 
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -84,12 +118,17 @@ const EditProfileDialog = ({ profile, onSubmit }: EditProfileDialogProps) => {
             
             <FormField
               control={form.control}
-              name="full_name"
+              name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-white">Nome completo</FormLabel>
+                  <FormLabel className="text-foreground">Email</FormLabel>
                   <FormControl>
-                    <Input {...field} className="bg-gray-800 border-gray-700 text-white" />
+                    <Input 
+                      {...field} 
+                      type="email" 
+                      className="bg-input border-input text-foreground"
+                      disabled={!canUpdate}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -98,12 +137,12 @@ const EditProfileDialog = ({ profile, onSubmit }: EditProfileDialogProps) => {
 
             <FormField
               control={form.control}
-              name="email"
+              name="full_name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-white">Email</FormLabel>
+                  <FormLabel className="text-foreground">Nome completo</FormLabel>
                   <FormControl>
-                    <Input {...field} type="email" className="bg-gray-800 border-gray-700 text-white" />
+                    <Input {...field} className="bg-input border-input text-foreground" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -115,9 +154,9 @@ const EditProfileDialog = ({ profile, onSubmit }: EditProfileDialogProps) => {
               name="phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-white">Telefone</FormLabel>
+                  <FormLabel className="text-foreground">Telefone</FormLabel>
                   <FormControl>
-                    <Input {...field} type="tel" className="bg-gray-800 border-gray-700 text-white" />
+                    <Input {...field} type="tel" className="bg-input border-input text-foreground" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -129,9 +168,9 @@ const EditProfileDialog = ({ profile, onSubmit }: EditProfileDialogProps) => {
               name="website"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-white">Website</FormLabel>
+                  <FormLabel className="text-foreground">Website</FormLabel>
                   <FormControl>
-                    <Input {...field} type="url" className="bg-gray-800 border-gray-700 text-white" />
+                    <Input {...field} type="url" className="bg-input border-input text-foreground" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -143,9 +182,9 @@ const EditProfileDialog = ({ profile, onSubmit }: EditProfileDialogProps) => {
               name="birth_date"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-white">Data de Nascimento</FormLabel>
+                  <FormLabel className="text-foreground">Data de Nascimento</FormLabel>
                   <FormControl>
-                    <Input {...field} type="date" className="bg-gray-800 border-gray-700 text-white" />
+                    <Input {...field} type="date" className="bg-input border-input text-foreground" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -245,7 +284,12 @@ const EditProfileDialog = ({ profile, onSubmit }: EditProfileDialogProps) => {
             />
           </div>
 
-          <Button type="submit" className="w-full">Salvar alterações</Button>
+          <Button 
+            type="submit" 
+            className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+          >
+            Salvar alterações
+          </Button>
         </form>
       </Form>
     </DialogContent>
