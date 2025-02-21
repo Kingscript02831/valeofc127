@@ -14,13 +14,17 @@ interface EditPhotosButtonProps {
   onCoverClick: () => void;
   onDeleteAvatar: () => void;
   onDeleteCover: () => void;
+  avatarCount?: number;
+  coverCount?: number;
 }
 
 const EditPhotosButton = ({ 
   onAvatarClick, 
   onCoverClick, 
   onDeleteAvatar, 
-  onDeleteCover 
+  onDeleteCover,
+  avatarCount = 0,
+  coverCount = 0
 }: EditPhotosButtonProps) => {
   return (
     <DropdownMenu>
@@ -32,11 +36,11 @@ const EditPhotosButton = ({
       <DropdownMenuContent align="end" className="w-48 bg-gray-900 border-gray-800">
         <DropdownMenuItem onClick={onAvatarClick} className="text-white cursor-pointer">
           <Camera className="h-4 w-4 mr-2" />
-          Alterar foto de perfil
+          Alterar foto de perfil ({avatarCount})
         </DropdownMenuItem>
         <DropdownMenuItem onClick={onCoverClick} className="text-white cursor-pointer">
           <Camera className="h-4 w-4 mr-2" />
-          Alterar capa
+          Alterar capa ({coverCount})
         </DropdownMenuItem>
         <DropdownMenuSeparator className="bg-gray-700" />
         <DropdownMenuItem onClick={onDeleteAvatar} className="text-red-500 cursor-pointer">

@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,6 +28,8 @@ export default function Profile() {
   const queryClient = useQueryClient();
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const { theme } = useTheme();
+  const [avatarCount, setAvatarCount] = useState(0);
+  const [coverCount, setCoverCount] = useState(0);
 
   const { data: profile, isLoading: isProfileLoading } = useQuery({
     queryKey: ["profile"],
@@ -62,6 +63,21 @@ export default function Profile() {
         .eq("id", session.user.id);
 
       if (error) throw error;
+
+      // Atualiza o contador
+      if (url) {
+        if (type === 'avatar') {
+          setAvatarCount(1);
+        } else {
+          setCoverCount(1);
+        }
+      } else {
+        if (type === 'avatar') {
+          setAvatarCount(0);
+        } else {
+          setCoverCount(0);
+        }
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["profile"] });
@@ -138,6 +154,13 @@ export default function Profile() {
     await supabase.auth.signOut();
     navigate("/login");
   };
+
+  useEffect(() => {
+    if (profile) {
+      setAvatarCount(profile.avatar_url ? 1 : 0);
+      setCoverCount(profile.cover_url ? 1 : 0);
+    }
+  }, [profile]);
 
   if (isProfileLoading) {
     return (
@@ -226,6 +249,8 @@ export default function Profile() {
                     onCoverClick={handleCoverClick}
                     onDeleteAvatar={handleDeleteAvatar}
                     onDeleteCover={handleDeleteCover}
+                    avatarCount={avatarCount}
+                    coverCount={coverCount}
                   />
 
                   <Dialog>
