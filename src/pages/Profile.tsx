@@ -1,10 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { format } from "date-fns";
-import { supabase } from "../integrations/supabase/client";
-import { Button } from "../components/ui/button";
-import { useToast } from "../hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import {
   DropdownMenu,
@@ -12,13 +11,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, MapPin, Link2, Eye, ArrowLeft, Camera, Pencil, MoreHorizontal } from "lucide-react";
-import BottomNav from "../components/BottomNav";
-import { useTheme } from "../components/ThemeProvider";
-import ProfileTabs from "../components/ProfileTabs";
-import EditProfileDialog from "../components/EditProfileDialog";
-import EditPhotosButton from "../components/EditPhotosButton";
-import type { Profile } from "../types/profile";
+import { LogOut, MapPin, Link2, Eye, ArrowLeft, Pencil, MoreHorizontal } from "lucide-react";
+import BottomNav from "@/components/BottomNav";
+import { useTheme } from "@/components/ThemeProvider";
+import ProfileTabs from "@/components/ProfileTabs";
+import EditProfileDialog from "@/components/EditProfileDialog";
+import EditPhotosButton from "@/components/EditPhotosButton";
+import type { Profile } from "@/types/profile";
 
 const defaultAvatarImage = "/placeholder.svg";
 const defaultCoverImage = "/placeholder.svg";
@@ -46,6 +45,64 @@ export default function Profile() {
       return data as Profile;
     },
   });
+
+  const handlePhotoUpdate = useMutation({
+    mutationFn: async ({ type, url }: { type: 'avatar' | 'cover', url: string | null }) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Não autenticado");
+
+      const updates = type === 'avatar' 
+        ? { avatar_url: url }
+        : { cover_url: url };
+
+      const { error } = await supabase
+        .from("profiles")
+        .update(updates)
+        .eq("id", session.user.id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      toast({
+        title: "Foto atualizada",
+        description: "Sua foto foi atualizada com sucesso",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erro ao atualizar foto",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleAvatarClick = () => {
+    const dialog = window.prompt('Cole aqui o link do Dropbox para a foto de perfil:', profile?.avatar_url || '');
+    if (dialog !== null) {
+      handlePhotoUpdate.mutate({ type: 'avatar', url: dialog });
+    }
+  };
+
+  const handleCoverClick = () => {
+    const dialog = window.prompt('Cole aqui o link do Dropbox para a imagem de capa:', profile?.cover_url || '');
+    if (dialog !== null) {
+      handlePhotoUpdate.mutate({ type: 'cover', url: dialog });
+    }
+  };
+
+  const handleDeleteAvatar = () => {
+    if (window.confirm('Tem certeza que deseja excluir sua foto de perfil?')) {
+      handlePhotoUpdate.mutate({ type: 'avatar', url: null });
+    }
+  };
+
+  const handleDeleteCover = () => {
+    if (window.confirm('Tem certeza que deseja excluir sua foto de capa?')) {
+      handlePhotoUpdate.mutate({ type: 'cover', url: null });
+    }
+  };
 
   const { data: userProducts } = useQuery({
     queryKey: ["userProducts"],
@@ -76,14 +133,14 @@ export default function Profile() {
   const handleCoverImageClick = () => {
     const dialog = window.prompt('Cole aqui o link do Dropbox para a imagem de capa:', profile?.cover_url || '');
     if (dialog !== null) {
-      updateProfile.mutate({ cover_url: dialog });
+      handlePhotoUpdate.mutate({ type: 'cover', url: dialog });
     }
   };
 
   const handleAvatarImageClick = () => {
     const dialog = window.prompt('Cole aqui o link do Dropbox para a foto de perfil:', profile?.avatar_url || '');
     if (dialog !== null) {
-      updateProfile.mutate({ avatar_url: dialog });
+      handlePhotoUpdate.mutate({ type: 'avatar', url: dialog });
     }
   };
 
@@ -96,50 +153,6 @@ export default function Profile() {
       });
     }
   };
-
-  const updateProfile = useMutation({
-    mutationFn: async (values: Partial<Profile>) => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("Não autenticado");
-
-      const isUpdatingRestricted = 
-        values.username !== profile?.username ||
-        values.phone !== profile?.phone;
-
-      if (isUpdatingRestricted) {
-        const { data: canUpdate, error: checkError } = await supabase
-          .rpc('can_update_basic_info', { profile_id: session.user.id });
-
-        if (checkError) throw checkError;
-        if (!canUpdate) {
-          throw new Error("Você só pode alterar seu @ ou telefone após 30 dias da última atualização.");
-        }
-
-        values.basic_info_updated_at = new Date().toISOString();
-      }
-
-      const { error } = await supabase
-        .from("profiles")
-        .update(values)
-        .eq("id", session.user.id);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["profile"] });
-      toast({
-        title: "Perfil atualizado",
-        description: "Suas informações foram atualizadas com sucesso",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Erro ao atualizar perfil",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
 
   const handleSubmit = async (values: Partial<Profile>) => {
     await updateProfile.mutateAsync(values);
@@ -230,20 +243,15 @@ export default function Profile() {
                 )}
               </div>
 
-              <div className="flex flex-col gap-2">
+              <div className="flex gap-2">
                 {!isPreviewMode ? (
                   <>
-                    <Button 
-                      variant="outline" 
-                      className={`${theme === 'light' ? 'text-black border-gray-300' : 'text-white border-gray-700'}`}
-                      onClick={() => {
-                        const avatarDialog = document.getElementById('avatar-dialog');
-                        if (avatarDialog) avatarDialog.click();
-                      }}
-                    >
-                      <Camera className="h-4 w-4 mr-2" />
-                      Editar foto
-                    </Button>
+                    <EditPhotosButton 
+                      onAvatarClick={handleAvatarClick}
+                      onCoverClick={handleCoverClick}
+                      onDeleteAvatar={handleDeleteAvatar}
+                      onDeleteCover={handleDeleteCover}
+                    />
 
                     <Dialog>
                       <DialogTrigger asChild>

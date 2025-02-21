@@ -5,31 +5,47 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "./ui/dropdown-menu";
-import { Camera, Pencil } from "lucide-react";
+import { Camera, Trash2 } from "lucide-react";
 
 interface EditPhotosButtonProps {
   onAvatarClick: () => void;
   onCoverClick: () => void;
+  onDeleteAvatar: () => void;
+  onDeleteCover: () => void;
 }
 
-const EditPhotosButton = ({ onAvatarClick, onCoverClick }: EditPhotosButtonProps) => {
+const EditPhotosButton = ({ 
+  onAvatarClick, 
+  onCoverClick, 
+  onDeleteAvatar, 
+  onDeleteCover 
+}: EditPhotosButtonProps) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" className="text-white border-gray-700">
-          <Pencil className="h-4 w-4 mr-2" />
-          Editar fotos
+        <Button variant="outline" size="icon" className="text-white border-gray-700">
+          <Camera className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48">
-        <DropdownMenuItem onClick={onAvatarClick}>
+      <DropdownMenuContent align="end" className="w-48 bg-gray-900 border-gray-800">
+        <DropdownMenuItem onClick={onAvatarClick} className="text-white cursor-pointer">
           <Camera className="h-4 w-4 mr-2" />
           Alterar foto de perfil
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={onCoverClick}>
+        <DropdownMenuItem onClick={onCoverClick} className="text-white cursor-pointer">
           <Camera className="h-4 w-4 mr-2" />
           Alterar capa
+        </DropdownMenuItem>
+        <DropdownMenuSeparator className="bg-gray-700" />
+        <DropdownMenuItem onClick={onDeleteAvatar} className="text-red-500 cursor-pointer">
+          <Trash2 className="h-4 w-4 mr-2" />
+          Excluir foto de perfil
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={onDeleteCover} className="text-red-500 cursor-pointer">
+          <Trash2 className="h-4 w-4 mr-2" />
+          Excluir capa
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
