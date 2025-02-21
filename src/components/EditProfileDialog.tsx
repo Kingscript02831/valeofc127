@@ -8,9 +8,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "../integrations/supabase/client";
-import type { Profile } from "../types/profile";
-import type { Location } from "../types/locations";
+import { supabase } from "@/integrations/supabase/client";
+import { Profile } from "@/types/profile";
+import type { Location } from "@/types/locations";
 
 const formSchema = z.object({
   username: z.string().min(1, "Username é obrigatório"),
@@ -59,6 +59,25 @@ const EditProfileDialog = ({ profile, onSubmit }: EditProfileDialogProps) => {
       return data as Location[];
     },
   });
+
+  // Reset form when profile changes
+  React.useEffect(() => {
+    if (profile) {
+      form.reset({
+        username: profile.username || "",
+        full_name: profile.full_name || "",
+        email: profile.email || "",
+        phone: profile.phone || "",
+        website: profile.website || "",
+        birth_date: profile.birth_date || "",
+        city: profile.city || "",
+        street: profile.street || "",
+        house_number: profile.house_number || "",
+        postal_code: profile.postal_code || "",
+        status: profile.status || "",
+      });
+    }
+  }, [profile, form]);
 
   return (
     <DialogContent className="bg-gray-900 border-gray-800">
@@ -253,4 +272,3 @@ const EditProfileDialog = ({ profile, onSubmit }: EditProfileDialogProps) => {
 };
 
 export default EditProfileDialog;
-
