@@ -40,7 +40,7 @@ const EditProfileDialog = ({ profile, onSubmit }: EditProfileDialogProps) => {
       email: profile?.email || "",
       phone: profile?.phone || "",
       website: profile?.website || "",
-      birth_date: profile?.birth_date || "",
+      birth_date: profile?.birth_date ? new Date(profile.birth_date).toISOString().split('T')[0] : "",
       city: profile?.city || "",
       street: profile?.street || "",
       house_number: profile?.house_number || "",
@@ -59,6 +59,25 @@ const EditProfileDialog = ({ profile, onSubmit }: EditProfileDialogProps) => {
       return data as Location[];
     },
   });
+
+  // Reset form when profile data changes
+  React.useEffect(() => {
+    if (profile) {
+      form.reset({
+        username: profile.username || "",
+        full_name: profile.full_name || "",
+        email: profile.email || "",
+        phone: profile.phone || "",
+        website: profile.website || "",
+        birth_date: profile.birth_date ? new Date(profile.birth_date).toISOString().split('T')[0] : "",
+        city: profile.city || "",
+        street: profile.street || "",
+        house_number: profile.house_number || "",
+        postal_code: profile.postal_code || "",
+        status: profile.status || "",
+      });
+    }
+  }, [profile, form]);
 
   return (
     <DialogContent className="bg-gray-900 border-gray-800">
@@ -164,6 +183,7 @@ const EditProfileDialog = ({ profile, onSubmit }: EditProfileDialogProps) => {
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
+                      value={field.value}
                     >
                       <FormControl>
                         <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
@@ -253,4 +273,3 @@ const EditProfileDialog = ({ profile, onSubmit }: EditProfileDialogProps) => {
 };
 
 export default EditProfileDialog;
-
