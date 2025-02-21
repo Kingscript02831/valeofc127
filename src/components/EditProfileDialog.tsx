@@ -1,4 +1,3 @@
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "./ui/form";
 import { Input } from "./ui/input";
@@ -59,6 +58,24 @@ const EditProfileDialog = ({ profile, onSubmit }: EditProfileDialogProps) => {
       return data as Location[];
     },
   });
+
+  React.useEffect(() => {
+    if (profile) {
+      form.reset({
+        username: profile.username || "",
+        full_name: profile.full_name || "",
+        email: profile.email || "",
+        phone: profile.phone || "",
+        website: profile.website || "",
+        birth_date: profile.birth_date || "",
+        city: profile.city || "",
+        street: profile.street || "",
+        house_number: profile.house_number || "",
+        postal_code: profile.postal_code || "",
+        status: profile.status || "",
+      });
+    }
+  }, [profile, form]);
 
   return (
     <DialogContent className="bg-gray-900 border-gray-800">
