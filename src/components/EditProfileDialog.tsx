@@ -1,4 +1,5 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "./ui/dialog";
+
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "./ui/form";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
@@ -87,12 +88,12 @@ const EditProfileDialog = ({ profile, onSubmit }: EditProfileDialogProps) => {
 
   return (
     <DialogContent className="bg-card border-border sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
-      <DialogHeader className="flex flex-row items-center justify-between pr-8">
+      <DialogHeader className="flex flex-row items-center justify-between">
         <DialogTitle className="text-foreground">Editar perfil</DialogTitle>
-        <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+        <button className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
           <X className="h-4 w-4" />
           <span className="sr-only">Fechar</span>
-        </DialogClose>
+        </button>
       </DialogHeader>
       
       <Form {...form}>
@@ -191,30 +192,30 @@ const EditProfileDialog = ({ profile, onSubmit }: EditProfileDialogProps) => {
               )}
             />
 
-            <div className="space-y-4 pt-4 border-t border-gray-700">
-              <h3 className="text-white font-semibold">Endereço</h3>
+            <div className="space-y-4 pt-4 border-t border-border">
+              <h3 className="text-foreground font-semibold">Endereço</h3>
               
               <FormField
                 control={form.control}
                 name="city"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-white">Cidade</FormLabel>
+                    <FormLabel className="text-foreground">Cidade</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
+                        <SelectTrigger className="bg-input border-input text-foreground">
                           <SelectValue placeholder="Selecione uma cidade" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent className="bg-gray-800 border-gray-700">
+                      <SelectContent className="bg-card border-border">
                         {locations?.map((location) => (
                           <SelectItem
                             key={location.id}
                             value={location.name}
-                            className="text-white hover:bg-gray-700"
+                            className="text-foreground hover:bg-accent"
                           >
                             {location.name}
                           </SelectItem>
@@ -231,9 +232,9 @@ const EditProfileDialog = ({ profile, onSubmit }: EditProfileDialogProps) => {
                 name="street"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-white">Rua</FormLabel>
+                    <FormLabel className="text-foreground">Rua</FormLabel>
                     <FormControl>
-                      <Input {...field} className="bg-gray-800 border-gray-700 text-white" />
+                      <Input {...field} className="bg-input border-input text-foreground" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -245,9 +246,9 @@ const EditProfileDialog = ({ profile, onSubmit }: EditProfileDialogProps) => {
                 name="house_number"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-white">Número</FormLabel>
+                    <FormLabel className="text-foreground">Número</FormLabel>
                     <FormControl>
-                      <Input {...field} className="bg-gray-800 border-gray-700 text-white" />
+                      <Input {...field} className="bg-input border-input text-foreground" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -259,9 +260,9 @@ const EditProfileDialog = ({ profile, onSubmit }: EditProfileDialogProps) => {
                 name="postal_code"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-white">CEP</FormLabel>
+                    <FormLabel className="text-foreground">CEP</FormLabel>
                     <FormControl>
-                      <Input {...field} className="bg-gray-800 border-gray-700 text-white" />
+                      <Input {...field} className="bg-input border-input text-foreground" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -274,9 +275,9 @@ const EditProfileDialog = ({ profile, onSubmit }: EditProfileDialogProps) => {
               name="status"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-white">Status</FormLabel>
+                  <FormLabel className="text-foreground">Status</FormLabel>
                   <FormControl>
-                    <Input {...field} className="bg-gray-800 border-gray-700 text-white" placeholder="Ex: Em linha" />
+                    <Input {...field} className="bg-input border-input text-foreground" placeholder="Ex: Em linha" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
