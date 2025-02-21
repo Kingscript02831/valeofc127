@@ -1,91 +1,33 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { supabase } from "../integrations/supabase/client";
 import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
 import { useToast } from "../hooks/use-toast";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "../components/ui/form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
-import {
-  LogOut,
-  User,
-  Settings,
-  MapPin,
-  Link2,
-  Eye,
-  ArrowLeft,
-  Camera,
-  Pencil,
-} from "lucide-react";
-import { Card } from "../components/ui/card";
+import { LogOut, Settings, MapPin, Link2, Eye, ArrowLeft } from "lucide-react";
 import BottomNav from "../components/BottomNav";
-import type { Profile } from "../types/profile";
 import { useTheme } from "../components/ThemeProvider";
 import ProfileTabs from "../components/ProfileTabs";
+import EditProfileDialog from "../components/EditProfileDialog";
+import EditPhotosButton from "../components/EditPhotosButton";
+import type { Profile } from "../types/profile";
 
-const profileSchema = z.object({
-  full_name: z.string().min(1, "Nome completo é obrigatório"),
-  email: z.string().email("Email inválido"),
-  phone: z.string().min(1, "Telefone é obrigatório"),
-  birth_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida"),
-  street: z.string().min(1, "Rua é obrigatória"),
-  house_number: z.string().min(1, "Número é obrigatório"),
-  city: z.string().min(1, "Cidade é obrigatória"),
-  postal_code: z.string().min(1, "CEP é obrigatório"),
-  avatar_url: z.string().nullable().optional(),
-  cover_url: z.string().nullable().optional(),
-  username: z.string().min(3, "Username deve ter pelo menos 3 caracteres"),
-  bio: z.string().optional(),
-  website: z.string().url("URL inválida").optional().or(z.literal("")),
-  status: z.string().optional(),
-  basic_info_updated_at: z.string().optional(),
-});
-
-const convertDropboxUrl = (url: string) => {
-  if (!url) return "";
-  if (url.includes("?raw=1")) return url;
-  return url.replace("www.dropbox.com", "dl.dropboxusercontent.com").replace("?dl=0", "?raw=1");
-};
-
-const defaultCoverImage = "/placeholder-cover.jpg"
-const defaultAvatarImage = "/placeholder-avatar.jpg"
+const defaultAvatarImage = "/placeholder.svg";
+const defaultCoverImage = "/placeholder.svg";
 
 export default function Profile() {
-  const { toast } = useToast();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [showSettings, setShowSettings] = useState(false);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
-  const [activeTab, setActiveTab] = useState("posts");
-  const [isLoadingImage, setIsLoadingImage] = useState(false);
-  const [showDeletePhotoDialog, setShowDeletePhotoDialog] = useState(false);
-  const [showDeleteCoverDialog, setShowDeleteCoverDialog] = useState(false);
   const { theme } = useTheme();
 
   const form = useForm<z.infer<typeof profileSchema>>({
@@ -211,12 +153,13 @@ export default function Profile() {
   };
 
   const copyProfileLink = () => {
-    const profileUrl = `${window.location.origin}/perfil/${profile?.username}`;
-    navigator.clipboard.writeText(profileUrl);
-    toast({
-      title: "Link copiado!",
-      description: "O link do seu perfil foi copiado para a área de transferência.",
-    });
+    if (profile?.username) {
+      navigator.clipboard.writeText(`${window.location.origin}/perfil/${profile.username}`);
+      toast({
+        title: "Link copiado!",
+        description: "O link do seu perfil foi copiado para a área de transferência.",
+      });
+    }
   };
 
   const updateProfile = useMutation({
@@ -271,17 +214,13 @@ export default function Profile() {
     },
   });
 
+  const handleSubmit = async (values: any) => {
+    await updateProfile.mutateAsync(values);
+  };
+
   const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut();
-      navigate("/login");
-    } catch (error: any) {
-      toast({
-        title: "Erro ao sair",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
+    await supabase.auth.signOut();
+    navigate("/login");
   };
 
   useEffect(() => {
@@ -329,7 +268,6 @@ export default function Profile() {
 
       <div className="pt-16 pb-20">
         <div className="relative">
-          {/* Cover Image Section */}
           <div className="h-32 bg-gray-200 dark:bg-gray-800 relative">
             {profile?.cover_url ? (
               <img
@@ -345,19 +283,8 @@ export default function Profile() {
                 <p className="text-gray-500">Sem Capa de Perfil</p>
               </div>
             )}
-            {!isPreviewMode && (
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handleCoverImageClick}
-                className="absolute bottom-2 right-2 bg-white/80 hover:bg-white/90"
-              >
-                <Camera className="h-4 w-4" />
-              </Button>
-            )}
           </div>
 
-          {/* Profile Info Section */}
           <div className="relative -mt-16 px-4">
             <div className="relative inline-block">
               <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white dark:border-black">
@@ -376,16 +303,6 @@ export default function Profile() {
                   </div>
                 )}
               </div>
-              {!isPreviewMode && (
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={handleAvatarImageClick}
-                  className="absolute bottom-0 right-0 bg-white/80 hover:bg-white/90 rounded-full"
-                >
-                  <Camera className="h-4 w-4" />
-                </Button>
-              )}
             </div>
           </div>
 
@@ -410,27 +327,10 @@ export default function Profile() {
               <div className="flex flex-col gap-2">
                 {!isPreviewMode ? (
                   <>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button 
-                          variant="outline" 
-                          className={`${theme === 'light' ? 'text-black border-gray-300' : 'text-white border-gray-700'}`}
-                        >
-                          <Pencil className="h-4 w-4 mr-2" />
-                          Editar fotos
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48">
-                        <DropdownMenuItem onClick={handleAvatarImageClick}>
-                          <Camera className="h-4 w-4 mr-2" />
-                          Alterar foto de perfil
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={handleCoverImageClick}>
-                          <Camera className="h-4 w-4 mr-2" />
-                          Alterar capa
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <EditPhotosButton 
+                      onAvatarClick={handleAvatarImageClick} 
+                      onCoverClick={handleCoverImageClick}
+                    />
 
                     <Dialog>
                       <DialogTrigger asChild>
@@ -438,239 +338,7 @@ export default function Profile() {
                           Editar perfil
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="bg-gray-900 border-gray-800">
-                        <DialogHeader>
-                          <DialogTitle className="text-white">Editar perfil</DialogTitle>
-                        </DialogHeader>
-                        <Form {...form}>
-                          <form onSubmit={form.handleSubmit((data) => updateProfile.mutate(data))} className="space-y-4">
-                            <FormField
-                              control={form.control}
-                              name="username"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-white">Username</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
-                                      placeholder="Seu username"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-
-                            <FormField
-                              control={form.control}
-                              name="full_name"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-white">Nome completo</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
-                                      placeholder="Seu nome completo"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-
-                            <FormField
-                              control={form.control}
-                              name="bio"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-white">Bio</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
-                                      placeholder="Sua biografia"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-
-                            <FormField
-                              control={form.control}
-                              name="website"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-white">Website</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
-                                      placeholder="https://seu-site.com"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-
-                            <FormField
-                              control={form.control}
-                              name="phone"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-white">Telefone</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      type="tel"
-                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
-                                      placeholder="(00) 00000-0000"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-
-                            <FormField
-                              control={form.control}
-                              name="birth_date"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-white">Data de Nascimento</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      type="date"
-                                      className="bg-transparent border-white text-white"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-
-                            <FormField
-                              control={form.control}
-                              name="email"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-white">Email</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      type="email"
-                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
-                                      placeholder="seu@email.com"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-
-                            <FormField
-                              control={form.control}
-                              name="street"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-white">Rua</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
-                                      placeholder="Nome da rua"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-
-                            <FormField
-                              control={form.control}
-                              name="house_number"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-white">Número</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
-                                      placeholder="123"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-
-                            <FormField
-                              control={form.control}
-                              name="city"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-white">Cidade</FormLabel>
-                                  <FormControl>
-                                    <select
-                                      {...field}
-                                      className="w-full bg-transparent border-white text-white placeholder:text-gray-400 rounded-md p-2"
-                                    >
-                                      {locations?.map((location) => (
-                                        <option 
-                                          key={location.id} 
-                                          value={location.name}
-                                          selected={location.name === profile?.city}
-                                        >
-                                          {location.name}
-                                        </option>
-                                      ))}
-                                    </select>
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-
-                            <FormField
-                              control={form.control}
-                              name="postal_code"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-white">CEP</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      {...field}
-                                      className="bg-transparent border-white text-white placeholder:text-gray-400"
-                                      placeholder="00000-000"
-                                    />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-                            <div className="flex gap-2 justify-end">
-                              <Button 
-                                type="button" 
-                                variant="outline" 
-                                onClick={() => setShowSettings(false)}
-                              >
-                                Cancelar
-                              </Button>
-                              <Button 
-                                type="submit" 
-                                className="bg-blue-600 hover:bg-blue-700"
-                                disabled={updateProfile.isPending}
-                              >
-                                {updateProfile.isPending ? "Salvando..." : "Salvar alterações"}
-                              </Button>
-                            </div>
-                          </form>
-                        </Form>
-                      </DialogContent>
+                      <EditProfileDialog profile={profile} onSubmit={handleSubmit} />
                     </Dialog>
 
                     <DropdownMenu>
