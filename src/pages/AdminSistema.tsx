@@ -333,12 +333,23 @@ const AdminSistema = () => {
 
   const updateIntervalMutation = useMutation({
     mutationFn: async (days: number) => {
+      const { data: configData, error: fetchError } = await supabase
+        .from('site_configuration')
+        .select('id')
+        .limit(1)
+        .single();
+      
+      if (fetchError) throw fetchError;
+      if (!configData?.id) throw new Error('No configuration found');
+
       const { data, error } = await supabase
         .from('site_configuration')
         .update({ basic_info_update_interval: days })
-        .eq('id', '00000000-0000-0000-0000-000000000000')
+        .eq('id', configData.id)
         .single();
+        
       if (error) throw error;
+      return data;
     },
     onSuccess: () => {
       toast({
