@@ -1,4 +1,3 @@
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "./ui/form";
 import { Input } from "./ui/input";
@@ -12,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Profile } from "@/types/profile";
 import type { Location } from "@/types/locations";
 import { useToast } from "./ui/use-toast";
+import { differenceInDays } from "date-fns";
 
 const formSchema = z.object({
   username: z.string().min(1, "Username é obrigatório"),
@@ -26,6 +26,8 @@ const formSchema = z.object({
   postal_code: z.string().optional(),
   status: z.string().optional(),
   location_id: z.string().optional(),
+  relationship_status: z.enum(["single", "dating", "widowed"]).nullable(),
+  instagram_url: z.string().url("URL do Instagram inválida").optional().or(z.literal("")),
 });
 
 interface EditProfileDialogProps {
@@ -50,6 +52,8 @@ const EditProfileDialog = ({ profile, onSubmit }: EditProfileDialogProps) => {
       postal_code: profile?.postal_code || "",
       status: profile?.status || "",
       location_id: profile?.location_id || "",
+      relationship_status: profile?.relationship_status || null,
+      instagram_url: profile?.instagram_url || "",
     },
   });
 
@@ -64,13 +68,58 @@ const EditProfileDialog = ({ profile, onSubmit }: EditProfileDialogProps) => {
     },
   });
 
-  // When a location is selected, update both city and location_id
+  const { data: siteConfig } = useQuery({
+    queryKey: ["site-configuration"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("site_configuration")
+        .select("basic_info_update_interval")
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const getRemainingDays = () => {
+    if (!profile?.basic_info_updated_at) return null;
+    const lastUpdate = new Date(profile.basic_info_updated_at);
+    const daysSinceLastUpdate = differenceInDays(new Date(), lastUpdate);
+    const minDays = siteConfig?.basic_info_update_interval || 30;
+    return Math.max(0, minDays - daysSinceLastUpdate);
+  };
+
+  const isBasicInfoLocked = getRemainingDays() !== null && getRemainingDays() > 0;
+
   const handleLocationChange = (locationId: string) => {
     const selectedLocation = locations?.find(loc => loc.id === locationId);
     if (selectedLocation) {
       form.setValue('location_id', locationId);
       form.setValue('city', selectedLocation.name);
     }
+  };
+
+  const handleSubmitWithValidation = async (values: z.infer<typeof formSchema>) => {
+    if ((values.username !== profile?.username || values.email !== profile?.email) && profile?.basic_info_updated_at) {
+      const lastUpdate = new Date(profile.basic_info_updated_at);
+      const daysSinceLastUpdate = differenceInDays(new Date(), lastUpdate);
+      const minDays = siteConfig?.basic_info_update_interval || 30;
+
+      if (daysSinceLastUpdate < minDays) {
+        toast({
+          title: "Não é possível atualizar",
+          description: `Você precisa esperar ${minDays} dias desde a última atualização de informações básicas. Dias restantes: ${minDays - daysSinceLastUpdate}`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    if (values.username !== profile?.username || values.email !== profile?.email) {
+      values.basic_info_updated_at = new Date().toISOString();
+    }
+
+    onSubmit(values);
   };
 
   return (
@@ -80,16 +129,27 @@ const EditProfileDialog = ({ profile, onSubmit }: EditProfileDialogProps) => {
       </DialogHeader>
       
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(handleSubmitWithValidation)} className="space-y-6">
           <div className="space-y-4">
             <FormField
               control={form.control}
               name="username"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-foreground">Username</FormLabel>
+                  <FormLabel className="text-foreground">
+                    Username
+                    {isBasicInfoLocked && (
+                      <span className="text-yellow-500 text-xs ml-2">
+                        (Bloqueado por mais {getRemainingDays()} dias)
+                      </span>
+                    )}
+                  </FormLabel>
                   <FormControl>
-                    <Input {...field} className="bg-input border-input text-foreground" />
+                    <Input 
+                      {...field} 
+                      className="bg-input border-input text-foreground"
+                      disabled={isBasicInfoLocked}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -101,9 +161,21 @@ const EditProfileDialog = ({ profile, onSubmit }: EditProfileDialogProps) => {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-foreground">Email</FormLabel>
+                  <FormLabel className="text-foreground">
+                    Email
+                    {isBasicInfoLocked && (
+                      <span className="text-yellow-500 text-xs ml-2">
+                        (Bloqueado por mais {getRemainingDays()} dias)
+                      </span>
+                    )}
+                  </FormLabel>
                   <FormControl>
-                    <Input {...field} type="email" className="bg-input border-input text-foreground" />
+                    <Input 
+                      {...field} 
+                      type="email" 
+                      className="bg-input border-input text-foreground"
+                      disabled={isBasicInfoLocked}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -118,6 +190,48 @@ const EditProfileDialog = ({ profile, onSubmit }: EditProfileDialogProps) => {
                   <FormLabel className="text-foreground">Nome completo</FormLabel>
                   <FormControl>
                     <Input {...field} className="bg-input border-input text-foreground" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="relationship_status"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-foreground">Estado Civil</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value || undefined}>
+                    <FormControl>
+                      <SelectTrigger className="bg-input border-input text-foreground">
+                        <SelectValue placeholder="Selecione seu estado civil" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="bg-card border-border">
+                      <SelectItem value="single">Solteiro(a)</SelectItem>
+                      <SelectItem value="dating">Namorando</SelectItem>
+                      <SelectItem value="widowed">Viúvo(a)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="instagram_url"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-foreground">Instagram</FormLabel>
+                  <FormControl>
+                    <Input 
+                      {...field} 
+                      type="url" 
+                      placeholder="https://instagram.com/seu_perfil"
+                      className="bg-input border-input text-foreground" 
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
