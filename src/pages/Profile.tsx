@@ -11,19 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { 
-  LogOut, 
-  MapPin, 
-  Link2, 
-  Eye, 
-  ArrowLeft, 
-  Pencil, 
-  MoreHorizontal, 
-  Calendar,
-  Globe,
-  Instagram,
-  Heart
-} from "lucide-react";
+import { LogOut, MapPin, Link2, Eye, ArrowLeft, Pencil, MoreHorizontal } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import { useTheme } from "@/components/ThemeProvider";
 import ProfileTabs from "@/components/ProfileTabs";
@@ -31,7 +19,6 @@ import EditProfileDialog from "@/components/EditProfileDialog";
 import EditPhotosButton from "@/components/EditPhotosButton";
 import PhotoUrlDialog from "@/components/PhotoUrlDialog";
 import type { Profile } from "@/types/profile";
-import { format } from "date-fns";
 
 const defaultAvatarImage = "/placeholder.svg";
 const defaultCoverImage = "/placeholder.svg";
@@ -69,6 +56,7 @@ export default function Profile() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Não autenticado");
 
+      // Adiciona dl=1 no final da URL se ainda não existir
       let finalUrl = url;
       if (url && !url.includes('dl=')) {
         finalUrl = url.includes('?') ? `${url}&dl=1` : `${url}?dl=1`;
@@ -85,6 +73,7 @@ export default function Profile() {
 
       if (error) throw error;
 
+      // Atualiza o contador
       if (finalUrl) {
         if (type === 'avatar') {
           setAvatarCount(1);
@@ -192,21 +181,6 @@ export default function Profile() {
     navigate("/login");
   };
 
-  const formatRelationshipStatus = (status: string | null | undefined) => {
-    if (!status) return null;
-    const statusMap: Record<string, string> = {
-      single: "Solteiro(a)",
-      dating: "Namorando",
-      widowed: "Viúvo(a)"
-    };
-    return statusMap[status] || status;
-  };
-
-  const formatBirthDate = (date: string | null | undefined) => {
-    if (!date) return null;
-    return format(new Date(date), "dd/MM/yyyy");
-  };
-
   useEffect(() => {
     if (profile) {
       setAvatarCount(profile.avatar_url ? 1 : 0);
@@ -292,48 +266,6 @@ export default function Profile() {
                     Mora em {profile.city}
                   </p>
                 )}
-
-                <div className="space-y-2 mt-3">
-                  {profile?.relationship_status && (
-                    <p className="text-gray-400 text-sm flex items-center gap-1">
-                      <Heart className="h-4 w-4" />
-                      {formatRelationshipStatus(profile.relationship_status)}
-                    </p>
-                  )}
-                  
-                  {profile?.birth_date && (
-                    <p className="text-gray-400 text-sm flex items-center gap-1">
-                      <Calendar className="h-4 w-4" />
-                      {formatBirthDate(profile.birth_date)}
-                    </p>
-                  )}
-                  
-                  <div className="flex items-center gap-2 mt-2">
-                    {profile?.website && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex items-center gap-1"
-                        onClick={() => window.open(profile.website, '_blank')}
-                      >
-                        <Globe className="h-4 w-4" />
-                        Website
-                      </Button>
-                    )}
-                    
-                    {profile?.instagram_url && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex items-center gap-1"
-                        onClick={() => window.open(profile.instagram_url, '_blank')}
-                      >
-                        <Instagram className="h-4 w-4" />
-                        Instagram
-                      </Button>
-                    )}
-                  </div>
-                </div>
               </div>
 
               {!isPreviewMode ? (
