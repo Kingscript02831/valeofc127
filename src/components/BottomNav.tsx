@@ -1,11 +1,11 @@
 
 import { Home, Bell, User, Plus } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useSiteConfig } from "../hooks/useSiteConfig";
-import { supabase } from "../integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
 
 const BottomNav = () => {
   const location = useLocation();
@@ -55,25 +55,28 @@ const BottomNav = () => {
   };
 
   const isActive = (path: string) => {
-    if (path === "/perfil" || path === "/login") {
-      return location.pathname === "/perfil" || location.pathname === "/login";
+    if (path === "/perfil") {
+      return location.pathname === "/perfil";
+    }
+    if (path === "/login") {
+      return location.pathname === "/login";
     }
     return location.pathname === path;
   };
 
   const navStyle = {
     background: `linear-gradient(to right, ${config?.bottom_nav_primary_color || '#1A1F2C'}, ${config?.bottom_nav_secondary_color || '#D6BCFA'})`,
-    borderTop: `1px solid ${config?.bottom_nav_primary_color}20 || '#1A1F2C20'`,
+    borderTop: `1px solid ${config?.bottom_nav_primary_color || '#1A1F2C'}20`,
   };
 
   const getItemStyle = (active: boolean) => ({
-    color: active ? config?.bottom_nav_icon_color : config?.bottom_nav_text_color,
-    background: active ? `${config?.bottom_nav_primary_color}15` : 'transparent',
+    color: active ? (config?.bottom_nav_icon_color || '#FFFFFF') : (config?.bottom_nav_text_color || '#A0AEC0'),
+    background: active ? `${config?.bottom_nav_primary_color || '#1A1F2C'}15` : 'transparent',
   });
 
   return (
     <nav 
-      className="fixed bottom-0 left-0 right-0 shadow-lg transition-all duration-300 md:hidden"
+      className="fixed bottom-0 left-0 right-0 shadow-lg transition-all duration-300 md:hidden z-50"
       style={navStyle}
     >
       <div className="container mx-auto px-4">
@@ -90,8 +93,8 @@ const BottomNav = () => {
             onClick={(e) => handleNavigation("/products/new", e)}
             className="flex items-center p-2 rounded-xl transition-all duration-300 hover:scale-105"
             style={{
-              color: config?.bottom_nav_icon_color,
-              background: `${config?.primary_color}15`,
+              color: config?.bottom_nav_icon_color || '#FFFFFF',
+              background: `${config?.primary_color || '#1A1F2C'}15`,
               opacity: session ? 1 : 0.5,
             }}
           >
@@ -99,7 +102,7 @@ const BottomNav = () => {
               className="h-6 w-6" 
               strokeWidth={2.5}
               style={{
-                filter: `drop-shadow(0 2px 4px ${config?.primary_color}40)`
+                filter: `drop-shadow(0 2px 4px ${config?.primary_color || '#1A1F2C'}40)`
               }}
             />
           </button>
@@ -120,7 +123,7 @@ const BottomNav = () => {
           <Link
             to={session ? "/perfil" : "/login"}
             className="flex items-center p-2 rounded-xl transition-all duration-300 hover:scale-105"
-            style={getItemStyle(isActive("/perfil"))}
+            style={getItemStyle(isActive(session ? "/perfil" : "/login"))}
           >
             <User className="h-6 w-6" strokeWidth={2} />
           </Link>
