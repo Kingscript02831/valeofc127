@@ -46,34 +46,6 @@ export default function Profile() {
     },
   });
 
-  const updateProfile = useMutation({
-    mutationFn: async (values: Partial<Profile>) => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("Não autenticado");
-
-      const { error } = await supabase
-        .from("profiles")
-        .update(values)
-        .eq("id", session.user.id);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["profile"] });
-      toast({
-        title: "Perfil atualizado",
-        description: "Suas informações foram atualizadas com sucesso",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Erro ao atualizar perfil",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
   const handlePhotoUpdate = useMutation({
     mutationFn: async ({ type, url }: { type: 'avatar' | 'cover', url: string | null }) => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -254,7 +226,7 @@ export default function Profile() {
           </div>
 
           <div className="px-4 mt-4">
-            <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-2xl font-bold">{profile?.full_name}</h2>
                 <p className="text-gray-400">@{profile?.username}</p>
@@ -271,57 +243,57 @@ export default function Profile() {
                 )}
               </div>
 
-              {!isPreviewMode ? (
-                <div className="flex gap-2 mt-2">
-                  <EditPhotosButton 
-                    onAvatarClick={handleAvatarClick}
-                    onCoverClick={handleCoverClick}
-                    onDeleteAvatar={handleDeleteAvatar}
-                    onDeleteCover={handleDeleteCover}
-                  />
+              <div className="flex gap-2">
+                {!isPreviewMode ? (
+                  <>
+                    <EditPhotosButton 
+                      onAvatarClick={handleAvatarClick}
+                      onCoverClick={handleCoverClick}
+                      onDeleteAvatar={handleDeleteAvatar}
+                      onDeleteCover={handleDeleteCover}
+                    />
 
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" className={`${theme === 'light' ? 'text-black border-gray-300' : 'text-white border-gray-700'}`}>
-                        <Pencil className="h-4 w-4 mr-2" />
-                        Editar perfil
-                      </Button>
-                    </DialogTrigger>
-                    <EditProfileDialog profile={profile} onSubmit={handleSubmit} />
-                  </Dialog>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" className={`${theme === 'light' ? 'text-black border-gray-300' : 'text-white border-gray-700'}`}>
+                          <Pencil className="h-4 w-4 mr-2" />
+                          Editar perfil
+                        </Button>
+                      </DialogTrigger>
+                      <EditProfileDialog profile={profile} onSubmit={handleSubmit} />
+                    </Dialog>
 
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="icon" className="border-gray-700">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="bg-gray-900 border-gray-800">
-                      <DropdownMenuItem onClick={copyProfileLink} className="text-white cursor-pointer">
-                        <Link2 className="h-4 w-4 mr-2" />
-                        Copiar link do perfil
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setIsPreviewMode(true)} className="text-white cursor-pointer">
-                        <Eye className="h-4 w-4 mr-2" />
-                        Ver como
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              ) : (
-                <Button 
-                  onClick={() => setIsPreviewMode(false)} 
-                  variant="outline" 
-                  className={`${theme === 'light' ? 'text-black border-gray-300' : 'text-white border-gray-700'}`}
-                >
-                  Sair do modo preview
-                </Button>
-              )}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="icon" className="border-gray-700">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="bg-gray-900 border-gray-800">
+                        <DropdownMenuItem onClick={copyProfileLink} className="text-white cursor-pointer">
+                          <Link2 className="h-4 w-4 mr-2" />
+                          Copiar link do perfil
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setIsPreviewMode(true)} className="text-white cursor-pointer">
+                          <Eye className="h-4 w-4 mr-2" />
+                          Ver como
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </>
+                ) : (
+                  <Button 
+                    onClick={() => setIsPreviewMode(false)} 
+                    variant="outline" 
+                    className={`${theme === 'light' ? 'text-black border-gray-300' : 'text-white border-gray-700'}`}
+                  >
+                    Sair do modo preview
+                  </Button>
+                )}
+              </div>
             </div>
 
-            <div className="mt-6">
-              <ProfileTabs userProducts={userProducts} />
-            </div>
+            <ProfileTabs userProducts={userProducts} />
           </div>
         </div>
       </div>
