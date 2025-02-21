@@ -54,8 +54,12 @@ const BottomNav = () => {
     navigate(path);
   };
 
-  const isActive = (path: string) => {
-    return location.pathname === path;
+  const checkActive = (path: string) => {
+    const currentPath = location.pathname;
+    if (path === "/perfil") {
+      return currentPath === "/perfil" || currentPath === "/login";
+    }
+    return currentPath === path;
   };
 
   const navStyle = {
@@ -63,10 +67,12 @@ const BottomNav = () => {
     borderTop: `1px solid ${config?.bottom_nav_primary_color}20 || '#1A1F2C20'`,
   };
 
-  const getItemStyle = (active: boolean) => ({
-    color: active ? config?.bottom_nav_icon_color : config?.bottom_nav_text_color,
-    background: active ? `${config?.bottom_nav_primary_color}15` : 'transparent',
-  });
+  const getItemStyle = (isActive: boolean) => {
+    return {
+      color: isActive ? config?.bottom_nav_icon_color : config?.bottom_nav_text_color,
+      background: isActive ? `${config?.bottom_nav_primary_color}15` : 'transparent',
+    };
+  };
 
   return (
     <nav 
@@ -78,7 +84,7 @@ const BottomNav = () => {
           <Link
             to="/"
             className="flex items-center p-2 rounded-xl transition-all duration-300 hover:scale-105"
-            style={getItemStyle(isActive("/"))}
+            style={getItemStyle(checkActive("/"))}
           >
             <Home className="h-6 w-6" strokeWidth={2} />
           </Link>
@@ -89,7 +95,7 @@ const BottomNav = () => {
             style={{
               color: config?.bottom_nav_icon_color,
               background: `${config?.primary_color}15`,
-              opacity: session ? 1 : 0.5, // Reduz a opacidade quando não está logado
+              opacity: session ? 1 : 0.5,
             }}
           >
             <Plus 
@@ -104,7 +110,7 @@ const BottomNav = () => {
           <button
             onClick={(e) => handleNavigation("/notify", e)}
             className="flex items-center p-2 rounded-xl transition-all duration-300 hover:scale-105 relative"
-            style={getItemStyle(isActive("/notify"))}
+            style={getItemStyle(checkActive("/notify"))}
           >
             <Bell className="h-6 w-6" strokeWidth={2} />
             {unreadCount > 0 && (
@@ -117,9 +123,12 @@ const BottomNav = () => {
           <Link
             to={session ? "/perfil" : "/login"}
             className="flex items-center p-2 rounded-xl transition-all duration-300 hover:scale-105"
-            style={getItemStyle(isActive("/perfil") || isActive("/login"))}
+            style={getItemStyle(checkActive("/perfil"))}
           >
-            <User className="h-6 w-6" strokeWidth={2} />
+            <User 
+              className="h-6 w-6" 
+              strokeWidth={2}
+            />
           </Link>
         </div>
       </div>

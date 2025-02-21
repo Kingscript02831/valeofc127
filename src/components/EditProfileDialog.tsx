@@ -81,6 +81,16 @@ const EditProfileDialog = ({ profile, onSubmit }: EditProfileDialogProps) => {
     },
   });
 
+  const getRemainingDays = () => {
+    if (!profile?.basic_info_updated_at) return null;
+    const lastUpdate = new Date(profile.basic_info_updated_at);
+    const daysSinceLastUpdate = differenceInDays(new Date(), lastUpdate);
+    const minDays = siteConfig?.basic_info_update_interval || 30;
+    return Math.max(0, minDays - daysSinceLastUpdate);
+  };
+
+  const isBasicInfoLocked = getRemainingDays() !== null && getRemainingDays() > 0;
+
   const handleLocationChange = (locationId: string) => {
     const selectedLocation = locations?.find(loc => loc.id === locationId);
     if (selectedLocation) {
@@ -126,9 +136,20 @@ const EditProfileDialog = ({ profile, onSubmit }: EditProfileDialogProps) => {
               name="username"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-foreground">Username</FormLabel>
+                  <FormLabel className="text-foreground">
+                    Username
+                    {isBasicInfoLocked && (
+                      <span className="text-yellow-500 text-xs ml-2">
+                        (Bloqueado por mais {getRemainingDays()} dias)
+                      </span>
+                    )}
+                  </FormLabel>
                   <FormControl>
-                    <Input {...field} className="bg-input border-input text-foreground" />
+                    <Input 
+                      {...field} 
+                      className="bg-input border-input text-foreground"
+                      disabled={isBasicInfoLocked}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -140,9 +161,21 @@ const EditProfileDialog = ({ profile, onSubmit }: EditProfileDialogProps) => {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-foreground">Email</FormLabel>
+                  <FormLabel className="text-foreground">
+                    Email
+                    {isBasicInfoLocked && (
+                      <span className="text-yellow-500 text-xs ml-2">
+                        (Bloqueado por mais {getRemainingDays()} dias)
+                      </span>
+                    )}
+                  </FormLabel>
                   <FormControl>
-                    <Input {...field} type="email" className="bg-input border-input text-foreground" />
+                    <Input 
+                      {...field} 
+                      type="email" 
+                      className="bg-input border-input text-foreground"
+                      disabled={isBasicInfoLocked}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
