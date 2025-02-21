@@ -6,7 +6,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import { Camera } from "lucide-react";
+import { Camera, Pencil } from "lucide-react";
 
 interface EditPhotosButtonProps {
   onAvatarClick: () => void;
@@ -17,8 +17,9 @@ const EditPhotosButton = ({ onAvatarClick, onCoverClick }: EditPhotosButtonProps
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="icon" className="text-white border-gray-700">
-          <Camera className="h-4 w-4" />
+        <Button variant="outline" className="text-white border-gray-700">
+          <Pencil className="h-4 w-4 mr-2" />
+          Editar fotos
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
