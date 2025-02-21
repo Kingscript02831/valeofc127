@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -13,7 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, Settings, MapPin, Link2, Eye, ArrowLeft } from "lucide-react";
+import { LogOut, MapPin, Link2, Eye, ArrowLeft, Camera, Pencil, MoreHorizontal } from "lucide-react";
 import BottomNav from "../components/BottomNav";
 import { useTheme } from "../components/ThemeProvider";
 import ProfileTabs from "../components/ProfileTabs";
@@ -234,14 +233,22 @@ export default function Profile() {
               <div className="flex flex-col gap-2">
                 {!isPreviewMode ? (
                   <>
-                    <EditPhotosButton 
-                      onAvatarClick={handleAvatarImageClick} 
-                      onCoverClick={handleCoverImageClick}
-                    />
+                    <Button 
+                      variant="outline" 
+                      className={`${theme === 'light' ? 'text-black border-gray-300' : 'text-white border-gray-700'}`}
+                      onClick={() => {
+                        const avatarDialog = document.getElementById('avatar-dialog');
+                        if (avatarDialog) avatarDialog.click();
+                      }}
+                    >
+                      <Camera className="h-4 w-4 mr-2" />
+                      Editar foto
+                    </Button>
 
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button variant="outline" className={`${theme === 'light' ? 'text-black border-gray-300' : 'text-white border-gray-700'}`}>
+                          <Pencil className="h-4 w-4 mr-2" />
                           Editar perfil
                         </Button>
                       </DialogTrigger>
@@ -251,7 +258,7 @@ export default function Profile() {
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="outline" size="icon" className="border-gray-700">
-                          <Settings className="h-4 w-4" />
+                          <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent className="bg-gray-900 border-gray-800">
