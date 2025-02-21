@@ -60,25 +60,6 @@ const EditProfileDialog = ({ profile, onSubmit }: EditProfileDialogProps) => {
     },
   });
 
-  // Reset form when profile changes
-  React.useEffect(() => {
-    if (profile) {
-      form.reset({
-        username: profile.username || "",
-        full_name: profile.full_name || "",
-        email: profile.email || "",
-        phone: profile.phone || "",
-        website: profile.website || "",
-        birth_date: profile.birth_date || "",
-        city: profile.city || "",
-        street: profile.street || "",
-        house_number: profile.house_number || "",
-        postal_code: profile.postal_code || "",
-        status: profile.status || "",
-      });
-    }
-  }, [profile, form]);
-
   return (
     <DialogContent className="bg-gray-900 border-gray-800">
       <DialogHeader>
