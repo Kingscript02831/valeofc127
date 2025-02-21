@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -30,26 +31,6 @@ export default function Profile() {
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const { theme } = useTheme();
 
-  const form = useForm<z.infer<typeof profileSchema>>({
-    resolver: zodResolver(profileSchema),
-    defaultValues: {
-      full_name: "",
-      email: "",
-      phone: "",
-      birth_date: "",
-      street: "",
-      house_number: "",
-      city: "",
-      postal_code: "",
-      avatar_url: "",
-      cover_url: "",
-      username: "",
-      bio: "",
-      website: "",
-      status: "",
-    },
-  });
-
   const { data: profile, isLoading: isProfileLoading } = useQuery({
     queryKey: ["profile"],
     queryFn: async () => {
@@ -63,17 +44,7 @@ export default function Profile() {
         .single();
 
       if (error) throw error;
-      
-      if (data) {
-        if (data.avatar_url) {
-          data.avatar_url = convertDropboxUrl(data.avatar_url);
-        }
-        if (data.cover_url) {
-          data.cover_url = convertDropboxUrl(data.cover_url);
-        }
-      }
-      
-      return data;
+      return data as Profile;
     },
   });
 
@@ -103,53 +74,18 @@ export default function Profile() {
     },
   });
 
-  const handleDeleteAvatar = async () => {
-    form.setValue("avatar_url", null);
-    updateProfile.mutate(form.getValues());
-    setShowDeletePhotoDialog(false);
-    toast({
-      title: "Foto de perfil removida",
-      description: "Sua foto de perfil foi removida com sucesso",
-    });
-  };
-
-  const handleDeleteCover = async () => {
-    form.setValue("cover_url", null);
-    updateProfile.mutate(form.getValues());
-    setShowDeleteCoverDialog(false);
-    toast({
-      title: "Foto de capa removida",
-      description: "Sua foto de capa foi removida com sucesso",
-    });
-  };
-
   const handleCoverImageClick = () => {
     const dialog = window.prompt('Cole aqui o link do Dropbox para a imagem de capa:', profile?.cover_url || '');
     if (dialog !== null) {
-      const values = {
-        ...form.getValues(),
-        cover_url: dialog
-      };
-      updateProfile.mutate(values);
+      updateProfile.mutate({ cover_url: dialog });
     }
   };
 
   const handleAvatarImageClick = () => {
     const dialog = window.prompt('Cole aqui o link do Dropbox para a foto de perfil:', profile?.avatar_url || '');
     if (dialog !== null) {
-      form.setValue("avatar_url", dialog);
-      updateProfile.mutate(form.getValues());
+      updateProfile.mutate({ avatar_url: dialog });
     }
-  };
-
-  const handleImageError = (error: any) => {
-    console.error("Erro ao carregar a imagem", error);
-    toast({
-      title: "Erro ao carregar a imagem",
-      description: "Verifique se o link do Dropbox está correto",
-      variant: "destructive",
-    });
-    setIsLoadingImage(false);
   };
 
   const copyProfileLink = () => {
@@ -163,16 +99,9 @@ export default function Profile() {
   };
 
   const updateProfile = useMutation({
-    mutationFn: async (values: z.infer<typeof profileSchema>) => {
+    mutationFn: async (values: Partial<Profile>) => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Não autenticado");
-
-      if (values.avatar_url) {
-        values.avatar_url = convertDropboxUrl(values.avatar_url);
-      }
-      if (values.cover_url) {
-        values.cover_url = convertDropboxUrl(values.cover_url);
-      }
 
       const isUpdatingRestricted = 
         values.username !== profile?.username ||
@@ -203,7 +132,6 @@ export default function Profile() {
         title: "Perfil atualizado",
         description: "Suas informações foram atualizadas com sucesso",
       });
-      setShowSettings(false);
     },
     onError: (error: Error) => {
       toast({
@@ -214,7 +142,7 @@ export default function Profile() {
     },
   });
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: Partial<Profile>) => {
     await updateProfile.mutateAsync(values);
   };
 
@@ -222,27 +150,6 @@ export default function Profile() {
     await supabase.auth.signOut();
     navigate("/login");
   };
-
-  useEffect(() => {
-    if (profile) {
-      form.reset({
-        full_name: profile.full_name || "",
-        email: profile.email || "",
-        phone: profile.phone || "",
-        birth_date: profile.birth_date ? format(new Date(profile.birth_date), "yyyy-MM-dd") : "",
-        street: profile.street || "",
-        house_number: profile.house_number || "",
-        city: profile.city || "",
-        postal_code: profile.postal_code || "",
-        avatar_url: profile.avatar_url || "",
-        cover_url: profile.cover_url || "",
-        username: profile.username || "",
-        bio: profile.bio || "",
-        website: profile.website || "",
-        status: profile.status || "",
-      });
-    }
-  }, [profile, form]);
 
   if (isProfileLoading) {
     return (
