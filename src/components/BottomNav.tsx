@@ -55,6 +55,9 @@ const BottomNav = () => {
   };
 
   const isActive = (path: string) => {
+    if (path === "/perfil" || path === "/login") {
+      return location.pathname === "/perfil" || location.pathname === "/login";
+    }
     return location.pathname === path;
   };
 
@@ -89,7 +92,7 @@ const BottomNav = () => {
             style={{
               color: config?.bottom_nav_icon_color,
               background: `${config?.primary_color}15`,
-              opacity: session ? 1 : 0.5, // Reduz a opacidade quando não está logado
+              opacity: session ? 1 : 0.5,
             }}
           >
             <Plus 
@@ -117,7 +120,7 @@ const BottomNav = () => {
           <Link
             to={session ? "/perfil" : "/login"}
             className="flex items-center p-2 rounded-xl transition-all duration-300 hover:scale-105"
-            style={getItemStyle(isActive("/perfil") || isActive("/login"))}
+            style={getItemStyle(isActive("/perfil"))}
           >
             <User className="h-6 w-6" strokeWidth={2} />
           </Link>
