@@ -333,10 +333,10 @@ const AdminSistema = () => {
 
   const updateIntervalMutation = useMutation({
     mutationFn: async (days: number) => {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('site_configuration')
         .update({ basic_info_update_interval: days })
-        .eq('id', 1);
+        .single();
       if (error) throw error;
     },
     onSuccess: () => {
