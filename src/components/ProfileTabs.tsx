@@ -17,7 +17,7 @@ const ProfileTabs = ({ userProducts }: ProfileTabsProps) => {
       <TabsList className="w-full justify-start border-b border-gray-800 bg-transparent">
         <TabsTrigger
           value="posts"
-          className={`flex-1 text-xl py-4 border-0 data-[state=active]:border-b-2 ${
+          className={`flex-1 text-sm py-4 border-0 data-[state=active]:border-b-2 ${
             theme === 'light' 
               ? 'data-[state=active]:text-black data-[state=active]:border-black' 
               : 'data-[state=active]:text-white data-[state=active]:border-white'
@@ -27,7 +27,7 @@ const ProfileTabs = ({ userProducts }: ProfileTabsProps) => {
         </TabsTrigger>
         <TabsTrigger
           value="products"
-          className={`flex-1 text-xl py-4 border-0 data-[state=active]:border-b-2 ${
+          className={`flex-1 text-sm py-4 border-0 data-[state=active]:border-b-2 ${
             theme === 'light' 
               ? 'data-[state=active]:text-black data-[state=active]:border-black' 
               : 'data-[state=active]:text-white data-[state=active]:border-white'
@@ -37,7 +37,7 @@ const ProfileTabs = ({ userProducts }: ProfileTabsProps) => {
         </TabsTrigger>
         <TabsTrigger
           value="reels"
-          className={`flex-1 text-xl py-4 border-0 data-[state=active]:border-b-2 ${
+          className={`flex-1 text-sm py-4 border-0 data-[state=active]:border-b-2 ${
             theme === 'light' 
               ? 'data-[state=active]:text-black data-[state=active]:border-black' 
               : 'data-[state=active]:text-white data-[state=active]:border-white'

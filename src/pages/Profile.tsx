@@ -208,7 +208,7 @@ export default function Profile() {
                 <p className="text-gray-400">@{profile?.username}</p>
                 {profile?.status && (
                   <p className="text-yellow-500 text-sm mt-1">
-                    {profile.status} 👍
+                    {profile.status}
                   </p>
                 )}
                 {profile?.city && (
@@ -220,7 +220,7 @@ export default function Profile() {
               </div>
 
               {!isPreviewMode ? (
-                <div className="flex gap-2 mt-4">
+                <div className="flex justify-end gap-2 mt-4">
                   <EditPhotosButton 
                     onAvatarClick={handleAvatarClick}
                     onCoverClick={handleCoverClick}
