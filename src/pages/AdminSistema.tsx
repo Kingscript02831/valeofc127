@@ -336,6 +336,7 @@ const AdminSistema = () => {
       const { data, error } = await supabase
         .from('site_configuration')
         .update({ basic_info_update_interval: days })
+        .eq('id', '00000000-0000-0000-0000-000000000000')
         .single();
       if (error) throw error;
     },
