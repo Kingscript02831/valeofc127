@@ -25,7 +25,7 @@ const EditPhotosButton = ({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="icon" className="text-white bg-black/30 border-gray-700">
+        <Button variant="outline" size="icon" className="text-white border-gray-700">
           <Camera className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>

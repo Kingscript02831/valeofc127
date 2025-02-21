@@ -1,3 +1,4 @@
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "./ui/form";
 import { Input } from "./ui/input";
@@ -8,7 +9,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { Profile } from "@/types/profile";
+import { Profile } from "@/types/profile";
 import type { Location } from "@/types/locations";
 
 const formSchema = z.object({
@@ -23,8 +24,6 @@ const formSchema = z.object({
   house_number: z.string().optional(),
   postal_code: z.string().optional(),
   status: z.string().optional(),
-  avatar_url: z.string().url("URL inválida").optional().or(z.literal("")),
-  cover_url: z.string().url("URL inválida").optional().or(z.literal("")),
 });
 
 interface EditProfileDialogProps {
@@ -47,8 +46,6 @@ const EditProfileDialog = ({ profile, onSubmit }: EditProfileDialogProps) => {
       house_number: profile?.house_number || "",
       postal_code: profile?.postal_code || "",
       status: profile?.status || "",
-      avatar_url: profile?.avatar_url || "",
-      cover_url: profile?.cover_url || "",
     },
   });
 
@@ -63,51 +60,14 @@ const EditProfileDialog = ({ profile, onSubmit }: EditProfileDialogProps) => {
     },
   });
 
-  const handleFormSubmit = (values: z.infer<typeof formSchema>) => {
-    const processedValues = {
-      ...values,
-      avatar_url: values.avatar_url ? values.avatar_url.replace(/0/g, '1') : values.avatar_url,
-      cover_url: values.cover_url ? values.cover_url.replace(/0/g, '1') : values.cover_url,
-    };
-    onSubmit(processedValues);
-  };
-
   return (
     <DialogContent className="bg-gray-900 border-gray-800">
       <DialogHeader>
         <DialogTitle className="text-white">Editar perfil</DialogTitle>
       </DialogHeader>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4 max-h-[70vh] overflow-y-auto">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 max-h-[70vh] overflow-y-auto">
           <div className="space-y-4 p-1">
-            <FormField
-              control={form.control}
-              name="avatar_url"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-white">URL da foto de perfil</FormLabel>
-                  <FormControl>
-                    <Input {...field} className="bg-gray-800 border-gray-700 text-white" placeholder="Cole o link do Dropbox" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="cover_url"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-white">URL da foto de capa</FormLabel>
-                  <FormControl>
-                    <Input {...field} className="bg-gray-800 border-gray-700 text-white" placeholder="Cole o link do Dropbox" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
             <FormField
               control={form.control}
               name="username"
