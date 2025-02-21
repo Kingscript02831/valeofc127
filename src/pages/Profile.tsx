@@ -11,7 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, MapPin, Link2, Eye, ArrowLeft, Pencil, MoreHorizontal, Calendar, Globe, Instagram, Heart } from "lucide-react";
+import { LogOut, MapPin, Link2, Eye, ArrowLeft, Pencil, MoreHorizontal } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import { useTheme } from "@/components/ThemeProvider";
 import ProfileTabs from "@/components/ProfileTabs";
@@ -19,8 +19,6 @@ import EditProfileDialog from "@/components/EditProfileDialog";
 import EditPhotosButton from "@/components/EditPhotosButton";
 import PhotoUrlDialog from "@/components/PhotoUrlDialog";
 import type { Profile } from "@/types/profile";
-import { useSiteConfig } from "@/hooks/useSiteConfig";
-import { format, differenceInDays } from "date-fns";
 
 const defaultAvatarImage = "/placeholder.svg";
 const defaultCoverImage = "/placeholder.svg";
@@ -58,6 +56,7 @@ export default function Profile() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Não autenticado");
 
+      // Adiciona dl=1 no final da URL se ainda não existir
       let finalUrl = url;
       if (url && !url.includes('dl=')) {
         finalUrl = url.includes('?') ? `${url}&dl=1` : `${url}?dl=1`;
@@ -74,6 +73,7 @@ export default function Profile() {
 
       if (error) throw error;
 
+      // Atualiza o contador
       if (finalUrl) {
         if (type === 'avatar') {
           setAvatarCount(1);
@@ -181,26 +181,6 @@ export default function Profile() {
     navigate("/login");
   };
 
-  const { data: siteConfig } = useSiteConfig();
-
-  const getRelationshipStatusText = (status: string | null) => {
-    switch (status) {
-      case 'single': return 'Solteiro(a)';
-      case 'dating': return 'Namorando';
-      case 'widowed': return 'Viúvo(a)';
-      default: return null;
-    }
-  };
-
-  const getRemainingDays = () => {
-    if (!profile?.basic_info_updated_at) return null;
-    const lastUpdate = new Date(profile.basic_info_updated_at);
-    const daysSinceLastUpdate = differenceInDays(new Date(), lastUpdate);
-    const minDays = siteConfig?.basic_info_update_interval || 30;
-    const remainingDays = minDays - daysSinceLastUpdate;
-    return remainingDays > 0 ? remainingDays : 0;
-  };
-
   useEffect(() => {
     if (profile) {
       setAvatarCount(profile.avatar_url ? 1 : 0);
@@ -286,42 +266,6 @@ export default function Profile() {
                     Mora em {profile.city}
                   </p>
                 )}
-
-                <div className="mt-3 space-y-2">
-                  {profile?.relationship_status && (
-                    <p className="text-gray-400 text-sm flex items-center gap-1">
-                      <Heart className="h-4 w-4" />
-                      {getRelationshipStatusText(profile.relationship_status)}
-                    </p>
-                  )}
-                  {profile?.birth_date && (
-                    <p className="text-gray-400 text-sm flex items-center gap-1">
-                      <Calendar className="h-4 w-4" />
-                      Nascimento: {format(new Date(profile.birth_date), 'dd/MM/yyyy')}
-                    </p>
-                  )}
-                  {profile?.website && (
-                    <p className="text-gray-400 text-sm flex items-center gap-1">
-                      <Globe className="h-4 w-4" />
-                      <a href={profile.website} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                        {profile.website}
-                      </a>
-                    </p>
-                  )}
-                  {profile?.instagram_url && (
-                    <p className="text-gray-400 text-sm flex items-center gap-1">
-                      <Instagram className="h-4 w-4" />
-                      <a href={profile.instagram_url} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                        {profile.instagram_url.replace('https://instagram.com/', '@')}
-                      </a>
-                    </p>
-                  )}
-                  {getRemainingDays() !== null && getRemainingDays() > 0 && (
-                    <p className="text-yellow-500 text-sm mt-1">
-                      Aguarde {getRemainingDays()} dias para alterar username/email
-                    </p>
-                  )}
-                </div>
               </div>
 
               {!isPreviewMode ? (
