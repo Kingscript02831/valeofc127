@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProductWithDistance } from "@/types/products";
 import { useTheme } from "./ThemeProvider";
+import { Link } from "react-router-dom";
 
 interface ProfileTabsProps {
   userProducts: ProductWithDistance[] | undefined;
@@ -58,24 +59,26 @@ const ProfileTabs = ({ userProducts }: ProfileTabsProps) => {
         {userProducts && userProducts.length > 0 ? (
           <div className="grid grid-cols-2 gap-4 p-4">
             {userProducts.map((product) => (
-              <Card key={product.id} className={`${theme === 'light' ? 'bg-white' : 'bg-black'} shadow-none border-0`}>
-                <CardContent className="p-3">
-                  {product.images?.[0] && (
-                    <img
-                      src={product.images[0]}
-                      alt={product.title}
-                      className="w-full aspect-square object-cover rounded-lg mb-2"
-                    />
-                  )}
-                  <h3 className={`font-medium ${theme === 'light' ? 'text-black' : 'text-white'}`}>{product.title}</h3>
-                  <p className="text-green-500">
-                    {new Intl.NumberFormat('pt-BR', {
-                      style: 'currency',
-                      currency: 'BRL'
-                    }).format(Number(product.price))}
-                  </p>
-                </CardContent>
-              </Card>
+              <Link to={`/product/${product.id}`} key={product.id}>
+                <Card className={`${theme === 'light' ? 'bg-white' : 'bg-black'} shadow-none border-0 transition-all duration-300 hover:scale-105`}>
+                  <CardContent className="p-3">
+                    {product.images?.[0] && (
+                      <img
+                        src={product.images[0]}
+                        alt={product.title}
+                        className="w-full aspect-square object-cover rounded-lg mb-2"
+                      />
+                    )}
+                    <h3 className={`font-medium ${theme === 'light' ? 'text-black' : 'text-white'}`}>{product.title}</h3>
+                    <p className="text-green-500">
+                      {new Intl.NumberFormat('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL'
+                      }).format(Number(product.price))}
+                    </p>
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
           </div>
         ) : (
