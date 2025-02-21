@@ -53,9 +53,15 @@ export default function Profile() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Não autenticado");
 
+      // Adiciona dl=1 no final da URL se ainda não existir
+      let finalUrl = url;
+      if (url && !url.includes('dl=')) {
+        finalUrl = url.includes('?') ? `${url}&dl=1` : `${url}?dl=1`;
+      }
+
       const updates = type === 'avatar' 
-        ? { avatar_url: url }
-        : { cover_url: url };
+        ? { avatar_url: finalUrl }
+        : { cover_url: finalUrl };
 
       const { error } = await supabase
         .from("profiles")
@@ -65,7 +71,7 @@ export default function Profile() {
       if (error) throw error;
 
       // Atualiza o contador
-      if (url) {
+      if (finalUrl) {
         if (type === 'avatar') {
           setAvatarCount(1);
         } else {
