@@ -806,7 +806,6 @@ export type Database = {
           full_name: string | null
           house_number: string | null
           id: string
-          instagram_url: string | null
           is_admin: boolean | null
           is_blocked: boolean | null
           last_basic_info_update: string | null
@@ -819,7 +818,6 @@ export type Database = {
           online_status: boolean | null
           phone: string | null
           postal_code: string | null
-          relationship_status: string | null
           scheduled_deletion_date: string | null
           status: string | null
           street: string | null
@@ -840,7 +838,6 @@ export type Database = {
           full_name?: string | null
           house_number?: string | null
           id: string
-          instagram_url?: string | null
           is_admin?: boolean | null
           is_blocked?: boolean | null
           last_basic_info_update?: string | null
@@ -853,7 +850,6 @@ export type Database = {
           online_status?: boolean | null
           phone?: string | null
           postal_code?: string | null
-          relationship_status?: string | null
           scheduled_deletion_date?: string | null
           status?: string | null
           street?: string | null
@@ -874,7 +870,6 @@ export type Database = {
           full_name?: string | null
           house_number?: string | null
           id?: string
-          instagram_url?: string | null
           is_admin?: boolean | null
           is_blocked?: boolean | null
           last_basic_info_update?: string | null
@@ -887,7 +882,6 @@ export type Database = {
           online_status?: boolean | null
           phone?: string | null
           postal_code?: string | null
-          relationship_status?: string | null
           scheduled_deletion_date?: string | null
           status?: string | null
           street?: string | null
