@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -119,31 +120,6 @@ export default function Profile() {
     },
   });
 
-  const { data: locations } = useQuery({
-    queryKey: ["locations"],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("locations")
-        .select("*")
-        .order("name");
-      return data || [];
-    },
-  });
-
-  const handleCoverImageClick = () => {
-    const dialog = window.prompt('Cole aqui o link do Dropbox para a imagem de capa:', profile?.cover_url || '');
-    if (dialog !== null) {
-      handlePhotoUpdate.mutate({ type: 'cover', url: dialog });
-    }
-  };
-
-  const handleAvatarImageClick = () => {
-    const dialog = window.prompt('Cole aqui o link do Dropbox para a foto de perfil:', profile?.avatar_url || '');
-    if (dialog !== null) {
-      handlePhotoUpdate.mutate({ type: 'avatar', url: dialog });
-    }
-  };
-
   const copyProfileLink = () => {
     if (profile?.username) {
       navigator.clipboard.writeText(`${window.location.origin}/perfil/${profile.username}`);
@@ -155,7 +131,7 @@ export default function Profile() {
   };
 
   const handleSubmit = async (values: Partial<Profile>) => {
-    await updateProfile.mutateAsync(values);
+    // Implement profile update logic here
   };
 
   const handleLogout = async () => {
@@ -226,7 +202,7 @@ export default function Profile() {
           </div>
 
           <div className="px-4 mt-4">
-            <div className="flex items-center justify-between mb-4">
+            <div className="space-y-2">
               <div>
                 <h2 className="text-2xl font-bold">{profile?.full_name}</h2>
                 <p className="text-gray-400">@{profile?.username}</p>
@@ -243,57 +219,57 @@ export default function Profile() {
                 )}
               </div>
 
-              <div className="flex gap-2">
-                {!isPreviewMode ? (
-                  <>
-                    <EditPhotosButton 
-                      onAvatarClick={handleAvatarClick}
-                      onCoverClick={handleCoverClick}
-                      onDeleteAvatar={handleDeleteAvatar}
-                      onDeleteCover={handleDeleteCover}
-                    />
+              {!isPreviewMode ? (
+                <div className="flex gap-2 mt-4">
+                  <EditPhotosButton 
+                    onAvatarClick={handleAvatarClick}
+                    onCoverClick={handleCoverClick}
+                    onDeleteAvatar={handleDeleteAvatar}
+                    onDeleteCover={handleDeleteCover}
+                  />
 
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" className={`${theme === 'light' ? 'text-black border-gray-300' : 'text-white border-gray-700'}`}>
-                          <Pencil className="h-4 w-4 mr-2" />
-                          Editar perfil
-                        </Button>
-                      </DialogTrigger>
-                      <EditProfileDialog profile={profile} onSubmit={handleSubmit} />
-                    </Dialog>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" className={`${theme === 'light' ? 'text-black border-gray-300' : 'text-white border-gray-700'}`}>
+                        <Pencil className="h-4 w-4 mr-2" />
+                        Editar perfil
+                      </Button>
+                    </DialogTrigger>
+                    <EditProfileDialog profile={profile} onSubmit={handleSubmit} />
+                  </Dialog>
 
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="icon" className="border-gray-700">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent className="bg-gray-900 border-gray-800">
-                        <DropdownMenuItem onClick={copyProfileLink} className="text-white cursor-pointer">
-                          <Link2 className="h-4 w-4 mr-2" />
-                          Copiar link do perfil
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setIsPreviewMode(true)} className="text-white cursor-pointer">
-                          <Eye className="h-4 w-4 mr-2" />
-                          Ver como
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </>
-                ) : (
-                  <Button 
-                    onClick={() => setIsPreviewMode(false)} 
-                    variant="outline" 
-                    className={`${theme === 'light' ? 'text-black border-gray-300' : 'text-white border-gray-700'}`}
-                  >
-                    Sair do modo preview
-                  </Button>
-                )}
-              </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="icon" className="border-gray-700">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="bg-gray-900 border-gray-800">
+                      <DropdownMenuItem onClick={copyProfileLink} className="text-white cursor-pointer">
+                        <Link2 className="h-4 w-4 mr-2" />
+                        Copiar link do perfil
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setIsPreviewMode(true)} className="text-white cursor-pointer">
+                        <Eye className="h-4 w-4 mr-2" />
+                        Ver como
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              ) : (
+                <Button 
+                  onClick={() => setIsPreviewMode(false)} 
+                  variant="outline" 
+                  className={`${theme === 'light' ? 'text-black border-gray-300' : 'text-white border-gray-700'}`}
+                >
+                  Sair do modo preview
+                </Button>
+              )}
             </div>
 
-            <ProfileTabs userProducts={userProducts} />
+            <div className="mt-6">
+              <ProfileTabs userProducts={userProducts} />
+            </div>
           </div>
         </div>
       </div>
