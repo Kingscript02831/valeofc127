@@ -230,7 +230,7 @@ export default function Profile() {
         </button>
       </div>
 
-      <div className="pt-16 pb-20">
+      <div className="pt-16 pb-24">
         <div className="relative">
           <div className="h-32 bg-gray-200 dark:bg-gray-800 relative">
             {profile?.cover_url ? (
@@ -404,7 +404,9 @@ export default function Profile() {
         title="Alterar foto de capa"
       />
 
-      <BottomNav />
+      <div className={theme === 'light' ? 'light' : 'dark'}>
+        <BottomNav />
+      </div>
     </div>
   );
 }

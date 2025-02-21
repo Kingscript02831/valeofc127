@@ -1,11 +1,10 @@
-
 import { Home, Bell, User, Plus } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { useSiteConfig } from "../hooks/useSiteConfig";
+import { supabase } from "../integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
-import { useSiteConfig } from "@/hooks/useSiteConfig";
 
 const BottomNav = () => {
   const location = useLocation();
