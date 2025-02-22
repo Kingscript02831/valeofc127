@@ -1,16 +1,30 @@
 
 import { useState, useEffect } from "react";
+import type { InstagramMedia } from "@/types/supabase";
 
 interface MediaCarouselProps {
   images: string[];
   videoUrls: string[];
   title: string;
   autoplay?: boolean;
+  instagramMedia?: InstagramMedia[];
 }
 
-export const MediaCarousel = ({ images, videoUrls, title, autoplay = false }: MediaCarouselProps) => {
+export const MediaCarousel = ({ 
+  images, 
+  videoUrls, 
+  title, 
+  autoplay = false,
+  instagramMedia = []
+}: MediaCarouselProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const allMedia = [...images.map(url => ({ type: "image" as const, url })), ...videoUrls.map(url => ({ type: "video" as const, url }))];
+  
+  // Combine all media into one array
+  const allMedia = [
+    ...images.map(url => ({ type: "image" as const, url })),
+    ...videoUrls.map(url => ({ type: "video" as const, url })),
+    ...instagramMedia.map(media => ({ type: media.type === 'video' ? 'video' as const : 'image' as const, url: media.url }))
+  ];
 
   useEffect(() => {
     if (!autoplay || allMedia.length <= 1) return;

@@ -7,7 +7,12 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export type Database = {
+export interface InstagramMedia {
+  url: string;
+  type: 'post' | 'video';
+}
+
+export interface Database {
   public: {
     Tables: {
       site_configuration: {
@@ -29,8 +34,8 @@ export type Database = {
           language: string | null;
           enable_dark_mode: boolean | null;
           enable_weather: boolean | null;
-          header_alerts: Json[] | null;
-          navigation_links: Json[] | null;
+          header_alerts: Json[];
+          navigation_links: Json[];
           font_size: string | null;
           footer_primary_color: string;
           footer_secondary_color: string;
@@ -80,13 +85,87 @@ export type Database = {
           favorite_heart_color: string;
           buy_button_color: string;
           buy_button_text: string;
+          whatsapp_message: string;
+          basic_info_update_interval: number;
+        }
+      },
+      news: {
+        Row: {
+          id: string;
+          title: string;
+          content: string;
+          date: string;
+          category_id: string | null;
+          images: string[] | null;
+          video_urls: string[] | null;
+          button_color: string | null;
+          button_secondary_color: string | null;
+          instagram_media: InstagramMedia[] | null;
+          created_at: string;
+          file_metadata: Json;
+          files_metadata: Json[];
+          categories?: {
+            id: string;
+            name: string;
+            background_color?: string;
+          } | null;
+        }
+      },
+      events: {
+        Row: {
+          id: string;
+          title: string;
+          description: string;
+          event_date: string;
+          event_time: string;
+          end_time: string;
+          location: string | null;
+          url_maps_events: string | null;
+          entrance_fee: string | null;
+          button_color: string | null;
+          button_secondary_color: string | null;
+          file_path: string | null;
+          image: string | null;
+          images: string[] | null;
+          video_url: string | null;
+          video_urls: string[] | null;
+          category_id: string | null;
+          created_at: string;
+        }
+      },
+      categories: {
+        Row: {
+          id: string;
+          name: string;
+          background_color: string | null;
+          page_type: string | null;
+        }
+      },
+      notifications: {
+        Row: {
+          id: string;
+          user_id: string;
+          type: string;
+          title: string;
+          message: string;
+          enabled: boolean;
+          read: boolean;
+          created_at: string;
+        }
+      },
+      places: {
+        Row: {
+          id: string;
+          name: string;
+          description: string;
+          address: string;
+          latitude: number;
+          longitude: number;
+          category_id: string | null;
+          images: string[];
+          created_at: string;
         }
       }
     }
   }
-}
-
-export interface InstagramMedia {
-  url: string;
-  type: 'post' | 'video';
 }
