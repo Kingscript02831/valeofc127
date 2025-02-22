@@ -1,7 +1,7 @@
 
 create table posts (
   id uuid default uuid_generate_v4() primary key,
-  user_id uuid references auth.users(id) on delete cascade not null,
+  user_id uuid references profiles(id) on delete cascade not null,
   content text,
   images text[] default '{}',
   video_urls text[] default '{}',
@@ -11,7 +11,7 @@ create table posts (
 
 create table post_likes (
   id uuid default uuid_generate_v4() primary key,
-  user_id uuid references auth.users(id) on delete cascade not null,
+  user_id uuid references profiles(id) on delete cascade not null,
   post_id uuid references posts(id) on delete cascade not null,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   unique(user_id, post_id)
@@ -19,7 +19,7 @@ create table post_likes (
 
 create table post_comments (
   id uuid default uuid_generate_v4() primary key,
-  user_id uuid references auth.users(id) on delete cascade not null,
+  user_id uuid references profiles(id) on delete cascade not null,
   post_id uuid references posts(id) on delete cascade not null,
   content text not null,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
