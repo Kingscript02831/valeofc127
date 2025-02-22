@@ -2,17 +2,17 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Bell, Search, Share2, MessageCircle } from "lucide-react";
 import { MediaCarousel } from "@/components/MediaCarousel";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
-import BottomNav from "@/components/BottomNav";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import ReactionMenu from "@/components/ReactionMenu";
 import { Separator } from "@/components/ui/separator";
+import BottomNav from "@/components/BottomNav";
 
 interface Post {
   id: string;
@@ -34,6 +34,7 @@ interface Post {
 
 export default function Posts() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [activeReactionMenu, setActiveReactionMenu] = useState<string | null>(null);
 
@@ -41,6 +42,8 @@ export default function Posts() {
     queryKey: ['posts', searchTerm],
     queryFn: async () => {
       try {
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
+        
         let query = supabase
           .from('posts')
           .select(`
@@ -49,6 +52,10 @@ export default function Posts() {
               username,
               full_name,
               avatar_url
+            ),
+            post_likes (
+              reaction_type,
+              user_id
             )
           `)
           .order('created_at', { ascending: false });
@@ -57,16 +64,17 @@ export default function Posts() {
           query = query.ilike('content', `%${searchTerm}%`);
         }
 
-        const { data, error } = await query;
+        const { data: postsData, error } = await query;
 
-        if (error) {
-          console.error('Error fetching posts:', error);
-          throw error;
-        }
+        if (error) throw error;
 
-        return data || [];
+        return (postsData || []).map(post => ({
+          ...post,
+          reaction_type: post.post_likes?.find(like => like.user_id === currentUser?.id)?.reaction_type,
+          likes: post.post_likes?.length || 0
+        }));
       } catch (error) {
-        console.error('Error in posts query:', error);
+        console.error('Error fetching posts:', error);
         return [];
       }
     }
@@ -75,6 +83,7 @@ export default function Posts() {
   const handleReaction = async (postId: string, reactionType: string) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
+      
       if (!user) {
         toast({
           title: "Erro",
@@ -84,34 +93,55 @@ export default function Posts() {
         return;
       }
 
-      const { error } = await supabase
+      const { data: existingReaction } = await supabase
         .from('post_likes')
-        .upsert({
-          post_id: postId,
-          user_id: user.id,
-          reaction_type: reactionType,
-        });
+        .select('*')
+        .eq('post_id', postId)
+        .eq('user_id', user.id)
+        .single();
 
-      if (error) {
-        console.error('Error updating reaction:', error);
-        toast({
-          title: "Erro",
-          description: "Não foi possível processar sua reação",
-          variant: "destructive",
-        });
-        return;
+      if (existingReaction) {
+        // Remove reaction if same type is clicked
+        if (existingReaction.reaction_type === reactionType) {
+          const { error: deleteError } = await supabase
+            .from('post_likes')
+            .delete()
+            .eq('post_id', postId)
+            .eq('user_id', user.id);
+
+          if (deleteError) throw deleteError;
+        } else {
+          // Update reaction type
+          const { error: updateError } = await supabase
+            .from('post_likes')
+            .update({ reaction_type: reactionType })
+            .eq('post_id', postId)
+            .eq('user_id', user.id);
+
+          if (updateError) throw updateError;
+        }
+      } else {
+        // Add new reaction
+        const { error: insertError } = await supabase
+          .from('post_likes')
+          .insert({
+            post_id: postId,
+            user_id: user.id,
+            reaction_type: reactionType
+          });
+
+        if (insertError) throw insertError;
       }
 
-      // Immediately close the reaction menu
+      // Close reaction menu and refresh posts
       setActiveReactionMenu(null);
+      await queryClient.invalidateQueries({ queryKey: ['posts'] });
       
-      // Invalidate the posts query to refresh the data
-      // This will be handled by React Query's automatic background updates
     } catch (error) {
       console.error('Error in reaction handler:', error);
       toast({
         title: "Erro",
-        description: "Ocorreu um erro ao processar sua reação",
+        description: "Não foi possível processar sua reação. Tente novamente.",
         variant: "destructive",
       });
     }
@@ -222,6 +252,7 @@ export default function Posts() {
                           images={post.images || []}
                           videoUrls={post.video_urls || []}
                           title={post.content || ""}
+                          autoplay
                         />
                       </div>
                     )}
@@ -231,8 +262,6 @@ export default function Posts() {
                         <button
                           className="flex items-center gap-2 transition-colors duration-200 hover:text-primary"
                           onClick={() => setActiveReactionMenu(activeReactionMenu === post.id ? null : post.id)}
-                          onMouseEnter={() => setActiveReactionMenu(post.id)}
-                          onMouseLeave={() => setActiveReactionMenu(null)}
                         >
                           <span className="text-xl">
                             {post.reaction_type ? getReactionIcon(post.reaction_type) : '👍'}
