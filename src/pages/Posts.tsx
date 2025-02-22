@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -76,8 +77,7 @@ export default function Posts() {
         console.error('Error fetching posts:', error);
         return [];
       }
-    },
-    staleTime: 1000 * 60,
+    }
   });
 
   const handleReaction = async (postId: string, reactionType: string) => {
@@ -93,22 +93,6 @@ export default function Posts() {
         return;
       }
 
-      queryClient.setQueryData(['posts', searchTerm], (oldData: any) => {
-        return oldData.map((post: any) => {
-          if (post.id === postId) {
-            const isRemovingReaction = post.reaction_type === reactionType;
-            return {
-              ...post,
-              reaction_type: isRemovingReaction ? null : reactionType,
-              likes: isRemovingReaction ? Math.max(0, post.likes - 1) : post.likes + 1
-            };
-          }
-          return post;
-        });
-      });
-
-      setActiveReactionMenu(null);
-
       const { data: existingReaction } = await supabase
         .from('post_likes')
         .select('*')
@@ -117,29 +101,40 @@ export default function Posts() {
         .single();
 
       if (existingReaction) {
+        // Remove reaction if same type is clicked
         if (existingReaction.reaction_type === reactionType) {
-          await supabase
+          const { error: deleteError } = await supabase
             .from('post_likes')
             .delete()
             .eq('post_id', postId)
             .eq('user_id', user.id);
+
+          if (deleteError) throw deleteError;
         } else {
-          await supabase
+          // Update reaction type
+          const { error: updateError } = await supabase
             .from('post_likes')
             .update({ reaction_type: reactionType })
             .eq('post_id', postId)
             .eq('user_id', user.id);
+
+          if (updateError) throw updateError;
         }
       } else {
-        await supabase
+        // Add new reaction
+        const { error: insertError } = await supabase
           .from('post_likes')
           .insert({
             post_id: postId,
             user_id: user.id,
             reaction_type: reactionType
           });
+
+        if (insertError) throw insertError;
       }
 
+      // Close reaction menu and refresh posts
+      setActiveReactionMenu(null);
       await queryClient.invalidateQueries({ queryKey: ['posts'] });
       
     } catch (error) {
@@ -149,8 +144,6 @@ export default function Posts() {
         description: "Não foi possível processar sua reação. Tente novamente.",
         variant: "destructive",
       });
-      
-      await queryClient.invalidateQueries({ queryKey: ['posts'] });
     }
   };
 
@@ -161,6 +154,7 @@ export default function Posts() {
       });
     } catch (error) {
       console.error('Error sharing:', error);
+      // Fall back to copying to clipboard
       navigator.clipboard.writeText(`${window.location.origin}/posts/${postId}`);
       toast({
         title: "Link copiado",
