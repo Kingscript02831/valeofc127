@@ -1,8 +1,9 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { ThumbsUp, Share2, MessageCircle, Heart, Laugh, Frown, Angry } from "lucide-react";
+import { ThumbsUp, Share2, MessageCircle } from "lucide-react";
 import { MediaCarousel } from "@/components/MediaCarousel";
 import PostsMenu from "@/components/PostsMenu";
 import Navbar from "@/components/Navbar";
@@ -10,6 +11,7 @@ import BottomNav from "@/components/BottomNav";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useQuery } from "@tanstack/react-query";
 import ReactionMenu from "@/components/ReactionMenu";
+import { Separator } from "@/components/ui/separator";
 
 interface Post {
   id: string;
@@ -170,82 +172,99 @@ export default function Posts() {
       <PostsMenu />
       <div className="container mx-auto p-4 pt-20 pb-24">
         <div className="max-w-xl mx-auto space-y-4">
-          {posts.map((post) => (
-            <Card key={post.id} className="shadow-none border-none">
-              <CardContent className="p-0">
-                <div className="flex items-center gap-3 px-4 py-2">
-                  <Avatar>
-                    <AvatarImage src={post.user.avatar_url || "/placeholder.svg"} />
-                    <AvatarFallback>
-                      {post.user.full_name?.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <div className="flex items-center gap-1">
-                      <span className="font-semibold">{post.user.full_name}</span>
-                      <span className="text-muted-foreground">@{post.user.username}</span>
+          {posts.map((post, index) => (
+            <div key={post.id}>
+              <Card className="border-none shadow-sm bg-card hover:bg-accent/5 transition-colors duration-200">
+                <CardContent className="p-0">
+                  <div className="flex items-center gap-3 px-4 py-3">
+                    <Avatar className="h-10 w-10 border-2 border-primary/10">
+                      <AvatarImage src={post.user.avatar_url || "/placeholder.svg"} />
+                      <AvatarFallback>
+                        {post.user.full_name?.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-1">
+                        <span className="font-semibold text-foreground hover:underline cursor-pointer">
+                          {post.user.full_name}
+                        </span>
+                        <span className="text-muted-foreground text-sm">
+                          @{post.user.username}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(post.created_at).toLocaleDateString('pt-BR', {
+                          day: '2-digit',
+                          month: 'long',
+                        })}
+                      </p>
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(post.created_at).toLocaleDateString('pt-BR', {
-                        day: '2-digit',
-                        month: 'long',
-                      })}
-                    </p>
                   </div>
-                </div>
 
-                {post.content && (
-                  <p className="px-4 py-2">{post.content}</p>
-                )}
+                  {post.content && (
+                    <div className="px-4 py-2">
+                      <p className="text-foreground text-[15px] leading-normal">
+                        {post.content}
+                      </p>
+                    </div>
+                  )}
 
-                {(post.images?.length > 0 || post.video_urls?.length > 0) && (
-                  <div className="w-full">
-                    <MediaCarousel
-                      images={post.images || []}
-                      videoUrls={post.video_urls || []}
-                      title={post.content || ""}
-                    />
-                  </div>
-                )}
+                  {(post.images?.length > 0 || post.video_urls?.length > 0) && (
+                    <div className="w-full mt-2">
+                      <MediaCarousel
+                        images={post.images || []}
+                        videoUrls={post.video_urls || []}
+                        title={post.content || ""}
+                      />
+                    </div>
+                  )}
 
-                <div className="flex items-center justify-between px-4 py-2 border-t">
-                  <div className="relative">
-                    <button
-                      className="flex items-center gap-2 transition-colors duration-200"
-                      onClick={() => setActiveReactionMenu(activeReactionMenu === post.id ? null : post.id)}
-                      onMouseEnter={() => setActiveReactionMenu(post.id)}
-                      onMouseLeave={() => setActiveReactionMenu(null)}
-                    >
-                      <span className="text-xl">
-                        {post.user_has_liked ? (
-                          getReactionIcon(post.reaction_type || 'like')
-                        ) : (
-                          '👍'
-                        )}
+                  <div className="flex items-center justify-between px-4 py-3 border-t border-border/40">
+                    <div className="relative">
+                      <button
+                        className="flex items-center gap-2 transition-colors duration-200 hover:text-primary"
+                        onClick={() => setActiveReactionMenu(activeReactionMenu === post.id ? null : post.id)}
+                        onMouseEnter={() => setActiveReactionMenu(post.id)}
+                        onMouseLeave={() => setActiveReactionMenu(null)}
+                      >
+                        <span className="text-xl">
+                          {post.user_has_liked ? (
+                            getReactionIcon(post.reaction_type || 'like')
+                          ) : (
+                            '👍'
+                          )}
+                        </span>
+                        <span className="text-sm text-muted-foreground">
+                          {post.likes || 0}
+                        </span>
+                      </button>
+                      
+                      <ReactionMenu 
+                        isOpen={activeReactionMenu === post.id}
+                        onSelect={(type) => handleReaction(post.id, type)}
+                      />
+                    </div>
+
+                    <button className="flex items-center gap-2 hover:text-primary transition-colors duration-200">
+                      <MessageCircle className="w-5 h-5 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">
+                        {post.comment_count || 0}
                       </span>
-                      <span className="text-sm text-gray-500">{post.likes || 0}</span>
                     </button>
-                    
-                    <ReactionMenu 
-                      isOpen={activeReactionMenu === post.id}
-                      onSelect={(type) => handleReaction(post.id, type)}
-                    />
+
+                    <button
+                      className="flex items-center transition-colors duration-200 hover:text-primary"
+                      onClick={() => handleShare(post.id)}
+                    >
+                      <Share2 className="w-5 h-5 text-muted-foreground" />
+                    </button>
                   </div>
-
-                  <button className="flex items-center gap-2">
-                    <MessageCircle className="w-5 h-5 text-gray-500" />
-                    <span className="text-sm text-gray-500">{post.comment_count || 0}</span>
-                  </button>
-
-                  <button
-                    className="flex items-center transition-colors duration-200"
-                    onClick={() => handleShare(post.id)}
-                  >
-                    <Share2 className="w-5 h-5 text-gray-500" />
-                  </button>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+              {index < posts.length - 1 && (
+                <Separator className="my-4 opacity-40" />
+              )}
+            </div>
           ))}
         </div>
       </div>
