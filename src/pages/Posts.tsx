@@ -163,8 +163,9 @@ export default function Posts() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-background">
       <SubNav />
-      <main className="container mx-auto py-8 px-4 pt-20 pb-24">
-        <div className="sticky top-16 z-10 bg-background/80 backdrop-blur-sm pb-4">
+      <main className="container mx-auto px-4">
+        {/* Reduced spacing by adjusting padding classes */}
+        <div className="sticky top-[4.5rem] z-10 bg-background/80 backdrop-blur-sm py-3">
           <div className="flex gap-2">
             <Button
               variant="ghost"
@@ -187,7 +188,8 @@ export default function Posts() {
           </div>
         </div>
 
-        <div className="max-w-xl mx-auto space-y-4">
+        {/* Reduced spacing between search and posts */}
+        <div className="max-w-xl mx-auto pt-2">
           {isLoading ? (
             <div className="space-y-4">
               {[1, 2, 3].map((i) => (
@@ -210,7 +212,7 @@ export default function Posts() {
               onTouchStart={onTouchStart}
               onTouchMove={onTouchMove}
               onTouchEnd={onTouchEnd}
-              className="space-y-4"
+              className="space-y-3"
             >
               {posts.map((post: Post, index) => (
                 <div key={post.id} className="transform transition-transform duration-300">
