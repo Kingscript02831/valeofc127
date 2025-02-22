@@ -35,12 +35,28 @@ export const MediaCarousel = ({ images, videoUrls, instagramMedia = [], title }:
     }) || []),
     ...(instagramMedia?.map(media => {
       let embedUrl = typeof media === 'string' ? media : media.url;
+      // Remove parâmetros e trailing slashes
       embedUrl = embedUrl.split('?')[0].replace(/\/+$/, '');
-      if (!embedUrl.startsWith('http')) embedUrl = 'https://' + embedUrl;
+      
+      // Garantir que a URL começa com https://
+      if (!embedUrl.startsWith('http')) {
+        embedUrl = 'https://' + embedUrl;
+      }
+      
+      // Remover www. se existir
       embedUrl = embedUrl.replace('www.', '');
+      
+      // Transformar URLs de reel em post
       embedUrl = embedUrl.replace('/reel/', '/p/');
-      if (!embedUrl.endsWith('/embed')) embedUrl = embedUrl + '/embed';
+      
+      // Garantir que termina com /embed
+      if (!embedUrl.endsWith('/embed')) {
+        embedUrl = embedUrl + '/embed';
+      }
+
+      // Adicionar parâmetros necessários
       embedUrl = `${embedUrl}?cr=1&v=14&wp=540&rd=https%3A%2F%2Finstagram.com`;
+
       return { type: "instagram" as const, url: embedUrl };
     }) || [])
   ];
