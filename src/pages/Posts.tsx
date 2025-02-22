@@ -1,15 +1,16 @@
 
-import { useState, useEffect } from "react";
-import { supabase } from "../integrations/supabase/client";
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { ThumbsUp, Share2, MessageCircle } from "lucide-react";
+import { ThumbsUp, Share2, MessageCircle, Heart, Laugh, Frown, Angry } from "lucide-react";
 import { MediaCarousel } from "@/components/MediaCarousel";
 import PostsMenu from "@/components/PostsMenu";
 import Navbar from "@/components/Navbar";
 import BottomNav from "@/components/BottomNav";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useQuery } from "@tanstack/react-query";
+import ReactionMenu from "@/components/ReactionMenu";
 
 interface Post {
   id: string;
@@ -18,6 +19,7 @@ interface Post {
   images: string[];
   video_urls: string[];
   likes: number;
+  reaction_type?: string;
   created_at: string;
   user_has_liked?: boolean;
   comment_count?: number;
@@ -30,6 +32,7 @@ interface Post {
 
 export default function Posts() {
   const { toast } = useToast();
+  const [activeReactionMenu, setActiveReactionMenu] = useState<string | null>(null);
 
   const { data: posts = [], refetch: refetchPosts } = useQuery({
     queryKey: ["posts"],
@@ -48,24 +51,25 @@ export default function Posts() {
 
       if (!posts) return [];
 
-      // Fetch likes
       if (user) {
         const { data: likes } = await supabase
           .from("post_likes")
-          .select("post_id")
+          .select("post_id, reaction_type")
           .eq("user_id", user.id);
 
         posts = await Promise.all(posts.map(async (post) => {
-          // Get comment count
           const { count } = await supabase
             .from("post_comments")
             .select("*", { count: 'exact', head: true })
             .eq("post_id", post.id);
 
+          const userLike = likes?.find(like => like.post_id === post.id);
+          
           return {
             ...post,
             comment_count: count || 0,
-            user_has_liked: likes?.some(like => like.post_id === post.id) || false
+            user_has_liked: !!userLike,
+            reaction_type: userLike?.reaction_type || null
           };
         }));
       }
@@ -74,14 +78,29 @@ export default function Posts() {
     }
   });
 
-  const handleLike = async (postId: string) => {
+  const getReactionIcon = (type: string) => {
+    switch (type) {
+      case 'love':
+        return <Heart className="w-5 h-5 text-red-500 fill-red-500 border-2 border-red-500 rounded-full p-0.5" />;
+      case 'haha':
+        return <Laugh className="w-5 h-5 text-yellow-500 fill-yellow-500 border-2 border-yellow-500 rounded-full p-0.5" />;
+      case 'sad':
+        return <Frown className="w-5 h-5 text-purple-500 fill-purple-500 border-2 border-purple-500 rounded-full p-0.5" />;
+      case 'angry':
+        return <Angry className="w-5 h-5 text-orange-500 fill-orange-500 border-2 border-orange-500 rounded-full p-0.5" />;
+      default:
+        return <ThumbsUp className="w-5 h-5 text-blue-500 fill-blue-500 border-2 border-blue-500 rounded-full p-0.5" />;
+    }
+  };
+
+  const handleReaction = async (postId: string, reactionType: string) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
 
       if (!user) {
         toast({
           title: "Erro",
-          description: "Você precisa estar logado para curtir um post",
+          description: "Você precisa estar logado para reagir a um post",
           variant: "destructive",
         });
         return;
@@ -90,7 +109,8 @@ export default function Posts() {
       const post = posts.find((p) => p.id === postId);
       if (!post) return;
 
-      if (post.user_has_liked) {
+      if (post.user_has_liked && post.reaction_type === reactionType) {
+        // Remove reaction
         const { error } = await supabase
           .from("post_likes")
           .delete()
@@ -99,33 +119,40 @@ export default function Posts() {
 
         if (error) throw error;
 
-        // Atualizar contagem de likes no post
         await supabase
           .from("posts")
           .update({ likes: (post.likes || 1) - 1 })
           .eq("id", postId);
       } else {
+        // Add or update reaction
         const { error } = await supabase
           .from("post_likes")
-          .insert({ post_id: postId, user_id: user.id });
+          .upsert({ 
+            post_id: postId, 
+            user_id: user.id,
+            reaction_type: reactionType
+          });
 
         if (error) throw error;
 
-        // Atualizar contagem de likes no post
-        await supabase
-          .from("posts")
-          .update({ likes: (post.likes || 0) + 1 })
-          .eq("id", postId);
+        if (!post.user_has_liked) {
+          await supabase
+            .from("posts")
+            .update({ likes: (post.likes || 0) + 1 })
+            .eq("id", postId);
+        }
       }
 
       refetchPosts();
     } catch (error) {
-      console.error("Error liking post:", error);
+      console.error("Error reacting to post:", error);
       toast({
         title: "Erro",
-        description: "Não foi possível processar sua curtida",
+        description: "Não foi possível processar sua reação",
         variant: "destructive",
       });
+    } finally {
+      setActiveReactionMenu(null);
     }
   };
 
@@ -180,28 +207,34 @@ export default function Posts() {
                       images={post.images || []}
                       videoUrls={post.video_urls || []}
                       title={post.content || ""}
-                      instagramMedia={[]}
                     />
                   </div>
                 )}
 
                 <div className="flex items-center justify-between px-4 py-2 border-t">
-                  <button
-                    className="flex items-center gap-2 transition-colors duration-200"
-                    onClick={() => handleLike(post.id)}
-                  >
-                    <ThumbsUp
-                      className={`w-5 h-5 ${
-                        post.user_has_liked 
-                          ? "text-blue-500 fill-blue-500" 
-                          : "text-gray-500 hover:text-blue-500"
-                      }`}
+                  <div className="relative">
+                    <button
+                      className="flex items-center gap-2 transition-colors duration-200"
+                      onClick={() => setActiveReactionMenu(activeReactionMenu === post.id ? null : post.id)}
+                      onMouseEnter={() => setActiveReactionMenu(post.id)}
+                      onMouseLeave={() => setActiveReactionMenu(null)}
+                    >
+                      {post.user_has_liked ? (
+                        getReactionIcon(post.reaction_type || 'like')
+                      ) : (
+                        <ThumbsUp className="w-5 h-5 text-gray-500 border-2 border-gray-500 rounded-full p-0.5" />
+                      )}
+                      <span className="text-sm text-gray-500">{post.likes || 0}</span>
+                    </button>
+                    
+                    <ReactionMenu 
+                      isOpen={activeReactionMenu === post.id}
+                      onSelect={(type) => handleReaction(post.id, type)}
                     />
-                    <span className="text-sm text-gray-500">{post.likes || 0}</span>
-                  </button>
+                  </div>
 
                   <button className="flex items-center gap-2">
-                    <MessageCircle className="w-5 h-5 text-gray-500 hover:text-purple-500 transition-colors duration-200" />
+                    <MessageCircle className="w-5 h-5 text-gray-500 border-2 border-gray-500 rounded-full p-0.5" />
                     <span className="text-sm text-gray-500">{post.comment_count || 0}</span>
                   </button>
 
@@ -209,7 +242,7 @@ export default function Posts() {
                     className="flex items-center transition-colors duration-200"
                     onClick={() => handleShare(post.id)}
                   >
-                    <Share2 className="w-5 h-5 text-gray-500 hover:text-green-500" />
+                    <Share2 className="w-5 h-5 text-gray-500 border-2 border-gray-500 rounded-full p-0.5" />
                   </button>
                 </div>
               </CardContent>
