@@ -66,7 +66,7 @@ export const MediaCarousel = ({
   return (
     <div className="relative w-full h-full bg-background overflow-hidden group">
       {currentMedia.type === 'video' ? (
-        <div className="relative w-full h-0 pb-[100%]">
+        <div className="relative w-full h-0 pb-[56.25%]">
           {currentMedia.url.includes('youtube.com') || currentMedia.url.includes('youtu.be') ? (
             <iframe
               src={getVideoUrl(currentMedia.url)}
@@ -90,7 +90,7 @@ export const MediaCarousel = ({
           )}
         </div>
       ) : (
-        <div className="relative w-full h-0 pb-[100%]">
+        <div className="relative w-full h-0 pb-[56.25%]">
           <img
             src={currentMedia.url}
             alt={title}
