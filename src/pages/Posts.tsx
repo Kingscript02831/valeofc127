@@ -3,17 +3,17 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Bell, Search, Share2, MessageCircle } from "lucide-react";
+import { Bell, Search, Share2, MessageCircle, X } from "lucide-react";
 import { MediaCarousel } from "@/components/MediaCarousel";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import Navbar from "@/components/Navbar";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import ReactionMenu from "@/components/ReactionMenu";
 import { Separator } from "@/components/ui/separator";
-import BottomNav from "@/components/BottomNav";
 import { useNavigate } from "react-router-dom";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface Post {
   id: string;
@@ -25,12 +25,15 @@ interface Post {
   reaction_type?: string;
   created_at: string;
   user_has_liked?: boolean;
-  comment_count?: number;
   user: {
     username: string;
     full_name: string;
     avatar_url: string;
   };
+  post_likes: Array<{
+    reaction_type: string;
+    user_id: string;
+  }>;
 }
 
 export default function Posts() {
@@ -39,6 +42,7 @@ export default function Posts() {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [activeReactionMenu, setActiveReactionMenu] = useState<string | null>(null);
+  const [hiddenPosts, setHiddenPosts] = useState<string[]>([]);
 
   const { data: posts = [], isLoading } = useQuery({
     queryKey: ['posts', searchTerm],
@@ -160,12 +164,36 @@ export default function Posts() {
     }
   };
 
+  const handleHidePost = (postId: string) => {
+    setHiddenPosts(prev => [...prev, postId]);
+    toast({
+      title: "Post ocultado",
+      description: "Você não verá mais este post",
+    });
+  };
+
+  const formatDateTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (date.toDateString() === today.toDateString()) {
+      return `Hoje às ${format(date, 'HH:mm')}`;
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      return `Ontem às ${format(date, 'HH:mm')}`;
+    } else {
+      return format(date, "d 'de' MMMM 'às' HH:mm", { locale: ptBR });
+    }
+  };
+
+  const visiblePosts = posts.filter(post => !hiddenPosts.includes(post.id));
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-background">
-      <Navbar />
-      <main className="container mx-auto py-8 px-4 pt-20 pb-24">
-        <div className="sticky top-16 z-10 bg-background/80 backdrop-blur-sm pb-4">
-          <div className="flex gap-2">
+      <div className="sticky top-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border/40">
+        <div className="container mx-auto py-4 px-4">
+          <div className="flex gap-2 items-center">
             <Button
               variant="ghost"
               size="icon"
@@ -186,7 +214,9 @@ export default function Posts() {
             </div>
           </div>
         </div>
+      </div>
 
+      <main className="container mx-auto py-4 px-4">
         <div className="max-w-xl mx-auto space-y-4">
           {isLoading ? (
             <div className="space-y-4">
@@ -206,33 +236,40 @@ export default function Posts() {
               ))}
             </div>
           ) : (
-            posts.map((post: Post, index) => (
+            visiblePosts.map((post, index) => (
               <div key={post.id}>
                 <Card className="border-none shadow-sm bg-card hover:bg-accent/5 transition-colors duration-200">
                   <CardContent className="p-0">
-                    <div className="flex items-center gap-3 px-4 py-3">
-                      <Avatar className="h-10 w-10 border-2 border-primary/10">
-                        <AvatarImage src={post.user.avatar_url || "/placeholder.svg"} />
-                        <AvatarFallback>
-                          {post.user.full_name?.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-1">
-                          <span className="font-semibold text-foreground hover:underline cursor-pointer">
-                            {post.user.full_name}
-                          </span>
-                          <span className="text-muted-foreground text-sm">
-                            @{post.user.username}
-                          </span>
+                    <div className="flex items-center justify-between px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-10 w-10 border-2 border-primary/10">
+                          <AvatarImage src={post.user.avatar_url || "/placeholder.svg"} />
+                          <AvatarFallback>
+                            {post.user.full_name?.charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-1">
+                            <span className="font-semibold text-foreground hover:underline cursor-pointer">
+                              {post.user.full_name}
+                            </span>
+                            <span className="text-muted-foreground text-sm">
+                              @{post.user.username}
+                            </span>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            {formatDateTime(post.created_at)}
+                          </p>
                         </div>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(post.created_at).toLocaleDateString('pt-BR', {
-                            day: '2-digit',
-                            month: 'long',
-                          })}
-                        </p>
                       </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-muted-foreground hover:text-destructive"
+                        onClick={() => handleHidePost(post.id)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
                     </div>
 
                     {post.content && (
@@ -246,9 +283,9 @@ export default function Posts() {
                     {(post.images?.length > 0 || post.video_urls?.length > 0) && (
                       <div className="w-full mt-2">
                         <MediaCarousel
-                          images={post.images || []}
-                          videoUrls={post.video_urls || []}
-                          title={post.content || ""}
+                          images={post.images}
+                          videoUrls={post.video_urls}
+                          title={post.content}
                           autoplay={false}
                           showControls={true}
                           cropMode="contain"
@@ -278,11 +315,11 @@ export default function Posts() {
 
                       <button 
                         onClick={() => navigate(`/posts/${post.id}`)}
-                        className="flex items-center gap-2 hover:text-primary transition-colors duration-200"
+                        className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                       >
                         <MessageCircle className="w-5 h-5 text-muted-foreground" />
                         <span className="text-sm text-muted-foreground">
-                          {post.comment_count || 0}
+                          {0}
                         </span>
                       </button>
 
@@ -295,30 +332,5 @@ export default function Posts() {
                     </div>
                   </CardContent>
                 </Card>
-                {index < posts.length - 1 && (
-                  <Separator className="my-4 opacity-40" />
-                )}
-              </div>
-            ))
-          )}
-        </div>
-      </main>
-      <BottomNav />
-    </div>
-  );
-}
-
-const getReactionIcon = (type: string) => {
-  switch (type) {
-    case 'love':
-      return '❤️';
-    case 'haha':
-      return '😂';
-    case 'sad':
-      return '😞';
-    case 'angry':
-      return '🤬';
-    default:
-      return '👍';
-  }
-};
+                {index < visiblePosts.length - 1 && (
+                  <Separator className="my-4 opacity
