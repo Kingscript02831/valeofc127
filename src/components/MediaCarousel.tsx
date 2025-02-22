@@ -55,8 +55,11 @@ export const MediaCarousel = ({
     if (url.includes('instagram.com/')) {
       // Convert to embed URL if it's not already
       if (!url.includes('/embed/')) {
-        const postId = url.split('/p/')[1]?.split('/')[0];
-        return `https://www.instagram.com/p/${postId}/embed`;
+        // Extract post ID from various Instagram URL formats
+        const postIdMatch = url.match(/\/(?:p|reel)\/([^/?]+)/);
+        if (postIdMatch) {
+          return `https://www.instagram.com/p/${postIdMatch[1]}/embed`;
+        }
       }
     }
     return url;
@@ -112,6 +115,22 @@ export const MediaCarousel = ({
               className="absolute inset-0 w-full h-full object-cover"
             />
           )}
+        </div>
+      )}
+
+      {/* Navigation controls */}
+      {allMedia.length > 1 && (
+        <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
+          {allMedia.map((_, index) => (
+            <button
+              key={index}
+              className={`w-2 h-2 rounded-full transition-colors ${
+                index === currentIndex ? 'bg-white' : 'bg-white/50'
+              }`}
+              onClick={() => setCurrentIndex(index)}
+              aria-label={`Go to slide ${index + 1}`}
+            />
+          ))}
         </div>
       )}
     </div>
