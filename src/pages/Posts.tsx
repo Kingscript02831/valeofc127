@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -52,14 +51,12 @@ export default function Posts() {
       if (!posts) return [];
 
       if (user) {
-        // Primeiro, vamos buscar as curtidas com o tipo de reação
         const { data: likes } = await supabase
           .from("post_likes")
           .select("post_id, reaction_type")
           .eq("user_id", user.id);
 
         posts = await Promise.all(posts.map(async (post) => {
-          // Buscar contagem de comentários
           const { count } = await supabase
             .from("post_comments")
             .select("*", { count: 'exact', head: true })
@@ -83,15 +80,15 @@ export default function Posts() {
   const getReactionIcon = (type: string) => {
     switch (type) {
       case 'love':
-        return <Heart className="w-5 h-5 text-red-500 fill-red-500 border-2 border-red-500 rounded-full p-0.5" />;
+        return '❤️';
       case 'haha':
-        return <Laugh className="w-5 h-5 text-yellow-500 fill-yellow-500 border-2 border-yellow-500 rounded-full p-0.5" />;
+        return '😂';
       case 'sad':
-        return <Frown className="w-5 h-5 text-purple-500 fill-purple-500 border-2 border-purple-500 rounded-full p-0.5" />;
+        return '😞';
       case 'angry':
-        return <Angry className="w-5 h-5 text-orange-500 fill-orange-500 border-2 border-orange-500 rounded-full p-0.5" />;
+        return '🤬';
       default:
-        return <ThumbsUp className="w-5 h-5 text-blue-500 fill-blue-500 border-2 border-blue-500 rounded-full p-0.5" />;
+        return '👍';
     }
   };
 
@@ -112,7 +109,6 @@ export default function Posts() {
       if (!post) return;
 
       if (post.user_has_liked && post.reaction_type === reactionType) {
-        // Remove reaction
         const { error } = await supabase
           .from("post_likes")
           .delete()
@@ -126,7 +122,6 @@ export default function Posts() {
           .update({ likes: (post.likes || 1) - 1 })
           .eq("id", postId);
       } else {
-        // Add or update reaction
         const { error } = await supabase
           .from("post_likes")
           .upsert({ 
@@ -221,11 +216,13 @@ export default function Posts() {
                       onMouseEnter={() => setActiveReactionMenu(post.id)}
                       onMouseLeave={() => setActiveReactionMenu(null)}
                     >
-                      {post.user_has_liked ? (
-                        getReactionIcon(post.reaction_type || 'like')
-                      ) : (
-                        <ThumbsUp className="w-5 h-5 text-gray-500 border-2 border-gray-500 rounded-full p-0.5" />
-                      )}
+                      <span className="text-xl">
+                        {post.user_has_liked ? (
+                          getReactionIcon(post.reaction_type || 'like')
+                        ) : (
+                          '👍'
+                        )}
+                      </span>
                       <span className="text-sm text-gray-500">{post.likes || 0}</span>
                     </button>
                     
@@ -236,7 +233,7 @@ export default function Posts() {
                   </div>
 
                   <button className="flex items-center gap-2">
-                    <MessageCircle className="w-5 h-5 text-gray-500 border-2 border-gray-500 rounded-full p-0.5" />
+                    <MessageCircle className="w-5 h-5 text-gray-500" />
                     <span className="text-sm text-gray-500">{post.comment_count || 0}</span>
                   </button>
 
@@ -244,7 +241,7 @@ export default function Posts() {
                     className="flex items-center transition-colors duration-200"
                     onClick={() => handleShare(post.id)}
                   >
-                    <Share2 className="w-5 h-5 text-gray-500 border-2 border-gray-500 rounded-full p-0.5" />
+                    <Share2 className="w-5 h-5 text-gray-500" />
                   </button>
                 </div>
               </CardContent>
