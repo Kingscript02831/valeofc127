@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,6 +13,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import ReactionMenu from "@/components/ReactionMenu";
 import { Separator } from "@/components/ui/separator";
 import BottomNav from "@/components/BottomNav";
+import { useNavigate } from "react-router-dom";
 
 interface Post {
   id: string;
@@ -33,6 +35,7 @@ interface Post {
 
 export default function Posts() {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [activeReactionMenu, setActiveReactionMenu] = useState<string | null>(null);
@@ -273,7 +276,10 @@ export default function Posts() {
                         />
                       </div>
 
-                      <button className="flex items-center gap-2 hover:text-primary transition-colors duration-200">
+                      <button 
+                        onClick={() => navigate(`/posts/${post.id}`)}
+                        className="flex items-center gap-2 hover:text-primary transition-colors duration-200"
+                      >
                         <MessageCircle className="w-5 h-5 text-muted-foreground" />
                         <span className="text-sm text-muted-foreground">
                           {post.comment_count || 0}
