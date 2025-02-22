@@ -1,10 +1,10 @@
 
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "../lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 import { Plus } from "lucide-react";
-import { Button } from "../components/ui/button";
-import { Link } from "react-router-dom";
-import { Card } from "../components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Link, useNavigate } from "react-router-dom";
+import NewsCard from "@/components/NewsCard";
 
 interface Post {
   id: string;
@@ -23,6 +23,8 @@ interface Post {
 }
 
 export default function Posts() {
+  const navigate = useNavigate();
+  
   const { data: posts, isLoading } = useQuery({
     queryKey: ["posts"],
     queryFn: async () => {
@@ -44,6 +46,7 @@ export default function Posts() {
 
       if (error) throw error;
 
+      // Fetch likes for current user if logged in
       if (session) {
         const { data: userLikes } = await supabase
           .from("post_likes")
@@ -78,21 +81,15 @@ export default function Posts() {
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {posts?.map((post) => (
-          <Card key={post.id} className="p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="font-semibold">{post.user.username}</div>
-            </div>
-            <p className="text-sm text-gray-600 mb-4">{post.content}</p>
-            {post.images && post.images.length > 0 && (
-              <div className="aspect-video relative overflow-hidden rounded-lg mb-4">
-                <img 
-                  src={post.images[0]} 
-                  alt="Post content"
-                  className="object-cover w-full h-full"
-                />
-              </div>
-            )}
-          </Card>
+          <NewsCard
+            key={post.id}
+            id={post.id}
+            title={post.user.username}
+            content={post.content}
+            createdAt={post.created_at}
+            images={post.images}
+            video_urls={post.video_urls}
+          />
         ))}
       </div>
     </div>

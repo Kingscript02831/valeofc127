@@ -21,10 +21,15 @@ const PhotoUrlDialog = ({ isOpen, onClose, onConfirm, title }: PhotoUrlDialogPro
   const [url, setUrl] = useState("");
 
   const handleConfirm = () => {
+    // Remove qualquer dl=0 existente e outros parâmetros
     let finalUrl = url;
     
+    // Se é um link do Dropbox
     if (finalUrl.includes('dropbox.com')) {
+      // Remover dl=0 se existir
       finalUrl = finalUrl.replace(/[&?]dl=0/g, '');
+      
+      // Adicionar dl=1 no final
       finalUrl = finalUrl.includes('?') ? `${finalUrl}&dl=1` : `${finalUrl}?dl=1`;
     }
 
