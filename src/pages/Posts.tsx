@@ -52,12 +52,14 @@ export default function Posts() {
       if (!posts) return [];
 
       if (user) {
+        // Primeiro, vamos buscar as curtidas com o tipo de reação
         const { data: likes } = await supabase
           .from("post_likes")
           .select("post_id, reaction_type")
           .eq("user_id", user.id);
 
         posts = await Promise.all(posts.map(async (post) => {
+          // Buscar contagem de comentários
           const { count } = await supabase
             .from("post_comments")
             .select("*", { count: 'exact', head: true })
