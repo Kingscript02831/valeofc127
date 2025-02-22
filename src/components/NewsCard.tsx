@@ -1,86 +1,90 @@
-
-import React from 'react';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import MediaCarousel from '@/components/MediaCarousel';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { ArrowRight } from 'lucide-react';
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { Card } from "@/components/ui/card";
+import MediaCarousel from "./MediaCarousel";
+import { Link } from "react-router-dom";
 
 interface NewsCardProps {
   id: string;
   title: string;
   content: string;
-  date: string;
-  createdAt: string;
-  images: string[];
-  video_urls: string[];
+  date?: string;
+  createdAt?: string;
+  buttonColor?: string;
   category?: {
     name: string;
-    slug: string;
+    slug?: string;
     background_color?: string;
-  };
-  buttonColor?: string;
-  onClick?: () => void;
+  } | null;
+  images?: string[];
+  video_urls?: string[];
 }
 
-const NewsCard: React.FC<NewsCardProps> = ({
+const NewsCard = ({
+  id,
   title,
   content,
   date,
-  images,
-  video_urls,
+  createdAt,
   category,
-  buttonColor,
-  onClick,
-}) => {
+  images = [],
+  video_urls = []
+}: NewsCardProps) => {
+  const formattedCreatedAt = createdAt 
+    ? format(new Date(createdAt), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })
+    : null;
+
+  const hasMedia = images?.length > 0 || video_urls?.length > 0;
+
   return (
-    <Card className="overflow-hidden border-none shadow-md hover:shadow-lg transition-shadow duration-200">
-      {(images?.length > 0 || video_urls?.length > 0) && (
-        <div className="relative aspect-video">
-          <MediaCarousel
-            images={images}
-            videoUrls={video_urls}
-            title={title}
-            cropMode="cover"
-          />
-        </div>
-      )}
-      <CardContent className="p-4 space-y-4">
-        <div className="space-y-2">
-          {category && (
-            <Badge
-              style={{
-                backgroundColor: category.background_color
-                  ? `${category.background_color}40`
-                  : '#D6BCFA40',
-                color: category.background_color || '#1A1F2C',
-              }}
-              className="transition-all duration-300 hover:scale-105"
-            >
-              {category.name}
-            </Badge>
-          )}
-          <h3 className="font-semibold text-lg leading-tight line-clamp-2">
+    <Card className="overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-lg group">
+      <Link to={`/noticias/${id}`} className="block">
+        {/* Media Section */}
+        {hasMedia && (
+          <div className="relative aspect-video overflow-hidden bg-gray-100">
+            <MediaCarousel 
+              images={images}
+              videoUrls={video_urls}
+              title={title}
+              cropMode="contain"
+              showControls={true}
+              autoplay={false}
+            />
+          </div>
+        )}
+
+        <div className="p-4 space-y-3">
+          {/* Category and Date */}
+          <div className="flex items-center justify-between gap-2 text-xs">
+            {category && (
+              <span 
+                className="inline-block px-2 py-0.5 rounded-full"
+                style={{
+                  backgroundColor: category.background_color ? `${category.background_color}40` : '#D6BCFA40',
+                  color: category.background_color || '#1A1F2C'
+                }}
+              >
+                {category.name}
+              </span>
+            )}
+            {formattedCreatedAt && (
+              <span className="text-gray-500">
+                {formattedCreatedAt}
+              </span>
+            )}
+          </div>
+
+          {/* Title */}
+          <h3 className="text-lg font-bold leading-tight group-hover:text-primary transition-colors">
             {title}
           </h3>
-          <p className="text-sm text-muted-foreground line-clamp-2">{content}</p>
-        </div>
 
-        <div className="flex items-center justify-between">
-          <time className="text-sm text-muted-foreground">
-            {format(new Date(date), "dd 'de' MMMM", { locale: ptBR })}
-          </time>
-          <button
-            onClick={onClick}
-            className="flex items-center gap-2 text-sm font-medium transition-colors duration-200 hover:text-primary"
-            style={{ color: buttonColor }}
-          >
-            Ler mais
-            <ArrowRight className="w-4 h-4" />
-          </button>
+          {/* Content Preview */}
+          <div className="text-sm text-gray-600 line-clamp-3">
+            {content}
+          </div>
         </div>
-      </CardContent>
+      </Link>
     </Card>
   );
 };

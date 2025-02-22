@@ -3,7 +3,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { MessageSquare, Search, ArrowRight } from "lucide-react";
+import { Bell, Search, Share2, MessageCircle } from "lucide-react";
 import { MediaCarousel } from "@/components/MediaCarousel";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -147,15 +147,15 @@ export default function Posts() {
 
   const handleShare = async (postId: string) => {
     try {
-      const postUrl = `${window.location.origin}/posts/${postId}`;
-      const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(`Confira este post: ${postUrl}`)}`;
-      window.open(whatsappUrl, '_blank');
+      await navigator.share({
+        url: `${window.location.origin}/posts/${postId}`,
+      });
     } catch (error) {
       console.error('Error sharing:', error);
+      navigator.clipboard.writeText(`${window.location.origin}/posts/${postId}`);
       toast({
-        title: "Erro ao compartilhar",
-        description: "Não foi possível abrir o WhatsApp para compartilhar",
-        variant: "destructive",
+        title: "Link copiado",
+        description: "O link foi copiado para sua área de transferência",
       });
     }
   };
@@ -165,15 +165,24 @@ export default function Posts() {
       <Navbar />
       <main className="container mx-auto py-8 px-4 pt-20 pb-24">
         <div className="sticky top-16 z-10 bg-background/80 backdrop-blur-sm pb-4">
-          <div className="relative flex-1">
-            <Input
-              placeholder="Buscar posts..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pr-10 rounded-full bg-card/50 backdrop-blur-sm border-none shadow-lg"
-            />
-            <div className="absolute right-3 top-1/2 -translate-y-1/2">
-              <Search className="h-5 w-5 text-foreground" />
+          <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="hover:scale-105 transition-transform text-foreground"
+            >
+              <Bell className="h-5 w-5" />
+            </Button>
+            <div className="relative flex-1">
+              <Input
+                placeholder="Buscar posts..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pr-10 rounded-full bg-card/50 backdrop-blur-sm border-none shadow-lg"
+              />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                <Search className="h-5 w-5 text-foreground" />
+              </div>
             </div>
           </div>
         </div>
@@ -200,8 +209,8 @@ export default function Posts() {
             posts.map((post: Post, index) => (
               <div key={post.id}>
                 <Card className="border-none shadow-sm bg-card hover:bg-accent/5 transition-colors duration-200">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-3">
+                  <CardContent className="p-0">
+                    <div className="flex items-center gap-3 px-4 py-3">
                       <Avatar className="h-10 w-10 border-2 border-primary/10">
                         <AvatarImage src={post.user.avatar_url || "/placeholder.svg"} />
                         <AvatarFallback>
@@ -227,7 +236,7 @@ export default function Posts() {
                     </div>
 
                     {post.content && (
-                      <div className="mt-3">
+                      <div className="px-4 py-2">
                         <p className="text-foreground text-[15px] leading-normal">
                           {post.content}
                         </p>
@@ -235,20 +244,23 @@ export default function Posts() {
                     )}
 
                     {(post.images?.length > 0 || post.video_urls?.length > 0) && (
-                      <div className="mt-3">
+                      <div className="w-full mt-2">
                         <MediaCarousel
                           images={post.images || []}
                           videoUrls={post.video_urls || []}
                           title={post.content || ""}
+                          autoplay={false}
+                          showControls={true}
+                          cropMode="contain"
                         />
                       </div>
                     )}
 
-                    <div className="flex items-center justify-between mt-4 gap-4">
-                      <div className="flex-1 relative">
+                    <div className="flex items-center justify-between px-4 py-3 border-t border-border/40">
+                      <div className="relative">
                         <button
+                          className="flex items-center gap-2 transition-colors duration-200 hover:text-primary"
                           onClick={() => setActiveReactionMenu(activeReactionMenu === post.id ? null : post.id)}
-                          className="w-full bg-gray-50 hover:bg-gray-100 dark:bg-gray-800/50 dark:hover:bg-gray-800 py-2 rounded-xl flex items-center justify-center gap-2"
                         >
                           <span className="text-xl">
                             {post.reaction_type ? getReactionIcon(post.reaction_type) : '👍'}
@@ -266,28 +278,19 @@ export default function Posts() {
 
                       <button 
                         onClick={() => navigate(`/posts/${post.id}`)}
-                        className="flex-1 bg-gray-50 hover:bg-gray-100 dark:bg-gray-800/50 dark:hover:bg-gray-800 py-2 rounded-xl flex items-center justify-center gap-2"
+                        className="flex items-center gap-2 hover:text-primary transition-colors duration-200"
                       >
-                        <MessageSquare className="w-5 h-5" />
+                        <MessageCircle className="w-5 h-5 text-muted-foreground" />
                         <span className="text-sm text-muted-foreground">
                           {post.comment_count || 0}
                         </span>
                       </button>
 
                       <button
+                        className="flex items-center transition-colors duration-200 hover:text-primary"
                         onClick={() => handleShare(post.id)}
-                        className="flex-1 bg-gray-50 hover:bg-gray-100 dark:bg-gray-800/50 dark:hover:bg-gray-800 py-2 rounded-xl flex items-center justify-center"
                       >
-                        <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
-                          <path d="M17.6 6.4C16.8 6.4 16 6.7 15.4 7.2L9 12.2C8.8 12 8.7 11.7 8.5 11.5C8.1 10.8 7.5 10.2 6.8 9.9C6.1 9.5 5.3 9.3 4.5 9.3C3.7 9.3 2.9 9.5 2.2 9.9C1.5 10.2 0.9 10.8 0.5 11.5C0.2 12.2 0 12.9 0 13.7C0 14.5 0.2 15.2 0.5 15.9C0.9 16.6 1.5 17.2 2.2 17.5C2.9 17.9 3.7 18.1 4.5 18.1C5.3 18.1 6.1 17.9 6.8 17.5C7.5 17.2 8.1 16.6 8.5 15.9C8.7 15.7 8.8 15.4 9 15.2L15.4 20.2C16 20.7 16.8 21 17.6 21C18.4 21 19.2 20.7 19.8 20.2C20.5 19.7 21 19 21.2 18.2C21.5 17.4 21.5 16.5 21.2 15.7C21 14.9 20.5 14.2 19.8 13.7C19.2 13.2 18.4 12.9 17.6 12.9C16.8 12.9 16 13.2 15.4 13.7L9 8.7C9.2 8.5 9.3 8.2 9.5 8C9.8 7.3 9.8 6.4 9.5 5.6C9.3 4.8 8.8 4.1 8.1 3.6C7.5 3.1 6.7 2.8 5.9 2.8C5.1 2.8 4.3 3.1 3.7 3.6C3 4.1 2.5 4.8 2.3 5.6C2 6.4 2 7.3 2.3 8.1C2.5 8.9 3 9.6 3.7 10.1C4.3 10.6 5.1 10.9 5.9 10.9C6.7 10.9 7.5 10.6 8.1 10.1L14.5 15.1C14.3 15.3 14.2 15.6 14 15.8C13.7 16.5 13.7 17.4 14 18.2C14.2 19 14.7 19.7 15.4 20.2C16 20.7 16.8 21 17.6 21C18.4 21 19.2 20.7 19.8 20.2C20.5 19.7 21 19 21.2 18.2C21.5 17.4 21.5 16.5 21.2 15.7C21 14.9 20.5 14.2 19.8 13.7C19.2 13.2 18.4 12.9 17.6 12.9"/>
-                        </svg>
-                      </button>
-
-                      <button
-                        onClick={() => navigate(`/posts/${post.id}`)}
-                        className="flex-1 bg-gray-50 hover:bg-gray-100 dark:bg-gray-800/50 dark:hover:bg-gray-800 py-2 rounded-xl flex items-center justify-center"
-                      >
-                        <ArrowRight className="w-5 h-5" />
+                        <Share2 className="w-5 h-5 text-muted-foreground" />
                       </button>
                     </div>
                   </CardContent>
