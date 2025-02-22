@@ -1,8 +1,9 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Bell, Search, Share2, MessageCircle, MessageSquareMore } from "lucide-react";
+import { Bell, Search, Share2, MessageCircle, MessageSquareMore, ThumbsUp } from "lucide-react";
 import { MediaCarousel } from "@/components/MediaCarousel";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -293,13 +294,13 @@ export default function Posts() {
                     <div className="flex items-center justify-between px-4 py-3 border-t border-border/40">
                       <div className="relative">
                         <button
-                          className="flex items-center gap-2 transition-colors duration-200 hover:text-primary"
+                          className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                           onClick={() => setActiveReactionMenu(activeReactionMenu === post.id ? null : post.id)}
                         >
-                          <span className="text-xl">
-                            {post.reaction_type ? getReactionIcon(post.reaction_type) : '👍'}
-                          </span>
-                          <span className="text-sm text-muted-foreground">
+                          <ThumbsUp 
+                            className={`w-5 h-5 ${post.reaction_type ? 'text-blue-500' : 'text-muted-foreground'}`}
+                          />
+                          <span className={`text-sm ${post.reaction_type ? 'text-blue-500' : 'text-muted-foreground'}`}>
                             {post.likes || 0}
                           </span>
                         </button>
@@ -328,7 +329,7 @@ export default function Posts() {
                       </button>
 
                       <button
-                        className="flex items-center transition-colors duration-200 hover:text-primary"
+                        className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                         onClick={() => handleShare(post.id)}
                       >
                         <Share2 className="w-5 h-5 text-muted-foreground" />
