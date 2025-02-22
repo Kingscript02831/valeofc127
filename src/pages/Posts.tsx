@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -34,6 +33,21 @@ interface Post {
     avatar_url: string;
   };
 }
+
+const getReactionIcon = (type: string) => {
+  switch (type) {
+    case 'love':
+      return '❤️';
+    case 'haha':
+      return '😂';
+    case 'sad':
+      return '😞';
+    case 'angry':
+      return '🤬';
+    default:
+      return '👍';
+  }
+};
 
 export default function Posts() {
   const { toast } = useToast();
@@ -183,21 +197,6 @@ export default function Posts() {
     }
   };
 
-  const getReactionIcon = (type: string) => {
-    switch (type) {
-      case 'love':
-        return '❤️';
-      case 'haha':
-        return '😂';
-      case 'sad':
-        return '😞';
-      case 'angry':
-        return '🤬';
-      default:
-        return '👍';
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-background">
       <Navbar />
@@ -297,9 +296,9 @@ export default function Posts() {
                           className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                           onClick={() => setActiveReactionMenu(activeReactionMenu === post.id ? null : post.id)}
                         >
-                          <ThumbsUp 
-                            className={`w-5 h-5 ${post.reaction_type ? 'text-blue-500' : 'text-muted-foreground'}`}
-                          />
+                          <span className={`text-xl ${post.reaction_type ? 'text-blue-500' : 'text-muted-foreground'}`}>
+                            {getReactionIcon(post.reaction_type || 'like')}
+                          </span>
                           <span className={`text-sm ${post.reaction_type ? 'text-blue-500' : 'text-muted-foreground'}`}>
                             {post.likes || 0}
                           </span>
