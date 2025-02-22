@@ -8,6 +8,7 @@ interface MediaCarouselProps {
   title: string;
   autoplay?: boolean;
   instagramMedia?: InstagramMedia[];
+  cropMode?: 'cover' | 'contain';
 }
 
 export const MediaCarousel = ({ 
@@ -15,7 +16,8 @@ export const MediaCarousel = ({
   videoUrls, 
   title, 
   autoplay = false,
-  instagramMedia = []
+  instagramMedia = [],
+  cropMode = 'contain'
 }: MediaCarouselProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   
@@ -70,7 +72,7 @@ export const MediaCarousel = ({
               controls
               loop
               playsInline
-              className="absolute inset-0 w-full h-full object-contain"
+              className={`absolute inset-0 w-full h-full object-${cropMode}`}
               controlsList="nodownload"
             >
               Seu navegador não suporta a reprodução de vídeos.
@@ -82,12 +84,12 @@ export const MediaCarousel = ({
           <img
             src={currentMedia.url}
             alt={title}
-            className="absolute inset-0 w-full h-full object-contain"
+            className={`absolute inset-0 w-full h-full object-${cropMode}`}
           />
         </div>
       )}
 
-      {/* Pontos de navegação apenas se houver mais de um item de mídia */}
+      {/* Navigation dots only if there's more than one media item */}
       {allMedia.length > 1 && (
         <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
           {allMedia.map((_, index) => (
@@ -107,3 +109,4 @@ export const MediaCarousel = ({
 };
 
 export default MediaCarousel;
+

@@ -168,6 +168,7 @@ const NewsDetails = () => {
                     videoUrls={news.video_urls || []}
                     instagramMedia={instagramMedia}
                     title={news.title}
+                    cropMode="contain"
                   />
                 </div>
               )}

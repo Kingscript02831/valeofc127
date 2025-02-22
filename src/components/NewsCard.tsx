@@ -40,14 +40,6 @@ const NewsCard = ({
 
   const hasMedia = images?.length > 0 || video_urls?.length > 0 || instagramMedia?.length > 0;
 
-  // Log media for debugging
-  console.log('NewsCard media:', {
-    images,
-    video_urls,
-    instagramMedia,
-    hasMedia
-  });
-
   return (
     <Card className="overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-lg group">
       <Link to={`/noticias/${id}`} className="block">
@@ -59,6 +51,7 @@ const NewsCard = ({
               videoUrls={video_urls}
               instagramMedia={instagramMedia}
               title={title}
+              cropMode="cover"
             />
           </div>
         )}
