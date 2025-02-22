@@ -1,4 +1,3 @@
-
 import { Link, useLocation } from "react-router-dom";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { useEffect, useRef, useState } from "react";
@@ -12,7 +11,6 @@ const SubNav = () => {
 
   const links = [
     { path: "/", label: "Notícias" },
-    { path: "/posts", label: "Posts" },
     { path: "/eventos", label: "Eventos" },
     { path: "/lugares", label: "Lugares" },
     { path: "/products", label: "Marketplace" },
