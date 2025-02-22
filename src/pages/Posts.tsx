@@ -1,15 +1,11 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
-import { ThumbsUp, Share2, MessageCircle } from "lucide-react";
-import PhotoUrlDialog from "@/components/PhotoUrlDialog";
-import { useTheme } from "@/components/ThemeProvider";
+import { ThumbsUp, Share2, MessageCircle, Trash2, Edit } from "lucide-react";
 import { MediaCarousel } from "@/components/MediaCarousel";
 import PostsMenu from "@/components/PostsMenu";
 
@@ -43,175 +39,163 @@ interface Comment {
 
 export default function Posts() {
   const [posts, setPosts] = useState<Post[]>([]);
-  const [newPostContent, setNewPostContent] = useState("");
-  const [isPhotoDialogOpen, setIsPhotoDialogOpen] = useState(false);
-  const [isVideoDialogOpen, setIsVideoDialogOpen] = useState(false);
-  const [selectedImages, setSelectedImages] = useState<string[]>([]);
-  const [selectedVideos, setSelectedVideos] = useState<string[]>([]);
   const [comments, setComments] = useState<{ [key: string]: string }>({});
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const { toast } = useToast();
-  const navigate = useNavigate();
-  const { theme } = useTheme();
+
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setCurrentUserId(user?.id || null);
+    };
+    fetchCurrentUser();
+  }, []);
 
   useEffect(() => {
     fetchPosts();
   }, []);
 
   const fetchPosts = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      navigate("/login");
-      return;
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+
+      let { data: posts, error } = await supabase
+        .from("posts")
+        .select(`
+          *,
+          user:profiles(username, avatar_url),
+          comments:post_comments(
+            id,
+            content,
+            created_at,
+            user:profiles(username, avatar_url)
+          )
+        `)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      if (!posts) return;
+
+      // Fetch likes for current user
+      if (user) {
+        const { data: likes } = await supabase
+          .from("post_likes")
+          .select("post_id")
+          .eq("user_id", user.id);
+
+        posts = posts.map(post => ({
+          ...post,
+          user_has_liked: likes?.some(like => like.post_id === post.id) || false
+        }));
+      }
+
+      setPosts(posts as Post[]);
+    } catch (error) {
+      console.error("Error fetching posts:", error);
     }
-
-    const { data: postsData, error } = await supabase
-      .from("posts")
-      .select(`
-        *,
-        user:profiles(username, avatar_url),
-        comments:post_comments(
-          id,
-          content,
-          created_at,
-          user:profiles(username, avatar_url)
-        )
-      `)
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      toast({
-        title: "Erro ao carregar posts",
-        description: error.message,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Fetch likes for current user
-    const { data: userLikes } = await supabase
-      .from("post_likes")
-      .select("post_id")
-      .eq("user_id", session.user.id);
-
-    const postsWithLikes = postsData.map(post => ({
-      ...post,
-      user_has_liked: userLikes?.some(like => like.post_id === post.id) || false,
-    }));
-
-    setPosts(postsWithLikes);
-  };
-
-  const handleCreatePost = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      navigate("/login");
-      return;
-    }
-
-    const { data, error } = await supabase
-      .from("posts")
-      .insert({
-        user_id: session.user.id,
-        content: newPostContent,
-        images: selectedImages,
-        video_urls: selectedVideos,
-      })
-      .select()
-      .single();
-
-    if (error) {
-      toast({
-        title: "Erro ao criar post",
-        description: error.message,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    toast({
-      title: "Post criado com sucesso!",
-      variant: "default",
-    });
-
-    setNewPostContent("");
-    setSelectedImages([]);
-    setSelectedVideos([]);
-    fetchPosts();
   };
 
   const handleLike = async (postId: string) => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      navigate("/login");
-      return;
-    }
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-    const post = posts.find(p => p.id === postId);
-    if (!post) return;
+      if (!user) {
+        toast({
+          title: "Erro",
+          description: "Você precisa estar logado para curtir um post",
+          variant: "destructive",
+        });
+        return;
+      }
 
-    if (post.user_has_liked) {
-      await supabase
-        .from("post_likes")
-        .delete()
-        .match({ user_id: session.user.id, post_id: postId });
+      const post = posts.find((p) => p.id === postId);
+      if (!post) return;
 
-      setPosts(posts.map(p => 
-        p.id === postId 
-          ? { ...p, likes: p.likes - 1, user_has_liked: false }
-          : p
-      ));
-    } else {
-      await supabase
-        .from("post_likes")
-        .insert({ user_id: session.user.id, post_id: postId });
+      if (post.user_has_liked) {
+        await supabase
+          .from("post_likes")
+          .delete()
+          .eq("post_id", postId)
+          .eq("user_id", user.id);
+      } else {
+        await supabase
+          .from("post_likes")
+          .insert({ post_id: postId, user_id: user.id });
+      }
 
-      setPosts(posts.map(p => 
-        p.id === postId 
-          ? { ...p, likes: p.likes + 1, user_has_liked: true }
-          : p
-      ));
+      fetchPosts();
+    } catch (error) {
+      console.error("Error liking post:", error);
     }
   };
 
   const handleComment = async (postId: string) => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      navigate("/login");
-      return;
-    }
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-    const commentContent = comments[postId];
-    if (!commentContent?.trim()) return;
+      if (!user) {
+        toast({
+          title: "Erro",
+          description: "Você precisa estar logado para comentar",
+          variant: "destructive",
+        });
+        return;
+      }
 
-    const { error } = await supabase
-      .from("post_comments")
-      .insert({
-        user_id: session.user.id,
+      const content = comments[postId];
+      if (!content?.trim()) return;
+
+      await supabase.from("post_comments").insert({
         post_id: postId,
-        content: commentContent,
+        user_id: user.id,
+        content,
       });
 
-    if (error) {
-      toast({
-        title: "Erro ao adicionar comentário",
-        description: error.message,
-        variant: "destructive",
-      });
-      return;
+      setComments({ ...comments, [postId]: "" });
+      fetchPosts();
+    } catch (error) {
+      console.error("Error commenting:", error);
     }
-
-    setComments({ ...comments, [postId]: "" });
-    fetchPosts();
   };
 
   const handleShare = async (postId: string) => {
     try {
       await navigator.share({
-        title: "Compartilhar post",
-        url: `${window.location.origin}/posts/${postId}`,
+        title: "Compartilhar Post",
+        url: `${window.location.origin}/post/${postId}`,
       });
     } catch (error) {
       console.error("Error sharing:", error);
+    }
+  };
+
+  const handleDelete = async (postId: string) => {
+    try {
+      const { error } = await supabase
+        .from("posts")
+        .delete()
+        .eq("id", postId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: "Post excluído com sucesso!",
+      });
+
+      fetchPosts();
+    } catch (error) {
+      console.error("Error deleting post:", error);
+      toast({
+        title: "Erro",
+        description: "Erro ao excluir o post",
+        variant: "destructive",
+      });
     }
   };
 
@@ -219,37 +203,6 @@ export default function Posts() {
     <div className="min-h-screen bg-background">
       <PostsMenu />
       <div className="text-foreground p-4 max-w-3xl mx-auto">
-        <Card className="mb-6">
-          <CardContent className="pt-6">
-            <Textarea
-              placeholder="O que você está pensando?"
-              value={newPostContent}
-              onChange={(e) => setNewPostContent(e.target.value)}
-              className="mb-4"
-            />
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setIsPhotoDialogOpen(true)}
-              >
-                Adicionar Foto
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => setIsVideoDialogOpen(true)}
-              >
-                Adicionar Vídeo
-              </Button>
-              <Button
-                onClick={handleCreatePost}
-                disabled={!newPostContent.trim() && !selectedImages.length && !selectedVideos.length}
-              >
-                Postar
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
         {posts.map((post) => (
           <Card key={post.id} className="mb-4">
             <CardHeader className="flex flex-row items-center gap-4">
@@ -258,12 +211,36 @@ export default function Posts() {
                 alt={post.user.username}
                 className="w-10 h-10 rounded-full"
               />
-              <div>
+              <div className="flex-1">
                 <h3 className="font-semibold">{post.user.username}</h3>
                 <p className="text-sm text-muted-foreground">
                   {new Date(post.created_at).toLocaleDateString()}
                 </p>
               </div>
+              {currentUserId === post.user_id && (
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      // Implement edit functionality
+                      toast({
+                        title: "Em breve",
+                        description: "Funcionalidade em desenvolvimento",
+                      });
+                    }}
+                  >
+                    <Edit className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDelete(post.id)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
             </CardHeader>
             <CardContent>
               <p className="mb-4 whitespace-pre-wrap">{post.content}</p>
@@ -339,24 +316,6 @@ export default function Posts() {
             </CardFooter>
           </Card>
         ))}
-
-        <PhotoUrlDialog
-          isOpen={isPhotoDialogOpen}
-          onClose={() => setIsPhotoDialogOpen(false)}
-          onConfirm={(url) => {
-            setSelectedImages([...selectedImages, url]);
-          }}
-          title="Adicionar foto do Dropbox"
-        />
-
-        <PhotoUrlDialog
-          isOpen={isVideoDialogOpen}
-          onClose={() => setIsVideoDialogOpen(false)}
-          onConfirm={(url) => {
-            setSelectedVideos([...selectedVideos, url]);
-          }}
-          title="Adicionar vídeo do Dropbox"
-        />
       </div>
     </div>
   );
