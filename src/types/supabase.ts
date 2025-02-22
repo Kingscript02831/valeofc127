@@ -7,40 +7,22 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
+export interface InstagramMedia {
+  url: string;
+  type: 'post' | 'video';
+}
+
 export interface Database {
   public: {
     Tables: {
-      news: {
+      posts: {
         Row: {
           id: string;
-          title: string;
+          user_id: string;
           content: string;
-          date: string;
-          category_id: string | null;
-          images: string[] | null;
-          video_urls: string[] | null;
-          button_color: string | null;
+          images: string[];
+          video_urls: string[];
           created_at: string;
-          user_id: string | null;
-        }
-        Insert: {
-          id?: string;
-          title: string;
-          content: string;
-          date?: string;
-          category_id?: string | null;
-          images?: string[] | null;
-          video_urls?: string[] | null;
-          button_color?: string | null;
-          created_at?: string;
-          user_id?: string | null;
-        }
-      }
-      categories: {
-        Row: {
-          id: string;
-          name: string;
-          background_color?: string;
         }
       }
     }

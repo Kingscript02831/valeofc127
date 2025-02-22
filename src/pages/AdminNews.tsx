@@ -7,10 +7,28 @@ import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { Search, Plus, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import type { Database } from "@/types/supabase";
 
-type News = Database['public']['Tables']['news']['Row'];
-type Category = Database['public']['Tables']['categories']['Row'];
+interface Category {
+  id: string;
+  name: string;
+}
+
+interface InstagramMedia {
+  url: string;
+  type: "post" | "video";
+}
+
+interface News {
+  id: string;
+  title: string;
+  content: string;
+  date: string;
+  category_id: string | null;
+  images: string[] | null;
+  video_urls: string[] | null;
+  button_color: string | null;
+  instagram_media: InstagramMedia[] | null;
+}
 
 const AdminNews = () => {
   const [news, setNews] = useState<News[]>([]);
@@ -24,6 +42,7 @@ const AdminNews = () => {
     images: [],
     video_urls: [],
     button_color: "#9b87f5",
+    instagram_media: [],
   });
 
   const [newImageUrl, setNewImageUrl] = useState("");
@@ -93,14 +112,19 @@ const AdminNews = () => {
         }
       }
 
-      const { error } = await supabase.from("news").insert([
+      console.log('Submitting news:', newNews);
+
+      const { data, error } = await supabase.from("news").insert([
         {
           ...newNews,
           date: new Date().toISOString(),
         },
       ]);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
 
       toast.success("Notícia adicionada com sucesso!");
       setNewNews({
@@ -110,6 +134,7 @@ const AdminNews = () => {
         images: [],
         video_urls: [],
         button_color: "#9b87f5",
+        instagram_media: [],
       });
       fetchNews();
     } catch (error) {
@@ -125,6 +150,7 @@ const AdminNews = () => {
         return;
       }
 
+      // Get current user
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
@@ -134,10 +160,7 @@ const AdminNews = () => {
 
       const { error } = await supabase
         .from("news")
-        .update({
-          ...editingNews,
-          user_id: user.id,
-        })
+        .update({ ...editingNews, user_id: user.id })
         .eq("id", editingNews.id);
 
       if (error) throw error;
@@ -163,6 +186,186 @@ const AdminNews = () => {
       console.error("Error deleting news:", error);
       toast.error("Erro ao excluir notícia");
     }
+  };
+
+  const renderInstagramMediaFields = (item: Partial<News>) => {
+    const media = (item.instagram_media as InstagramMedia[]) || [];
+    
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <Label>Mídia do Instagram</Label>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              const newMedia = [...media, { url: "", type: "post" as const }];
+              if (editingNews) {
+                setEditingNews({ ...editingNews, instagram_media: newMedia });
+              } else {
+                setNewNews({ ...newNews, instagram_media: newMedia });
+              }
+            }}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Adicionar Mídia
+          </Button>
+        </div>
+        {media.map((m, index) => (
+          <div key={index} className="flex gap-4 items-start">
+            <div className="flex-1">
+              <Input
+                value={m.url}
+                onChange={(e) => {
+                  const newMedia = [...media];
+                  newMedia[index] = { ...newMedia[index], url: e.target.value };
+                  if (editingNews) {
+                    setEditingNews({ ...editingNews, instagram_media: newMedia });
+                  } else {
+                    setNewNews({ ...newNews, instagram_media: newMedia });
+                  }
+                }}
+                placeholder="URL da mídia do Instagram"
+              />
+            </div>
+            <select
+              className="border border-gray-300 rounded-md p-2"
+              value={m.type}
+              onChange={(e) => {
+                const newMedia = [...media];
+                newMedia[index] = {
+                  ...newMedia[index],
+                  type: e.target.value as "post" | "video",
+                };
+                if (editingNews) {
+                  setEditingNews({ ...editingNews, instagram_media: newMedia });
+                } else {
+                  setNewNews({ ...newNews, instagram_media: newMedia });
+                }
+              }}
+            >
+              <option value="post">Post</option>
+              <option value="video">Vídeo</option>
+            </select>
+            <Button
+              type="button"
+              variant="destructive"
+              size="icon"
+              onClick={() => {
+                const newMedia = media.filter((_, i) => i !== index);
+                if (editingNews) {
+                  setEditingNews({ ...editingNews, instagram_media: newMedia });
+                } else {
+                  setNewNews({ ...newNews, instagram_media: newMedia });
+                }
+              }}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const handleAddImage = () => {
+    if (!newImageUrl) {
+      toast.error("Por favor, insira uma URL de imagem válida");
+      return;
+    }
+
+    // Check if it's a valid Dropbox URL
+    if (!newImageUrl.includes('dropbox.com')) {
+      toast.error("Por favor, insira uma URL válida do Dropbox");
+      return;
+    }
+
+    // Convert Dropbox URL to direct link if needed
+    let directImageUrl = newImageUrl;
+    if (newImageUrl.includes('www.dropbox.com')) {
+      directImageUrl = newImageUrl.replace('www.dropbox.com', 'dl.dropboxusercontent.com');
+    }
+
+    if (editingNews) {
+      setEditingNews({
+        ...editingNews,
+        images: [...(editingNews.images || []), directImageUrl]
+      });
+    } else {
+      setNewNews({
+        ...newNews,
+        images: [...(newNews.images || []), directImageUrl]
+      });
+    }
+    setNewImageUrl("");
+    toast.success("Imagem adicionada com sucesso!");
+  };
+
+  const handleRemoveImage = (imageUrl: string) => {
+    if (editingNews) {
+      setEditingNews({
+        ...editingNews,
+        images: editingNews.images?.filter(url => url !== imageUrl) || []
+      });
+    } else {
+      setNewNews({
+        ...newNews,
+        images: newNews.images?.filter(url => url !== imageUrl) || []
+      });
+    }
+    toast.success("Imagem removida com sucesso!");
+  };
+
+  const handleAddVideo = () => {
+    if (!newVideoUrl) {
+      toast.error("Por favor, insira uma URL de vídeo válida");
+      return;
+    }
+
+    // Check if it's a valid Dropbox or YouTube URL
+    const isDropboxUrl = newVideoUrl.includes('dropbox.com');
+    const isYoutubeUrl = newVideoUrl.includes('youtube.com') || newVideoUrl.includes('youtu.be');
+
+    if (!isDropboxUrl && !isYoutubeUrl) {
+      toast.error("Por favor, insira uma URL válida do Dropbox ou YouTube");
+      return;
+    }
+
+    // Convert Dropbox URL to direct link if needed
+    let directVideoUrl = newVideoUrl;
+    if (isDropboxUrl && newVideoUrl.includes('www.dropbox.com')) {
+      directVideoUrl = newVideoUrl.replace('www.dropbox.com', 'dl.dropboxusercontent.com');
+    }
+
+    if (editingNews) {
+      setEditingNews({
+        ...editingNews,
+        video_urls: [...(editingNews.video_urls || []), directVideoUrl]
+      });
+    } else {
+      setNewNews({
+        ...newNews,
+        video_urls: [...(newNews.video_urls || []), directVideoUrl]
+      });
+    }
+    setNewVideoUrl("");
+    toast.success("Vídeo adicionado com sucesso!");
+  };
+
+  const handleRemoveVideo = (videoUrl: string) => {
+    if (editingNews) {
+      setEditingNews({
+        ...editingNews,
+        video_urls: editingNews.video_urls?.filter(url => url !== videoUrl) || []
+      });
+    } else {
+      setNewNews({
+        ...newNews,
+        video_urls: newNews.video_urls?.filter(url => url !== videoUrl) || []
+      });
+    }
+    toast.success("Vídeo removido com sucesso!");
   };
 
   const renderMediaFields = (item: Partial<News>) => {
@@ -278,6 +481,7 @@ const AdminNews = () => {
               </select>
             </div>
             {renderMediaFields(newNews)}
+            {renderInstagramMediaFields(newNews)}
             <Button onClick={handleNewsSubmit}>Adicionar Notícia</Button>
           </div>
         </div>
@@ -319,6 +523,7 @@ const AdminNews = () => {
               </select>
             </div>
             {renderMediaFields(editingNews)}
+            {renderInstagramMediaFields(editingNews)}
             <div className="flex gap-2">
               <Button onClick={handleNewsEdit}>Salvar Alterações</Button>
               <Button variant="outline" onClick={() => setEditingNews(null)}>Cancelar</Button>
@@ -399,6 +604,25 @@ const AdminNews = () => {
                         {video}
                       </p>
                     ))}
+                  </div>
+                )}
+                {item.button_color && (
+                  <p className="text-sm text-gray-500">
+                    Cor do botão: <span style={{ color: item.button_color }}>{item.button_color}</span>
+                  </p>
+                )}
+                {Array.isArray(item.instagram_media) && item.instagram_media.length > 0 && (
+                  <div className="mt-2">
+                    <p className="text-sm font-medium text-gray-500">Mídia do Instagram:</p>
+                    {item.instagram_media.map((media, index) => {
+                      const instaMedia = media as InstagramMedia;
+                      if (!instaMedia?.url || !instaMedia?.type) return null;
+                      return (
+                        <p key={index} className="text-sm text-gray-500">
+                          {instaMedia.type === 'post' ? 'Post' : 'Vídeo'}: {instaMedia.url}
+                        </p>
+                      );
+                    })}
                   </div>
                 )}
               </div>
