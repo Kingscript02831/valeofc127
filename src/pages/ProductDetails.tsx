@@ -1,3 +1,4 @@
+
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Share2, Heart, User2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,7 +7,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "../integrations/supabase/client";
 import type { Product } from "../types/products";
 import { useQuery } from "@tanstack/react-query";
-import MediaCarousel from "@/components/MediaCarousel";
+import { MediaCarousel } from "../components/MediaCarousel";
 import { Badge } from "@/components/ui/badge";
 import { formatDistance } from "date-fns";
 import { ptBR } from "date-fns/locale";

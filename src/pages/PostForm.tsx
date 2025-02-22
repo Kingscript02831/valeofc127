@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { Plus, Trash2 } from "lucide-react";
-import MediaCarousel from "@/components/MediaCarousel";
+import { MediaCarousel } from "@/components/MediaCarousel";
 import Navbar from "@/components/Navbar";
 import BottomNav from "@/components/BottomNav";
 import { Label } from "@/components/ui/label";
