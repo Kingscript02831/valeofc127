@@ -1,9 +1,6 @@
 
 import React from "react";
-import { Link } from "react-router-dom";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
-import { Button } from "./ui/button";
-import { Plus } from "lucide-react";
 
 const PostsMenu = () => {
   const { data: config } = useSiteConfig();
@@ -20,20 +17,6 @@ const PostsMenu = () => {
         <h1 className="text-xl font-semibold" style={{ color: config?.text_color }}>
           Posts
         </h1>
-        <Link to="/posts/new">
-          <Button 
-            variant="outline"
-            size="sm"
-            className="flex items-center gap-2"
-            style={{
-              borderColor: config?.text_color,
-              color: config?.text_color
-            }}
-          >
-            <Plus className="h-4 w-4" />
-            Novo Post
-          </Button>
-        </Link>
       </div>
     </nav>
   );

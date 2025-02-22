@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
-import { ThumbsUp, Share2, MessageCircle, Trash2, Edit } from "lucide-react";
+import { ThumbsUp, Share2, MessageCircle } from "lucide-react";
 import { MediaCarousel } from "@/components/MediaCarousel";
 import PostsMenu from "@/components/PostsMenu";
+import Navbar from "@/components/Navbar";
+import BottomNav from "@/components/BottomNav";
 
 interface Post {
   id: string;
@@ -40,16 +42,7 @@ interface Comment {
 export default function Posts() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [comments, setComments] = useState<{ [key: string]: string }>({});
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const { toast } = useToast();
-
-  useEffect(() => {
-    const fetchCurrentUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setCurrentUserId(user?.id || null);
-    };
-    fetchCurrentUser();
-  }, []);
 
   useEffect(() => {
     fetchPosts();
@@ -77,7 +70,6 @@ export default function Posts() {
 
       if (!posts) return;
 
-      // Fetch likes for current user
       if (user) {
         const { data: likes } = await supabase
           .from("post_likes")
@@ -174,149 +166,126 @@ export default function Posts() {
     }
   };
 
-  const handleDelete = async (postId: string) => {
-    try {
-      const { error } = await supabase
-        .from("posts")
-        .delete()
-        .eq("id", postId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Sucesso",
-        description: "Post excluído com sucesso!",
-      });
-
-      fetchPosts();
-    } catch (error) {
-      console.error("Error deleting post:", error);
-      toast({
-        title: "Erro",
-        description: "Erro ao excluir o post",
-        variant: "destructive",
-      });
-    }
-  };
-
   return (
     <div className="min-h-screen bg-background">
+      <Navbar />
       <PostsMenu />
-      <div className="text-foreground p-4 max-w-3xl mx-auto">
-        {posts.map((post) => (
-          <Card key={post.id} className="mb-4">
-            <CardHeader className="flex flex-row items-center gap-4">
-              <img
-                src={post.user.avatar_url || "/placeholder.svg"}
-                alt={post.user.username}
-                className="w-10 h-10 rounded-full"
-              />
-              <div className="flex-1">
-                <h3 className="font-semibold">{post.user.username}</h3>
-                <p className="text-sm text-muted-foreground">
-                  {new Date(post.created_at).toLocaleDateString()}
-                </p>
-              </div>
-              {currentUserId === post.user_id && (
-                <div className="flex gap-2">
+      <div className="container mx-auto p-4 pt-20 pb-24">
+        <div className="max-w-xl mx-auto space-y-4">
+          {posts.map((post) => (
+            <Card key={post.id} className="shadow-md">
+              <CardHeader className="flex flex-row items-center gap-4 pb-3">
+                <img
+                  src={post.user.avatar_url || "/placeholder.svg"}
+                  alt={post.user.username}
+                  className="w-10 h-10 rounded-full object-cover"
+                />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-sm">{post.user.username}</h3>
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(post.created_at).toLocaleDateString('pt-BR', {
+                      day: '2-digit',
+                      month: 'long',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </p>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm mb-4 whitespace-pre-wrap">{post.content}</p>
+                {(post.images?.length > 0 || post.video_urls?.length > 0) && (
+                  <MediaCarousel
+                    images={post.images || []}
+                    videoUrls={post.video_urls || []}
+                    title={post.content}
+                  />
+                )}
+              </CardContent>
+              <CardFooter className="flex flex-col gap-4 pt-0">
+                <div className="flex items-center justify-between w-full border-t border-b py-1">
                   <Button
                     variant="ghost"
                     size="sm"
+                    className="flex-1 flex items-center justify-center gap-2"
+                    onClick={() => handleLike(post.id)}
+                  >
+                    <ThumbsUp
+                      className={`w-4 h-4 ${post.user_has_liked ? "fill-current text-blue-500" : ""}`}
+                    />
+                    <span className="text-sm">Curtir</span>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="flex-1 flex items-center justify-center gap-2"
                     onClick={() => {
-                      // Implement edit functionality
-                      toast({
-                        title: "Em breve",
-                        description: "Funcionalidade em desenvolvimento",
-                      });
+                      const commentInput = document.getElementById(`comment-${post.id}`);
+                      if (commentInput) commentInput.focus();
                     }}
                   >
-                    <Edit className="w-4 h-4" />
+                    <MessageCircle className="w-4 h-4" />
+                    <span className="text-sm">Comentar</span>
                   </Button>
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleDelete(post.id)}
+                    className="flex-1 flex items-center justify-center gap-2"
+                    onClick={() => handleShare(post.id)}
                   >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              )}
-            </CardHeader>
-            <CardContent>
-              <p className="mb-4 whitespace-pre-wrap">{post.content}</p>
-              {(post.images?.length > 0 || post.video_urls?.length > 0) && (
-                <MediaCarousel
-                  images={post.images || []}
-                  videoUrls={post.video_urls || []}
-                  title={post.content}
-                />
-              )}
-            </CardContent>
-            <CardFooter className="flex flex-col gap-4">
-              <div className="flex items-center gap-6 w-full">
-                <Button
-                  variant="ghost"
-                  className="flex items-center gap-2"
-                  onClick={() => handleLike(post.id)}
-                >
-                  <ThumbsUp
-                    className={post.user_has_liked ? "fill-current" : ""}
-                  />
-                  {post.likes}
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="flex items-center gap-2"
-                  onClick={() => handleShare(post.id)}
-                >
-                  <Share2 />
-                  Compartilhar
-                </Button>
-              </div>
-
-              <div className="w-full">
-                <div className="flex gap-2 mb-4">
-                  <Input
-                    placeholder="Escreva um comentário..."
-                    value={comments[post.id] || ""}
-                    onChange={(e) => setComments({
-                      ...comments,
-                      [post.id]: e.target.value
-                    })}
-                  />
-                  <Button
-                    onClick={() => handleComment(post.id)}
-                    disabled={!comments[post.id]?.trim()}
-                  >
-                    <MessageCircle className="w-4 h-4" />
+                    <Share2 className="w-4 h-4" />
+                    <span className="text-sm">Compartilhar</span>
                   </Button>
                 </div>
 
-                <div className="space-y-2">
-                  {post.comments?.map((comment) => (
-                    <div
-                      key={comment.id}
-                      className="flex items-start gap-2 p-2 rounded-lg bg-muted"
+                <div className="w-full space-y-4">
+                  <div className="flex gap-2">
+                    <Input
+                      id={`comment-${post.id}`}
+                      placeholder="Escreva um comentário..."
+                      value={comments[post.id] || ""}
+                      onChange={(e) => setComments({
+                        ...comments,
+                        [post.id]: e.target.value
+                      })}
+                      className="text-sm"
+                    />
+                    <Button
+                      size="sm"
+                      onClick={() => handleComment(post.id)}
+                      disabled={!comments[post.id]?.trim()}
                     >
-                      <img
-                        src={comment.user.avatar_url || "/placeholder.svg"}
-                        alt={comment.user.username}
-                        className="w-8 h-8 rounded-full"
-                      />
-                      <div>
-                        <p className="font-semibold text-sm">
-                          {comment.user.username}
-                        </p>
-                        <p className="text-sm">{comment.content}</p>
+                      <MessageCircle className="w-4 h-4" />
+                    </Button>
+                  </div>
+
+                  <div className="space-y-2">
+                    {post.comments?.map((comment) => (
+                      <div
+                        key={comment.id}
+                        className="flex items-start gap-2 p-2 rounded-lg bg-muted"
+                      >
+                        <img
+                          src={comment.user.avatar_url || "/placeholder.svg"}
+                          alt={comment.user.username}
+                          className="w-8 h-8 rounded-full object-cover"
+                        />
+                        <div>
+                          <p className="font-semibold text-sm">
+                            {comment.user.username}
+                          </p>
+                          <p className="text-sm">{comment.content}</p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            </CardFooter>
-          </Card>
-        ))}
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
       </div>
+      <BottomNav />
     </div>
   );
 }
