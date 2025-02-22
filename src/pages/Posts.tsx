@@ -1,14 +1,15 @@
-
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { ThumbsUp, Share2, MessageCircle } from "lucide-react";
+import { ThumbsUp, Share2, MessageCircle, Heart, Laugh, Frown, Angry } from "lucide-react";
 import { MediaCarousel } from "@/components/MediaCarousel";
 import PostsMenu from "@/components/PostsMenu";
 import Navbar from "@/components/Navbar";
 import BottomNav from "@/components/BottomNav";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { useQuery } from "@tanstack/react-query";
+import ReactionMenu from "@/components/ReactionMenu";
 
 interface Post {
   id: string;
@@ -17,66 +18,88 @@ interface Post {
   images: string[];
   video_urls: string[];
   likes: number;
+  reaction_type?: string;
   created_at: string;
   user_has_liked?: boolean;
+  comment_count?: number;
   user: {
     username: string;
+    full_name: string;
     avatar_url: string;
   };
 }
 
 export default function Posts() {
-  const [posts, setPosts] = useState<Post[]>([]);
   const { toast } = useToast();
+  const [activeReactionMenu, setActiveReactionMenu] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchPosts();
-  }, []);
-
-  const fetchPosts = async () => {
-    try {
+  const { data: posts = [], refetch: refetchPosts } = useQuery({
+    queryKey: ["posts"],
+    queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
 
       let { data: posts, error } = await supabase
         .from("posts")
         .select(`
           *,
-          user:profiles(username, avatar_url)
+          user:profiles(username, full_name, avatar_url)
         `)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
 
-      if (!posts) return;
+      if (!posts) return [];
 
       if (user) {
         const { data: likes } = await supabase
           .from("post_likes")
-          .select("post_id")
+          .select("post_id, reaction_type")
           .eq("user_id", user.id);
 
-        posts = posts.map(post => ({
-          ...post,
-          user_has_liked: likes?.some(like => like.post_id === post.id) || false
+        posts = await Promise.all(posts.map(async (post) => {
+          const { count } = await supabase
+            .from("post_comments")
+            .select("*", { count: 'exact', head: true })
+            .eq("post_id", post.id);
+
+          const userLike = likes?.find(like => like.post_id === post.id);
+          
+          return {
+            ...post,
+            comment_count: count || 0,
+            user_has_liked: !!userLike,
+            reaction_type: userLike?.reaction_type || null
+          };
         }));
       }
 
-      setPosts(posts as Post[]);
-    } catch (error) {
-      console.error("Error fetching posts:", error);
+      return posts as Post[];
+    }
+  });
+
+  const getReactionIcon = (type: string) => {
+    switch (type) {
+      case 'love':
+        return '❤️';
+      case 'haha':
+        return '😂';
+      case 'sad':
+        return '😞';
+      case 'angry':
+        return '🤬';
+      default:
+        return '👍';
     }
   };
 
-  const handleLike = async (postId: string) => {
+  const handleReaction = async (postId: string, reactionType: string) => {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
 
       if (!user) {
         toast({
           title: "Erro",
-          description: "Você precisa estar logado para curtir um post",
+          description: "Você precisa estar logado para reagir a um post",
           variant: "destructive",
         });
         return;
@@ -85,21 +108,48 @@ export default function Posts() {
       const post = posts.find((p) => p.id === postId);
       if (!post) return;
 
-      if (post.user_has_liked) {
-        await supabase
+      if (post.user_has_liked && post.reaction_type === reactionType) {
+        const { error } = await supabase
           .from("post_likes")
           .delete()
           .eq("post_id", postId)
           .eq("user_id", user.id);
-      } else {
+
+        if (error) throw error;
+
         await supabase
+          .from("posts")
+          .update({ likes: (post.likes || 1) - 1 })
+          .eq("id", postId);
+      } else {
+        const { error } = await supabase
           .from("post_likes")
-          .insert({ post_id: postId, user_id: user.id });
+          .upsert({ 
+            post_id: postId, 
+            user_id: user.id,
+            reaction_type: reactionType
+          });
+
+        if (error) throw error;
+
+        if (!post.user_has_liked) {
+          await supabase
+            .from("posts")
+            .update({ likes: (post.likes || 0) + 1 })
+            .eq("id", postId);
+        }
       }
 
-      fetchPosts();
+      refetchPosts();
     } catch (error) {
-      console.error("Error liking post:", error);
+      console.error("Error reacting to post:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível processar sua reação",
+        variant: "destructive",
+      });
+    } finally {
+      setActiveReactionMenu(null);
     }
   };
 
@@ -127,12 +177,12 @@ export default function Posts() {
                   <Avatar>
                     <AvatarImage src={post.user.avatar_url || "/placeholder.svg"} />
                     <AvatarFallback>
-                      {post.user.username?.charAt(0).toUpperCase()}
+                      {post.user.full_name?.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <div>
                     <div className="flex items-center gap-1">
-                      <span className="font-semibold">{post.user.username}</span>
+                      <span className="font-semibold">{post.user.full_name}</span>
                       <span className="text-muted-foreground">@{post.user.username}</span>
                     </div>
                     <p className="text-xs text-muted-foreground">
@@ -159,24 +209,36 @@ export default function Posts() {
                 )}
 
                 <div className="flex items-center justify-between px-4 py-2 border-t">
-                  <button
-                    className="flex items-center gap-2"
-                    onClick={() => handleLike(post.id)}
-                  >
-                    <ThumbsUp
-                      className={`w-5 h-5 ${
-                        post.user_has_liked ? "text-blue-500 fill-current" : "text-gray-500"
-                      }`}
+                  <div className="relative">
+                    <button
+                      className="flex items-center gap-2 transition-colors duration-200"
+                      onClick={() => setActiveReactionMenu(activeReactionMenu === post.id ? null : post.id)}
+                      onMouseEnter={() => setActiveReactionMenu(post.id)}
+                      onMouseLeave={() => setActiveReactionMenu(null)}
+                    >
+                      <span className="text-xl">
+                        {post.user_has_liked ? (
+                          getReactionIcon(post.reaction_type || 'like')
+                        ) : (
+                          '👍'
+                        )}
+                      </span>
+                      <span className="text-sm text-gray-500">{post.likes || 0}</span>
+                    </button>
+                    
+                    <ReactionMenu 
+                      isOpen={activeReactionMenu === post.id}
+                      onSelect={(type) => handleReaction(post.id, type)}
                     />
-                    <span className="text-sm text-gray-500">{post.likes || 0}</span>
-                  </button>
+                  </div>
 
-                  <button className="flex items-center">
+                  <button className="flex items-center gap-2">
                     <MessageCircle className="w-5 h-5 text-gray-500" />
+                    <span className="text-sm text-gray-500">{post.comment_count || 0}</span>
                   </button>
 
                   <button
-                    className="flex items-center"
+                    className="flex items-center transition-colors duration-200"
                     onClick={() => handleShare(post.id)}
                   >
                     <Share2 className="w-5 h-5 text-gray-500" />
