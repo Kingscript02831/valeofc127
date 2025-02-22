@@ -6,6 +6,12 @@ import { supabase } from "../integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 
 const BottomNav = () => {
   const location = useLocation();
@@ -46,7 +52,7 @@ const BottomNav = () => {
 
   const handleNavigation = (path: string, e: React.MouseEvent) => {
     e.preventDefault();
-    if (!session && (path === "/notify" || path === "/products/new")) {
+    if (!session) {
       toast.error("Você precisa fazer login para acessar esta área");
       navigate("/login");
       return;
@@ -83,23 +89,47 @@ const BottomNav = () => {
             <Home className="h-6 w-6" strokeWidth={2} />
           </Link>
 
-          <button
-            onClick={(e) => handleNavigation("/products/new", e)}
-            className="flex items-center p-2 rounded-xl transition-all duration-300 hover:scale-105"
-            style={{
-              color: config?.bottom_nav_icon_color,
-              background: `${config?.primary_color}15`,
-              opacity: session ? 1 : 0.5, // Reduz a opacidade quando não está logado
-            }}
-          >
-            <Plus 
-              className="h-6 w-6" 
-              strokeWidth={2.5}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className="flex items-center p-2 rounded-xl transition-all duration-300 hover:scale-105"
+                style={{
+                  color: config?.bottom_nav_icon_color,
+                  background: `${config?.primary_color}15`,
+                  opacity: session ? 1 : 0.5,
+                }}
+              >
+                <Plus 
+                  className="h-6 w-6" 
+                  strokeWidth={2.5}
+                  style={{
+                    filter: `drop-shadow(0 2px 4px ${config?.primary_color}40)`
+                  }}
+                />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              side="top"
+              className="mb-2"
               style={{
-                filter: `drop-shadow(0 2px 4px ${config?.primary_color}40)`
+                background: config?.bottom_nav_primary_color,
+                borderColor: `${config?.bottom_nav_primary_color}40`,
               }}
-            />
-          </button>
+            >
+              <DropdownMenuItem
+                className="cursor-pointer"
+                onClick={(e) => handleNavigation("/products/new", e)}
+              >
+                Adicionar Produto
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="cursor-pointer"
+                onClick={(e) => handleNavigation("/posts", e)}
+              >
+                Criar Post
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           <button
             onClick={(e) => handleNavigation("/notify", e)}
