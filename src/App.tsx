@@ -31,6 +31,7 @@ import UserProducts from "./pages/UserProducts";
 import NewsDetails from "./pages/NewsDetails";
 import Posts from "./pages/Posts";
 import PostForm from "./pages/PostForm";
+import PostDetails from "./pages/PostDetails";
 
 const queryClient = new QueryClient();
 
@@ -59,6 +60,7 @@ const App: React.FC = () => {
                   <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/update-password" element={<UpdatePassword />} />
                   <Route path="/posts" element={<Posts />} />
+                  <Route path="/posts/:id" element={<PostDetails />} />
                   <Route path="/posts/new" element={<PostForm />} />
                   <Route path="/admin" element={<Admin />}>    
                     <Route path="lugares" element={<AdminPlaces />} />
