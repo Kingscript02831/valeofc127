@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,7 +7,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { Plus, Trash2 } from "lucide-react";
-import PhotoUrlDialog from "@/components/PhotoUrlDialog";
 import { MediaCarousel } from "@/components/MediaCarousel";
 import Navbar from "@/components/Navbar";
 import BottomNav from "@/components/BottomNav";
@@ -23,8 +23,6 @@ interface UserPost {
 
 const PostForm = () => {
   const [newPostContent, setNewPostContent] = useState("");
-  const [isPhotoDialogOpen, setIsPhotoDialogOpen] = useState(false);
-  const [isVideoDialogOpen, setIsVideoDialogOpen] = useState(false);
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [selectedVideos, setSelectedVideos] = useState<string[]>([]);
   const [userPosts, setUserPosts] = useState<UserPost[]>([]);
@@ -33,8 +31,6 @@ const PostForm = () => {
   const navigate = useNavigate();
   const [newImageUrl, setNewImageUrl] = useState("");
   const [newVideoUrl, setNewVideoUrl] = useState("");
-  const [imageUrls, setImageUrls] = useState<string[]>([]);
-  const [videoUrls, setVideoUrls] = useState<string[]>([]);
 
   useEffect(() => {
     fetchUserPosts();
@@ -155,12 +151,20 @@ const PostForm = () => {
 
   const handleAddImage = () => {
     if (!newImageUrl) {
-      toast.error("Por favor, insira uma URL de imagem válida");
+      toast({
+        title: "Erro",
+        description: "Por favor, insira uma URL de imagem válida",
+        variant: "destructive"
+      });
       return;
     }
 
     if (!newImageUrl.includes('dropbox.com')) {
-      toast.error("Por favor, insira uma URL válida do Dropbox");
+      toast({
+        title: "Erro",
+        description: "Por favor, insira uma URL válida do Dropbox",
+        variant: "destructive"
+      });
       return;
     }
 
@@ -169,18 +173,29 @@ const PostForm = () => {
       directImageUrl = newImageUrl.replace('www.dropbox.com', 'dl.dropboxusercontent.com');
     }
 
-    if (!imageUrls.includes(directImageUrl)) {
-      setImageUrls([...imageUrls, directImageUrl]);
+    if (!selectedImages.includes(directImageUrl)) {
+      setSelectedImages([...selectedImages, directImageUrl]);
       setNewImageUrl("");
-      toast.success("Imagem adicionada com sucesso!");
+      toast({
+        title: "Sucesso",
+        description: "Imagem adicionada com sucesso!"
+      });
     } else {
-      toast.error("Esta imagem já foi adicionada");
+      toast({
+        title: "Erro",
+        description: "Esta imagem já foi adicionada",
+        variant: "destructive"
+      });
     }
   };
 
   const handleAddVideo = () => {
     if (!newVideoUrl) {
-      toast.error("Por favor, insira uma URL de vídeo válida");
+      toast({
+        title: "Erro",
+        description: "Por favor, insira uma URL de vídeo válida",
+        variant: "destructive"
+      });
       return;
     }
 
@@ -188,7 +203,11 @@ const PostForm = () => {
     const isYoutubeUrl = newVideoUrl.includes('youtube.com') || newVideoUrl.includes('youtu.be');
 
     if (!isDropboxUrl && !isYoutubeUrl) {
-      toast.error("Por favor, insira uma URL válida do Dropbox ou YouTube");
+      toast({
+        title: "Erro",
+        description: "Por favor, insira uma URL válida do Dropbox ou YouTube",
+        variant: "destructive"
+      });
       return;
     }
 
@@ -197,13 +216,28 @@ const PostForm = () => {
       directVideoUrl = newVideoUrl.replace('www.dropbox.com', 'dl.dropboxusercontent.com');
     }
 
-    if (!videoUrls.includes(directVideoUrl)) {
-      setVideoUrls([...videoUrls, directVideoUrl]);
+    if (!selectedVideos.includes(directVideoUrl)) {
+      setSelectedVideos([...selectedVideos, directVideoUrl]);
       setNewVideoUrl("");
-      toast.success("Vídeo adicionado com sucesso!");
+      toast({
+        title: "Sucesso",
+        description: "Vídeo adicionado com sucesso!"
+      });
     } else {
-      toast.error("Este vídeo já foi adicionada");
+      toast({
+        title: "Erro",
+        description: "Este vídeo já foi adicionado",
+        variant: "destructive"
+      });
     }
+  };
+
+  const handleRemoveImage = (index: number) => {
+    setSelectedImages(selectedImages.filter((_, i) => i !== index));
+  };
+
+  const handleRemoveVideo = (index: number) => {
+    setSelectedVideos(selectedVideos.filter((_, i) => i !== index));
   };
 
   return (
@@ -246,6 +280,19 @@ const PostForm = () => {
                       Adicionar
                     </Button>
                   </div>
+                  {selectedImages.map((url, index) => (
+                    <div key={index} className="flex items-center gap-2 mt-2">
+                      <Input value={url} readOnly />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        onClick={() => handleRemoveImage(index)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
                 </div>
                 
                 <div>
@@ -261,38 +308,42 @@ const PostForm = () => {
                       Adicionar
                     </Button>
                   </div>
+                  {selectedVideos.map((url, index) => (
+                    <div key={index} className="flex items-center gap-2 mt-2">
+                      <Input value={url} readOnly />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        onClick={() => handleRemoveVideo(index)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
                 </div>
               </div>
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setIsPhotoDialogOpen(true)}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Foto
-                </Button>
-                <Button variant="outline" onClick={() => setIsVideoDialogOpen(true)}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Vídeo
-                </Button>
+              <Button
+                className="w-full mt-4"
+                onClick={handleCreatePost}
+                disabled={!newPostContent.trim() && !selectedImages.length && !selectedVideos.length}
+              >
+                {editingPost ? "Salvar alterações" : "Publicar"}
+              </Button>
+              {editingPost && (
                 <Button
-                  className="flex-1"
-                  onClick={handleCreatePost}
-                  disabled={!newPostContent.trim() && !selectedImages.length && !selectedVideos.length}
+                  variant="ghost"
+                  className="w-full mt-2"
+                  onClick={() => {
+                    setEditingPost(null);
+                    setNewPostContent("");
+                    setSelectedImages([]);
+                    setSelectedVideos([]);
+                  }}
                 >
-                  {editingPost ? "Salvar alterações" : "Publicar"}
+                  Cancelar
                 </Button>
-                {editingPost && (
-                  <Button
-                    variant="ghost"
-                    onClick={() => {
-                      setEditingPost(null);
-                      setNewPostContent("");
-                      setSelectedImages([]);
-                      setSelectedVideos([]);
-                    }}
-                  >
-                    Cancelar
-                  </Button>
-                )}
-              </div>
+              )}
             </CardContent>
           </Card>
 
@@ -332,24 +383,6 @@ const PostForm = () => {
             ))}
           </div>
         </div>
-
-        <PhotoUrlDialog
-          isOpen={isPhotoDialogOpen}
-          onClose={() => setIsPhotoDialogOpen(false)}
-          onConfirm={(url) => {
-            setSelectedImages([...selectedImages, url]);
-          }}
-          title="Adicionar foto do Dropbox"
-        />
-
-        <PhotoUrlDialog
-          isOpen={isVideoDialogOpen}
-          onClose={() => setIsVideoDialogOpen(false)}
-          onConfirm={(url) => {
-            setSelectedVideos([...selectedVideos, url]);
-          }}
-          title="Adicionar vídeo do Dropbox"
-        />
       </div>
       <BottomNav />
     </div>
