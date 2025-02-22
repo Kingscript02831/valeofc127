@@ -1,66 +1,43 @@
 
-import { useState, useRef, TouchEvent } from "react";
+import { useState, useEffect } from "react";
 
 interface MediaCarouselProps {
   images: string[];
   videoUrls: string[];
   title: string;
+  autoplay?: boolean;
 }
 
-export const MediaCarousel = ({ images, videoUrls, title }: MediaCarouselProps) => {
+export const MediaCarousel = ({ images, videoUrls, title, autoplay = false }: MediaCarouselProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const touchStartX = useRef<number | null>(null);
-  const touchEndX = useRef<number | null>(null);
+  const allMedia = [...images.map(url => ({ type: "image" as const, url })), ...videoUrls.map(url => ({ type: "video" as const, url }))];
 
-  const allMedia = [
-    ...images.map(url => ({ type: "image" as const, url })),
-    ...videoUrls.map(url => ({ type: "video" as const, url }))
-  ];
+  useEffect(() => {
+    if (!autoplay || allMedia.length <= 1) return;
 
-  const handleTouchStart = (e: TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX;
-  };
+    const interval = setInterval(() => {
+      setCurrentIndex((current) => (current + 1) % allMedia.length);
+    }, 5000); // Change media every 5 seconds
 
-  const handleTouchMove = (e: TouchEvent) => {
-    touchEndX.current = e.touches[0].clientX;
-  };
-
-  const handleTouchEnd = () => {
-    if (!touchStartX.current || !touchEndX.current) return;
-
-    const diff = touchStartX.current - touchEndX.current;
-    const threshold = 50;
-
-    if (Math.abs(diff) > threshold) {
-      if (diff > 0 && currentIndex < allMedia.length - 1) {
-        setCurrentIndex(prev => prev + 1);
-      } else if (diff < 0 && currentIndex > 0) {
-        setCurrentIndex(prev => prev - 1);
-      }
-    }
-
-    touchStartX.current = null;
-    touchEndX.current = null;
-  };
+    return () => clearInterval(interval);
+  }, [autoplay, allMedia.length]);
 
   if (!allMedia.length) return null;
 
   const currentMedia = allMedia[currentIndex];
 
   return (
-    <div 
-      className="relative w-full h-full bg-gray-100 overflow-hidden"
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-    >
+    <div className="relative w-full h-full bg-gray-100 overflow-hidden">
       {currentMedia.type === 'video' ? (
         <div className="relative w-full aspect-video">
           <video
             src={currentMedia.url}
-            controls
+            autoPlay={autoplay}
+            loop
+            muted={autoplay}
             playsInline
             className="absolute inset-0 w-full h-full object-cover"
+            controlsList="nodownload nofullscreen noremoteplayback" // Remove three dots menu
           >
             Seu navegador não suporta a reprodução de vídeos.
           </video>
