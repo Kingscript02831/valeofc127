@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "../integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { ThumbsUp, Share2, MessageCircle } from "lucide-react";
@@ -9,6 +9,7 @@ import PostsMenu from "@/components/PostsMenu";
 import Navbar from "@/components/Navbar";
 import BottomNav from "@/components/BottomNav";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { useQuery } from "@tanstack/react-query";
 
 interface Post {
   id: string;
@@ -19,59 +20,63 @@ interface Post {
   likes: number;
   created_at: string;
   user_has_liked?: boolean;
+  comment_count?: number;
   user: {
     username: string;
+    full_name: string;
     avatar_url: string;
   };
 }
 
 export default function Posts() {
-  const [posts, setPosts] = useState<Post[]>([]);
   const { toast } = useToast();
 
-  useEffect(() => {
-    fetchPosts();
-  }, []);
-
-  const fetchPosts = async () => {
-    try {
+  const { data: posts = [], refetch: refetchPosts } = useQuery({
+    queryKey: ["posts"],
+    queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
 
       let { data: posts, error } = await supabase
         .from("posts")
         .select(`
           *,
-          user:profiles(username, avatar_url)
+          user:profiles(username, full_name, avatar_url)
         `)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
 
-      if (!posts) return;
+      if (!posts) return [];
 
+      // Fetch likes
       if (user) {
         const { data: likes } = await supabase
           .from("post_likes")
           .select("post_id")
           .eq("user_id", user.id);
 
-        posts = posts.map(post => ({
-          ...post,
-          user_has_liked: likes?.some(like => like.post_id === post.id) || false
+        posts = await Promise.all(posts.map(async (post) => {
+          // Get comment count
+          const { count } = await supabase
+            .from("post_comments")
+            .select("*", { count: 'exact', head: true })
+            .eq("post_id", post.id);
+
+          return {
+            ...post,
+            comment_count: count || 0,
+            user_has_liked: likes?.some(like => like.post_id === post.id) || false
+          };
         }));
       }
 
-      setPosts(posts as Post[]);
-    } catch (error) {
-      console.error("Error fetching posts:", error);
+      return posts as Post[];
     }
-  };
+  });
 
   const handleLike = async (postId: string) => {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
 
       if (!user) {
         toast({
@@ -86,20 +91,41 @@ export default function Posts() {
       if (!post) return;
 
       if (post.user_has_liked) {
-        await supabase
+        const { error } = await supabase
           .from("post_likes")
           .delete()
           .eq("post_id", postId)
           .eq("user_id", user.id);
-      } else {
+
+        if (error) throw error;
+
+        // Atualizar contagem de likes no post
         await supabase
+          .from("posts")
+          .update({ likes: (post.likes || 1) - 1 })
+          .eq("id", postId);
+      } else {
+        const { error } = await supabase
           .from("post_likes")
           .insert({ post_id: postId, user_id: user.id });
+
+        if (error) throw error;
+
+        // Atualizar contagem de likes no post
+        await supabase
+          .from("posts")
+          .update({ likes: (post.likes || 0) + 1 })
+          .eq("id", postId);
       }
 
-      fetchPosts();
+      refetchPosts();
     } catch (error) {
       console.error("Error liking post:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível processar sua curtida",
+        variant: "destructive",
+      });
     }
   };
 
@@ -127,12 +153,12 @@ export default function Posts() {
                   <Avatar>
                     <AvatarImage src={post.user.avatar_url || "/placeholder.svg"} />
                     <AvatarFallback>
-                      {post.user.username?.charAt(0).toUpperCase()}
+                      {post.user.full_name?.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <div>
                     <div className="flex items-center gap-1">
-                      <span className="font-semibold">{post.user.username}</span>
+                      <span className="font-semibold">{post.user.full_name}</span>
                       <span className="text-muted-foreground">@{post.user.username}</span>
                     </div>
                     <p className="text-xs text-muted-foreground">
@@ -154,32 +180,36 @@ export default function Posts() {
                       images={post.images || []}
                       videoUrls={post.video_urls || []}
                       title={post.content || ""}
+                      instagramMedia={[]}
                     />
                   </div>
                 )}
 
                 <div className="flex items-center justify-between px-4 py-2 border-t">
                   <button
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 transition-colors duration-200"
                     onClick={() => handleLike(post.id)}
                   >
                     <ThumbsUp
                       className={`w-5 h-5 ${
-                        post.user_has_liked ? "text-blue-500 fill-current" : "text-gray-500"
+                        post.user_has_liked 
+                          ? "text-blue-500 fill-blue-500" 
+                          : "text-gray-500 hover:text-blue-500"
                       }`}
                     />
                     <span className="text-sm text-gray-500">{post.likes || 0}</span>
                   </button>
 
-                  <button className="flex items-center">
-                    <MessageCircle className="w-5 h-5 text-gray-500" />
+                  <button className="flex items-center gap-2">
+                    <MessageCircle className="w-5 h-5 text-gray-500 hover:text-purple-500 transition-colors duration-200" />
+                    <span className="text-sm text-gray-500">{post.comment_count || 0}</span>
                   </button>
 
                   <button
-                    className="flex items-center"
+                    className="flex items-center transition-colors duration-200"
                     onClick={() => handleShare(post.id)}
                   >
-                    <Share2 className="w-5 h-5 text-gray-500" />
+                    <Share2 className="w-5 h-5 text-gray-500 hover:text-green-500" />
                   </button>
                 </div>
               </CardContent>
