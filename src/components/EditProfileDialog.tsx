@@ -28,17 +28,18 @@ const formSchema = z.object({
   status: z.string().optional(),
   location_id: z.string().optional(),
   relationship_status: z.enum(["single", "dating", "widowed"]).nullable(),
-  instagram_url: z.string()
-    .refine((val) => !val || val.startsWith('https://'), { 
-      message: "A URL deve começar com https://",
-      path: ["instagram_url"]
-    })
-    .refine((val) => !val || val.includes('instagram.com'), {
-      message: "A URL deve ser do Instagram",
-      path: ["instagram_url"]
-    })
-    .optional()
-    .or(z.literal(""))
+  instagram_url: z.union([
+    z.string()
+      .refine((val) => val.startsWith('https://'), {
+        message: "A URL deve começar com https://",
+      })
+      .refine((val) => val.includes('instagram.com'), {
+        message: "A URL deve ser do Instagram",
+      }),
+    z.literal(""),
+    z.null(),
+    z.undefined()
+  ])
 });
 
 interface EditProfileDialogProps {
