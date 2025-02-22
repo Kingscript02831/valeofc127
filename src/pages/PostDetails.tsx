@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { MessageCircle, Share2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import BottomNav from "@/components/BottomNav";
@@ -31,6 +31,8 @@ interface PostDetails {
     id: string;
     content: string;
     created_at: string;
+    likes: number;
+    has_liked: boolean;
     user: {
       id: string;
       username: string;
@@ -46,6 +48,7 @@ export default function PostDetails() {
   const [post, setPost] = useState<PostDetails | null>(null);
   const [comment, setComment] = useState("");
   const [activeReactionMenu, setActiveReactionMenu] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
 
   useEffect(() => {
     fetchPost();
@@ -53,6 +56,8 @@ export default function PostDetails() {
 
   const fetchPost = async () => {
     try {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      
       const { data: postData, error: postError } = await supabase
         .from('posts')
         .select(`
@@ -84,6 +89,9 @@ export default function PostDetails() {
             username,
             full_name,
             avatar_url
+          ),
+          comment_likes!left (
+            user_id
           )
         `)
         .eq('post_id', id)
@@ -91,19 +99,69 @@ export default function PostDetails() {
 
       if (commentsError) throw commentsError;
 
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      const formattedComments = commentsData.map(comment => ({
+        ...comment,
+        likes: comment.comment_likes?.length || 0,
+        has_liked: comment.comment_likes?.some(like => like.user_id === currentUser?.id) || false
+      }));
+
       setPost({
         ...postData,
-        reaction_type: postData.post_likes?.find(like => like.user_id === user?.id)?.reaction_type,
+        reaction_type: postData.post_likes?.find(like => like.user_id === currentUser?.id)?.reaction_type,
         likes: postData.post_likes?.length || 0,
-        comments: commentsData || []
+        comments: formattedComments
       });
     } catch (error) {
       console.error('Error fetching post:', error);
       toast({
         title: "Erro",
         description: "Erro ao carregar o post",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCommentLike = async (commentId: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Erro",
+          description: "Você precisa estar logado para curtir",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { data: existingLike } = await supabase
+        .from('comment_likes')
+        .select()
+        .eq('comment_id', commentId)
+        .eq('user_id', user.id)
+        .single();
+
+      if (existingLike) {
+        await supabase
+          .from('comment_likes')
+          .delete()
+          .eq('comment_id', commentId)
+          .eq('user_id', user.id);
+      } else {
+        await supabase
+          .from('comment_likes')
+          .insert({
+            comment_id: commentId,
+            user_id: user.id
+          });
+      }
+
+      await fetchPost();
+    } catch (error) {
+      console.error('Error liking comment:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível curtir o comentário",
         variant: "destructive",
       });
     }
@@ -116,7 +174,7 @@ export default function PostDetails() {
       if (!user) {
         toast({
           title: "Erro",
-          description: "Você precisa estar logado para reagir a posts",
+          description: "Você precisa estar logado para reagir",
           variant: "destructive",
         });
         return;
@@ -131,32 +189,26 @@ export default function PostDetails() {
 
       if (existingReaction) {
         if (existingReaction.reaction_type === reactionType) {
-          const { error: deleteError } = await supabase
+          await supabase
             .from('post_likes')
             .delete()
             .eq('post_id', id)
             .eq('user_id', user.id);
-
-          if (deleteError) throw deleteError;
         } else {
-          const { error: updateError } = await supabase
+          await supabase
             .from('post_likes')
             .update({ reaction_type: reactionType })
             .eq('post_id', id)
             .eq('user_id', user.id);
-
-          if (updateError) throw updateError;
         }
       } else {
-        const { error: insertError } = await supabase
+        await supabase
           .from('post_likes')
           .insert({
             post_id: id,
             user_id: user.id,
             reaction_type: reactionType
           });
-
-        if (insertError) throw insertError;
       }
 
       setActiveReactionMenu(false);
@@ -194,7 +246,7 @@ export default function PostDetails() {
         return;
       }
 
-      const { error: commentError } = await supabase
+      await supabase
         .from('post_comments')
         .insert({
           post_id: id,
@@ -202,14 +254,13 @@ export default function PostDetails() {
           content: comment.trim()
         });
 
-      if (commentError) throw commentError;
-
       setComment("");
+      setReplyingTo(null);
       await fetchPost();
       
       toast({
         title: "Sucesso",
-        description: "Comentário adicionado com sucesso",
+        description: "Comentário adicionado",
       });
     } catch (error) {
       console.error('Error adding comment:', error);
@@ -221,33 +272,23 @@ export default function PostDetails() {
     }
   };
 
+  const handleReply = (username: string) => {
+    setReplyingTo(username);
+    setComment(`@${username} `);
+  };
+
   const handleShare = async () => {
     try {
       await navigator.share({
-        url: `${window.location.origin}/posts/${id}`,
+        url: window.location.href,
       });
     } catch (error) {
       console.error('Error sharing:', error);
-      navigator.clipboard.writeText(`${window.location.origin}/posts/${id}`);
+      navigator.clipboard.writeText(window.location.href);
       toast({
         title: "Link copiado",
         description: "O link foi copiado para sua área de transferência",
       });
-    }
-  };
-
-  const getReactionIcon = (type: string) => {
-    switch (type) {
-      case 'love':
-        return '❤️';
-      case 'haha':
-        return '😂';
-      case 'sad':
-        return '😞';
-      case 'angry':
-        return '🤬';
-      default:
-        return '👍';
     }
   };
 
@@ -331,7 +372,7 @@ export default function PostDetails() {
             <div className="mt-6">
               <div className="flex gap-2 mb-6">
                 <Input
-                  placeholder="Adicione um comentário..."
+                  placeholder={replyingTo ? `Respondendo @${replyingTo}...` : "Adicione um comentário..."}
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                 />
@@ -358,6 +399,22 @@ export default function PostDetails() {
                         </span>
                       </div>
                       <p className="text-sm mt-1">{comment.content}</p>
+                      <div className="flex gap-4 mt-2">
+                        <button
+                          onClick={() => handleCommentLike(comment.id)}
+                          className={`text-sm hover:text-primary transition-colors ${
+                            comment.has_liked ? 'text-primary' : 'text-muted-foreground'
+                          }`}
+                        >
+                          {comment.has_liked ? '❤️' : '🤍'} {comment.likes}
+                        </button>
+                        <button
+                          onClick={() => handleReply(comment.user.username)}
+                          className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                        >
+                          Responder
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -370,3 +427,18 @@ export default function PostDetails() {
     </div>
   );
 }
+
+const getReactionIcon = (type: string) => {
+  switch (type) {
+    case 'love':
+      return '❤️';
+    case 'haha':
+      return '😂';
+    case 'sad':
+      return '😞';
+    case 'angry':
+      return '🤬';
+    default:
+      return '👍';
+  }
+};
