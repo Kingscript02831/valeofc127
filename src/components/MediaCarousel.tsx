@@ -10,20 +10,43 @@ interface MediaCarouselProps {
   instagramMedia?: InstagramMedia[];
 }
 
-export const MediaCarousel = ({ 
-  images, 
-  videoUrls, 
-  title, 
+const MediaCarousel = ({ 
+  images = [], 
+  videoUrls = [], 
+  title,
   autoplay = false,
   instagramMedia = []
 }: MediaCarouselProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  // Process Instagram URLs to get proper embed URLs
+  const processedInstagramMedia = instagramMedia.map(media => {
+    let processedUrl = media.url;
+    
+    // Convert Instagram post URL to embed URL
+    if (media.type === 'post' && media.url.includes('instagram.com/p/')) {
+      const postId = media.url.split('/p/')[1]?.split('/')[0];
+      if (postId) {
+        processedUrl = `https://www.instagram.com/p/${postId}/embed`;
+      }
+    }
+    
+    // Convert Instagram video URL to embed URL
+    if (media.type === 'video' && media.url.includes('instagram.com/reel/')) {
+      const reelId = media.url.split('/reel/')[1]?.split('/')[0];
+      if (reelId) {
+        processedUrl = `https://www.instagram.com/reel/${reelId}/embed`;
+      }
+    }
+    
+    return { ...media, url: processedUrl };
+  });
   
   // Combine all media into one array
   const allMedia = [
     ...images.map(url => ({ type: "image" as const, url })),
     ...videoUrls.map(url => ({ type: "video" as const, url })),
-    ...instagramMedia.map(media => ({ type: media.type === 'video' ? 'video' as const : 'image' as const, url: media.url }))
+    ...processedInstagramMedia
   ];
 
   useEffect(() => {
@@ -31,7 +54,7 @@ export const MediaCarousel = ({
 
     const interval = setInterval(() => {
       setCurrentIndex((current) => (current + 1) % allMedia.length);
-    }, 5000); // Change media every 5 seconds
+    }, 5000);
 
     return () => clearInterval(interval);
   }, [autoplay, allMedia.length]);
@@ -54,43 +77,61 @@ export const MediaCarousel = ({
     return url;
   };
 
+  const renderMedia = () => {
+    if (currentMedia.type === 'post' || (currentMedia.type === 'video' && currentMedia.url.includes('instagram.com'))) {
+      return (
+        <iframe
+          src={currentMedia.url}
+          className="absolute inset-0 w-full h-full border-none"
+          allowFullScreen
+          loading="lazy"
+          title={`Instagram ${currentMedia.type}`}
+        />
+      );
+    }
+
+    if (currentMedia.type === 'video') {
+      if (currentMedia.url.includes('youtube.com') || currentMedia.url.includes('youtu.be')) {
+        return (
+          <iframe
+            src={getVideoUrl(currentMedia.url)}
+            className="absolute inset-0 w-full h-full"
+            allowFullScreen
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            title={title}
+          />
+        );
+      }
+
+      return (
+        <video
+          src={currentMedia.url}
+          controls
+          loop
+          playsInline
+          className="absolute inset-0 w-full h-full object-contain"
+          controlsList="nodownload"
+        >
+          Seu navegador não suporta a reprodução de vídeos.
+        </video>
+      );
+    }
+
+    return (
+      <img
+        src={currentMedia.url}
+        alt={title}
+        className="absolute inset-0 w-full h-full object-contain"
+      />
+    );
+  };
+
   return (
     <div className="relative w-full h-full bg-background overflow-hidden">
-      {currentMedia.type === 'video' ? (
-        <div className="relative w-full h-0 pb-[100%]">
-          {currentMedia.url.includes('youtube.com') || currentMedia.url.includes('youtu.be') ? (
-            <iframe
-              src={getVideoUrl(currentMedia.url)}
-              className="absolute inset-0 w-full h-full"
-              allowFullScreen
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              title={title}
-            />
-          ) : (
-            <video
-              src={currentMedia.url}
-              autoPlay={autoplay}
-              controls
-              loop
-              playsInline
-              className="absolute inset-0 w-full h-full object-contain"
-              controlsList="nodownload"
-            >
-              Seu navegador não suporta a reprodução de vídeos.
-            </video>
-          )}
-        </div>
-      ) : (
-        <div className="relative w-full h-0 pb-[100%]">
-          <img
-            src={currentMedia.url}
-            alt={title}
-            className="absolute inset-0 w-full h-full object-contain"
-          />
-        </div>
-      )}
+      <div className="relative w-full h-0 pb-[100%]">
+        {renderMedia()}
+      </div>
 
-      {/* Navigation controls */}
       {allMedia.length > 1 && (
         <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
           {allMedia.map((_, index) => (
@@ -110,4 +151,3 @@ export const MediaCarousel = ({
 };
 
 export default MediaCarousel;
-
