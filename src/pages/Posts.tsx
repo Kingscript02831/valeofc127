@@ -1,9 +1,8 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Bell, Search, Share2, MessageCircle } from "lucide-react";
+import { MessageSquare, ArrowRight, Phone, Share2 } from "lucide-react";
 import { MediaCarousel } from "@/components/MediaCarousel";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -14,6 +13,8 @@ import ReactionMenu from "@/components/ReactionMenu";
 import { Separator } from "@/components/ui/separator";
 import BottomNav from "@/components/BottomNav";
 import { useNavigate } from "react-router-dom";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface Post {
   id: string;
@@ -147,15 +148,15 @@ export default function Posts() {
 
   const handleShare = async (postId: string) => {
     try {
-      await navigator.share({
-        url: `${window.location.origin}/posts/${postId}`,
-      });
+      const postUrl = `${window.location.origin}/posts/${postId}`;
+      const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(`Confira este post: ${postUrl}`)}`;
+      window.open(whatsappUrl, '_blank');
     } catch (error) {
       console.error('Error sharing:', error);
-      navigator.clipboard.writeText(`${window.location.origin}/posts/${postId}`);
       toast({
-        title: "Link copiado",
-        description: "O link foi copiado para sua área de transferência",
+        title: "Erro ao compartilhar",
+        description: "Não foi possível abrir o WhatsApp para compartilhar",
+        variant: "destructive",
       });
     }
   };
@@ -227,10 +228,7 @@ export default function Posts() {
                           </span>
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          {new Date(post.created_at).toLocaleDateString('pt-BR', {
-                            day: '2-digit',
-                            month: 'long',
-                          })}
+                          {format(new Date(post.created_at), "dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}
                         </p>
                       </div>
                     </div>
@@ -280,7 +278,7 @@ export default function Posts() {
                         onClick={() => navigate(`/posts/${post.id}`)}
                         className="flex items-center gap-2 hover:text-primary transition-colors duration-200"
                       >
-                        <MessageCircle className="w-5 h-5 text-muted-foreground" />
+                        <MessageSquare className="w-5 h-5 text-muted-foreground" />
                         <span className="text-sm text-muted-foreground">
                           {post.comment_count || 0}
                         </span>
@@ -290,7 +288,14 @@ export default function Posts() {
                         className="flex items-center transition-colors duration-200 hover:text-primary"
                         onClick={() => handleShare(post.id)}
                       >
-                        <Share2 className="w-5 h-5 text-muted-foreground" />
+                        <Phone className="w-5 h-5 text-muted-foreground" />
+                      </button>
+
+                      <button
+                        onClick={() => navigate(`/posts/${post.id}`)}
+                        className="flex items-center transition-colors duration-200 hover:text-primary"
+                      >
+                        <ArrowRight className="w-5 h-5 text-muted-foreground" />
                       </button>
                     </div>
                   </CardContent>
