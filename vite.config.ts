@@ -11,7 +11,6 @@ const supabase = createClient(
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN4bmt0cmZwcWpqa2RmbWl5aGR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzkyNDAyNDksImV4cCI6MjA1NDgxNjI0OX0.GwEFcZ0mI8xuZs1hGJgz8R2zp13cLJIbtu6ZY2nDeTU"
 );
 
-// Fetch PWA configuration from Supabase
 const getPWAConfig = async () => {
   try {
     const { data, error } = await supabase
@@ -32,7 +31,6 @@ const getPWAConfig = async () => {
   }
 };
 
-// https://vitejs.dev/config/
 export default defineConfig(async ({ mode }) => {
   const pwaConfig = await getPWAConfig();
   console.log("Final PWA Config being used:", pwaConfig);
@@ -52,7 +50,7 @@ export default defineConfig(async ({ mode }) => {
       description: pwaConfig?.pwa_description || 'Seu app de notícias local',
       theme_color: pwaConfig?.pwa_theme_color || '#000000',
       background_color: pwaConfig?.pwa_background_color || '#ffffff',
-      display: 'standalone',
+      display: 'standalone' as const,
       icons: [
         {
           src: pwaConfig?.pwa_app_icon || '/pwa-192x192.png',
@@ -78,8 +76,6 @@ export default defineConfig(async ({ mode }) => {
       navigateFallback: 'index.html'
     }
   };
-
-  console.log("PWA Manifest configuration:", manifestConfig);
 
   return {
     server: {

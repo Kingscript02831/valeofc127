@@ -333,4 +333,14 @@ export default function Posts() {
                   </CardContent>
                 </Card>
                 {index < visiblePosts.length - 1 && (
-                  <Separator className="my-4 opacity
+                  <Separator className="my-4 opacity-40" />
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      </main>
+    </div>
+  );
+}
+
