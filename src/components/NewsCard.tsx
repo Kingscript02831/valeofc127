@@ -42,12 +42,14 @@ const NewsCard = ({
       <Link to={`/noticias/${id}`} className="block">
         {/* Media Section */}
         {hasMedia && (
-          <div className="relative aspect-[16/9] overflow-hidden">
+          <div className="relative aspect-video overflow-hidden bg-gray-100">
             <MediaCarousel 
               images={images}
               videoUrls={video_urls}
               title={title}
-              cropMode="cover"
+              cropMode="contain"
+              showControls={true}
+              autoplay={false}
             />
           </div>
         )}
