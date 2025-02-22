@@ -1,12 +1,12 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
+import { supabase } from "../lib/supabase";
+import { Button } from "../components/ui/button";
+import { Card, CardContent } from "../components/ui/card";
+import { Textarea } from "../components/ui/textarea";
 import { toast } from "sonner";
-import PhotoUrlDialog from "@/components/PhotoUrlDialog";
+import PhotoUrlDialog from "../components/PhotoUrlDialog";
 
 export default function CreatePost() {
   const [newPostContent, setNewPostContent] = useState("");
