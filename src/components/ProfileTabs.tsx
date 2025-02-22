@@ -48,10 +48,8 @@ const ProfileTabs = ({ userProducts }: ProfileTabsProps) => {
       </TabsList>
 
       <TabsContent value="posts" className="min-h-[200px]">
-        <div className="grid grid-cols-3 gap-1">
-          <div className="aspect-square bg-gray-800/50 flex items-center justify-center">
-            <p className="text-gray-500">Ainda não há Posts</p>
-          </div>
+        <div className="flex items-center justify-center h-[200px]">
+          <p className="text-gray-500">Ainda não há Posts</p>
         </div>
       </TabsContent>
 
@@ -89,10 +87,8 @@ const ProfileTabs = ({ userProducts }: ProfileTabsProps) => {
       </TabsContent>
 
       <TabsContent value="reels" className="min-h-[200px]">
-        <div className="grid grid-cols-3 gap-1">
-          <div className="aspect-square bg-gray-800/50 flex items-center justify-center">
-            <p className="text-gray-500">Ainda não há Reels</p>
-          </div>
+        <div className="flex items-center justify-center h-[200px]">
+          <p className="text-gray-500">Ainda não há Reels</p>
         </div>
       </TabsContent>
     </Tabs>
@@ -100,3 +96,4 @@ const ProfileTabs = ({ userProducts }: ProfileTabsProps) => {
 };
 
 export default ProfileTabs;
+
