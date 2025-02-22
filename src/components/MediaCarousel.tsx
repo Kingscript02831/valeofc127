@@ -31,7 +31,7 @@ export const MediaCarousel = ({
 
     const interval = setInterval(() => {
       setCurrentIndex((current) => (current + 1) % allMedia.length);
-    }, 5000); // Change media every 5 seconds
+    }, 5000);
 
     return () => clearInterval(interval);
   }, [autoplay, allMedia.length]);
@@ -41,12 +41,10 @@ export const MediaCarousel = ({
   const currentMedia = allMedia[currentIndex];
 
   const getVideoUrl = (url: string) => {
-    // Convert YouTube watch URLs to embed URLs
     if (url.includes('youtube.com/watch?v=')) {
       const videoId = url.split('v=')[1]?.split('&')[0];
       return `https://www.youtube.com/embed/${videoId}`;
     }
-    // Convert YouTube short URLs
     if (url.includes('youtu.be/')) {
       const videoId = url.split('youtu.be/')[1]?.split('?')[0];
       return `https://www.youtube.com/embed/${videoId}`;
@@ -69,7 +67,6 @@ export const MediaCarousel = ({
           ) : (
             <video
               src={currentMedia.url}
-              autoPlay={autoplay}
               controls
               loop
               playsInline
@@ -90,7 +87,7 @@ export const MediaCarousel = ({
         </div>
       )}
 
-      {/* Navigation controls */}
+      {/* Pontos de navegação apenas se houver mais de um item de mídia */}
       {allMedia.length > 1 && (
         <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
           {allMedia.map((_, index) => (
@@ -110,4 +107,3 @@ export const MediaCarousel = ({
 };
 
 export default MediaCarousel;
-
