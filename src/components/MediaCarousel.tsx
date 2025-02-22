@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from "react";
-import type { InstagramMedia } from "@/types/supabase";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
@@ -10,7 +9,6 @@ interface MediaCarouselProps {
   videoUrls: string[];
   title: string;
   autoplay?: boolean;
-  instagramMedia?: InstagramMedia[];
   cropMode?: 'cover' | 'contain';
   showControls?: boolean;
 }
@@ -20,7 +18,6 @@ export const MediaCarousel = ({
   videoUrls, 
   title, 
   autoplay = false,
-  instagramMedia = [],
   cropMode = 'contain',
   showControls = false,
 }: MediaCarouselProps) => {
@@ -29,8 +26,7 @@ export const MediaCarousel = ({
   // Combine all media into one array
   const allMedia = [
     ...images.map(url => ({ type: "image" as const, url })),
-    ...videoUrls.map(url => ({ type: "video" as const, url })),
-    ...instagramMedia.map(media => ({ type: media.type === 'video' ? 'video' as const : 'image' as const, url: media.url }))
+    ...videoUrls.map(url => ({ type: "video" as const, url }))
   ];
 
   useEffect(() => {

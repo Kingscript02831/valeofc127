@@ -1,9 +1,8 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { supabase } from "../../integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import { Search, Plus, Trash2 } from "lucide-react";
@@ -14,21 +13,15 @@ interface Category {
   name: string;
 }
 
-interface InstagramMedia {
-  url: string;
-  type: "post" | "video";
-}
-
 interface News {
   id: string;
   title: string;
   content: string;
   date: string;
   category_id: string | null;
-  image: string | null;
-  video: string | null;
+  images: string[] | null;
+  video_urls: string[] | null;
   button_color: string | null;
-  instagram_media: InstagramMedia[] | null;
 }
 
 const AdminNews = () => {
@@ -40,11 +33,13 @@ const AdminNews = () => {
     title: "",
     content: "",
     category_id: null,
-    image: null,
-    video: null,
-    button_color: "#000000",
-    instagram_media: [],
+    images: [],
+    video_urls: [],
+    button_color: "#9b87f5"
   });
+
+  const [newImageUrl, setNewImageUrl] = useState("");
+  const [newVideoUrl, setNewVideoUrl] = useState("");
 
   useEffect(() => {
     fetchNews();
@@ -81,6 +76,74 @@ const AdminNews = () => {
     }
   };
 
+  const handleAddImage = () => {
+    if (!newImageUrl) {
+      toast.error("Por favor, insira uma URL de imagem válida");
+      return;
+    }
+
+    if (editingNews) {
+      setEditingNews({
+        ...editingNews,
+        images: [...(editingNews.images || []), newImageUrl]
+      });
+    } else {
+      setNewNews({
+        ...newNews,
+        images: [...(newNews.images || []), newImageUrl]
+      });
+    }
+    setNewImageUrl("");
+  };
+
+  const handleRemoveImage = (imageUrl: string) => {
+    if (editingNews) {
+      setEditingNews({
+        ...editingNews,
+        images: editingNews.images?.filter(url => url !== imageUrl) || []
+      });
+    } else {
+      setNewNews({
+        ...newNews,
+        images: newNews.images?.filter(url => url !== imageUrl) || []
+      });
+    }
+  };
+
+  const handleAddVideo = () => {
+    if (!newVideoUrl) {
+      toast.error("Por favor, insira uma URL de vídeo válida");
+      return;
+    }
+
+    if (editingNews) {
+      setEditingNews({
+        ...editingNews,
+        video_urls: [...(editingNews.video_urls || []), newVideoUrl]
+      });
+    } else {
+      setNewNews({
+        ...newNews,
+        video_urls: [...(newNews.video_urls || []), newVideoUrl]
+      });
+    }
+    setNewVideoUrl("");
+  };
+
+  const handleRemoveVideo = (videoUrl: string) => {
+    if (editingNews) {
+      setEditingNews({
+        ...editingNews,
+        video_urls: editingNews.video_urls?.filter(url => url !== videoUrl) || []
+      });
+    } else {
+      setNewNews({
+        ...newNews,
+        video_urls: newNews.video_urls?.filter(url => url !== videoUrl) || []
+      });
+    }
+  };
+
   const handleNewsSubmit = async () => {
     try {
       if (!newNews.title || !newNews.content) {
@@ -102,10 +165,9 @@ const AdminNews = () => {
         title: "",
         content: "",
         category_id: null,
-        image: null,
-        video: null,
-        button_color: "#000000",
-        instagram_media: [],
+        images: [],
+        video_urls: [],
+        button_color: "#9b87f5",
       });
       fetchNews();
     } catch (error) {
@@ -151,87 +213,6 @@ const AdminNews = () => {
     }
   };
 
-  const renderInstagramMediaFields = (item: Partial<News>) => {
-    const media = (item.instagram_media as InstagramMedia[]) || [];
-    
-    return (
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <Label>Mídia do Instagram</Label>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={() => {
-              const newMedia = [...media, { url: "", type: "post" as const }];
-              if (editingNews) {
-                setEditingNews({ ...editingNews, instagram_media: newMedia });
-              } else {
-                setNewNews({ ...newNews, instagram_media: newMedia });
-              }
-            }}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Adicionar Mídia
-          </Button>
-        </div>
-        {media.map((m, index) => (
-          <div key={index} className="flex gap-4 items-start">
-            <div className="flex-1">
-              <Input
-                value={m.url}
-                onChange={(e) => {
-                  const newMedia = [...media];
-                  newMedia[index] = { ...newMedia[index], url: e.target.value };
-                  if (editingNews) {
-                    setEditingNews({ ...editingNews, instagram_media: newMedia });
-                  } else {
-                    setNewNews({ ...newNews, instagram_media: newMedia });
-                  }
-                }}
-                placeholder="URL da mídia do Instagram"
-              />
-            </div>
-            <select
-              className="border border-gray-300 rounded-md p-2"
-              value={m.type}
-              onChange={(e) => {
-                const newMedia = [...media];
-                newMedia[index] = {
-                  ...newMedia[index],
-                  type: e.target.value as "post" | "video",
-                };
-                if (editingNews) {
-                  setEditingNews({ ...editingNews, instagram_media: newMedia });
-                } else {
-                  setNewNews({ ...newNews, instagram_media: newMedia });
-                }
-              }}
-            >
-              <option value="post">Post</option>
-              <option value="video">Vídeo</option>
-            </select>
-            <Button
-              type="button"
-              variant="destructive"
-              size="icon"
-              onClick={() => {
-                const newMedia = media.filter((_, i) => i !== index);
-                if (editingNews) {
-                  setEditingNews({ ...editingNews, instagram_media: newMedia });
-                } else {
-                  setNewNews({ ...newNews, instagram_media: newMedia });
-                }
-              }}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
   return (
     <div className="space-y-6">
       {!editingNews ? (
@@ -255,61 +236,90 @@ const AdminNews = () => {
                 className="min-h-[200px]"
               />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="category">Categoria</Label>
-                <select
-                  id="category"
-                  className="w-full border border-gray-300 rounded-md p-2"
-                  value={newNews.category_id || ""}
-                  onChange={(e) => setNewNews({ ...newNews, category_id: e.target.value || null })}
-                >
-                  <option value="">Selecione uma categoria</option>
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
+            <div>
+              <Label htmlFor="category">Categoria</Label>
+              <select
+                id="category"
+                className="w-full border border-gray-300 rounded-md p-2"
+                value={newNews.category_id || ""}
+                onChange={(e) => setNewNews({ ...newNews, category_id: e.target.value || null })}
+              >
+                <option value="">Selecione uma categoria</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <Label htmlFor="button_color">Cor do Botão</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="button_color"
+                  type="color"
+                  value={newNews.button_color || "#9b87f5"}
+                  onChange={(e) => setNewNews({ ...newNews, button_color: e.target.value })}
+                  className="w-20"
+                />
+                <Input
+                  type="text"
+                  value={newNews.button_color || "#9b87f5"}
+                  onChange={(e) => setNewNews({ ...newNews, button_color: e.target.value })}
+                  placeholder="#9b87f5"
+                />
               </div>
-              <div>
-                <Label htmlFor="button_color">Cor do Botão</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="button_color"
-                    type="color"
-                    value={newNews.button_color || "#000000"}
-                    onChange={(e) => setNewNews({ ...newNews, button_color: e.target.value })}
-                    className="w-20"
-                  />
-                  <Input
-                    type="text"
-                    value={newNews.button_color || "#000000"}
-                    onChange={(e) => setNewNews({ ...newNews, button_color: e.target.value })}
-                    placeholder="#000000"
-                  />
+            </div>
+            <div className="space-y-2">
+              <Label>Imagens</Label>
+              <div className="flex gap-2">
+                <Input
+                  value={newImageUrl}
+                  onChange={(e) => setNewImageUrl(e.target.value)}
+                  placeholder="Cole a URL da imagem"
+                />
+                <Button type="button" onClick={handleAddImage}>
+                  Adicionar
+                </Button>
+              </div>
+              {newNews.images?.map((url, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <Input value={url} readOnly />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={() => handleRemoveImage(url)}
+                  >
+                    Remover
+                  </Button>
                 </div>
+              ))}
+            </div>
+            <div className="space-y-2">
+              <Label>Vídeos</Label>
+              <div className="flex gap-2">
+                <Input
+                  value={newVideoUrl}
+                  onChange={(e) => setNewVideoUrl(e.target.value)}
+                  placeholder="Cole a URL do vídeo"
+                />
+                <Button type="button" onClick={handleAddVideo}>
+                  Adicionar
+                </Button>
               </div>
+              {newNews.video_urls?.map((url, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <Input value={url} readOnly />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={() => handleRemoveVideo(url)}
+                  >
+                    Remover
+                  </Button>
+                </div>
+              ))}
             </div>
-            <div>
-              <Label htmlFor="image">Link da Imagem</Label>
-              <Input
-                id="image"
-                value={newNews.image || ""}
-                onChange={(e) => setNewNews({ ...newNews, image: e.target.value })}
-                placeholder="https://exemplo.com/imagem.jpg"
-              />
-            </div>
-            <div>
-              <Label htmlFor="video">Link do Vídeo (YouTube)</Label>
-              <Input
-                id="video"
-                value={newNews.video || ""}
-                onChange={(e) => setNewNews({ ...newNews, video: e.target.value })}
-                placeholder="https://youtube.com/embed/..."
-              />
-            </div>
-            {renderInstagramMediaFields(newNews)}
             <Button onClick={handleNewsSubmit}>Adicionar Notícia</Button>
           </div>
         </div>
@@ -334,61 +344,90 @@ const AdminNews = () => {
                 className="min-h-[200px]"
               />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="edit-category">Categoria</Label>
-                <select
-                  id="edit-category"
-                  className="w-full border border-gray-300 rounded-md p-2"
-                  value={editingNews.category_id || ""}
-                  onChange={(e) => setEditingNews({ ...editingNews, category_id: e.target.value || null })}
-                >
-                  <option value="">Selecione uma categoria</option>
-                  {categories.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
+            <div>
+              <Label htmlFor="edit-category">Categoria</Label>
+              <select
+                id="edit-category"
+                className="w-full border border-gray-300 rounded-md p-2"
+                value={editingNews.category_id || ""}
+                onChange={(e) => setEditingNews({ ...editingNews, category_id: e.target.value || null })}
+              >
+                <option value="">Selecione uma categoria</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <Label htmlFor="edit-button_color">Cor do Botão</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="edit-button_color"
+                  type="color"
+                  value={editingNews.button_color || "#9b87f5"}
+                  onChange={(e) => setEditingNews({ ...editingNews, button_color: e.target.value })}
+                  className="w-20"
+                />
+                <Input
+                  type="text"
+                  value={editingNews.button_color || "#9b87f5"}
+                  onChange={(e) => setEditingNews({ ...editingNews, button_color: e.target.value })}
+                  placeholder="#9b87f5"
+                />
               </div>
-              <div>
-                <Label htmlFor="edit-button_color">Cor do Botão</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="edit-button_color"
-                    type="color"
-                    value={editingNews.button_color || "#000000"}
-                    onChange={(e) => setEditingNews({ ...editingNews, button_color: e.target.value })}
-                    className="w-20"
-                  />
-                  <Input
-                    type="text"
-                    value={editingNews.button_color || "#000000"}
-                    onChange={(e) => setEditingNews({ ...editingNews, button_color: e.target.value })}
-                    placeholder="#000000"
-                  />
+            </div>
+            <div className="space-y-2">
+              <Label>Imagens</Label>
+              <div className="flex gap-2">
+                <Input
+                  value={newImageUrl}
+                  onChange={(e) => setNewImageUrl(e.target.value)}
+                  placeholder="Cole a URL da imagem"
+                />
+                <Button type="button" onClick={handleAddImage}>
+                  Adicionar
+                </Button>
+              </div>
+              {editingNews.images?.map((url, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <Input value={url} readOnly />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={() => handleRemoveImage(url)}
+                  >
+                    Remover
+                  </Button>
                 </div>
+              ))}
+            </div>
+            <div className="space-y-2">
+              <Label>Vídeos</Label>
+              <div className="flex gap-2">
+                <Input
+                  value={newVideoUrl}
+                  onChange={(e) => setNewVideoUrl(e.target.value)}
+                  placeholder="Cole a URL do vídeo"
+                />
+                <Button type="button" onClick={handleAddVideo}>
+                  Adicionar
+                </Button>
               </div>
+              {editingNews.video_urls?.map((url, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <Input value={url} readOnly />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={() => handleRemoveVideo(url)}
+                  >
+                    Remover
+                  </Button>
+                </div>
+              ))}
             </div>
-            <div>
-              <Label htmlFor="edit-image">Link da Imagem</Label>
-              <Input
-                id="edit-image"
-                value={editingNews.image || ""}
-                onChange={(e) => setEditingNews({ ...editingNews, image: e.target.value })}
-                placeholder="https://exemplo.com/imagem.jpg"
-              />
-            </div>
-            <div>
-              <Label htmlFor="edit-video">Link do Vídeo (YouTube)</Label>
-              <Input
-                id="edit-video"
-                value={editingNews.video || ""}
-                onChange={(e) => setEditingNews({ ...editingNews, video: e.target.value })}
-                placeholder="https://youtube.com/embed/..."
-              />
-            </div>
-            {renderInstagramMediaFields(editingNews)}
             <div className="flex gap-2">
               <Button onClick={handleNewsEdit}>Salvar Alterações</Button>
               <Button variant="outline" onClick={() => setEditingNews(null)}>Cancelar</Button>
@@ -452,26 +491,30 @@ const AdminNews = () => {
                   </div>
                 </div>
                 <p className="whitespace-pre-wrap mb-2">{item.content}</p>
-                {item.image && <p className="text-sm text-gray-500">Imagem: {item.image}</p>}
-                {item.video && <p className="text-sm text-gray-500">Vídeo: {item.video}</p>}
+                {item.images && item.images.length > 0 && (
+                  <div className="mt-2">
+                    <p className="text-sm font-medium text-gray-500">Imagens:</p>
+                    {item.images.map((image, index) => (
+                      <p key={index} className="text-sm text-gray-500">
+                        {image}
+                      </p>
+                    ))}
+                  </div>
+                )}
+                {item.video_urls && item.video_urls.length > 0 && (
+                  <div className="mt-2">
+                    <p className="text-sm font-medium text-gray-500">Vídeos:</p>
+                    {item.video_urls.map((video, index) => (
+                      <p key={index} className="text-sm text-gray-500">
+                        {video}
+                      </p>
+                    ))}
+                  </div>
+                )}
                 {item.button_color && (
                   <p className="text-sm text-gray-500">
                     Cor do botão: <span style={{ color: item.button_color }}>{item.button_color}</span>
                   </p>
-                )}
-                {Array.isArray(item.instagram_media) && item.instagram_media.length > 0 && (
-                  <div className="mt-2">
-                    <p className="text-sm font-medium text-gray-500">Mídia do Instagram:</p>
-                    {item.instagram_media.map((media, index) => {
-                      const instaMedia = media as InstagramMedia;
-                      if (!instaMedia?.url || !instaMedia?.type) return null;
-                      return (
-                        <p key={index} className="text-sm text-gray-500">
-                          {instaMedia.type === 'post' ? 'Post' : 'Vídeo'}: {instaMedia.url}
-                        </p>
-                      );
-                    })}
-                  </div>
                 )}
               </div>
             ))}
@@ -487,4 +530,3 @@ const AdminNews = () => {
 };
 
 export default AdminNews;
-

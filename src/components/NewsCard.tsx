@@ -4,7 +4,6 @@ import { ptBR } from "date-fns/locale";
 import { Card } from "@/components/ui/card";
 import MediaCarousel from "./MediaCarousel";
 import { Link } from "react-router-dom";
-import type { InstagramMedia } from "@/types/supabase";
 
 interface NewsCardProps {
   id: string;
@@ -20,7 +19,6 @@ interface NewsCardProps {
   } | null;
   images?: string[];
   video_urls?: string[];
-  instagramMedia?: InstagramMedia[];
 }
 
 const NewsCard = ({
@@ -31,14 +29,13 @@ const NewsCard = ({
   createdAt,
   category,
   images = [],
-  video_urls = [],
-  instagramMedia = []
+  video_urls = []
 }: NewsCardProps) => {
   const formattedCreatedAt = createdAt 
     ? format(new Date(createdAt), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })
     : null;
 
-  const hasMedia = images?.length > 0 || video_urls?.length > 0 || instagramMedia?.length > 0;
+  const hasMedia = images?.length > 0 || video_urls?.length > 0;
 
   return (
     <Card className="overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-lg group">
@@ -49,7 +46,6 @@ const NewsCard = ({
             <MediaCarousel 
               images={images}
               videoUrls={video_urls}
-              instagramMedia={instagramMedia}
               title={title}
               cropMode="cover"
             />
