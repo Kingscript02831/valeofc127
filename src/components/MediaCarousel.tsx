@@ -53,12 +53,11 @@ export const MediaCarousel = ({
     }
     // Convert Instagram video URLs if needed
     if (url.includes('instagram.com/')) {
-      // Convert to embed URL if it's not already
       if (!url.includes('/embed/')) {
-        // Extract post ID from various Instagram URL formats
         const postIdMatch = url.match(/\/(?:p|reel)\/([^/?]+)/);
         if (postIdMatch) {
-          return `https://www.instagram.com/p/${postIdMatch[1]}/embed`;
+          // Usar o formato de incorporação sem cabeçalho
+          return `https://www.instagram.com/p/${postIdMatch[1]}/embed/captioned/`;
         }
       }
     }
@@ -83,6 +82,9 @@ export const MediaCarousel = ({
               className="absolute inset-0 w-full h-full"
               allowFullScreen
               title={title}
+              scrolling="no"
+              frameBorder="0"
+              allowTransparency
             />
           ) : (
             <video
@@ -107,6 +109,9 @@ export const MediaCarousel = ({
               className="absolute inset-0 w-full h-full"
               allowFullScreen
               title={title}
+              scrolling="no"
+              frameBorder="0"
+              allowTransparency
             />
           ) : (
             <img
