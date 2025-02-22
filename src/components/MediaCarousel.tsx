@@ -98,11 +98,20 @@ export const MediaCarousel = ({
         </div>
       ) : (
         <div className="relative w-full aspect-[4/3]">
-          <img
-            src={currentMedia.url}
-            alt={title}
-            className="absolute inset-0 w-full h-full object-cover"
-          />
+          {currentMedia.url.includes('instagram.com') ? (
+            <iframe
+              src={getVideoUrl(currentMedia.url)}
+              className="absolute inset-0 w-full h-full"
+              allowFullScreen
+              title={title}
+            />
+          ) : (
+            <img
+              src={currentMedia.url}
+              alt={title}
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          )}
         </div>
       )}
     </div>
