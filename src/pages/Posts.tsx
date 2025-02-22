@@ -1,27 +1,33 @@
-import { useState, useEffect } from "react";
-import { supabase } from "../integrations/supabase/client";
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
-import { MediaCarousel } from "../components/MediaCarousel";
 import { useToast } from "@/hooks/use-toast";
+import { Bell, Search, Share2, MessageCircle, MessageSquareMore, ThumbsUp } from "lucide-react";
+import { MediaCarousel } from "@/components/MediaCarousel";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import Navbar from "@/components/Navbar";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import ReactionMenu from "@/components/ReactionMenu";
+import { Separator } from "@/components/ui/separator";
+import BottomNav from "@/components/BottomNav";
+import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import Navbar from "../components/Navbar";
-import { ThumbsUp, MessageCircle, Share2 } from "lucide-react";
-import ReactionMenu from "../components/ReactionMenu";
-import BottomNav from "../components/BottomNav";
 
 interface Post {
   id: string;
+  user_id: string;
   content: string;
   images: string[];
   video_urls: string[];
-  created_at: string;
   likes: number;
   reaction_type?: string;
+  created_at: string;
+  user_has_liked?: boolean;
+  comment_count?: number;
   user: {
-    id: string;
     username: string;
     full_name: string;
     avatar_url: string;
@@ -39,71 +45,67 @@ const getReactionIcon = (type: string) => {
     case 'angry':
       return '🤬';
     default:
-      return null;
+      return '👍';
   }
 };
 
 export default function Posts() {
   const { toast } = useToast();
-  const [posts, setPosts] = useState<Post[]>([]);
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [searchTerm, setSearchTerm] = useState("");
   const [activeReactionMenu, setActiveReactionMenu] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  const fetchPosts = async () => {
-    setLoading(true);
-    try {
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
+  const { data: posts = [], isLoading } = useQuery({
+    queryKey: ['posts', searchTerm],
+    queryFn: async () => {
+      try {
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
+        
+        let query = supabase
+          .from('posts')
+          .select(`
+            *,
+            user:user_id (
+              username,
+              full_name,
+              avatar_url
+            ),
+            post_likes (
+              reaction_type,
+              user_id
+            )
+          `)
+          .order('created_at', { ascending: false });
 
-      const { data, error } = await supabase
-        .from('posts')
-        .select(`
-          *,
-          user:user_id (
-            id,
-            username,
-            full_name,
-            avatar_url
-          ),
-          post_likes (
-            reaction_type,
-            user_id
-          )
-        `)
-        .order('created_at', { ascending: false });
+        if (searchTerm) {
+          query = query.ilike('content', `%${searchTerm}%`);
+        }
 
-      if (error) throw error;
+        const { data: postsData, error } = await query;
 
-      const formattedPosts = data.map(post => ({
-        ...post,
-        reaction_type: post.post_likes?.find(like => like.user_id === currentUser?.id)?.reaction_type,
-        likes: post.post_likes?.length || 0
-      }));
+        if (error) throw error;
 
-      setPosts(formattedPosts);
-    } catch (error) {
-      console.error('Error fetching posts:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao carregar os posts",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
+        return (postsData || []).map(post => ({
+          ...post,
+          reaction_type: post.post_likes?.find(like => like.user_id === currentUser?.id)?.reaction_type,
+          likes: post.post_likes?.length || 0
+        }));
+      } catch (error) {
+        console.error('Error fetching posts:', error);
+        return [];
+      }
     }
-  };
+  });
 
-  useEffect(() => {
-    fetchPosts();
-  }, []);
-
-  const handleReaction = async (postId: string, type: string) => {
+  const handleReaction = async (postId: string, reactionType: string) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
         toast({
           title: "Erro",
-          description: "Você precisa estar logado para reagir",
+          description: "Você precisa estar logado para reagir a posts",
           variant: "destructive",
         });
         return;
@@ -117,50 +119,56 @@ export default function Posts() {
         .single();
 
       if (existingReaction) {
-        if (existingReaction.reaction_type === type) {
-          await supabase
+        if (existingReaction.reaction_type === reactionType) {
+          const { error: deleteError } = await supabase
             .from('post_likes')
             .delete()
             .eq('post_id', postId)
             .eq('user_id', user.id);
+
+          if (deleteError) throw deleteError;
         } else {
-          await supabase
+          const { error: updateError } = await supabase
             .from('post_likes')
-            .update({ reaction_type: type })
+            .update({ reaction_type: reactionType })
             .eq('post_id', postId)
             .eq('user_id', user.id);
+
+          if (updateError) throw updateError;
         }
       } else {
-        await supabase
+        const { error: insertError } = await supabase
           .from('post_likes')
           .insert({
             post_id: postId,
             user_id: user.id,
-            reaction_type: type
+            reaction_type: reactionType
           });
+
+        if (insertError) throw insertError;
       }
 
       setActiveReactionMenu(null);
-      await fetchPosts();
+      await queryClient.invalidateQueries({ queryKey: ['posts'] });
       
     } catch (error) {
       console.error('Error in reaction handler:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível processar sua reação",
+        description: "Não foi possível processar sua reação. Tente novamente.",
         variant: "destructive",
       });
     }
   };
 
-  const handleShare = async (url: string) => {
+  const handleShare = async (postId: string) => {
     try {
       await navigator.share({
-        url: url,
+        url: `${window.location.origin}/posts/${postId}`,
       });
     } catch (error) {
       console.error('Error sharing:', error);
-      navigator.clipboard.writeText(url);
+      navigator.clipboard.writeText(`${window.location.origin}/posts/${postId}`);
       toast({
         title: "Link copiado",
         description: "O link foi copiado para sua área de transferência",
@@ -168,18 +176,21 @@ export default function Posts() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInHours = Math.abs(now.getTime() - date.getTime()) / 36e5;
+  const handleWhatsAppShare = async (postId: string) => {
+    const postUrl = `${window.location.origin}/posts/${postId}`;
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(postUrl)}`;
+    window.open(whatsappUrl, '_blank');
+  };
 
-    if (diffInHours < 24) {
-      if (diffInHours < 1) {
-        const minutes = Math.floor((now.getTime() - date.getTime()) / 60000);
-        return `${minutes} minutos atrás`;
-      }
-      return `${Math.floor(diffInHours)} horas atrás`;
-    } else if (diffInHours < 48) {
+  const formatDateTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (date.toDateString() === today.toDateString()) {
+      return `Hoje às ${format(date, 'HH:mm')}`;
+    } else if (date.toDateString() === yesterday.toDateString()) {
       return `Ontem às ${format(date, 'HH:mm')}`;
     } else {
       return format(date, "d 'de' MMMM 'às' HH:mm", { locale: ptBR });
@@ -190,22 +201,43 @@ export default function Posts() {
     <div className="min-h-screen bg-gray-50 dark:bg-background">
       <Navbar />
       <main className="container mx-auto py-8 px-4 pt-20 pb-24">
-        <div className="max-w-2xl mx-auto space-y-4">
-          {loading ? (
+        <div className="sticky top-16 z-10 bg-background/80 backdrop-blur-sm pb-4">
+          <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="hover:scale-105 transition-transform text-foreground"
+            >
+              <Bell className="h-5 w-5" />
+            </Button>
+            <div className="relative flex-1">
+              <Input
+                placeholder="Buscar posts..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pr-10 rounded-full bg-card/50 backdrop-blur-sm border-none shadow-lg"
+              />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                <Search className="h-5 w-5 text-foreground" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-xl mx-auto space-y-4">
+          {isLoading ? (
             <div className="space-y-4">
               {[1, 2, 3].map((i) => (
-                <Card key={i} className="border-none shadow-sm">
-                  <CardContent className="p-0">
-                    <div className="animate-pulse">
-                      <div className="flex items-center gap-3 p-4">
-                        <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-full" />
-                        <div className="flex-1">
-                          <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
-                          <div className="h-3 w-16 bg-gray-100 dark:bg-gray-800 rounded" />
-                        </div>
+                <Card key={i} className="border-none shadow-sm animate-pulse">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-gray-200" />
+                      <div className="flex-1">
+                        <div className="h-4 w-24 bg-gray-200 rounded" />
+                        <div className="h-3 w-16 bg-gray-200 rounded mt-2" />
                       </div>
-                      <div className="h-64 bg-gray-100 dark:bg-gray-800" />
                     </div>
+                    <div className="h-24 bg-gray-200 rounded mt-4" />
                   </CardContent>
                 </Card>
               ))}
@@ -215,54 +247,58 @@ export default function Posts() {
               <div key={post.id}>
                 <Card className="border-none shadow-sm bg-card hover:bg-accent/5 transition-colors duration-200">
                   <CardContent className="p-0">
-                    <div className="flex items-center gap-3 p-4">
-                      <Avatar className="h-12 w-12 border-2 border-primary/10">
+                    <div className="flex items-center gap-3 px-4 py-3">
+                      <Avatar className="h-10 w-10 border-2 border-primary/10">
                         <AvatarImage src={post.user.avatar_url || "/placeholder.svg"} />
                         <AvatarFallback>
                           {post.user.full_name?.charAt(0).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
-                      <div>
-                        <h2 className="font-semibold">{post.user.full_name}</h2>
-                        <p className="text-sm text-muted-foreground">
-                          {formatDate(post.created_at)}
+                      <div className="flex-1">
+                        <div className="flex items-center gap-1">
+                          <span className="font-semibold text-foreground hover:underline cursor-pointer">
+                            {post.user.full_name}
+                          </span>
+                          <span className="text-muted-foreground text-sm">
+                            @{post.user.username}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {formatDateTime(post.created_at)}
                         </p>
                       </div>
                     </div>
 
                     {post.content && (
-                      <p className="px-4 pb-4 whitespace-pre-wrap">{post.content}</p>
+                      <div className="px-4 py-2">
+                        <p className="text-foreground text-[15px] leading-normal">
+                          {post.content}
+                        </p>
+                      </div>
                     )}
 
                     {(post.images?.length > 0 || post.video_urls?.length > 0) && (
-                      <MediaCarousel
-                        images={post.images || []}
-                        videoUrls={post.video_urls || []}
-                        title={post.content || ""}
-                      />
+                      <div className="w-full mt-2">
+                        <MediaCarousel
+                          images={post.images || []}
+                          videoUrls={post.video_urls || []}
+                          title={post.content || ""}
+                          autoplay={false}
+                          showControls={true}
+                          cropMode="contain"
+                        />
+                      </div>
                     )}
 
                     <div className="flex items-center justify-between px-4 py-3 border-t border-border/40">
-                      <div className="flex items-center gap-2">
+                      <div className="relative">
                         <button
                           className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                          onClick={(e) => {
-                            // Se já tem uma reação, remove ela
-                            if (post.reaction_type) {
-                              handleReaction(post.id, post.reaction_type);
-                            } else {
-                              // Se não tem reação, abre o menu
-                              setActiveReactionMenu(activeReactionMenu === post.id ? null : post.id);
-                            }
-                          }}
+                          onClick={() => setActiveReactionMenu(activeReactionMenu === post.id ? null : post.id)}
                         >
-                          {post.reaction_type ? (
-                            <span className="text-xl text-blue-500">
-                              {getReactionIcon(post.reaction_type) || <ThumbsUp className="w-5 h-5" />}
-                            </span>
-                          ) : (
-                            <ThumbsUp className="w-5 h-5 text-muted-foreground" />
-                          )}
+                          <span className={`text-xl ${post.reaction_type ? 'text-blue-500' : 'text-muted-foreground'}`}>
+                            {getReactionIcon(post.reaction_type || 'like')}
+                          </span>
                           <span className={`text-sm ${post.reaction_type ? 'text-blue-500' : 'text-muted-foreground'}`}>
                             {post.likes || 0}
                           </span>
@@ -272,16 +308,28 @@ export default function Posts() {
                           isOpen={activeReactionMenu === post.id}
                           onSelect={(type) => handleReaction(post.id, type)}
                         />
-
-                        <button className="flex items-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-                          <MessageCircle className="w-5 h-5 text-muted-foreground" />
-                          <span className="text-sm text-muted-foreground">0</span>
-                        </button>
                       </div>
 
+                      <button 
+                        onClick={() => navigate(`/posts/${post.id}`)}
+                        className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                      >
+                        <MessageCircle className="w-5 h-5 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground">
+                          {post.comment_count || 0}
+                        </span>
+                      </button>
+
                       <button
-                        onClick={() => handleShare(`${window.location.origin}/post/${post.id}`)}
-                        className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                        className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-[#25D366]/10 hover:bg-[#25D366]/20 transition-colors"
+                        onClick={() => handleWhatsAppShare(post.id)}
+                      >
+                        <MessageSquareMore className="w-5 h-5 text-[#25D366]" />
+                      </button>
+
+                      <button
+                        className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                        onClick={() => handleShare(post.id)}
                       >
                         <Share2 className="w-5 h-5 text-muted-foreground" />
                       </button>
