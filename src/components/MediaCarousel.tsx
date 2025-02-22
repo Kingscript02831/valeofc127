@@ -51,21 +51,11 @@ export const MediaCarousel = ({
       const videoId = url.split('youtu.be/')[1]?.split('?')[0];
       return `https://www.youtube.com/embed/${videoId}`;
     }
-    // Convert Instagram video URLs if needed
-    if (url.includes('instagram.com/')) {
-      if (!url.includes('/embed/')) {
-        const postIdMatch = url.match(/\/(?:p|reel)\/([^/?]+)/);
-        if (postIdMatch) {
-          // Usar formato de incorporação hidrata/minimal para remover UI e preservar proporção
-          return `https://www.instagram.com/p/${postIdMatch[1]}/embed/hidrated/?cr=1&v=14&rd=https%3A%2F%2Fwww.instagram.com`;
-        }
-      }
-    }
     return url;
   };
 
   return (
-    <div className="relative w-full h-full bg-gray-100 overflow-hidden">
+    <div className="relative w-full h-full bg-background overflow-hidden">
       {currentMedia.type === 'video' ? (
         <div className="relative w-full h-0 pb-[100%]">
           {currentMedia.url.includes('youtube.com') || currentMedia.url.includes('youtu.be') ? (
@@ -76,24 +66,12 @@ export const MediaCarousel = ({
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               title={title}
             />
-          ) : currentMedia.url.includes('instagram.com') ? (
-            <iframe
-              src={getVideoUrl(currentMedia.url)}
-              className="absolute inset-0 w-full h-full"
-              allowFullScreen
-              title={title}
-              scrolling="no"
-              frameBorder="0"
-              allow="autoplay; encrypted-media"
-              allowTransparency
-            />
           ) : (
             <video
               src={currentMedia.url}
               autoPlay={autoplay}
-              controls={!autoplay}
+              controls
               loop
-              muted={autoplay}
               playsInline
               className="absolute inset-0 w-full h-full object-contain"
               controlsList="nodownload"
@@ -104,24 +82,11 @@ export const MediaCarousel = ({
         </div>
       ) : (
         <div className="relative w-full h-0 pb-[100%]">
-          {currentMedia.url.includes('instagram.com') ? (
-            <iframe
-              src={getVideoUrl(currentMedia.url)}
-              className="absolute inset-0 w-full h-full"
-              allowFullScreen
-              title={title}
-              scrolling="no"
-              frameBorder="0"
-              allow="autoplay; encrypted-media"
-              allowTransparency
-            />
-          ) : (
-            <img
-              src={currentMedia.url}
-              alt={title}
-              className="absolute inset-0 w-full h-full object-contain"
-            />
-          )}
+          <img
+            src={currentMedia.url}
+            alt={title}
+            className="absolute inset-0 w-full h-full object-contain"
+          />
         </div>
       )}
 
@@ -145,3 +110,4 @@ export const MediaCarousel = ({
 };
 
 export default MediaCarousel;
+

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +10,8 @@ import PhotoUrlDialog from "@/components/PhotoUrlDialog";
 import { MediaCarousel } from "@/components/MediaCarousel";
 import Navbar from "@/components/Navbar";
 import BottomNav from "@/components/BottomNav";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 
 interface UserPost {
   id: string;
@@ -30,6 +31,10 @@ const PostForm = () => {
   const [editingPost, setEditingPost] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [newImageUrl, setNewImageUrl] = useState("");
+  const [newVideoUrl, setNewVideoUrl] = useState("");
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [videoUrls, setVideoUrls] = useState<string[]>([]);
 
   useEffect(() => {
     fetchUserPosts();
@@ -148,6 +153,59 @@ const PostForm = () => {
     }
   };
 
+  const handleAddImage = () => {
+    if (!newImageUrl) {
+      toast.error("Por favor, insira uma URL de imagem válida");
+      return;
+    }
+
+    if (!newImageUrl.includes('dropbox.com')) {
+      toast.error("Por favor, insira uma URL válida do Dropbox");
+      return;
+    }
+
+    let directImageUrl = newImageUrl;
+    if (newImageUrl.includes('www.dropbox.com')) {
+      directImageUrl = newImageUrl.replace('www.dropbox.com', 'dl.dropboxusercontent.com');
+    }
+
+    if (!imageUrls.includes(directImageUrl)) {
+      setImageUrls([...imageUrls, directImageUrl]);
+      setNewImageUrl("");
+      toast.success("Imagem adicionada com sucesso!");
+    } else {
+      toast.error("Esta imagem já foi adicionada");
+    }
+  };
+
+  const handleAddVideo = () => {
+    if (!newVideoUrl) {
+      toast.error("Por favor, insira uma URL de vídeo válida");
+      return;
+    }
+
+    const isDropboxUrl = newVideoUrl.includes('dropbox.com');
+    const isYoutubeUrl = newVideoUrl.includes('youtube.com') || newVideoUrl.includes('youtu.be');
+
+    if (!isDropboxUrl && !isYoutubeUrl) {
+      toast.error("Por favor, insira uma URL válida do Dropbox ou YouTube");
+      return;
+    }
+
+    let directVideoUrl = newVideoUrl;
+    if (isDropboxUrl && newVideoUrl.includes('www.dropbox.com')) {
+      directVideoUrl = newVideoUrl.replace('www.dropbox.com', 'dl.dropboxusercontent.com');
+    }
+
+    if (!videoUrls.includes(directVideoUrl)) {
+      setVideoUrls([...videoUrls, directVideoUrl]);
+      setNewVideoUrl("");
+      toast.success("Vídeo adicionado com sucesso!");
+    } else {
+      toast.error("Este vídeo já foi adicionada");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -174,6 +232,37 @@ const PostForm = () => {
                   />
                 </div>
               )}
+              <div className="space-y-4 mt-4">
+                <div>
+                  <Label>Imagens do Dropbox</Label>
+                  <div className="flex gap-2 mt-2">
+                    <Input
+                      value={newImageUrl}
+                      onChange={(e) => setNewImageUrl(e.target.value)}
+                      placeholder="Cole a URL compartilhada do Dropbox"
+                    />
+                    <Button type="button" onClick={handleAddImage}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Adicionar
+                    </Button>
+                  </div>
+                </div>
+                
+                <div>
+                  <Label>Vídeos (Dropbox ou YouTube)</Label>
+                  <div className="flex gap-2 mt-2">
+                    <Input
+                      value={newVideoUrl}
+                      onChange={(e) => setNewVideoUrl(e.target.value)}
+                      placeholder="Cole a URL do Dropbox ou YouTube"
+                    />
+                    <Button type="button" onClick={handleAddVideo}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Adicionar
+                    </Button>
+                  </div>
+                </div>
+              </div>
               <div className="flex gap-2">
                 <Button variant="outline" onClick={() => setIsPhotoDialogOpen(true)}>
                   <Plus className="w-4 h-4 mr-2" />
