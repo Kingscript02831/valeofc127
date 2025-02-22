@@ -40,12 +40,16 @@ const getReactionIcon = (type: string) => {
       return '❤️';
     case 'haha':
       return '😂';
+    case 'crying':
+      return '🥲';
     case 'sad':
       return '😞';
     case 'angry':
       return '🤬';
-    default:
+    case 'like':
       return '👍';
+    default:
+      return null;
   }
 };
 
@@ -155,7 +159,7 @@ export default function Posts() {
       console.error('Error in reaction handler:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível processar sua reação. Tente novamente.",
+        description: "Não foi possível processar sua reação",
         variant: "destructive",
       });
     }
@@ -296,9 +300,13 @@ export default function Posts() {
                           className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                           onClick={() => setActiveReactionMenu(activeReactionMenu === post.id ? null : post.id)}
                         >
-                          <span className={`text-xl ${post.reaction_type ? 'text-blue-500' : 'text-muted-foreground'}`}>
-                            {getReactionIcon(post.reaction_type || 'like')}
-                          </span>
+                          {post.reaction_type ? (
+                            <span className="text-xl text-blue-500">
+                              {getReactionIcon(post.reaction_type)}
+                            </span>
+                          ) : (
+                            <ThumbsUp className="w-5 h-5 text-muted-foreground" />
+                          )}
                           <span className={`text-sm ${post.reaction_type ? 'text-blue-500' : 'text-muted-foreground'}`}>
                             {post.likes || 0}
                           </span>

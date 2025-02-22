@@ -30,6 +30,12 @@ const ReactionMenu: React.FC<ReactionMenuProps> = ({ isOpen, onSelect }) => {
         😂
       </button>
       <button
+        onClick={() => onSelect('crying')}
+        className="p-2 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors text-xl"
+      >
+        🥲
+      </button>
+      <button
         onClick={() => onSelect('sad')}
         className="p-2 rounded-full hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-colors text-xl"
       >
