@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -101,7 +100,6 @@ export default function Posts() {
         .single();
 
       if (existingReaction) {
-        // Remove reaction if same type is clicked
         if (existingReaction.reaction_type === reactionType) {
           const { error: deleteError } = await supabase
             .from('post_likes')
@@ -111,7 +109,6 @@ export default function Posts() {
 
           if (deleteError) throw deleteError;
         } else {
-          // Update reaction type
           const { error: updateError } = await supabase
             .from('post_likes')
             .update({ reaction_type: reactionType })
@@ -121,7 +118,6 @@ export default function Posts() {
           if (updateError) throw updateError;
         }
       } else {
-        // Add new reaction
         const { error: insertError } = await supabase
           .from('post_likes')
           .insert({
@@ -133,7 +129,6 @@ export default function Posts() {
         if (insertError) throw insertError;
       }
 
-      // Close reaction menu and refresh posts
       setActiveReactionMenu(null);
       await queryClient.invalidateQueries({ queryKey: ['posts'] });
       
@@ -154,7 +149,6 @@ export default function Posts() {
       });
     } catch (error) {
       console.error('Error sharing:', error);
-      // Fall back to copying to clipboard
       navigator.clipboard.writeText(`${window.location.origin}/posts/${postId}`);
       toast({
         title: "Link copiado",
@@ -254,7 +248,7 @@ export default function Posts() {
                           title={post.content || ""}
                           autoplay={false}
                           showControls={true}
-                          cropMode="cover"
+                          cropMode="contain"
                         />
                       </div>
                     )}
