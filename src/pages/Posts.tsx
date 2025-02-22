@@ -14,6 +14,8 @@ import ReactionMenu from "@/components/ReactionMenu";
 import { Separator } from "@/components/ui/separator";
 import BottomNav from "@/components/BottomNav";
 import { useNavigate } from "react-router-dom";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface Post {
   id: string;
@@ -160,6 +162,36 @@ export default function Posts() {
     }
   };
 
+  const formatDateTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (date.toDateString() === today.toDateString()) {
+      return `Hoje às ${format(date, 'HH:mm')}`;
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      return `Ontem às ${format(date, 'HH:mm')}`;
+    } else {
+      return format(date, "d 'de' MMMM 'às' HH:mm", { locale: ptBR });
+    }
+  };
+
+  const getReactionIcon = (type: string) => {
+    switch (type) {
+      case 'love':
+        return '❤️';
+      case 'haha':
+        return '😂';
+      case 'sad':
+        return '😞';
+      case 'angry':
+        return '🤬';
+      default:
+        return '👍';
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-background">
       <Navbar />
@@ -227,10 +259,7 @@ export default function Posts() {
                           </span>
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          {new Date(post.created_at).toLocaleDateString('pt-BR', {
-                            day: '2-digit',
-                            month: 'long',
-                          })}
+                          {formatDateTime(post.created_at)}
                         </p>
                       </div>
                     </div>
@@ -278,7 +307,7 @@ export default function Posts() {
 
                       <button 
                         onClick={() => navigate(`/posts/${post.id}`)}
-                        className="flex items-center gap-2 hover:text-primary transition-colors duration-200"
+                        className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                       >
                         <MessageCircle className="w-5 h-5 text-muted-foreground" />
                         <span className="text-sm text-muted-foreground">
@@ -307,18 +336,3 @@ export default function Posts() {
     </div>
   );
 }
-
-const getReactionIcon = (type: string) => {
-  switch (type) {
-    case 'love':
-      return '❤️';
-    case 'haha':
-      return '😂';
-    case 'sad':
-      return '😞';
-    case 'angry':
-      return '🤬';
-    default:
-      return '👍';
-  }
-};
