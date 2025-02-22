@@ -56,8 +56,8 @@ export const MediaCarousel = ({
       if (!url.includes('/embed/')) {
         const postIdMatch = url.match(/\/(?:p|reel)\/([^/?]+)/);
         if (postIdMatch) {
-          // Usar o formato de incorporação sem cabeçalho
-          return `https://www.instagram.com/p/${postIdMatch[1]}/embed/captioned/`;
+          // Usar formato de incorporação hidrata/minimal para remover UI e preservar proporção
+          return `https://www.instagram.com/p/${postIdMatch[1]}/embed/hidrated/?cr=1&v=14&rd=https%3A%2F%2Fwww.instagram.com`;
         }
       }
     }
@@ -67,7 +67,7 @@ export const MediaCarousel = ({
   return (
     <div className="relative w-full h-full bg-gray-100 overflow-hidden">
       {currentMedia.type === 'video' ? (
-        <div className="relative w-full aspect-video">
+        <div className="relative w-full h-0 pb-[100%]">
           {currentMedia.url.includes('youtube.com') || currentMedia.url.includes('youtu.be') ? (
             <iframe
               src={getVideoUrl(currentMedia.url)}
@@ -84,6 +84,7 @@ export const MediaCarousel = ({
               title={title}
               scrolling="no"
               frameBorder="0"
+              allow="autoplay; encrypted-media"
               allowTransparency
             />
           ) : (
@@ -94,7 +95,7 @@ export const MediaCarousel = ({
               loop
               muted={autoplay}
               playsInline
-              className="absolute inset-0 w-full h-full object-cover"
+              className="absolute inset-0 w-full h-full object-contain"
               controlsList="nodownload"
             >
               Seu navegador não suporta a reprodução de vídeos.
@@ -102,7 +103,7 @@ export const MediaCarousel = ({
           )}
         </div>
       ) : (
-        <div className="relative w-full aspect-[4/3]">
+        <div className="relative w-full h-0 pb-[100%]">
           {currentMedia.url.includes('instagram.com') ? (
             <iframe
               src={getVideoUrl(currentMedia.url)}
@@ -111,13 +112,14 @@ export const MediaCarousel = ({
               title={title}
               scrolling="no"
               frameBorder="0"
+              allow="autoplay; encrypted-media"
               allowTransparency
             />
           ) : (
             <img
               src={currentMedia.url}
               alt={title}
-              className="absolute inset-0 w-full h-full object-cover"
+              className="absolute inset-0 w-full h-full object-contain"
             />
           )}
         </div>
