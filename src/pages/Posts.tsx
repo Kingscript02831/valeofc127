@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -45,10 +44,13 @@ export default function Posts() {
           .from('posts')
           .select(`
             *,
-            user:user_id (
+            user:profiles!posts_user_id_fkey (
               username,
               full_name,
               avatar_url
+            ),
+            likes:post_likes (
+              reaction_type
             )
           `)
           .order('created_at', { ascending: false });
@@ -57,16 +59,17 @@ export default function Posts() {
           query = query.ilike('content', `%${searchTerm}%`);
         }
 
-        const { data, error } = await query;
+        const { data: postsData, error } = await query;
 
-        if (error) {
-          console.error('Error fetching posts:', error);
-          throw error;
-        }
+        if (error) throw error;
 
-        return data || [];
+        // Transform the data to include reaction information
+        return (postsData || []).map(post => ({
+          ...post,
+          reaction_type: post.likes?.[0]?.reaction_type || null,
+        }));
       } catch (error) {
-        console.error('Error in posts query:', error);
+        console.error('Error fetching posts:', error);
         return [];
       }
     }
