@@ -17,7 +17,7 @@ interface MediaCarouselProps {
   cropMode?: "contain" | "cover";
 }
 
-export const MediaCarousel: React.FC<MediaCarouselProps> = ({
+const MediaCarousel: React.FC<MediaCarouselProps> = ({
   images = [],
   videoUrls = [],
   title = "",
@@ -63,3 +63,5 @@ export const MediaCarousel: React.FC<MediaCarouselProps> = ({
     </Carousel>
   );
 };
+
+export default MediaCarousel;
