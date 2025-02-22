@@ -1,9 +1,8 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Bell, Search, Share2, MessageCircle } from "lucide-react";
+import { Bell, Search, Share2, MessageCircle, MessageSquareMore } from "lucide-react";
 import { MediaCarousel } from "@/components/MediaCarousel";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -162,6 +161,12 @@ export default function Posts() {
     }
   };
 
+  const handleWhatsAppShare = async (postId: string) => {
+    const postUrl = `${window.location.origin}/posts/${postId}`;
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(postUrl)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
   const formatDateTime = (dateString: string) => {
     const date = new Date(dateString);
     const today = new Date();
@@ -313,6 +318,13 @@ export default function Posts() {
                         <span className="text-sm text-muted-foreground">
                           {post.comment_count || 0}
                         </span>
+                      </button>
+
+                      <button
+                        className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-[#25D366]/10 hover:bg-[#25D366]/20 transition-colors"
+                        onClick={() => handleWhatsAppShare(post.id)}
+                      >
+                        <MessageSquareMore className="w-5 h-5 text-[#25D366]" />
                       </button>
 
                       <button
