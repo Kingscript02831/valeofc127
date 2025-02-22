@@ -124,7 +124,7 @@ const BottomNav = () => {
               </DropdownMenuItem>
               <DropdownMenuItem
                 className="cursor-pointer"
-                onClick={(e) => handleNavigation("/posts", e)}
+                onClick={(e) => handleNavigation("/posts/new", e)}
               >
                 Criar Post
               </DropdownMenuItem>
