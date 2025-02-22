@@ -64,6 +64,31 @@ export default function Profile() {
     },
   });
 
+  const { data: followStats } = useQuery({
+    queryKey: ["followStats", profile?.id],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Não autenticado");
+
+      // Buscar contagem de seguidores
+      const { count: followersCount } = await supabase
+        .from('follows')
+        .select('*', { count: 'exact', head: true })
+        .eq('following_id', session.user.id);
+
+      // Buscar contagem de pessoas que o usuário segue
+      const { count: followingCount } = await supabase
+        .from('follows')
+        .select('*', { count: 'exact', head: true })
+        .eq('follower_id', session.user.id);
+
+      return {
+        followers: followersCount || 0,
+        following: followingCount || 0
+      };
+    },
+  });
+
   const handlePhotoUpdate = useMutation({
     mutationFn: async ({ type, url }: { type: 'avatar' | 'cover', url: string | null }) => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -278,61 +303,74 @@ export default function Profile() {
 
           <div className="px-4 mt-4">
             <div className="space-y-2">
-              <div>
-                <h2 className="text-2xl font-bold">{profile?.full_name}</h2>
-                <p className="text-gray-400">@{profile?.username}</p>
-                {profile?.status && (
-                  <p className="text-yellow-500 text-sm mt-1">
-                    {profile.status}
-                  </p>
-                )}
-                {profile?.city && (
-                  <p className="text-gray-400 text-sm mt-1 flex items-center gap-1">
-                    <MapPin className="h-4 w-4" />
-                    Mora em {profile.city}
-                  </p>
-                )}
-
-                <div className="space-y-2 mt-3">
-                  {profile?.relationship_status && (
-                    <p className="text-gray-400 text-sm flex items-center gap-1">
-                      <Heart className="h-4 w-4" />
-                      {formatRelationshipStatus(profile.relationship_status)}
+              <div className="flex items-start justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold">{profile?.full_name}</h2>
+                  <p className="text-gray-400">@{profile?.username}</p>
+                  {profile?.status && (
+                    <p className="text-yellow-500 text-sm mt-1">
+                      {profile.status}
                     </p>
                   )}
-                  
-                  {profile?.birth_date && (
-                    <p className="text-gray-400 text-sm flex items-center gap-1">
-                      <Calendar className="h-4 w-4" />
-                      {formatBirthDate(profile.birth_date)}
-                    </p>
-                  )}
-                  
-                  <div className="flex flex-col gap-2 mt-2">
-                    {profile?.instagram_url && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex items-center gap-1 w-fit"
-                        onClick={() => window.open(profile.instagram_url, '_blank')}
-                      >
-                        <Instagram className="h-4 w-4" />
-                        Instagram
-                      </Button>
-                    )}
-                    
-                    {profile?.website && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex items-center gap-1 w-fit"
-                        onClick={() => window.open(profile.website, '_blank')}
-                      >
-                        <Globe className="h-4 w-4" />
-                        Website
-                      </Button>
-                    )}
+                </div>
+                <div className="flex gap-4 text-center">
+                  <div>
+                    <p className="font-semibold">{followStats?.followers || 0}</p>
+                    <p className="text-sm text-gray-500">Seguidores</p>
                   </div>
+                  <div>
+                    <p className="font-semibold">{followStats?.following || 0}</p>
+                    <p className="text-sm text-gray-500">Seguindo</p>
+                  </div>
+                </div>
+              </div>
+
+              {profile?.city && (
+                <p className="text-gray-400 text-sm mt-1 flex items-center gap-1">
+                  <MapPin className="h-4 w-4" />
+                  Mora em {profile.city}
+                </p>
+              )}
+
+              <div className="space-y-2 mt-3">
+                {profile?.relationship_status && (
+                  <p className="text-gray-400 text-sm flex items-center gap-1">
+                    <Heart className="h-4 w-4" />
+                    {formatRelationshipStatus(profile.relationship_status)}
+                  </p>
+                )}
+                
+                {profile?.birth_date && (
+                  <p className="text-gray-400 text-sm flex items-center gap-1">
+                    <Calendar className="h-4 w-4" />
+                    {formatBirthDate(profile.birth_date)}
+                  </p>
+                )}
+                
+                <div className="flex flex-col gap-2 mt-2">
+                  {profile?.instagram_url && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-1 w-fit"
+                      onClick={() => window.open(profile.instagram_url, '_blank')}
+                    >
+                      <Instagram className="h-4 w-4" />
+                      Instagram
+                    </Button>
+                  )}
+                  
+                  {profile?.website && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-1 w-fit"
+                      onClick={() => window.open(profile.website, '_blank')}
+                    >
+                      <Globe className="h-4 w-4" />
+                      Website
+                    </Button>
+                  )}
                 </div>
               </div>
 
