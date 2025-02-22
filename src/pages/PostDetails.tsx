@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { MediaCarousel } from "@/components/MediaCarousel";
@@ -12,20 +12,6 @@ import { MessageCircle, Share2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import BottomNav from "@/components/BottomNav";
 import ReactionMenu from "@/components/ReactionMenu";
-
-interface Comment {
-  id: string;
-  content: string;
-  created_at: string;
-  user: {
-    id: string;
-    username: string;
-    full_name: string;
-    avatar_url: string;
-  };
-  likes: number;
-  has_liked?: boolean;
-}
 
 interface PostDetails {
   id: string;
@@ -41,7 +27,19 @@ interface PostDetails {
   };
   likes: number;
   reaction_type?: string;
-  comments: Comment[];
+  comments: {
+    id: string;
+    content: string;
+    created_at: string;
+    likes: number;
+    has_liked: boolean;
+    user: {
+      id: string;
+      username: string;
+      full_name: string;
+      avatar_url: string;
+    };
+  }[];
 }
 
 export default function PostDetails() {
@@ -50,7 +48,7 @@ export default function PostDetails() {
   const [post, setPost] = useState<PostDetails | null>(null);
   const [comment, setComment] = useState("");
   const [activeReactionMenu, setActiveReactionMenu] = useState(false);
-  const [replyTo, setReplyTo] = useState<string | null>(null);
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
 
   useEffect(() => {
     fetchPost();
@@ -58,6 +56,8 @@ export default function PostDetails() {
 
   const fetchPost = async () => {
     try {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      
       const { data: postData, error: postError } = await supabase
         .from('posts')
         .select(`
@@ -90,7 +90,7 @@ export default function PostDetails() {
             full_name,
             avatar_url
           ),
-          comment_likes (
+          comment_likes!left (
             user_id
           )
         `)
@@ -99,17 +99,15 @@ export default function PostDetails() {
 
       if (commentsError) throw commentsError;
 
-      const { data: { user } } = await supabase.auth.getUser();
-
       const formattedComments = commentsData.map(comment => ({
         ...comment,
         likes: comment.comment_likes?.length || 0,
-        has_liked: comment.comment_likes?.some(like => like.user_id === user?.id)
+        has_liked: comment.comment_likes?.some(like => like.user_id === currentUser?.id) || false
       }));
 
       setPost({
         ...postData,
-        reaction_type: postData.post_likes?.find(like => like.user_id === user?.id)?.reaction_type,
+        reaction_type: postData.post_likes?.find(like => like.user_id === currentUser?.id)?.reaction_type,
         likes: postData.post_likes?.length || 0,
         comments: formattedComments
       });
@@ -118,6 +116,52 @@ export default function PostDetails() {
       toast({
         title: "Erro",
         description: "Erro ao carregar o post",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCommentLike = async (commentId: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Erro",
+          description: "Você precisa estar logado para curtir",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { data: existingLike } = await supabase
+        .from('comment_likes')
+        .select()
+        .eq('comment_id', commentId)
+        .eq('user_id', user.id)
+        .single();
+
+      if (existingLike) {
+        await supabase
+          .from('comment_likes')
+          .delete()
+          .eq('comment_id', commentId)
+          .eq('user_id', user.id);
+      } else {
+        await supabase
+          .from('comment_likes')
+          .insert({
+            comment_id: commentId,
+            user_id: user.id
+          });
+      }
+
+      await fetchPost();
+    } catch (error) {
+      console.error('Error liking comment:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível curtir o comentário",
         variant: "destructive",
       });
     }
@@ -180,52 +224,6 @@ export default function PostDetails() {
     }
   };
 
-  const handleCommentLike = async (commentId: string) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        toast({
-          title: "Erro",
-          description: "Você precisa estar logado para curtir",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const { data: existingLike } = await supabase
-        .from('comment_likes')
-        .select('*')
-        .eq('comment_id', commentId)
-        .eq('user_id', user.id)
-        .single();
-
-      if (existingLike) {
-        await supabase
-          .from('comment_likes')
-          .delete()
-          .eq('comment_id', commentId)
-          .eq('user_id', user.id);
-      } else {
-        await supabase
-          .from('comment_likes')
-          .insert({
-            comment_id: commentId,
-            user_id: user.id
-          });
-      }
-
-      await fetchPost();
-    } catch (error) {
-      console.error('Error liking comment:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível curtir o comentário",
-        variant: "destructive",
-      });
-    }
-  };
-
   const handleComment = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -257,7 +255,7 @@ export default function PostDetails() {
         });
 
       setComment("");
-      setReplyTo(null);
+      setReplyingTo(null);
       await fetchPost();
       
       toast({
@@ -275,7 +273,7 @@ export default function PostDetails() {
   };
 
   const handleReply = (username: string) => {
-    setReplyTo(username);
+    setReplyingTo(username);
     setComment(`@${username} `);
   };
 
@@ -374,7 +372,7 @@ export default function PostDetails() {
             <div className="mt-6">
               <div className="flex gap-2 mb-6">
                 <Input
-                  placeholder={replyTo ? `Respondendo @${replyTo}...` : "Adicione um comentário..."}
+                  placeholder={replyingTo ? `Respondendo @${replyingTo}...` : "Adicione um comentário..."}
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
                 />
