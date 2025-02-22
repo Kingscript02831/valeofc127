@@ -60,17 +60,24 @@ export default function Posts() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeReactionMenu, setActiveReactionMenu] = useState<string | null>(null);
 
-  const { data: posts = [], isLoading } = useQuery({
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      return user;
+    },
+  });
+
+  const { data: posts, isLoading } = useQuery({
     queryKey: ['posts', searchTerm],
     queryFn: async () => {
       try {
-        const { data: { user: currentUser } } = await supabase.auth.getUser();
-        
         let query = supabase
           .from('posts')
           .select(`
             *,
             user:user_id (
+              id,
               username,
               full_name,
               avatar_url
@@ -87,20 +94,83 @@ export default function Posts() {
         }
 
         const { data: postsData, error } = await query;
-
         if (error) throw error;
 
-        return (postsData || []).map(post => ({
-          ...post,
-          reaction_type: post.post_likes?.find(like => like.user_id === currentUser?.id)?.reaction_type,
-          likes: post.post_likes?.length || 0
+        const postsWithFollowStatus = await Promise.all((postsData || []).map(async (post) => {
+          if (!currentUser) return { ...post, isFollowing: false };
+
+          const { count } = await supabase
+            .from('follows')
+            .select('*', { count: 'exact', head: true })
+            .eq('follower_id', currentUser.id)
+            .eq('following_id', post.user_id);
+
+          return {
+            ...post,
+            isFollowing: count ? count > 0 : false,
+            reaction_type: post.post_likes?.find(like => like.user_id === currentUser?.id)?.reaction_type,
+            likes: post.post_likes?.length || 0
+          };
         }));
+
+        return postsWithFollowStatus;
       } catch (error) {
         console.error('Error fetching posts:', error);
         return [];
       }
-    }
+    },
   });
+
+  const handleFollow = async (userId: string, isFollowing: boolean) => {
+    try {
+      if (!currentUser) {
+        toast({
+          title: "Erro",
+          description: "Você precisa estar logado para seguir outros usuários",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (isFollowing) {
+        const { error } = await supabase
+          .from('follows')
+          .delete()
+          .eq('follower_id', currentUser.id)
+          .eq('following_id', userId);
+
+        if (error) throw error;
+
+        toast({
+          title: "Sucesso",
+          description: "Você deixou de seguir este usuário",
+        });
+      } else {
+        const { error } = await supabase
+          .from('follows')
+          .insert({
+            follower_id: currentUser.id,
+            following_id: userId
+          });
+
+        if (error) throw error;
+
+        toast({
+          title: "Sucesso",
+          description: "Você começou a seguir este usuário",
+        });
+      }
+
+      await queryClient.invalidateQueries({ queryKey: ['posts'] });
+    } catch (error) {
+      console.error('Error following/unfollowing:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar o status de seguir",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleReaction = async (postId: string, reactionType: string) => {
     try {
@@ -186,7 +256,7 @@ export default function Posts() {
     window.open(whatsappUrl, '_blank');
   };
 
-  const formatDateTime = (dateString: string) => {
+  const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const today = new Date();
     const yesterday = new Date(today);
@@ -247,29 +317,37 @@ export default function Posts() {
               ))}
             </div>
           ) : (
-            posts.map((post: Post, index) => (
+            posts?.map((post: any, index) => (
               <div key={post.id}>
                 <Card className="border-none shadow-sm bg-card hover:bg-accent/5 transition-colors duration-200">
                   <CardContent className="p-0">
-                    <div className="flex items-center gap-3 px-4 py-3">
-                      <Avatar className="h-10 w-10 border-2 border-primary/10">
-                        <AvatarImage src={post.user.avatar_url || "/placeholder.svg"} />
-                        <AvatarFallback>
-                          {post.user.full_name?.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-1">
-                          <span className="font-semibold text-foreground hover:underline cursor-pointer">
-                            {post.user.full_name}
-                          </span>
-                          <span className="text-muted-foreground text-sm">
-                            @{post.user.username}
-                          </span>
+                    <div className="flex items-center justify-between px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-12 w-12 border-2 border-primary/10">
+                          <AvatarImage src={post.user.avatar_url || "/placeholder.svg"} />
+                          <AvatarFallback>
+                            {post.user.full_name?.charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h2 className="font-semibold">{post.user.full_name}</h2>
+                            <p className="text-sm text-muted-foreground">@{post.user.username}</p>
+                            {currentUser && currentUser.id !== post.user_id && (
+                              <Button
+                                variant={post.isFollowing ? "outline" : "default"}
+                                size="sm"
+                                className="ml-2"
+                                onClick={() => handleFollow(post.user_id, post.isFollowing)}
+                              >
+                                {post.isFollowing ? "Seguindo" : "Seguir"}
+                              </Button>
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {formatDate(post.created_at)}
+                          </p>
                         </div>
-                        <p className="text-xs text-muted-foreground">
-                          {formatDateTime(post.created_at)}
-                        </p>
                       </div>
                     </div>
 

@@ -254,7 +254,13 @@ export default function Profile() {
           <button onClick={() => navigate(-1)} className="mr-2">
             <ArrowLeft className="h-6 w-6" />
           </button>
-          <h1 className="text-lg font-semibold">{profile?.full_name}</h1>
+          <div className="flex flex-col">
+            <h1 className="text-lg font-semibold">{profile?.full_name}</h1>
+            <div className="flex gap-4 text-sm text-gray-500">
+              <span>{followStats?.followers || 0} seguidores</span>
+              <span>{followStats?.following || 0} seguindo</span>
+            </div>
+          </div>
         </div>
         <button onClick={handleLogout} className="flex items-center">
           <LogOut className="h-6 w-6" />
