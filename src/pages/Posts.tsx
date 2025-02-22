@@ -3,10 +3,9 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Bell, Search, Share2, MessageCircle } from "lucide-react";
-import { MediaCarousel } from "@/components/MediaCarousel";
+import { MessageCircle, Search, Share2 } from "lucide-react";
+import MediaCarousel from "@/components/MediaCarousel";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -104,32 +103,26 @@ export default function Posts() {
 
       if (existingReaction) {
         if (existingReaction.reaction_type === reactionType) {
-          const { error: deleteError } = await supabase
+          await supabase
             .from('post_likes')
             .delete()
             .eq('post_id', postId)
             .eq('user_id', user.id);
-
-          if (deleteError) throw deleteError;
         } else {
-          const { error: updateError } = await supabase
+          await supabase
             .from('post_likes')
             .update({ reaction_type: reactionType })
             .eq('post_id', postId)
             .eq('user_id', user.id);
-
-          if (updateError) throw updateError;
         }
       } else {
-        const { error: insertError } = await supabase
+        await supabase
           .from('post_likes')
           .insert({
             post_id: postId,
             user_id: user.id,
             reaction_type: reactionType
           });
-
-        if (insertError) throw insertError;
       }
 
       setActiveReactionMenu(null);
@@ -139,7 +132,7 @@ export default function Posts() {
       console.error('Error in reaction handler:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível processar sua reação. Tente novamente.",
+        description: "Não foi possível processar sua reação",
         variant: "destructive",
       });
     }
@@ -147,15 +140,15 @@ export default function Posts() {
 
   const handleShare = async (postId: string) => {
     try {
-      await navigator.share({
-        url: `${window.location.origin}/posts/${postId}`,
-      });
+      const postUrl = `${window.location.origin}/posts/${postId}`;
+      const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(`Confira este post: ${postUrl}`)}`;
+      window.open(whatsappUrl, '_blank');
     } catch (error) {
       console.error('Error sharing:', error);
-      navigator.clipboard.writeText(`${window.location.origin}/posts/${postId}`);
       toast({
-        title: "Link copiado",
-        description: "O link foi copiado para sua área de transferência",
+        title: "Erro ao compartilhar",
+        description: "Não foi possível abrir o WhatsApp para compartilhar",
+        variant: "destructive",
       });
     }
   };
@@ -165,24 +158,15 @@ export default function Posts() {
       <Navbar />
       <main className="container mx-auto py-8 px-4 pt-20 pb-24">
         <div className="sticky top-16 z-10 bg-background/80 backdrop-blur-sm pb-4">
-          <div className="flex gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="hover:scale-105 transition-transform text-foreground"
-            >
-              <Bell className="h-5 w-5" />
-            </Button>
-            <div className="relative flex-1">
-              <Input
-                placeholder="Buscar posts..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pr-10 rounded-full bg-card/50 backdrop-blur-sm border-none shadow-lg"
-              />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                <Search className="h-5 w-5 text-foreground" />
-              </div>
+          <div className="relative">
+            <Input
+              placeholder="Buscar posts..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pr-10 rounded-full bg-card/50 backdrop-blur-sm border-none shadow-lg"
+            />
+            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+              <Search className="h-5 w-5 text-foreground" />
             </div>
           </div>
         </div>
@@ -209,8 +193,8 @@ export default function Posts() {
             posts.map((post: Post, index) => (
               <div key={post.id}>
                 <Card className="border-none shadow-sm bg-card hover:bg-accent/5 transition-colors duration-200">
-                  <CardContent className="p-0">
-                    <div className="flex items-center gap-3 px-4 py-3">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
                       <Avatar className="h-10 w-10 border-2 border-primary/10">
                         <AvatarImage src={post.user.avatar_url || "/placeholder.svg"} />
                         <AvatarFallback>
@@ -236,7 +220,7 @@ export default function Posts() {
                     </div>
 
                     {post.content && (
-                      <div className="px-4 py-2">
+                      <div className="mt-3">
                         <p className="text-foreground text-[15px] leading-normal">
                           {post.content}
                         </p>
@@ -244,53 +228,64 @@ export default function Posts() {
                     )}
 
                     {(post.images?.length > 0 || post.video_urls?.length > 0) && (
-                      <div className="w-full mt-2">
+                      <div className="mt-3">
                         <MediaCarousel
                           images={post.images || []}
                           videoUrls={post.video_urls || []}
                           title={post.content || ""}
-                          autoplay={false}
-                          showControls={true}
-                          cropMode="contain"
                         />
                       </div>
                     )}
 
-                    <div className="flex items-center justify-between px-4 py-3 border-t border-border/40">
-                      <div className="relative">
-                        <button
-                          className="flex items-center gap-2 transition-colors duration-200 hover:text-primary"
-                          onClick={() => setActiveReactionMenu(activeReactionMenu === post.id ? null : post.id)}
-                        >
-                          <span className="text-xl">
-                            {post.reaction_type ? getReactionIcon(post.reaction_type) : '👍'}
-                          </span>
-                          <span className="text-sm text-muted-foreground">
-                            {post.likes || 0}
-                          </span>
-                        </button>
-                        
+                    <div className="grid grid-cols-4 gap-2 mt-4">
+                      <button
+                        onClick={() => setActiveReactionMenu(activeReactionMenu === post.id ? null : post.id)}
+                        className="relative flex items-center justify-center gap-2 py-2 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                      >
+                        <span className="text-xl">
+                          {post.reaction_type ? getReactionIcon(post.reaction_type) : '👍'}
+                        </span>
+                        <span className="text-sm">
+                          {post.likes || 0}
+                        </span>
                         <ReactionMenu 
                           isOpen={activeReactionMenu === post.id}
                           onSelect={(type) => handleReaction(post.id, type)}
                         />
-                      </div>
+                      </button>
 
                       <button 
                         onClick={() => navigate(`/posts/${post.id}`)}
-                        className="flex items-center gap-2 hover:text-primary transition-colors duration-200"
+                        className="flex items-center justify-center gap-2 py-2 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                       >
-                        <MessageCircle className="w-5 h-5 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">
+                        <MessageCircle className="w-5 h-5" />
+                        <span className="text-sm">
                           {post.comment_count || 0}
                         </span>
                       </button>
 
                       <button
-                        className="flex items-center transition-colors duration-200 hover:text-primary"
                         onClick={() => handleShare(post.id)}
+                        className="flex items-center justify-center py-2 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                       >
-                        <Share2 className="w-5 h-5 text-muted-foreground" />
+                        <Share2 className="w-5 h-5" />
+                      </button>
+
+                      <button
+                        onClick={() => navigate(`/posts/${post.id}`)}
+                        className="flex items-center justify-center py-2 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                      >
+                        <svg 
+                          viewBox="0 0 24 24" 
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
                       </button>
                     </div>
                   </CardContent>
