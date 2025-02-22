@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { InstagramMedia } from "@/types/supabase";
 
 interface MediaCarouselProps {
@@ -10,43 +10,42 @@ interface MediaCarouselProps {
   instagramMedia?: InstagramMedia[];
 }
 
-export const MediaCarousel = ({ 
-  images, 
-  videoUrls, 
-  title, 
+const MediaCarousel = ({ 
+  images = [], 
+  videoUrls = [], 
+  title,
   autoplay = false,
   instagramMedia = []
 }: MediaCarouselProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const videoRef = useRef<HTMLVideoElement>(null);
   
   // Combine all media into one array
   const allMedia = [
     ...images.map(url => ({ type: "image" as const, url })),
     ...videoUrls.map(url => ({ type: "video" as const, url })),
-    ...instagramMedia.map(media => ({ type: media.type === 'video' ? 'video' as const : 'image' as const, url: media.url }))
+    ...instagramMedia
   ];
 
   useEffect(() => {
-    if (!autoplay || allMedia.length <= 1) return;
-
-    const interval = setInterval(() => {
-      setCurrentIndex((current) => (current + 1) % allMedia.length);
-    }, 5000); // Change media every 5 seconds
-
-    return () => clearInterval(interval);
-  }, [autoplay, allMedia.length]);
+    // Pause all videos except the current one
+    const videos = document.querySelectorAll('video');
+    videos.forEach(video => {
+      if (video !== videoRef.current) {
+        video.pause();
+      }
+    });
+  }, [currentIndex]);
 
   if (!allMedia.length) return null;
 
   const currentMedia = allMedia[currentIndex];
 
   const getVideoUrl = (url: string) => {
-    // Convert YouTube watch URLs to embed URLs
     if (url.includes('youtube.com/watch?v=')) {
       const videoId = url.split('v=')[1]?.split('&')[0];
       return `https://www.youtube.com/embed/${videoId}`;
     }
-    // Convert YouTube short URLs
     if (url.includes('youtu.be/')) {
       const videoId = url.split('youtu.be/')[1]?.split('?')[0];
       return `https://www.youtube.com/embed/${videoId}`;
@@ -56,41 +55,48 @@ export const MediaCarousel = ({
 
   return (
     <div className="relative w-full h-full bg-background overflow-hidden">
-      {currentMedia.type === 'video' ? (
-        <div className="relative w-full h-0 pb-[100%]">
-          {currentMedia.url.includes('youtube.com') || currentMedia.url.includes('youtu.be') ? (
+      <div className="relative w-full h-0 pb-[100%]">
+        {currentMedia.type === 'video' ? (
+          currentMedia.url.includes('youtube.com') || currentMedia.url.includes('youtu.be') ? (
             <iframe
-              src={getVideoUrl(currentMedia.url)}
+              src={`${getVideoUrl(currentMedia.url)}?autoplay=0`}
               className="absolute inset-0 w-full h-full"
               allowFullScreen
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               title={title}
             />
           ) : (
             <video
+              ref={videoRef}
               src={currentMedia.url}
-              autoPlay={autoplay}
               controls
               loop
               playsInline
               className="absolute inset-0 w-full h-full object-contain"
               controlsList="nodownload"
+              onPlay={() => {
+                // Pause all other videos when this one starts playing
+                const videos = document.querySelectorAll('video');
+                videos.forEach(video => {
+                  if (video !== videoRef.current) {
+                    video.pause();
+                  }
+                });
+              }}
             >
               Seu navegador não suporta a reprodução de vídeos.
             </video>
-          )}
-        </div>
-      ) : (
-        <div className="relative w-full h-0 pb-[100%]">
+          )
+        ) : (
           <img
             src={currentMedia.url}
             alt={title}
             className="absolute inset-0 w-full h-full object-contain"
           />
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* Navigation controls */}
+      {/* Mostrar pontos de navegação apenas se houver mais de um item */}
       {allMedia.length > 1 && (
         <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
           {allMedia.map((_, index) => (
@@ -110,4 +116,3 @@ export const MediaCarousel = ({
 };
 
 export default MediaCarousel;
-
