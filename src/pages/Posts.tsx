@@ -252,7 +252,9 @@ export default function Posts() {
                           images={post.images || []}
                           videoUrls={post.video_urls || []}
                           title={post.content || ""}
-                          autoplay
+                          autoplay={false}
+                          showControls={true}
+                          cropMode="cover"
                         />
                       </div>
                     )}
