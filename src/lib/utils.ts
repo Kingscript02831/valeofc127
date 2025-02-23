@@ -29,3 +29,20 @@ export function formatDate(date: string | number | Date): string {
     });
   }
 }
+
+export function getReactionEmoji(type: string) {
+  switch (type) {
+    case 'like':
+      return '👍';
+    case 'love':
+      return '❤️';
+    case 'haha':
+      return '😂';
+    case 'fire':
+      return '🔥';
+    case 'angry':
+      return '🤬';
+    default:
+      return '👍';
+  }
+}
