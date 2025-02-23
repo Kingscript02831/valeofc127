@@ -23,6 +23,7 @@ export interface Database {
           images: string[];
           video_urls: string[];
           created_at: string;
+          view_count: number;
         },
         Insert: {
           id?: string;
@@ -30,6 +31,23 @@ export interface Database {
           content: string;
           images?: string[];
           video_urls?: string[];
+          created_at?: string;
+          view_count?: number;
+        }
+      },
+      post_views: {
+        Row: {
+          id: string;
+          post_id: string;
+          user_id: string | null;
+          ip_address: string | null;
+          created_at: string;
+        },
+        Insert: {
+          id?: string;
+          post_id: string;
+          user_id?: string;
+          ip_address?: string;
           created_at?: string;
         }
       },
