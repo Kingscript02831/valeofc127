@@ -1,661 +1,340 @@
-import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { MediaCarousel } from "@/components/MediaCarousel";
-import { useToast } from "@/hooks/use-toast";
-import { 
-  Share2, 
-  ThumbsUp, 
-  Heart, 
-  Smile, 
-  MessageCircle, 
-  MessageSquareMore, 
-  Frown, 
-  Angry,
-  Reply,
-  ChevronDown,
-  Flame
-} from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import Navbar from "@/components/Navbar";
-import BottomNav from "@/components/BottomNav";
-import ReactionMenu from "@/components/ReactionMenu";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { supabase } from "../integrations/supabase/client";
+import MediaCarousel from "../components/MediaCarousel";
+import { useToast } from "../components/ui/use-toast";
+import { Avatar, AvatarImage } from "../components/ui/avatar";
+import { Button } from "../components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+} from "../components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../components/ui/dropdown-menu";
+import { Input } from "../components/ui/input";
+import { ScrollArea } from "../components/ui/scroll-area";
+import { Textarea } from "../components/ui/textarea";
+import Navbar from "../components/Navbar";
+import BottomNav from "../components/BottomNav";
+import ReactionMenu from "../components/ReactionMenu";
+import { MessageSquare, MoreVertical, Share2, Trash2, Edit2 } from 'lucide-react';
 
-interface Post {
-  id: string;
-  user_id: string;
-  content: string;
-  images: string[];
-  video_urls: string[];
-  likes: number;
-  reaction_type?: string;
-  created_at: string;
-  user_has_liked?: boolean;
-  comment_count: number;
-  user: {
-    username: string;
-    full_name: string;
-    avatar_url: string;
-  };
-}
-
-interface Comment {
-  id: string;
-  content: string;
-  created_at: string;
-  user_id: string;
-  reply_to_id: string | null;
-  user: {
-    username: string;
-    full_name: string;
-    avatar_url: string;
-  };
-  likes_count: number;
-  user_has_liked: boolean;
-  replies_count: number;
-}
-
-const PostDetails = () => {
-  const { id } = useParams();
-  const { toast } = useToast();
+export default function PostDetails() {
+  const { postId } = useParams<{ postId: string }>();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const [newComment, setNewComment] = useState("");
-  const [replyTo, setReplyTo] = useState<string | null>(null);
-  const [activeReactionMenu, setActiveReactionMenu] = useState<string | null>(null);
-  const [showReplies, setShowReplies] = useState<{ [key: string]: boolean }>({});
+  const { toast } = useToast();
 
-  const { data: currentUser } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: async () => {
+  const [post, setPost] = useState<any>(null);
+  const [comments, setComments] = useState<any[]>([]);
+  const [newComment, setNewComment] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  const [isEditing, setIsEditing] = useState<string | null>(null);
+  const [editedComment, setEditedComment] = useState("");
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
+  useEffect(() => {
+    // Fetch current user data
+    const fetchCurrentUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      return user;
-    },
-  });
-
-  const { data: post, isLoading: isLoadingPost } = useQuery({
-    queryKey: ['post', id],
-    queryFn: async () => {
-      const { data: post, error } = await supabase
-        .from('posts')
-        .select(`
-          *,
-          user:user_id (
-            id,
-            username,
-            full_name,
-            avatar_url
-          ),
-          post_likes (
-            reaction_type,
-            user_id
-          ),
-          post_comments (
-            id
-          )
-        `)
-        .eq('id', id)
-        .single();
-
-      if (error) throw error;
-
-      return {
-        ...post,
-        reaction_type: post.post_likes?.find(like => like.user_id === currentUser?.id)?.reaction_type,
-        likes: post.post_likes?.length || 0,
-        comment_count: post.post_comments?.length || 0
-      };
-    },
-  });
-
-  const { data: comments, isLoading: isLoadingComments } = useQuery({
-    queryKey: ['comments', id],
-    queryFn: async () => {
-      const { data: comments, error } = await supabase
-        .from('post_comments')
-        .select(`
-          *,
-          user:user_id (
-            username,
-            full_name,
-            avatar_url
-          ),
-          comment_likes (
-            id,
-            user_id
-          )
-        `)
-        .eq('post_id', id)
-        .is('reply_to_id', null)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      const commentsWithCounts = await Promise.all(comments.map(async (comment) => {
-        const { count: repliesCount } = await supabase
-          .from('post_comments')
-          .select('*', { count: 'exact', head: true })
-          .eq('reply_to_id', comment.id);
-
-        return {
-          ...comment,
-          likes_count: comment.comment_likes?.length || 0,
-          user_has_liked: comment.comment_likes?.some(like => like.user_id === currentUser?.id) || false,
-          replies_count: repliesCount || 0
-        };
-      }));
-
-      return commentsWithCounts;
-    },
-    enabled: !!id,
-  });
-
-  const { data: replies, isLoading: isLoadingReplies } = useQuery({
-    queryKey: ['replies', id, showReplies],
-    queryFn: async () => {
-      const repliesData: { [key: string]: Comment[] } = {};
-      
-      for (const commentId of Object.keys(showReplies)) {
-        if (showReplies[commentId]) {
-          const { data: commentReplies, error } = await supabase
-            .from('post_comments')
-            .select(`
-              *,
-              user:user_id (
-                username,
-                full_name,
-                avatar_url
-              ),
-              comment_likes (
-                id,
-                user_id
-              )
-            `)
-            .eq('reply_to_id', commentId)
-            .order('created_at', { ascending: true });
-
-          if (!error && commentReplies) {
-            repliesData[commentId] = commentReplies.map(reply => ({
-              ...reply,
-              likes_count: reply.comment_likes?.length || 0,
-              user_has_liked: reply.comment_likes?.some(like => like.user_id === currentUser?.id) || false
-            }));
-          }
-        }
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+        setCurrentUser(profile);
       }
-      
-      return repliesData;
-    },
-    enabled: Object.values(showReplies).some(value => value)
-  });
+    };
+    fetchCurrentUser();
+  }, []);
 
-  const handleShare = async () => {
-    try {
-      await navigator.share({
-        title: post?.content,
-        url: `${window.location.origin}/posts/${id}`,
-      });
-    } catch (error) {
-      console.error('Error sharing:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível compartilhar o post",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleWhatsAppShare = async () => {
-    const postUrl = `${window.location.origin}/posts/${id}`;
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(postUrl)}`;
-    window.open(whatsappUrl, '_blank');
-  };
-
-  const handleReaction = async (reactionType: string) => {
-    if (!currentUser) {
-      toast({
-        title: "Erro",
-        description: "Você precisa estar logado para reagir a posts",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      const { data: existingReaction } = await supabase
-        .from('post_likes')
-        .select('*')
-        .eq('post_id', id)
-        .eq('user_id', currentUser.id)
-        .single();
-
-      if (existingReaction) {
-        if (existingReaction.reaction_type === reactionType) {
-          await supabase
-            .from('post_likes')
-            .delete()
-            .eq('post_id', id)
-            .eq('user_id', currentUser.id);
-        } else {
-          await supabase
-            .from('post_likes')
-            .update({ reaction_type: reactionType })
-            .eq('post_id', id)
-            .eq('user_id', currentUser.id);
-        }
-      } else {
-        await supabase
-          .from('post_likes')
-          .insert({
-            post_id: id,
-            user_id: currentUser.id,
-            reaction_type: reactionType
-          });
-      }
-
-      await queryClient.invalidateQueries({ queryKey: ['post', id] });
-    } catch (error) {
-      console.error('Error in reaction handler:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível processar sua reação",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleSubmitComment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!currentUser) {
-      toast({
-        title: "Erro",
-        description: "Você precisa estar logado para comentar",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!newComment.trim()) {
-      toast({
-        title: "Erro",
-        description: "O comentário não pode estar vazio",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  const handleEditComment = async (commentId: string, newContent: string) => {
     try {
       const { error } = await supabase
         .from('post_comments')
-        .insert({
-          content: newComment.trim(),
-          post_id: id,
-          user_id: currentUser.id,
-          reply_to_id: replyTo
-        });
+        .update({ content: newContent })
+        .eq('id', commentId);
 
       if (error) throw error;
 
-      setNewComment("");
-      setReplyTo(null);
-      await queryClient.invalidateQueries({ queryKey: ['comments', id] });
-      
+      // Atualiza a lista de comentários
+      setComments(comments.map(comment => 
+        comment.id === commentId 
+          ? { ...comment, content: newContent }
+          : comment
+      ));
+      setIsEditing(null);
       toast({
-        title: "Sucesso",
-        description: "Comentário adicionado com sucesso",
+        title: "Comentário atualizado com sucesso!",
+        variant: "default",
       });
     } catch (error) {
-      console.error('Error adding comment:', error);
       toast({
-        title: "Erro",
-        description: "Não foi possível adicionar o comentário",
+        title: "Erro ao atualizar comentário",
         variant: "destructive",
       });
     }
   };
 
-  const handleCommentLike = async (commentId: string) => {
-    if (!currentUser) {
+  const handleDeleteComment = async (commentId: string) => {
+    try {
+      const { error } = await supabase
+        .from('post_comments')
+        .delete()
+        .eq('id', commentId);
+
+      if (error) throw error;
+
+      // Remove o comentário da lista
+      setComments(comments.filter(comment => comment.id !== commentId));
       toast({
-        title: "Erro",
-        description: "Você precisa estar logado para curtir comentários",
+        title: "Comentário excluído com sucesso!",
+        variant: "default",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro ao excluir comentário",
         variant: "destructive",
       });
-      return;
     }
+  };
+
+  useEffect(() => {
+    const fetchPost = async () => {
+      setLoading(true);
+      try {
+        const { data: postData, error: postError } = await supabase
+          .from('posts')
+          .select(`*, profiles(username, avatar_url)`)
+          .eq('id', postId)
+          .single();
+
+        if (postError) {
+          throw postError;
+        }
+
+        if (!postData) {
+          navigate('/404');
+          return;
+        }
+
+        setPost(postData);
+
+        const { data: commentsData, error: commentsError } = await supabase
+          .from('post_comments')
+          .select(`*, profiles(username, avatar_url)`)
+          .eq('post_id', postId)
+          .order('created_at', { ascending: false });
+
+        if (commentsError) {
+          throw commentsError;
+        }
+
+        setComments(commentsData || []);
+      } catch (error: any) {
+        console.error("Error fetching post details:", error);
+        toast({
+          title: "Error fetching post details",
+          description: error.message,
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPost();
+  }, [postId, navigate, toast]);
+
+  const handleComment = async () => {
+    if (!newComment.trim()) return;
 
     try {
-      const { data: existingLike } = await supabase
-        .from('comment_likes')
-        .select()
-        .eq('comment_id', commentId)
-        .eq('user_id', currentUser.id)
-        .single();
+      const { data: { user } } = await supabase.auth.getUser();
 
-      if (existingLike) {
-        await supabase
-          .from('comment_likes')
-          .delete()
-          .eq('comment_id', commentId)
-          .eq('user_id', currentUser.id);
-      } else {
-        await supabase
-          .from('comment_likes')
-          .insert({
-            comment_id: commentId,
-            user_id: currentUser.id
-          });
+      if (!user) {
+        toast({
+          title: "Not authenticated",
+          description: "You must be logged in to comment.",
+          variant: "destructive",
+        });
+        return;
       }
 
-      await queryClient.invalidateQueries({ queryKey: ['comments', id] });
-    } catch (error) {
-      console.error('Error toggling comment like:', error);
+      const { data, error } = await supabase
+        .from('post_comments')
+        .insert([{
+          post_id: postId,
+          user_id: user.id,
+          content: newComment,
+        }])
+        .select(`*, profiles(username, avatar_url)`)
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      setComments([data, ...comments]);
+      setNewComment('');
       toast({
-        title: "Erro",
-        description: "Não foi possível processar sua ação",
+        title: "Comment added",
+        variant: "default",
+      });
+
+    } catch (error: any) {
+      console.error("Error adding comment:", error);
+      toast({
+        title: "Error adding comment",
+        description: error.message,
         variant: "destructive",
       });
     }
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    if (date.toDateString() === today.toDateString()) {
-      return `Hoje às ${format(date, 'HH:mm')}`;
-    } else if (date.toDateString() === yesterday.toDateString()) {
-      return `Ontem às ${format(date, 'HH:mm')}`;
-    } else {
-      return format(date, "d 'de' MMMM 'às' HH:mm", { locale: ptBR });
-    }
-  };
-
-  const getReactionIcon = (type: string) => {
-    switch (type) {
-      case 'like':
-        return <ThumbsUp className="w-5 h-5 text-blue-500" />;
-      case 'love':
-        return <Heart className="w-5 h-5 text-red-500" />;
-      case 'haha':
-        return <Smile className="w-5 h-5 text-yellow-500" />;
-      case 'sad':
-        return <Frown className="w-5 h-5 text-purple-500" />;
-      case 'angry':
-        return <Angry className="w-5 h-5 text-orange-500" />;
-      default:
-        return <ThumbsUp className="w-5 h-5 text-muted-foreground" />;
-    }
-  };
-
-  if (isLoadingPost || isLoadingComments || isLoadingReplies) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
-        <main className="container mx-auto py-8 px-4 pt-20 pb-24">
-          <div className="max-w-xl mx-auto">
-            <Card className="animate-pulse p-4">
-              <div className="h-4 bg-muted rounded w-3/4 mb-4"></div>
-              <div className="h-20 bg-muted rounded mb-4"></div>
-            </Card>
-          </div>
-        </main>
-        <BottomNav />
-      </div>
-    );
+  if (loading) {
+    return <div>Loading...</div>;
   }
 
   if (!post) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
-        <main className="container mx-auto py-8 px-4 pt-20 pb-24">
-          <div className="max-w-xl mx-auto text-center">
-            <h1 className="text-2xl font-bold mb-4">Post não encontrado</h1>
-            <Button onClick={() => navigate('/')}>Voltar para o início</Button>
-          </div>
-        </main>
-        <BottomNav />
-      </div>
-    );
+    return <div>Post not found</div>;
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="container mx-auto pb-20">
       <Navbar />
-      <main className="container mx-auto py-8 px-4 pt-20 pb-24">
-        <div className="max-w-xl mx-auto space-y-4">
-          <Card className="overflow-hidden bg-white dark:bg-card border-none shadow-sm">
-            <div className="p-4">
-              <div className="flex items-center gap-3 mb-4">
-                <Avatar>
-                  <AvatarImage src={post.user.avatar_url} />
-                  <AvatarFallback>
-                    {post.user.full_name?.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <h2 className="font-semibold">{post.user.full_name}</h2>
-                  <p className="text-sm text-muted-foreground">
-                    {formatDate(post.created_at)}
-                  </p>
-                </div>
-              </div>
-
-              {post.content && (
-                <p className="text-foreground mb-4">{post.content}</p>
-              )}
-
-              {(post.images?.length > 0 || post.video_urls?.length > 0) && (
-                <MediaCarousel
-                  images={post.images || []}
-                  videoUrls={post.video_urls || []}
-                  title={post.content || ""}
-                />
-              )}
+      <Card className="mt-4">
+        <CardHeader>
+          <div className="flex items-center space-x-4">
+            <Avatar>
+              <AvatarImage src={post.profiles?.avatar_url || ''} />
+            </Avatar>
+            <div>
+              <h2 className="text-lg font-semibold">{post.profiles?.username}</h2>
             </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {post.images && post.images.length > 0 || post.video_urls && post.video_urls.length > 0 ? (
+            <MediaCarousel images={post.images} videos={post.video_urls} />
+          ) : null}
+          <CardDescription className="mt-2">{post.content}</CardDescription>
+        </CardContent>
+        <CardFooter className="flex justify-between">
+          <div className="flex space-x-2">
+            <ReactionMenu postId={postId} />
+            <Button variant="ghost">
+              <MessageSquare className="h-5 w-5 mr-2" />
+              {comments.length} Comments
+            </Button>
+          </div>
+          <Button variant="ghost">
+            <Share2 className="h-5 w-5 mr-2" />
+            Share
+          </Button>
+        </CardFooter>
+      </Card>
 
-            <div className="flex items-center justify-between p-2 mt-2 border-t border-border/40">
-              <div className="relative">
-                <button
-                  className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                  onClick={() => setActiveReactionMenu(activeReactionMenu === post.id ? null : post.id)}
-                >
-                  {post.reaction_type ? (
-                    <span className="text-blue-500">
-                      {getReactionIcon(post.reaction_type)}
-                    </span>
-                  ) : (
-                    <ThumbsUp className="w-5 h-5 text-muted-foreground" />
-                  )}
-                  <span className={`text-sm ${post.reaction_type ? 'text-blue-500' : 'text-muted-foreground'}`}>
-                    {post.likes || 0}
-                  </span>
-                </button>
-
-                <div className="relative">
-                  <ReactionMenu
-                    isOpen={activeReactionMenu === post.id}
-                    onSelect={(type) => handleReaction(type)}
-                  />
-                </div>
-              </div>
-
-              <button 
-                className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-              >
-                <MessageCircle className="w-5 h-5 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">
-                  {comments?.length || 0}
-                </span>
-              </button>
-
-              <button
-                className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-[#25D366]/10 hover:bg-[#25D366]/20 transition-colors"
-                onClick={handleWhatsAppShare}
-              >
-                <MessageSquareMore className="w-5 h-5 text-[#25D366]" />
-              </button>
-
-              <button
-                className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                onClick={handleShare}
-              >
-                <Share2 className="w-5 h-5 text-muted-foreground" />
-              </button>
-            </div>
-          </Card>
-
-          <Card className="p-4">
-            <form onSubmit={handleSubmitComment} className="space-y-4">
-              <Textarea
-                placeholder={replyTo ? "Escreva sua resposta..." : "Escreva um comentário..."}
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                className="min-h-[100px]"
-              />
-              <div className="flex justify-between items-center">
-                {replyTo && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => setReplyTo(null)}
-                  >
-                    Cancelar resposta
-                  </Button>
-                )}
-                <Button type="submit">
-                  {replyTo ? "Responder" : "Comentar"}
-                </Button>
-              </div>
-            </form>
-          </Card>
-
-          <div className="space-y-4">
-            {comments?.map((comment) => (
-              <Card key={comment.id} className="p-4">
-                <div className="flex gap-3">
-                  <Avatar className="w-8 h-8">
-                    <AvatarImage src={comment.user.avatar_url} />
-                    <AvatarFallback>
-                      {comment.user.full_name?.charAt(0).toUpperCase()}
-                    </AvatarFallback>
+      <div className="mt-4">
+        <h2 className="text-xl font-bold mb-4">Comentários</h2>
+        <div className="space-y-4">
+          {comments.map((comment) => (
+            <Card key={comment.id}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="flex items-center space-x-2">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={comment.profiles?.avatar_url || ''} />
                   </Avatar>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="font-semibold">
-                          {comment.user.full_name}
-                        </span>
-                        <span className="text-sm text-muted-foreground ml-2">
-                          {formatDate(comment.created_at)}
-                        </span>
-                      </div>
-                    </div>
-                    <p className="mt-1">{comment.content}</p>
-                    <div className="flex items-center gap-4 mt-2">
-                      <button
-                        onClick={() => handleCommentLike(comment.id)}
-                        className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors"
-                      >
-                        <Flame 
-                          className={`w-4 h-4 ${
-                            comment.user_has_liked ? "text-red-500" : ""
-                          }`}
-                        />
-                        <span>
-                          {comment.likes_count || 0}
-                        </span>
-                      </button>
-                      <button
-                        onClick={() => setReplyTo(comment.id)}
-                        className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors"
-                      >
-                        <Reply className="w-4 h-4" />
-                        <span>Responder</span>
-                      </button>
-                      {comment.replies_count > 0 && (
-                        <button
-                          onClick={() => setShowReplies(prev => ({
-                            ...prev,
-                            [comment.id]: !prev[comment.id]
-                          }))}
-                          className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors"
-                        >
-                          <ChevronDown className={`w-4 h-4 transform transition-transform ${showReplies[comment.id] ? 'rotate-180' : ''}`} />
-                          <span>
-                            {comment.replies_count} resposta{comment.replies_count > 1 ? 's' : ''}
-                          </span>
-                        </button>
-                      )}
-                    </div>
-
-                    {showReplies[comment.id] && replies && replies[comment.id] && (
-                      <div className="mt-4 space-y-4 pl-8 border-l-2 border-border/40">
-                        {replies[comment.id].map((reply) => (
-                          <div key={reply.id} className="flex gap-3">
-                            <Avatar className="w-6 h-6">
-                              <AvatarImage src={reply.user.avatar_url} />
-                              <AvatarFallback>
-                                {reply.user.full_name?.charAt(0).toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1">
-                              <div className="flex items-center">
-                                <span className="font-semibold text-sm">
-                                  {reply.user.full_name}
-                                </span>
-                                <span className="text-xs text-muted-foreground ml-2">
-                                  {formatDate(reply.created_at)}
-                                </span>
-                              </div>
-                              <p className="text-sm mt-1">{reply.content}</p>
-                              <div className="flex items-center gap-4 mt-2">
-                                <button
-                                  onClick={() => handleCommentLike(reply.id)}
-                                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
-                                >
-                                  <Flame 
-                                    className={`w-3 h-3 ${
-                                      reply.user_has_liked ? "text-red-500" : ""
-                                    }`}
-                                  />
-                                  <span>
-                                    {reply.likes_count || 0}
-                                  </span>
-                                </button>
-                                <button
-                                  onClick={() => setReplyTo(comment.id)}
-                                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
-                                >
-                                  <Reply className="w-3 h-3" />
-                                  <span>Responder</span>
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                  <div>
+                    <p className="text-sm font-bold">{comment.profiles?.username}</p>
+                    <p className="text-xs text-gray-500">
+                      {new Date(comment.created_at).toLocaleDateString()}
+                    </p>
                   </div>
                 </div>
-              </Card>
-            ))}
-          </div>
+                {(currentUser?.id === comment.user_id || currentUser?.role === 'admin') && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="h-8 w-8 p-0">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {currentUser?.id === comment.user_id && (
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setIsEditing(comment.id);
+                            setEditedComment(comment.content);
+                          }}
+                        >
+                          <Edit2 className="mr-2 h-4 w-4" />
+                          Editar
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuItem
+                        className="text-red-600"
+                        onClick={() => handleDeleteComment(comment.id)}
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Excluir
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+              </CardHeader>
+              <CardContent>
+                {isEditing === comment.id ? (
+                  <div className="space-y-2">
+                    <Textarea
+                      value={editedComment}
+                      onChange={(e) => setEditedComment(e.target.value)}
+                      className="min-h-[100px]"
+                    />
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => handleEditComment(comment.id, editedComment)}
+                      >
+                        Salvar
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => setIsEditing(null)}
+                      >
+                        Cancelar
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm">{comment.content}</p>
+                )}
+              </CardContent>
+            </Card>
+          ))}
         </div>
-      </main>
+      </div>
+
+      <div className="mt-4">
+        <h2 className="text-lg font-semibold mb-2">Add a comment</h2>
+        <div className="flex space-x-2">
+          <Input
+            type="text"
+            placeholder="Write your comment here"
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+          />
+          <Button onClick={handleComment}>Post Comment</Button>
+        </div>
+      </div>
+      
       <BottomNav />
     </div>
   );
-};
-
-export default PostDetails;
+}
