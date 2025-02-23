@@ -90,11 +90,6 @@ export type Database = {
           pwa_background_color: string | null
           pwa_install_message: string | null
           pwa_app_icon: string | null
-          like_emoji: string | null
-          love_emoji: string | null
-          haha_emoji: string | null
-          sad_emoji: string | null
-          angry_emoji: string | null
         }
       }
       events: {

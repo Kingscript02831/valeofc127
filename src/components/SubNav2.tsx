@@ -12,7 +12,6 @@ const SubNav2 = () => {
     { path: "/admin/lugares", label: "Lugares" },
     { path: "/admin/categorias", label: "Categorias" },
     { path: "/admin/sistema", label: "Sistema" },
-    { path: "/admin/emojis", label: "Emojis" },
     { path: "/config", label: "Configurações" },
   ];
 
