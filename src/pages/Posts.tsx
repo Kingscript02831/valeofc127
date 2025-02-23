@@ -1,20 +1,20 @@
 import { useState } from "react";
-import { supabase } from "../integrations/supabase/client";
-import { Card, CardContent } from "../components/ui/card";
-import { useToast } from "../hooks/use-toast";
-import { Bell, Search, Share2, MessageCircle, MessageSquareMore, ThumbsUp, UserPlus2, Check } from "lucide-react";
-import { MediaCarousel } from "../components/MediaCarousel";
-import { Input } from "../components/ui/input";
-import { Button } from "../components/ui/button";
-import Navbar from "../components/Navbar";
-import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { Bell, Search, Share2, MessageCircle, MessageSquareMore, ThumbsUp, Heart, Smile, Frown, Angry, Flame } from "lucide-react";
+import { MediaCarousel } from "@/components/MediaCarousel";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import Navbar from "@/components/Navbar";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import ReactionMenu from "../components/ReactionMenu";
-import BottomNav from "../components/BottomNav";
+import ReactionMenu from "@/components/ReactionMenu";
+import { Separator } from "@/components/ui/separator";
+import BottomNav from "@/components/BottomNav";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { getReactionIcon } from "../utils/emojisPosts";
 
 interface Post {
   id: string;
@@ -28,12 +28,9 @@ interface Post {
   user_has_liked?: boolean;
   comment_count: number;
   user: {
-    id: string;
     username: string;
     full_name: string;
     avatar_url: string;
-    followers_count?: number;
-    is_following?: boolean;
   };
 }
 
@@ -43,7 +40,6 @@ const Posts: React.FC = () => {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [activeReactionMenu, setActiveReactionMenu] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"following" | "forYou">("forYou");
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -53,21 +49,8 @@ const Posts: React.FC = () => {
     },
   });
 
-  const { data: following } = useQuery({
-    queryKey: ['following', currentUser?.id],
-    queryFn: async () => {
-      if (!currentUser) return [];
-      const { data } = await supabase
-        .from('follows')
-        .select('following_id')
-        .eq('follower_id', currentUser.id);
-      return data?.map(f => f.following_id) || [];
-    },
-    enabled: !!currentUser,
-  });
-
   const { data: posts, isLoading } = useQuery({
-    queryKey: ['posts', searchTerm, activeTab, following],
+    queryKey: ['posts', searchTerm],
     queryFn: async () => {
       try {
         let query = supabase
@@ -94,102 +77,23 @@ const Posts: React.FC = () => {
           query = query.ilike('content', `%${searchTerm}%`);
         }
 
-        if (activeTab === "following" && following?.length >= 0) {
-          query = query.in('user_id', following.length ? following : [null]);
-        }
-
         const { data: postsData, error } = await query;
         if (error) throw error;
 
-        const enhancedPosts = await Promise.all(postsData.map(async (post) => {
-          const { count: followersCount } = await supabase
-            .from('follows')
-            .select('*', { count: 'exact', head: true })
-            .eq('following_id', post.user.id);
-
-          const { data: isFollowing } = await supabase
-            .from('follows')
-            .select('*')
-            .eq('follower_id', currentUser?.id)
-            .eq('following_id', post.user.id)
-            .maybeSingle();
-
-          return {
-            ...post,
-            reaction_type: post.post_likes?.find(like => like.user_id === currentUser?.id)?.reaction_type,
-            likes: post.post_likes?.length || 0,
-            comment_count: post.post_comments?.length || 0,
-            user: {
-              ...post.user,
-              followers_count: followersCount,
-              is_following: !!isFollowing
-            }
-          };
+        const postsWithCounts = postsData?.map(post => ({
+          ...post,
+          reaction_type: post.post_likes?.find(like => like.user_id === currentUser?.id)?.reaction_type,
+          likes: post.post_likes?.length || 0,
+          comment_count: post.post_comments?.length || 0
         }));
 
-        return enhancedPosts;
+        return postsWithCounts;
       } catch (error) {
         console.error('Error fetching posts:', error);
         return [];
       }
     },
   });
-
-  const handleFollow = async (userToFollow: Post['user']) => {
-    if (!currentUser) {
-      toast({
-        title: "Faça login",
-        description: "Você precisa estar logado para seguir outros usuários",
-      });
-      return;
-    }
-
-    try {
-      const isFollowing = userToFollow.is_following;
-
-      if (isFollowing) {
-        await supabase
-          .from('follows')
-          .delete()
-          .eq('follower_id', currentUser.id)
-          .eq('following_id', userToFollow.id);
-      } else {
-        await supabase
-          .from('follows')
-          .insert({
-            follower_id: currentUser.id,
-            following_id: userToFollow.id
-          });
-
-        await supabase
-          .from('notifications')
-          .insert({
-            user_id: userToFollow.id,
-            title: 'Novo seguidor',
-            message: `${currentUser.user_metadata.full_name || 'Alguém'} começou a te seguir`,
-            type: 'system',
-            reference_id: currentUser.id
-          });
-      }
-
-      await queryClient.invalidateQueries({ queryKey: ['posts'] });
-      await queryClient.invalidateQueries({ queryKey: ['following'] });
-
-      toast({
-        title: isFollowing ? "Deixou de seguir" : "Seguindo",
-        description: isFollowing 
-          ? `Você deixou de seguir ${userToFollow.username}`
-          : `Você está seguindo ${userToFollow.username}`,
-      });
-    } catch (error) {
-      console.error('Error following/unfollowing:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível completar a ação",
-        variant: "destructive",
-      });
-    }
-  };
 
   const handleReaction = async (postId: string, reactionType: string) => {
     try {
@@ -254,25 +158,43 @@ const Posts: React.FC = () => {
     }
   };
 
-  const handleShare = async (post: Post) => {
+  const handleShare = async (postId: string) => {
     try {
-      const shareData = {
-        title: 'Vale OFC',
-        text: `Post de ${post.user.username}: ${post.content}`,
-        url: `${window.location.origin}/posts/${post.id}`
-      };
-
-      if (navigator.share) {
-        await navigator.share(shareData);
-      } else {
-        await navigator.clipboard.writeText(shareData.url);
-        toast({
-          title: "Link copiado!",
-          description: "O link do post foi copiado para sua área de transferência",
-        });
-      }
+      await navigator.share({
+        url: `${window.location.origin}/posts/${postId}`,
+      });
     } catch (error) {
       console.error('Error sharing:', error);
+      navigator.clipboard.writeText(`${window.location.origin}/posts/${postId}`);
+      toast({
+        title: "Link copiado",
+        description: "O link foi copiado para sua área de transferência",
+      });
+    }
+  };
+
+  const handleWhatsAppShare = async (postId: string) => {
+    const postUrl = `${window.location.origin}/posts/${postId}`;
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(postUrl)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
+  const getReactionIcon = (type: string) => {
+    switch (type) {
+      case 'like':
+        return '👍';
+      case 'love':
+        return '❤️';
+      case 'haha':
+        return '😂';
+      case 'fire':
+        return '🔥';
+      case 'sad':
+        return '🥲';
+      case 'angry':
+        return '🤬';
+      default:
+        return '👍';
     }
   };
 
@@ -301,7 +223,6 @@ const Posts: React.FC = () => {
               variant="ghost"
               size="icon"
               className="hover:scale-105 transition-transform text-foreground"
-              onClick={() => navigate('/notify')}
             >
               <Bell className="h-5 w-5" />
             </Button>
@@ -316,32 +237,6 @@ const Posts: React.FC = () => {
                 <Search className="h-5 w-5 text-foreground" />
               </div>
             </div>
-          </div>
-
-          <div className="flex justify-center gap-4 mt-4">
-            <Button
-              variant={activeTab === "following" ? "default" : "ghost"}
-              onClick={() => {
-                if (!currentUser) {
-                  toast({
-                    title: "Faça login",
-                    description: "Você precisa estar logado para ver posts de quem você segue",
-                  });
-                  return;
-                }
-                setActiveTab("following");
-              }}
-              className="flex-1 max-w-[200px]"
-            >
-              Seguindo
-            </Button>
-            <Button
-              variant={activeTab === "forYou" ? "default" : "ghost"}
-              onClick={() => setActiveTab("forYou")}
-              className="flex-1 max-w-[200px]"
-            >
-              Para Você
-            </Button>
           </div>
         </div>
 
@@ -363,109 +258,101 @@ const Posts: React.FC = () => {
                 </Card>
               ))}
             </div>
-          ) : posts?.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">
-                {activeTab === "following" 
-                  ? "Nenhum post de pessoas que você segue." 
-                  : "Nenhum post encontrado."}
-              </p>
-            </div>
           ) : (
             posts?.map((post: Post) => (
-              <Card key={post.id} className="border-none shadow-sm">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <Avatar 
-                      className="cursor-pointer"
-                      onClick={() => navigate(`/user/${post.user_id}`)}
-                    >
-                      <AvatarImage src={post.user.avatar_url || ''} />
-                      <AvatarFallback>
-                        {post.user.username?.[0]?.toUpperCase() || 'U'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <h3 
-                          className="font-medium cursor-pointer hover:underline"
-                          onClick={() => navigate(`/user/${post.user_id}`)}
-                        >
-                          {post.user.username || 'Usuário'}
-                        </h3>
-                        {currentUser?.id !== post.user_id && (
-                          <Button
-                            variant={post.user.is_following ? "secondary" : "default"}
-                            size="sm"
-                            className="ml-2"
-                            onClick={() => handleFollow(post.user)}
-                          >
-                            {post.user.is_following ? (
-                              <Check className="h-4 w-4 mr-1" />
-                            ) : (
-                              <UserPlus2 className="h-4 w-4 mr-1" />
-                            )}
-                            {post.user.is_following ? 'Seguindo' : 'Seguir'}
-                          </Button>
-                        )}
-                        <span className="text-sm text-muted-foreground">
-                          {post.user.followers_count} seguidores
-                        </span>
+              <Card key={post.id} className="overflow-hidden bg-white dark:bg-card border-none shadow-sm">
+                <CardContent className="p-0">
+                  <div className="p-3 space-y-2">
+                    <div className="flex items-center gap-3">
+                      <Avatar 
+                        className="h-10 w-10 border-2 border-primary/10 cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={() => navigate(`/perfil/${post.user.username}`)}
+                      >
+                        <AvatarImage src={post.user.avatar_url || "/placeholder.svg"} />
+                        <AvatarFallback>
+                          {post.user.full_name?.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h2 className="font-semibold">{post.user.full_name}</h2>
+                          <p className="text-sm text-muted-foreground">@{post.user.username}</p>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {formatDate(post.created_at)}
+                        </p>
                       </div>
-                      <time className="text-sm text-muted-foreground">
-                        {format(new Date(post.created_at), "d 'de' MMMM 'às' HH:mm", { locale: ptBR })}
-                      </time>
                     </div>
+
+                    {post.content && (
+                      <p className="text-foreground text-[15px] leading-normal">
+                        {post.content}
+                      </p>
+                    )}
                   </div>
 
-                  <p className="mt-3 text-sm">{post.content}</p>
-
                   {(post.images?.length > 0 || post.video_urls?.length > 0) && (
-                    <div className="mt-3">
-                      <MediaCarousel images={post.images} videos={post.video_urls} />
+                    <div className="w-full">
+                      <MediaCarousel
+                        images={post.images || []}
+                        videoUrls={post.video_urls || []}
+                        title={post.content || ""}
+                        autoplay={false}
+                        showControls={true}
+                        cropMode="contain"
+                      />
                     </div>
                   )}
 
-                  <div className="flex items-center gap-4 mt-4">
+                  <div className="flex items-center justify-between p-2 mt-2 border-t border-border/40">
                     <div className="relative">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="gap-2"
+                      <button
+                        className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                         onClick={() => setActiveReactionMenu(activeReactionMenu === post.id ? null : post.id)}
                       >
                         {post.reaction_type ? (
-                          <span className="text-lg">{getReactionIcon(post.reaction_type)}</span>
+                          <span className="text-blue-500">
+                            {getReactionIcon(post.reaction_type)}
+                          </span>
                         ) : (
-                          <ThumbsUp className="h-4 w-4" />
+                          <ThumbsUp className="w-5 h-5 text-muted-foreground" />
                         )}
-                        <span>{post.likes || 0}</span>
-                      </Button>
-                      {activeReactionMenu === post.id && (
+                        <span className={`text-sm ${post.reaction_type ? 'text-blue-500' : 'text-muted-foreground'}`}>
+                          {post.likes || 0}
+                        </span>
+                      </button>
+
+                      <div className="relative">
                         <ReactionMenu
-                          postId={post.id}
-                          onClose={() => setActiveReactionMenu(null)}
+                          isOpen={activeReactionMenu === post.id}
+                          onSelect={(type) => handleReaction(post.id, type)}
                         />
-                      )}
+                      </div>
                     </div>
 
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="gap-2"
+                    <button 
                       onClick={() => navigate(`/posts/${post.id}`)}
+                      className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                     >
-                      <MessageCircle className="h-4 w-4" />
-                      <span>{post.comment_count || 0}</span>
-                    </Button>
+                      <MessageCircle className="w-5 h-5 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">
+                        {post.comment_count || 0}
+                      </span>
+                    </button>
 
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleShare(post)}
+                    <button
+                      className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-[#25D366]/10 hover:bg-[#25D366]/20 transition-colors"
+                      onClick={() => handleWhatsAppShare(post.id)}
                     >
-                      <Share2 className="h-4 w-4" />
-                    </Button>
+                      <MessageSquareMore className="w-5 h-5 text-[#25D366]" />
+                    </button>
+
+                    <button
+                      className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                      onClick={() => handleShare(post.id)}
+                    >
+                      <Share2 className="w-5 h-5 text-muted-foreground" />
+                    </button>
                   </div>
                 </CardContent>
               </Card>

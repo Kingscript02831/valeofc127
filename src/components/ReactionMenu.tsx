@@ -1,69 +1,58 @@
 
-import { Button } from "./ui/button";
-import { reactionsList } from "../utils/emojisPosts";
-import { supabase } from "../integrations/supabase/client";
-import { useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect } from 'react';
+import { cn } from '@/lib/utils';
 
-export interface ReactionMenuProps {
-  postId: string;
-  onClose: () => void;
+interface ReactionMenuProps {
+  isOpen: boolean;
+  onSelect: (type: string) => void;
+  currentReaction?: string | null;
 }
 
-const ReactionMenu: React.FC<ReactionMenuProps> = ({ postId, onClose }) => {
-  const queryClient = useQueryClient();
+const ReactionMenu = ({ isOpen, onSelect, currentReaction }: ReactionMenuProps) => {
+  const [mounted, setMounted] = useState(false);
 
-  const handleReaction = async (type: string) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      // Check if user already reacted
-      const { data: existingReaction } = await supabase
-        .from('post_likes')
-        .select()
-        .eq('post_id', postId)
-        .eq('user_id', user.id)
-        .single();
-
-      if (existingReaction) {
-        // Update existing reaction
-        await supabase
-          .from('post_likes')
-          .update({ reaction_type: type })
-          .eq('id', existingReaction.id);
-      } else {
-        // Create new reaction
-        await supabase
-          .from('post_likes')
-          .insert({
-            post_id: postId,
-            user_id: user.id,
-            reaction_type: type
-          });
-      }
-
-      // Invalidate posts query to refresh the data
-      await queryClient.invalidateQueries({ queryKey: ['posts'] });
-      onClose();
-    } catch (error) {
-      console.error('Error adding reaction:', error);
+  useEffect(() => {
+    if (isOpen) {
+      setMounted(true);
+    } else {
+      const timer = setTimeout(() => setMounted(false), 200);
+      return () => clearTimeout(timer);
     }
-  };
+  }, [isOpen]);
+
+  if (!mounted) return null;
+
+  const reactions = [
+    { emoji: '👍', type: 'like', label: 'Curtir' },
+    { emoji: '❤️', type: 'love', label: 'Amei' },
+    { emoji: '😂', type: 'haha', label: 'Haha' },
+    { emoji: '🔥', type: 'fire', label: 'Fogo' },
+    { emoji: '🥲', type: 'sad', label: 'Triste' },
+    { emoji: '🤬', type: 'angry', label: 'Grr' },
+  ];
 
   return (
-    <div className="absolute bottom-full left-0 mb-2 p-2 bg-background rounded-lg shadow-lg border flex gap-1 z-50">
-      {reactionsList.map((reaction) => (
-        <Button
-          key={reaction.type}
-          variant="ghost"
-          size="sm"
-          className="hover:scale-125 transition-transform"
-          onClick={() => handleReaction(reaction.type)}
+    <div className={cn(
+      "absolute bottom-full left-0 mb-2 flex gap-1 p-2 rounded-full bg-background/95 border border-border/40 shadow-lg transition-all duration-200",
+      isOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+    )}>
+      {reactions.map(({ emoji, type, label }) => (
+        <button
+          key={type}
+          onClick={() => onSelect(type)}
+          className={cn(
+            "flex flex-col items-center p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-all text-xl",
+            "group relative",
+            currentReaction === type && "bg-gray-100 dark:bg-gray-800"
+          )}
         >
-          <span role="img" aria-label={reaction.label}>
-            {reaction.emoji}
+          <span className="transition-transform group-hover:scale-125">
+            {emoji}
           </span>
-        </Button>
+          <span className="absolute -bottom-8 text-xs bg-gray-800 text-white px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+            {label}
+          </span>
+        </button>
       ))}
     </div>
   );

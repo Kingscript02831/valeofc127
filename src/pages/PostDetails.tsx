@@ -26,7 +26,6 @@ import ReactionMenu from "@/components/ReactionMenu";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getReactionIcon } from "@/utils/emojisPosts";
 
 interface Post {
   id: string;
@@ -379,6 +378,25 @@ const PostDetails = () => {
       return `Ontem às ${format(date, 'HH:mm')}`;
     } else {
       return format(date, "d 'de' MMMM 'às' HH:mm", { locale: ptBR });
+    }
+  };
+
+  const getReactionIcon = (type: string) => {
+    switch (type) {
+      case 'like':
+        return '👍';
+      case 'love':
+        return '❤️';
+      case 'haha':
+        return '😂';
+      case 'fire':
+        return '🔥';
+      case 'sad':
+        return '🥲';
+      case 'angry':
+        return '🤬';
+      default:
+        return '👍';
     }
   };
 
