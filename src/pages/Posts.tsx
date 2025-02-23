@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -26,30 +27,13 @@ interface Post {
   reaction_type?: string;
   created_at: string;
   user_has_liked?: boolean;
-  comment_count?: number;
+  comment_count: number;
   user: {
     username: string;
     full_name: string;
     avatar_url: string;
   };
 }
-
-const getReactionIcon = (type: string) => {
-  switch (type) {
-    case 'like':
-      return <ThumbsUp className="w-5 h-5 text-blue-500" />;
-    case 'love':
-      return <Heart className="w-5 h-5 text-red-500" />;
-    case 'haha':
-      return <Smile className="w-5 h-5 text-yellow-500" />;
-    case 'sad':
-      return <Frown className="w-5 h-5 text-purple-500" />;
-    case 'angry':
-      return <Angry className="w-5 h-5 text-orange-500" />;
-    default:
-      return <ThumbsUp className="w-5 h-5 text-muted-foreground" />;
-  }
-};
 
 const Posts: React.FC = () => {
   const { toast } = useToast();
@@ -83,6 +67,9 @@ const Posts: React.FC = () => {
             post_likes (
               reaction_type,
               user_id
+            ),
+            post_comments (
+              id
             )
           `)
           .order('created_at', { ascending: false });
@@ -94,81 +81,20 @@ const Posts: React.FC = () => {
         const { data: postsData, error } = await query;
         if (error) throw error;
 
-        const postsWithFollowStatus = await Promise.all((postsData || []).map(async (post) => {
-          if (!currentUser) return { ...post, isFollowing: false };
-
-          const { count } = await supabase
-            .from('follows')
-            .select('*', { count: 'exact', head: true })
-            .eq('follower_id', currentUser.id)
-            .eq('following_id', post.user_id);
-
-          return {
-            ...post,
-            isFollowing: count ? count > 0 : false,
-            reaction_type: post.post_likes?.find(like => like.user_id === currentUser?.id)?.reaction_type,
-            likes: post.post_likes?.length || 0
-          };
+        const postsWithCounts = postsData?.map(post => ({
+          ...post,
+          reaction_type: post.post_likes?.find(like => like.user_id === currentUser?.id)?.reaction_type,
+          likes: post.post_likes?.length || 0,
+          comment_count: post.post_comments?.length || 0
         }));
 
-        return postsWithFollowStatus;
+        return postsWithCounts;
       } catch (error) {
         console.error('Error fetching posts:', error);
         return [];
       }
     },
   });
-
-  const handleFollow = async (userId: string, isFollowing: boolean) => {
-    try {
-      if (!currentUser) {
-        toast({
-          title: "Erro",
-          description: "Você precisa estar logado para seguir outros usuários",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (isFollowing) {
-        const { error } = await supabase
-          .from('follows')
-          .delete()
-          .eq('follower_id', currentUser.id)
-          .eq('following_id', userId);
-
-        if (error) throw error;
-
-        toast({
-          title: "Sucesso",
-          description: "Você deixou de seguir este usuário",
-        });
-      } else {
-        const { error } = await supabase
-          .from('follows')
-          .insert({
-            follower_id: currentUser.id,
-            following_id: userId
-          } as Database['public']['Tables']['follows']['Insert']);
-
-        if (error) throw error;
-
-        toast({
-          title: "Sucesso",
-          description: "Você começou a seguir este usuário",
-        });
-      }
-
-      await queryClient.invalidateQueries({ queryKey: ['posts'] });
-    } catch (error) {
-      console.error('Error following/unfollowing:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível atualizar o status de seguir",
-        variant: "destructive",
-      });
-    }
-  };
 
   const handleReaction = async (postId: string, reactionType: string) => {
     try {
@@ -254,6 +180,23 @@ const Posts: React.FC = () => {
     window.open(whatsappUrl, '_blank');
   };
 
+  const getReactionIcon = (type: string) => {
+    switch (type) {
+      case 'like':
+        return <ThumbsUp className="w-5 h-5 text-blue-500" />;
+      case 'love':
+        return <Heart className="w-5 h-5 text-red-500" />;
+      case 'haha':
+        return <Smile className="w-5 h-5 text-yellow-500" />;
+      case 'sad':
+        return <Frown className="w-5 h-5 text-purple-500" />;
+      case 'angry':
+        return <Angry className="w-5 h-5 text-orange-500" />;
+      default:
+        return <ThumbsUp className="w-5 h-5 text-muted-foreground" />;
+    }
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const today = new Date();
@@ -315,7 +258,7 @@ const Posts: React.FC = () => {
               ))}
             </div>
           ) : (
-            posts?.map((post: any, index) => (
+            posts?.map((post: Post) => (
               <Card key={post.id} className="overflow-hidden bg-white dark:bg-card border-none shadow-sm">
                 <CardContent className="p-0">
                   <div className="p-3 space-y-2">
