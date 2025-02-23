@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import { ThumbsUp, Heart, Smile, Frown, Flame, Angry } from 'lucide-react';
+import { ThumbsUp, Heart, Smile, Flame, Frown, Angry } from 'lucide-react';
 
 interface ReactionMenuProps {
   isOpen: boolean;
@@ -28,7 +28,7 @@ const ReactionMenu = ({ isOpen, onSelect }: ReactionMenuProps) => {
     { icon: Smile, type: 'haha', label: 'Haha', color: 'text-yellow-500' },
     { icon: Flame, type: 'fire', label: 'Fogo', color: 'text-orange-500' },
     { icon: Frown, type: 'sad', label: 'Triste', color: 'text-purple-500' },
-    { icon: Angry, type: 'angry', label: 'Grr', color: 'text-orange-500' },
+    { icon: Angry, type: 'angry', label: 'Grr', color: 'text-red-500' },
   ];
 
   return (

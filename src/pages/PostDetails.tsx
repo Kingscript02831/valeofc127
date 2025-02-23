@@ -388,10 +388,12 @@ const PostDetails = () => {
         return <Heart className="w-5 h-5 text-red-500" />;
       case 'haha':
         return <Smile className="w-5 h-5 text-yellow-500" />;
+      case 'fire':
+        return <Flame className="w-5 h-5 text-orange-500" />;
       case 'sad':
         return <Frown className="w-5 h-5 text-purple-500" />;
       case 'angry':
-        return <Angry className="w-5 h-5 text-orange-500" />;
+        return <Angry className="w-5 h-5 text-red-500" />;
       default:
         return <ThumbsUp className="w-5 h-5 text-muted-foreground" />;
     }
@@ -547,7 +549,10 @@ const PostDetails = () => {
             {comments?.map((comment) => (
               <Card key={comment.id} className="p-4">
                 <div className="flex gap-3">
-                  <Avatar className="w-8 h-8">
+                  <Avatar 
+                    className="w-8 h-8 cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={() => navigate(`/perfil/${comment.user.username}`)}
+                  >
                     <AvatarImage src={comment.user.avatar_url} />
                     <AvatarFallback>
                       {comment.user.full_name?.charAt(0).toUpperCase()}

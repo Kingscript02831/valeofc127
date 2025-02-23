@@ -1,9 +1,8 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Bell, Search, Share2, MessageCircle, MessageSquareMore, ThumbsUp, Heart, Smile, Frown, Angry } from "lucide-react";
+import { Bell, Search, Share2, MessageCircle, MessageSquareMore, ThumbsUp, Heart, Smile, Frown, Angry, Flame } from "lucide-react";
 import { MediaCarousel } from "@/components/MediaCarousel";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -188,10 +187,12 @@ const Posts: React.FC = () => {
         return <Heart className="w-5 h-5 text-red-500" />;
       case 'haha':
         return <Smile className="w-5 h-5 text-yellow-500" />;
+      case 'fire':
+        return <Flame className="w-5 h-5 text-orange-500" />;
       case 'sad':
         return <Frown className="w-5 h-5 text-purple-500" />;
       case 'angry':
-        return <Angry className="w-5 h-5 text-orange-500" />;
+        return <Angry className="w-5 h-5 text-red-500" />;
       default:
         return <ThumbsUp className="w-5 h-5 text-muted-foreground" />;
     }
