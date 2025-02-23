@@ -520,7 +520,6 @@ export type Database = {
           id: string
           page_path: string
           permission_name: string
-          user_id: string | null
           user_name: string
         }
         Insert: {
@@ -529,7 +528,6 @@ export type Database = {
           id?: string
           page_path: string
           permission_name: string
-          user_id?: string | null
           user_name: string
         }
         Update: {
@@ -538,7 +536,6 @@ export type Database = {
           id?: string
           page_path?: string
           permission_name?: string
-          user_id?: string | null
           user_name?: string
         }
         Relationships: []

@@ -20,41 +20,40 @@ const ProtectedRoute = ({ children, requiredPermission }: ProtectedRouteProps) =
         const { data: { user } } = await supabase.auth.getUser();
         
         if (!user) {
-          console.log('Usuário não autenticado');
-          toast.error('Você precisa estar logado para acessar esta página');
-          navigate('/login');
+          navigate('/404');
           return;
         }
 
-        console.log('Verificando permissões para:', user.email);
-
-        // Busca as permissões do usuário
-        const { data: permissions, error: permissionsError } = await supabase
+        const { data: permissions, error } = await supabase
           .from('permissions')
-          .select('*')
-          .eq('email', user.email)
-          .single();
+          .select(`
+            name,
+            permissions_pages!inner(
+              admin_pages!inner(
+                path
+              )
+            )
+          `)
+          .eq('user_id', user.id);
 
-        if (permissionsError) {
-          console.error('Erro ao buscar permissões:', permissionsError);
+        if (error) {
+          console.error('Error fetching permissions:', error);
           toast.error('Erro ao verificar permissões');
-          navigate('/');
+          navigate('/404');
           return;
         }
 
-        // Se encontrou permissão, autoriza o acesso
-        if (permissions) {
-          console.log('Permissões encontradas:', permissions);
-          setIsAuthorized(true);
-        } else {
-          console.log('Nenhuma permissão encontrada');
-          toast.error('Você não tem permissão para acessar esta página');
-          navigate('/');
+        const hasPermission = permissions?.some(p => p.name === requiredPermission);
+        
+        if (!hasPermission) {
+          navigate('/404');
+          return;
         }
+
+        setIsAuthorized(true);
       } catch (error) {
-        console.error('Erro ao verificar permissões:', error);
-        toast.error('Erro ao verificar permissões');
-        navigate('/');
+        console.error('Error in permission check:', error);
+        navigate('/404');
       } finally {
         setIsLoading(false);
       }
@@ -64,11 +63,9 @@ const ProtectedRoute = ({ children, requiredPermission }: ProtectedRouteProps) =
   }, [navigate, requiredPermission]);
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
-      </div>
-    );
+    return <div className="flex items-center justify-center min-h-screen">
+      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
+    </div>;
   }
 
   return isAuthorized ? children : null;
