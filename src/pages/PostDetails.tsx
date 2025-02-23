@@ -260,6 +260,7 @@ const PostDetails = () => {
       }
 
       await queryClient.invalidateQueries({ queryKey: ['post', id] });
+      setActiveReactionMenu(null);
     } catch (error) {
       console.error('Error in reaction handler:', error);
       toast({
@@ -473,26 +474,21 @@ const PostDetails = () => {
               <div className="relative">
                 <button
                   className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                  onClick={() => setActiveReactionMenu(activeReactionMenu === post.id ? null : post.id)}
+                  onClick={() => setActiveReactionMenu(activeReactionMenu === post?.id ? null : post?.id)}
                 >
-                  {post.reaction_type ? (
-                    <span className="text-blue-500">
-                      {getReactionIcon(post.reaction_type)}
-                    </span>
-                  ) : (
+                  {post?.reaction_type ? getReactionIcon(post.reaction_type) : (
                     <ThumbsUp className="w-5 h-5 text-muted-foreground" />
                   )}
-                  <span className={`text-sm ${post.reaction_type ? 'text-blue-500' : 'text-muted-foreground'}`}>
-                    {post.likes || 0}
+                  <span className={post?.reaction_type ? 'text-blue-500' : 'text-muted-foreground'}>
+                    {post?.likes || 0}
                   </span>
                 </button>
 
-                <div className="relative">
-                  <ReactionMenu
-                    isOpen={activeReactionMenu === post.id}
-                    onSelect={(type) => handleReaction(type)}
-                  />
-                </div>
+                <ReactionMenu
+                  isOpen={activeReactionMenu === post?.id}
+                  onSelect={handleReaction}
+                  currentReaction={post?.reaction_type}
+                />
               </div>
 
               <button 

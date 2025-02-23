@@ -6,9 +6,10 @@ import { ThumbsUp, Heart, Smile, Flame, Frown, Angry } from 'lucide-react';
 interface ReactionMenuProps {
   isOpen: boolean;
   onSelect: (type: string) => void;
+  currentReaction?: string | null;
 }
 
-const ReactionMenu = ({ isOpen, onSelect }: ReactionMenuProps) => {
+const ReactionMenu = ({ isOpen, onSelect, currentReaction }: ReactionMenuProps) => {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -23,7 +24,7 @@ const ReactionMenu = ({ isOpen, onSelect }: ReactionMenuProps) => {
   if (!mounted) return null;
 
   const reactions = [
-    { icon: ThumbsUp, type: 'like', label: 'Curti', color: 'text-blue-500' },
+    { icon: ThumbsUp, type: 'like', label: 'Curtir', color: 'text-blue-500' },
     { icon: Heart, type: 'love', label: 'Amei', color: 'text-red-500' },
     { icon: Smile, type: 'haha', label: 'Haha', color: 'text-yellow-500' },
     { icon: Flame, type: 'fire', label: 'Fogo', color: 'text-orange-500' },
@@ -42,10 +43,14 @@ const ReactionMenu = ({ isOpen, onSelect }: ReactionMenuProps) => {
           onClick={() => onSelect(type)}
           className={cn(
             "flex flex-col items-center p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-all",
-            "group relative"
+            "group relative",
+            currentReaction === type && "bg-gray-100 dark:bg-gray-800"
           )}
         >
-          <Icon className={cn("w-6 h-6 transition-transform group-hover:scale-125", color)} />
+          <Icon className={cn(
+            "w-6 h-6 transition-transform group-hover:scale-125",
+            currentReaction === type ? color : "text-muted-foreground"
+          )} />
           <span className="absolute -bottom-8 text-xs bg-gray-800 text-white px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
             {label}
           </span>
