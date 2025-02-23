@@ -1,4 +1,3 @@
-
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Share2, Heart, User2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -36,8 +35,10 @@ const ProductDetails = () => {
         .select(`
           *,
           profiles (
+            id,
             full_name,
-            avatar_url
+            avatar_url,
+            username
           )
         `)
         .eq('id', id)
@@ -267,11 +268,11 @@ const ProductDetails = () => {
                   </p>
                   <Button
                     variant="ghost"
-                    size="icon"
-                    onClick={() => navigate(`/perfil/${product?.user_id}`)}
-                    className="hover:scale-105 transition-transform h-8 w-8"
+                    onClick={() => navigate(`/perfil/${product?.profiles?.username}`)}
+                    className="hover:scale-105 transition-transform flex items-center gap-2 text-sm"
                   >
                     <User2 className="h-4 w-4" />
+                    Ver perfil
                   </Button>
                 </div>
                 {product?.created_at && (
