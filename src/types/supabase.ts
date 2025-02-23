@@ -24,6 +24,20 @@ export interface Database {
           video_urls: string[];
           created_at: string;
         }
+      },
+      follows: {
+        Row: {
+          id: string;
+          follower_id: string;
+          following_id: string;
+          created_at: string;
+        },
+        Insert: {
+          id?: string;
+          follower_id: string;
+          following_id: string;
+          created_at?: string;
+        }
       }
     }
   }
