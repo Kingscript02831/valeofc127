@@ -182,19 +182,19 @@ const Posts: React.FC = () => {
   const getReactionIcon = (type: string) => {
     switch (type) {
       case 'like':
-        return '👍';
+        return <ThumbsUp className="w-5 h-5 text-blue-500" />;
       case 'love':
-        return '❤️';
+        return <Heart className="w-5 h-5 text-red-500" />;
       case 'haha':
-        return '😂';
+        return <Smile className="w-5 h-5 text-yellow-500" />;
       case 'fire':
-        return '🔥';
+        return <Flame className="w-5 h-5 text-orange-500" />;
       case 'sad':
-        return '🥲';
+        return <Frown className="w-5 h-5 text-purple-500" />;
       case 'angry':
-        return '🤬';
+        return <Angry className="w-5 h-5 text-red-500" />;
       default:
-        return '👍';
+        return <ThumbsUp className="w-5 h-5 text-muted-foreground" />;
     }
   };
 
@@ -310,16 +310,14 @@ const Posts: React.FC = () => {
                         className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                         onClick={() => setActiveReactionMenu(activeReactionMenu === post.id ? null : post.id)}
                       >
-                        <span className={cn(
-                          "text-xl",
-                          post.reaction_type ? "" : "opacity-50"
-                        )}>
-                          {post.reaction_type ? getReactionIcon(post.reaction_type) : '👍'}
-                        </span>
-                        <span className={cn(
-                          "text-sm",
-                          post.reaction_type ? "text-blue-500" : "text-muted-foreground"
-                        )}>
+                        {post.reaction_type ? (
+                          <span className="text-blue-500">
+                            {getReactionIcon(post.reaction_type)}
+                          </span>
+                        ) : (
+                          <ThumbsUp className="w-5 h-5 text-muted-foreground" />
+                        )}
+                        <span className={`text-sm ${post.reaction_type ? 'text-blue-500' : 'text-muted-foreground'}`}>
                           {post.likes || 0}
                         </span>
                       </button>

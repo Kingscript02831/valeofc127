@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
+import { ThumbsUp, Heart, Smile, Flame, Frown, Angry } from 'lucide-react';
 
 interface ReactionMenuProps {
   isOpen: boolean;
@@ -23,12 +24,12 @@ const ReactionMenu = ({ isOpen, onSelect, currentReaction }: ReactionMenuProps) 
   if (!mounted) return null;
 
   const reactions = [
-    { emoji: '👍', type: 'like', label: 'Curtir' },
-    { emoji: '❤️', type: 'love', label: 'Amei' },
-    { emoji: '😂', type: 'haha', label: 'Haha' },
-    { emoji: '🔥', type: 'fire', label: 'Fogo' },
-    { emoji: '🥲', type: 'sad', label: 'Triste' },
-    { emoji: '🤬', type: 'angry', label: 'Grr' },
+    { icon: ThumbsUp, type: 'like', label: 'Curtir', color: 'text-blue-500' },
+    { icon: Heart, type: 'love', label: 'Amei', color: 'text-red-500' },
+    { icon: Smile, type: 'haha', label: 'Haha', color: 'text-yellow-500' },
+    { icon: Flame, type: 'fire', label: 'Fogo', color: 'text-orange-500' },
+    { icon: Frown, type: 'sad', label: 'Triste', color: 'text-purple-500' },
+    { icon: Angry, type: 'angry', label: 'Grr', color: 'text-red-500' },
   ];
 
   return (
@@ -36,19 +37,20 @@ const ReactionMenu = ({ isOpen, onSelect, currentReaction }: ReactionMenuProps) 
       "absolute bottom-full left-0 mb-2 flex gap-1 p-2 rounded-full bg-background/95 border border-border/40 shadow-lg transition-all duration-200",
       isOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
     )}>
-      {reactions.map(({ emoji, type, label }) => (
+      {reactions.map(({ icon: Icon, type, label, color }) => (
         <button
           key={type}
           onClick={() => onSelect(type)}
           className={cn(
-            "flex flex-col items-center p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-all text-2xl",
+            "flex flex-col items-center p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-all",
             "group relative",
             currentReaction === type && "bg-gray-100 dark:bg-gray-800"
           )}
         >
-          <span className="transition-transform group-hover:scale-125">
-            {emoji}
-          </span>
+          <Icon className={cn(
+            "w-6 h-6 transition-transform group-hover:scale-125",
+            currentReaction === type ? color : "text-muted-foreground"
+          )} />
           <span className="absolute -bottom-8 text-xs bg-gray-800 text-white px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
             {label}
           </span>
