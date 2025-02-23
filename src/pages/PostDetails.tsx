@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -335,11 +336,11 @@ export default function PostDetails() {
             <div className="flex items-center gap-4 py-4 border-y">
               <div className="relative">
                 <button
-                  className="flex items-center gap-2 hover:text-primary transition-colors duration-200"
+                  className="flex items-center gap-2 transition-colors duration-200 hover:text-primary"
                   onClick={() => setActiveReactionMenu(!activeReactionMenu)}
                 >
                   <span className="text-xl">
-                    {post.reaction_type ? getReactionEmoji(post.reaction_type) : '👍'}
+                    {post.reaction_type ? getReactionIcon(post.reaction_type) : '👍'}
                   </span>
                   <span className="text-sm text-muted-foreground">
                     {post.likes || 0}
@@ -360,7 +361,7 @@ export default function PostDetails() {
               </button>
 
               <button
-                className="flex items-center gap-2 hover:text-primary transition-colors duration-200"
+                className="flex items-center transition-colors duration-200 hover:text-primary"
                 onClick={handleShare}
               >
                 <Share2 className="w-5 h-5" />
@@ -427,7 +428,7 @@ export default function PostDetails() {
   );
 }
 
-const getReactionEmoji = (type: string) => {
+const getReactionIcon = (type: string) => {
   switch (type) {
     case 'love':
       return '❤️';
