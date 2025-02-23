@@ -151,7 +151,7 @@ export default function Posts() {
           .insert({
             follower_id: currentUser.id,
             following_id: userId
-          });
+          } as Database['public']['Tables']['follows']['Insert']);
 
         if (error) throw error;
 
