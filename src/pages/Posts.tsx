@@ -1,20 +1,20 @@
-
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
+import { supabase } from "../integrations/supabase/client";
+import { Card, CardContent } from "../components/ui/card";
+import { useToast } from "../hooks/use-toast";
 import { Bell, Search, Share2, MessageCircle, MessageSquareMore, ThumbsUp } from "lucide-react";
-import { MediaCarousel } from "@/components/MediaCarousel";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import Navbar from "@/components/Navbar";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { MediaCarousel } from "../components/MediaCarousel";
+import { Input } from "../components/ui/input";
+import { Button } from "../components/ui/button";
+import Navbar from "../components/Navbar";
+import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import ReactionMenu from "@/components/ReactionMenu";
-import BottomNav from "@/components/BottomNav";
+import ReactionMenu from "../components/ReactionMenu";
+import BottomNav from "../components/BottomNav";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { getReactionIcon } from "../utils/emojisPosts";
 
 interface Post {
   id: string;
