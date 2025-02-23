@@ -24,10 +24,16 @@ const ReactionMenu = ({ isOpen, onSelect, currentReaction }: ReactionMenuProps) 
   if (!mounted) return null;
 
   return (
-    <div className={cn(
-      "absolute bottom-full left-0 mb-2 flex gap-1 p-2 rounded-full bg-background/95 border border-border/40 shadow-lg transition-all duration-200",
-      isOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
-    )}>
+    <div 
+      className={cn(
+        "fixed transform -translate-x-1/2 z-50 flex gap-1 p-2 rounded-full bg-background/95 border border-border/40 shadow-lg transition-all duration-200",
+        isOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+      )}
+      style={{
+        bottom: 'calc(100% + 0.5rem)',
+        left: '50%',
+      }}
+    >
       {reactionsList.map(({ emoji, type, label }) => (
         <button
           key={type}
