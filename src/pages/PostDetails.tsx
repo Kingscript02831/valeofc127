@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +11,7 @@ import { MessageCircle, Share2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import BottomNav from "@/components/BottomNav";
 import ReactionMenu from "@/components/ReactionMenu";
+import { ThumbsUp, Heart, Smile, Flame, Frown, Angry } from "lucide-react";
 
 interface PostDetails {
   id: string;
@@ -430,15 +430,19 @@ export default function PostDetails() {
 
 const getReactionIcon = (type: string) => {
   switch (type) {
+    case 'like':
+      return <ThumbsUp className="w-5 h-5 text-blue-500" />;
     case 'love':
-      return '❤️';
+      return <Heart className="w-5 h-5 text-red-500" />;
     case 'haha':
-      return '😂';
+      return <Smile className="w-5 h-5 text-yellow-500" />;
+    case 'fire':
+      return <Flame className="w-5 h-5 text-orange-500" />;
     case 'sad':
-      return '😞';
+      return <Frown className="w-5 h-5 text-purple-500" />;
     case 'angry':
-      return '🤬';
+      return <Angry className="w-5 h-5 text-orange-500" />;
     default:
-      return '👍';
+      return <ThumbsUp className="w-5 h-5 text-muted-foreground" />;
   }
 };
