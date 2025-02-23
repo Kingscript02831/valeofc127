@@ -384,19 +384,19 @@ const PostDetails = () => {
   const getReactionIcon = (type: string) => {
     switch (type) {
       case 'like':
-        return <ThumbsUp className="w-5 h-5 text-blue-500" />;
+        return '👍';
       case 'love':
-        return <Heart className="w-5 h-5 text-red-500" />;
+        return '❤️';
       case 'haha':
-        return <Smile className="w-5 h-5 text-yellow-500" />;
+        return '😂';
       case 'fire':
-        return <Flame className="w-5 h-5 text-orange-500" />;
+        return '🔥';
       case 'sad':
-        return <Frown className="w-5 h-5 text-purple-500" />;
+        return '🥲';
       case 'angry':
-        return <Angry className="w-5 h-5 text-red-500" />;
+        return '🤬';
       default:
-        return <ThumbsUp className="w-5 h-5 text-muted-foreground" />;
+        return '👍';
     }
   };
 
@@ -476,10 +476,16 @@ const PostDetails = () => {
                   className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                   onClick={() => setActiveReactionMenu(activeReactionMenu === post?.id ? null : post?.id)}
                 >
-                  {post?.reaction_type ? getReactionIcon(post.reaction_type) : (
-                    <ThumbsUp className="w-5 h-5 text-muted-foreground" />
-                  )}
-                  <span className={post?.reaction_type ? 'text-blue-500' : 'text-muted-foreground'}>
+                  <span className={cn(
+                    "text-xl",
+                    post?.reaction_type ? "" : "opacity-50"
+                  )}>
+                    {post?.reaction_type ? getReactionIcon(post.reaction_type) : '👍'}
+                  </span>
+                  <span className={cn(
+                    "text-sm",
+                    post?.reaction_type ? "text-blue-500" : "text-muted-foreground"
+                  )}>
                     {post?.likes || 0}
                   </span>
                 </button>
