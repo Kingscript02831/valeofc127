@@ -384,19 +384,19 @@ const PostDetails = () => {
   const getReactionIcon = (type: string) => {
     switch (type) {
       case 'like':
-        return <ThumbsUp className="w-5 h-5 text-blue-500" />;
+        return '👍';
       case 'love':
-        return <Heart className="w-5 h-5 text-red-500" />;
+        return '❤️';
       case 'haha':
-        return <Smile className="w-5 h-5 text-yellow-500" />;
+        return '😂';
       case 'fire':
-        return <Flame className="w-5 h-5 text-orange-500" />;
+        return '🔥';
       case 'sad':
-        return <Frown className="w-5 h-5 text-purple-500" />;
+        return '🥲';
       case 'angry':
-        return <Angry className="w-5 h-5 text-red-500" />;
+        return '🤬';
       default:
-        return <ThumbsUp className="w-5 h-5 text-muted-foreground" />;
+        return '👍';
     }
   };
 
