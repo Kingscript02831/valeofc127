@@ -1,0 +1,242 @@
+
+import { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "../integrations/supabase/client";
+import { Button } from "../components/ui/button";
+import { useTheme } from "../components/ThemeProvider";
+import ProfileTabs from "../components/ProfileTabs";
+import { ArrowLeft, MapPin, Heart, Calendar, Globe, Instagram } from "lucide-react";
+import BottomNav from "../components/BottomNav";
+import type { Profile } from "../types/profile";
+import { format } from "date-fns";
+
+const defaultAvatarImage = "/placeholder.svg";
+const defaultCoverImage = "/placeholder.svg";
+
+export default function UserProfile() {
+  const { username } = useParams();
+  const navigate = useNavigate();
+  const { theme } = useTheme();
+
+  const { data: profile, isLoading } = useQuery({
+    queryKey: ["userProfile", username],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("username", username)
+        .single();
+
+      if (error || !data) {
+        navigate("/404");
+        return null;
+      }
+
+      return data as Profile;
+    },
+  });
+
+  const { data: followStats } = useQuery({
+    queryKey: ["followStats", profile?.id],
+    queryFn: async () => {
+      if (!profile?.id) return { followers: 0, following: 0 };
+
+      const { count: followersCount } = await supabase
+        .from('follows')
+        .select('*', { count: 'exact', head: true })
+        .eq('following_id', profile.id);
+
+      const { count: followingCount } = await supabase
+        .from('follows')
+        .select('*', { count: 'exact', head: true })
+        .eq('follower_id', profile.id);
+
+      return {
+        followers: followersCount || 0,
+        following: followingCount || 0
+      };
+    },
+    enabled: !!profile?.id,
+  });
+
+  const { data: userProducts } = useQuery({
+    queryKey: ["userProducts", profile?.id],
+    queryFn: async () => {
+      if (!profile?.id) return [];
+
+      const { data } = await supabase
+        .from("products")
+        .select("*")
+        .eq("user_id", profile.id);
+
+      return data || [];
+    },
+    enabled: !!profile?.id,
+  });
+
+  const formatRelationshipStatus = (status: string | null | undefined) => {
+    if (!status) return null;
+    const statusMap: Record<string, string> = {
+      single: "Solteiro(a)",
+      dating: "Namorando",
+      widowed: "Viúvo(a)"
+    };
+    return statusMap[status] || status;
+  };
+
+  const formatBirthDate = (date: string | null | undefined) => {
+    if (!date) return null;
+    return format(new Date(date), "dd/MM/yyyy");
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-black text-white">
+        <p>Carregando...</p>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return null; // Será redirecionado para 404
+  }
+
+  return (
+    <div className={`min-h-screen ${theme === 'light' ? 'bg-white text-black' : 'bg-black text-white'}`}>
+      <div className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between p-4 ${theme === 'light' ? 'bg-white/90' : 'bg-black/90'} backdrop-blur`}>
+        <div className="flex items-center">
+          <button onClick={() => navigate(-1)} className="mr-2">
+            <ArrowLeft className="h-6 w-6" />
+          </button>
+          <div className="flex flex-col">
+            <h1 className="text-lg font-semibold">{profile.full_name}</h1>
+          </div>
+        </div>
+      </div>
+
+      <div className="pt-16 pb-20">
+        <div className="relative">
+          <div className="h-32 bg-gray-200 dark:bg-gray-800 relative">
+            {profile.cover_url ? (
+              <img
+                src={profile.cover_url}
+                alt="Capa"
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.src = defaultCoverImage;
+                }}
+              />
+            ) : (
+              <div className={`w-full h-full flex items-center justify-center ${theme === 'light' ? 'bg-white' : 'bg-black'}`}>
+                <p className="text-gray-500">Sem Capa de Perfil</p>
+              </div>
+            )}
+          </div>
+
+          <div className="relative -mt-16 px-4">
+            <div className="relative inline-block">
+              <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white dark:border-black">
+                {profile.avatar_url ? (
+                  <img
+                    src={profile.avatar_url}
+                    alt="Avatar"
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src = defaultAvatarImage;
+                    }}
+                  />
+                ) : (
+                  <div className={`w-full h-full flex items-center justify-center ${theme === 'light' ? 'bg-white' : 'bg-black'}`}>
+                    <p className="text-gray-500">Sem foto de perfil</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="px-4 mt-4">
+            <div className="space-y-2">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold">{profile.full_name}</h2>
+                  <p className="text-gray-400">@{profile.username}</p>
+                  {profile.status && (
+                    <p className="text-yellow-500 text-sm mt-1">
+                      {profile.status}
+                    </p>
+                  )}
+                </div>
+                <div className="flex gap-4 text-center">
+                  <div>
+                    <p className="font-semibold">{followStats?.followers || 0}</p>
+                    <p className="text-sm text-gray-500">Seguidores</p>
+                  </div>
+                  <div>
+                    <p className="font-semibold">{followStats?.following || 0}</p>
+                    <p className="text-sm text-gray-500">Seguindo</p>
+                  </div>
+                </div>
+              </div>
+
+              {profile.city && (
+                <p className="text-gray-400 text-sm mt-1 flex items-center gap-1">
+                  <MapPin className="h-4 w-4" />
+                  Mora em {profile.city}
+                </p>
+              )}
+
+              <div className="space-y-2 mt-3">
+                {profile.relationship_status && (
+                  <p className="text-gray-400 text-sm flex items-center gap-1">
+                    <Heart className="h-4 w-4" />
+                    {formatRelationshipStatus(profile.relationship_status)}
+                  </p>
+                )}
+                
+                {profile.birth_date && (
+                  <p className="text-gray-400 text-sm flex items-center gap-1">
+                    <Calendar className="h-4 w-4" />
+                    {formatBirthDate(profile.birth_date)}
+                  </p>
+                )}
+                
+                <div className="flex flex-col gap-2 mt-2">
+                  {profile.instagram_url && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-1 w-fit"
+                      onClick={() => window.open(profile.instagram_url, '_blank')}
+                    >
+                      <Instagram className="h-4 w-4" />
+                      Instagram
+                    </Button>
+                  )}
+                  
+                  {profile.website && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-1 w-fit"
+                      onClick={() => window.open(profile.website, '_blank')}
+                    >
+                      <Globe className="h-4 w-4" />
+                      Website
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <ProfileTabs userProducts={userProducts} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <BottomNav />
+    </div>
+  );
+}

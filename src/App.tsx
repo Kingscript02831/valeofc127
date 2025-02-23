@@ -24,6 +24,7 @@ import AdminNews from "./pages/AdminNews";
 import AdminCategories from "./pages/AdminCategories";
 import AdminSistema from "./pages/AdminSistema";
 import Profile from "./pages/Profile";
+import UserProfile from "./pages/UserProfile";
 import NotFound from "./pages/NotFound"; 
 import ResetPassword from "./pages/ResetPassword";
 import UpdatePassword from "./pages/UpdatePassword";
@@ -56,12 +57,10 @@ const App: React.FC = () => {
                   <Route path="/login" element={<Login />} />
                   <Route path="/signup" element={<SignUp />} />
                   <Route path="/perfil" element={<Profile />} />
+                  <Route path="/perfil/:username" element={<UserProfile />} />
                   <Route path="/config" element={<Config />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/update-password" element={<UpdatePassword />} />
-                  <Route path="/posts" element={<Posts />} />
-                  <Route path="/posts/:id" element={<PostDetails />} />
-                  <Route path="/posts/new" element={<PostForm />} />
                   <Route path="/admin" element={<Admin />}>    
                     <Route path="lugares" element={<AdminPlaces />} />
                     <Route path="eventos" element={<AdminEvents />} />
@@ -71,6 +70,9 @@ const App: React.FC = () => {
                   </Route> 
                   <Route path="/user-products" element={<UserProducts />} />
                   <Route path="/noticias/:id" element={<NewsDetails />} />
+                  <Route path="/posts" element={<Posts />} />
+                  <Route path="/posts/:id" element={<PostDetails />} />
+                  <Route path="/posts/new" element={<PostForm />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </AuthWrapper>
