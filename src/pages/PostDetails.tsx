@@ -1,7 +1,8 @@
+
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { supabase } from "../integrations/supabase/client";
-import { MediaCarousel } from "../components/MediaCarousel";
+import { supabase } from "@/integrations/supabase/client";
+import { MediaCarousel } from "@/components/MediaCarousel";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Share2, 
@@ -13,14 +14,15 @@ import {
   Frown, 
   Angry,
   Reply,
-  ChevronDown
+  ChevronDown,
+  Flame
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import Navbar from "../components/Navbar";
-import BottomNav from "../components/BottomNav";
+import Navbar from "@/components/Navbar";
+import BottomNav from "@/components/BottomNav";
 import ReactionMenu from "@/components/ReactionMenu";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
