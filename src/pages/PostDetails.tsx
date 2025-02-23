@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../integrations/supabase/client";
@@ -11,9 +10,11 @@ import {
   ThumbsUp, 
   Heart, 
   Smile, 
-  Flame, 
   Frown, 
-  Angry 
+  Angry,
+  Reply,
+  ChevronDown,
+  Flame
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -47,6 +48,9 @@ interface Comment {
   id: string;
   content: string;
   created_at: string;
+  likes_count: number;
+  replies_count: number;
+  user_has_liked: boolean;
   user: {
     id: string;
     username: string;
@@ -73,55 +77,6 @@ const PostDetails = () => {
   useEffect(() => {
     fetchPost();
   }, [id]);
-
-  const fetchPost = async () => {
-    try {
-      const { data: post, error } = await supabase
-        .from("posts")
-        .select(`
-          *,
-          user:user_id (
-            id,
-            username,
-            full_name,
-            avatar_url
-          ),
-          comments:post_comments (
-            id,
-            content,
-            created_at,
-            user:user_id (
-              id,
-              username,
-              full_name,
-              avatar_url
-            )
-          ),
-          post_likes (
-            user_id,
-            reaction_type
-          )
-        `)
-        .eq("id", id)
-        .single();
-
-      if (error) throw error;
-
-      const { count } = await supabase
-        .from('post_comments')
-        .select('*', { count: 'exact', head: true })
-        .eq('post_id', id);
-
-      setPost({ ...post, comment_count: count || 0 });
-    } catch (error) {
-      console.error("Error fetching post:", error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar o post",
-        variant: "destructive",
-      });
-    }
-  };
 
   const handleReaction = async (postId: string, reactionType: string) => {
     try {
@@ -283,6 +238,115 @@ const PostDetails = () => {
     }
   };
 
+  const handleLikeComment = async (commentId: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Erro",
+          description: "Você precisa estar logado para curtir comentários",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { data: existingLike } = await supabase
+        .from('comment_likes')
+        .select('*')
+        .eq('comment_id', commentId)
+        .eq('user_id', user.id)
+        .single();
+
+      if (existingLike) {
+        await supabase
+          .from('comment_likes')
+          .delete()
+          .eq('comment_id', commentId)
+          .eq('user_id', user.id);
+      } else {
+        await supabase
+          .from('comment_likes')
+          .insert({
+            comment_id: commentId,
+            user_id: user.id
+          });
+      }
+
+      await fetchPost();
+    } catch (error) {
+      console.error('Error liking comment:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível curtir o comentário",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const fetchPost = async () => {
+    try {
+      const { data: post, error } = await supabase
+        .from("posts")
+        .select(`
+          *,
+          user:user_id (
+            id,
+            username,
+            full_name,
+            avatar_url
+          ),
+          comments:post_comments (
+            id,
+            content,
+            created_at,
+            user:user_id (
+              id,
+              username,
+              full_name,
+              avatar_url
+            ),
+            comment_likes (
+              user_id
+            ),
+            replies:post_comments!parent_id (
+              id
+            )
+          ),
+          post_likes (
+            user_id,
+            reaction_type
+          )
+        `)
+        .eq("id", id)
+        .single();
+
+      if (error) throw error;
+
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+
+      const enhancedComments = post.comments?.map((comment: any) => ({
+        ...comment,
+        likes_count: comment.comment_likes?.length || 0,
+        replies_count: comment.replies?.length || 0,
+        user_has_liked: comment.comment_likes?.some((like: any) => like.user_id === currentUser?.id) || false
+      }));
+
+      setPost({
+        ...post,
+        comments: enhancedComments,
+        comment_count: enhancedComments.length
+      });
+    } catch (error) {
+      console.error("Error fetching post:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar o post",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (!post) return null;
 
   return (
@@ -413,7 +477,32 @@ const PostDetails = () => {
                         <p className="text-xs text-muted-foreground">@{comment.user.username}</p>
                       </div>
                       <p className="text-sm mt-1">{comment.content}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
+                      <div className="flex items-center gap-4 mt-2">
+                        <button
+                          onClick={() => handleLikeComment(comment.id)}
+                          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-blue-500 transition-colors"
+                        >
+                          <ThumbsUp className={`h-4 w-4 ${comment.user_has_liked ? 'text-blue-500' : ''}`} />
+                          <span className={comment.user_has_liked ? 'text-blue-500' : ''}>
+                            {comment.likes_count}
+                          </span>
+                        </button>
+                        <button
+                          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-blue-500 transition-colors"
+                        >
+                          <Reply className="h-4 w-4" />
+                          <span>Responder</span>
+                        </button>
+                        {comment.replies_count > 0 && (
+                          <button
+                            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-blue-500 transition-colors"
+                          >
+                            <ChevronDown className="h-4 w-4" />
+                            <span>Ver {comment.replies_count} {comment.replies_count === 1 ? 'resposta anterior' : 'respostas anteriores'}</span>
+                          </button>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-2">
                         {formatDate(comment.created_at)}
                       </p>
                     </div>
