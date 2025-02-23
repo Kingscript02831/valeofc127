@@ -17,30 +17,63 @@ const ProtectedRoute = ({ children, requiredPermission }: ProtectedRouteProps) =
   useEffect(() => {
     const checkPermission = async () => {
       try {
+        // Verificar se o usuário está autenticado
         const { data: { user } } = await supabase.auth.getUser();
         
         if (!user) {
+          console.log('Usuário não autenticado');
           navigate('/404');
           return;
         }
 
-        const { data, error } = await supabase
-          .from('permissions')
-          .select('permission_name')
-          .eq('user_id', user.id)
-          .eq('permission_name', requiredPermission)
+        // Primeiro, verifica se a página requer alguma permissão
+        const { data: pageData, error: pageError } = await supabase
+          .from('admin_pages')
+          .select('*')
+          .eq('path', requiredPermission)
           .single();
 
-        if (error || !data) {
-          console.error('Error fetching permissions:', error);
+        // Se a página não existir na tabela admin_pages, permite o acesso
+        if (!pageData || pageError) {
+          console.log('Página não encontrada em admin_pages, permitindo acesso');
+          setIsAuthorized(true);
+          setIsLoading(false);
+          return;
+        }
+
+        // Verifica se o usuário tem a permissão necessária
+        const { data: permissionData, error: permissionError } = await supabase
+          .from('permissions')
+          .select(`
+            id,
+            permission_name,
+            permissions_pages!inner (
+              page_id
+            )
+          `)
+          .eq('user_id', user.id)
+          .eq('permissions_pages.page_id', pageData.id);
+
+        if (permissionError) {
+          console.error('Erro ao verificar permissões:', permissionError);
+          toast.error('Erro ao verificar permissões');
+          navigate('/404');
+          return;
+        }
+
+        if (!permissionData || permissionData.length === 0) {
+          console.log('Usuário não tem permissão para acessar esta página');
           toast.error('Você não tem permissão para acessar esta página');
           navigate('/404');
           return;
         }
 
+        console.log('Usuário autorizado');
         setIsAuthorized(true);
+
       } catch (error) {
-        console.error('Error in permission check:', error);
+        console.error('Erro ao verificar permissões:', error);
+        toast.error('Erro ao verificar permissões');
         navigate('/404');
       } finally {
         setIsLoading(false);
