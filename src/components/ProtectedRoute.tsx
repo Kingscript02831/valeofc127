@@ -24,28 +24,16 @@ const ProtectedRoute = ({ children, requiredPermission }: ProtectedRouteProps) =
           return;
         }
 
-        const { data: permissions, error } = await supabase
+        const { data, error } = await supabase
           .from('permissions')
-          .select(`
-            name,
-            permissions_pages!inner(
-              admin_pages!inner(
-                path
-              )
-            )
-          `)
-          .eq('user_id', user.id);
+          .select('permission_name')
+          .eq('user_id', user.id)
+          .eq('permission_name', requiredPermission)
+          .single();
 
-        if (error) {
+        if (error || !data) {
           console.error('Error fetching permissions:', error);
-          toast.error('Erro ao verificar permissões');
-          navigate('/404');
-          return;
-        }
-
-        const hasPermission = permissions?.some(p => p.name === requiredPermission);
-        
-        if (!hasPermission) {
+          toast.error('Você não tem permissão para acessar esta página');
           navigate('/404');
           return;
         }
