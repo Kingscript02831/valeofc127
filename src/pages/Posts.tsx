@@ -2,7 +2,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Bell, Search, Share2, MessageCircle, MessageSquareMore, ThumbsUp } from "lucide-react";
+import { Bell, Search, Share2, MessageCircle, MessageSquareMore, ThumbsUp, UserCheck, UserPlus } from "lucide-react";
 import { MediaCarousel } from "@/components/MediaCarousel";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -334,14 +334,20 @@ export default function Posts() {
                             <h2 className="font-semibold">{post.user.full_name}</h2>
                             <p className="text-sm text-muted-foreground">@{post.user.username}</p>
                             {currentUser && currentUser.id !== post.user_id && (
-                              <Button
-                                variant={post.isFollowing ? "outline" : "default"}
-                                size="sm"
-                                className="ml-2"
+                              <button
                                 onClick={() => handleFollow(post.user_id, post.isFollowing)}
+                                className={`flex items-center justify-center gap-2 py-2 px-4 rounded-xl ${
+                                  post.isFollowing 
+                                    ? 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700' 
+                                    : 'bg-primary/10 hover:bg-primary/20'
+                                } transition-colors`}
                               >
-                                {post.isFollowing ? "Seguindo" : "Seguir"}
-                              </Button>
+                                {post.isFollowing ? (
+                                  <UserCheck className="w-5 h-5 text-muted-foreground" />
+                                ) : (
+                                  <UserPlus className="w-5 h-5 text-primary" />
+                                )}
+                              </button>
                             )}
                           </div>
                           <p className="text-sm text-muted-foreground">
