@@ -15,6 +15,7 @@ import BottomNav from "@/components/BottomNav";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { getReactionIcon } from "@/utils/emojisPosts";
 
 interface Post {
   id: string;
@@ -177,25 +178,6 @@ const Posts: React.FC = () => {
     const postUrl = `${window.location.origin}/posts/${postId}`;
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(postUrl)}`;
     window.open(whatsappUrl, '_blank');
-  };
-
-  const getReactionIcon = (type: string) => {
-    switch (type) {
-      case 'like':
-        return '👍';
-      case 'love':
-        return '❤️';
-      case 'haha':
-        return '😂';
-      case 'fire':
-        return '🔥';
-      case 'sad':
-        return '🥲';
-      case 'angry':
-        return '🤬';
-      default:
-        return '👍';
-    }
   };
 
   const formatDate = (dateString: string) => {
