@@ -139,7 +139,10 @@ export default function Posts() {
           .eq('follower_id', currentUser.id)
           .eq('following_id', userId);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error unfollowing:', error);
+          throw error;
+        }
 
         toast({
           title: "Sucesso",
@@ -153,7 +156,10 @@ export default function Posts() {
             following_id: userId
           });
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error following:', error);
+          throw error;
+        }
 
         toast({
           title: "Sucesso",
