@@ -27,6 +27,7 @@ interface Post {
   created_at: string;
   user_has_liked?: boolean;
   comment_count?: number;
+  view_count: number;
   user: {
     username: string;
     full_name: string;
@@ -96,8 +97,23 @@ export default function Posts() {
         const { data: postsData, error } = await query;
         if (error) throw error;
 
-        const postsWithFollowStatus = await Promise.all((postsData || []).map(async (post) => {
-          if (!currentUser) return { ...post, isFollowing: false };
+        const postsWithReactions = await Promise.all((postsData || []).map(async (post) => {
+          const { data: reactionsData } = await supabase
+            .from('post_likes')
+            .select('reaction_type, count')
+            .eq('post_id', post.id)
+            .not('reaction_type', 'is', null)
+            .group_by('reaction_type')
+            .order('count', { ascending: false })
+            .limit(2);
+
+          if (!currentUser) return { 
+            ...post, 
+            isFollowing: false,
+            reaction_type: null,
+            likes: post.post_likes?.length || 0,
+            top_reactions: reactionsData || []
+          };
 
           const { count } = await supabase
             .from('follows')
@@ -109,11 +125,12 @@ export default function Posts() {
             ...post,
             isFollowing: count ? count > 0 : false,
             reaction_type: post.post_likes?.find(like => like.user_id === currentUser?.id)?.reaction_type,
-            likes: post.post_likes?.length || 0
+            likes: post.post_likes?.length || 0,
+            top_reactions: reactionsData || []
           };
         }));
 
-        return postsWithFollowStatus;
+        return postsWithReactions;
       } catch (error) {
         console.error('Error fetching posts:', error);
         return [];
@@ -379,52 +396,68 @@ export default function Posts() {
                     )}
 
                     <div className="flex items-center justify-between px-4 py-3 border-t border-border/40">
-                      <div className="relative">
-                        <button
-                          className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                          onClick={() => setActiveReactionMenu(activeReactionMenu === post.id ? null : post.id)}
-                        >
-                          {post.reaction_type ? (
-                            <span className="text-xl text-blue-500">
-                              {getReactionIcon(post.reaction_type)}
+                      <div className="flex items-center gap-4">
+                        <div className="relative">
+                          <button
+                            className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors relative"
+                            onClick={() => setActiveReactionMenu(activeReactionMenu === post.id ? null : post.id)}
+                          >
+                            {post.top_reactions?.length > 0 && (
+                              <div className="absolute -top-6 left-0 flex gap-1">
+                                {post.top_reactions.map((reaction: any, index: number) => (
+                                  <span key={index} className="text-sm">
+                                    {getReactionIcon(reaction.type)}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                            {post.reaction_type ? (
+                              <span className="text-xl text-blue-500">
+                                {getReactionIcon(post.reaction_type)}
+                              </span>
+                            ) : (
+                              <ThumbsUp className="w-5 h-5 text-muted-foreground" />
+                            )}
+                            <span className={`text-sm ${post.reaction_type ? 'text-blue-500' : 'text-muted-foreground'}`}>
+                              {post.likes || 0}
                             </span>
-                          ) : (
-                            <ThumbsUp className="w-5 h-5 text-muted-foreground" />
-                          )}
-                          <span className={`text-sm ${post.reaction_type ? 'text-blue-500' : 'text-muted-foreground'}`}>
-                            {post.likes || 0}
+                          </button>
+                          
+                          <ReactionMenu 
+                            isOpen={activeReactionMenu === post.id}
+                            onSelect={(type) => handleReaction(post.id, type)}
+                          />
+                        </div>
+
+                        <button 
+                          onClick={() => navigate(`/posts/${post.id}`)}
+                          className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                        >
+                          <MessageCircle className="w-5 h-5 text-muted-foreground" />
+                          <span className="text-sm text-muted-foreground">
+                            {post.comment_count || 0}
                           </span>
                         </button>
-                        
-                        <ReactionMenu 
-                          isOpen={activeReactionMenu === post.id}
-                          onSelect={(type) => handleReaction(post.id, type)}
-                        />
+
+                        <button
+                          className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-[#25D366]/10 hover:bg-[#25D366]/20 transition-colors"
+                          onClick={() => handleWhatsAppShare(post.id)}
+                        >
+                          <MessageSquareMore className="w-5 h-5 text-[#25D366]" />
+                        </button>
+
+                        <button
+                          className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                          onClick={() => handleShare(post.id)}
+                        >
+                          <Share2 className="w-5 h-5 text-muted-foreground" />
+                        </button>
                       </div>
 
-                      <button 
-                        onClick={() => navigate(`/posts/${post.id}`)}
-                        className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                      >
-                        <MessageCircle className="w-5 h-5 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">
-                          {post.comment_count || 0}
-                        </span>
-                      </button>
-
-                      <button
-                        className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-[#25D366]/10 hover:bg-[#25D366]/20 transition-colors"
-                        onClick={() => handleWhatsAppShare(post.id)}
-                      >
-                        <MessageSquareMore className="w-5 h-5 text-[#25D366]" />
-                      </button>
-
-                      <button
-                        className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                        onClick={() => handleShare(post.id)}
-                      >
-                        <Share2 className="w-5 h-5 text-muted-foreground" />
-                      </button>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span>👁️</span>
+                        <span>{post.view_count?.toLocaleString('pt-BR') || 0} visualizações</span>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>

@@ -654,6 +654,38 @@ export type Database = {
           },
         ]
       }
+      post_views: {
+        Row: {
+          created_at: string
+          id: string
+          ip_address: string | null
+          post_id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          post_id: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          post_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_views_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       posts: {
         Row: {
           content: string | null
@@ -663,6 +695,7 @@ export type Database = {
           likes: number | null
           user_id: string
           video_urls: string[] | null
+          view_count: number | null
         }
         Insert: {
           content?: string | null
@@ -672,6 +705,7 @@ export type Database = {
           likes?: number | null
           user_id: string
           video_urls?: string[] | null
+          view_count?: number | null
         }
         Update: {
           content?: string | null
@@ -681,6 +715,7 @@ export type Database = {
           likes?: number | null
           user_id?: string
           video_urls?: string[] | null
+          view_count?: number | null
         }
         Relationships: [
           {
