@@ -437,16 +437,19 @@ const PostDetails = () => {
           <Card className="overflow-hidden bg-white dark:bg-card border-none shadow-sm">
             <div className="p-4">
               <div className="flex items-center gap-3 mb-4">
-                <Avatar>
-                  <AvatarImage src={post.user.avatar_url} />
+                <Avatar 
+                  className="cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => navigate(`/perfil/${post?.user.username}`)}
+                >
+                  <AvatarImage src={post?.user.avatar_url} />
                   <AvatarFallback>
-                    {post.user.full_name?.charAt(0).toUpperCase()}
+                    {post?.user.full_name?.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <h2 className="font-semibold">{post.user.full_name}</h2>
+                  <h2 className="font-semibold">{post?.user.full_name}</h2>
                   <p className="text-sm text-muted-foreground">
-                    {formatDate(post.created_at)}
+                    {formatDate(post?.created_at)}
                   </p>
                 </div>
               </div>

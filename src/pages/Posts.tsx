@@ -263,7 +263,10 @@ const Posts: React.FC = () => {
                 <CardContent className="p-0">
                   <div className="p-3 space-y-2">
                     <div className="flex items-center gap-3">
-                      <Avatar className="h-10 w-10 border-2 border-primary/10">
+                      <Avatar 
+                        className="h-10 w-10 border-2 border-primary/10 cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={() => navigate(`/perfil/${post.user.username}`)}
+                      >
                         <AvatarImage src={post.user.avatar_url || "/placeholder.svg"} />
                         <AvatarFallback>
                           {post.user.full_name?.charAt(0).toUpperCase()}
