@@ -41,12 +41,31 @@ const ProtectedRoute = ({ children, requiredPermission }: ProtectedRouteProps) =
           return;
         }
 
-        // Verifica se o usuário tem permissão específica
+        // Busca a página na tabela admin_pages
+        const { data: pageData, error: pageError } = await supabase
+          .from('admin_pages')
+          .select('id')
+          .eq('path', requiredPermission)
+          .single();
+
+        if (pageError) {
+          console.error('Erro ao buscar página:', pageError);
+          toast.error('Erro ao verificar permissões');
+          navigate('/404');
+          return;
+        }
+
+        // Verifica se o usuário tem permissão específica usando o email
         const { data: permissions, error: permissionsError } = await supabase
           .from('permissions')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('page_path', requiredPermission);
+          .select(`
+            id,
+            permissions_pages!inner (
+              page_id
+            )
+          `)
+          .eq('email', user.email)
+          .eq('permissions_pages.page_id', pageData.id);
 
         if (permissionsError) {
           console.error('Erro ao verificar permissões:', permissionsError);
