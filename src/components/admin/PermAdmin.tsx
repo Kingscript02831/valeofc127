@@ -396,14 +396,36 @@ const PermAdmin = () => {
                 </div>
                 <div>
                   <label className="text-sm font-medium">Nome da Permissão</label>
-                  <Input
-                    value={newPermission.permission_name}
-                    onChange={(e) =>
-                      setNewPermission({ ...newPermission, permission_name: e.target.value })
-                    }
-                    placeholder="Nome da permissão"
-                    required
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      value={newPermission.permission_name}
+                      onChange={(e) =>
+                        setNewPermission({ ...newPermission, permission_name: e.target.value })
+                      }
+                      placeholder="Nome da permissão"
+                      required
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        if (!newPermission.permission_name) {
+                          toast({
+                            title: "Campo obrigatório",
+                            description: "Por favor, insira um nome para a permissão",
+                            variant: "destructive",
+                          });
+                          return;
+                        }
+                        setNewPermission({
+                          ...newPermission,
+                          permission_name: `${newPermission.permission_name}_permission`,
+                        });
+                      }}
+                    >
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
                 <div>
                   <label className="text-sm font-medium">Páginas</label>
