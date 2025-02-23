@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,28 +19,41 @@ const ProtectedRoute = ({ children, requiredPermission }: ProtectedRouteProps) =
         const { data: { user } } = await supabase.auth.getUser();
         
         if (!user) {
-          navigate('/404');
+          console.log('Usuário não autenticado');
+          toast.error('Você precisa estar logado para acessar esta página');
+          navigate('/login');
           return;
         }
 
-        const { data, error } = await supabase
+        console.log('Verificando permissões para:', user.email);
+
+        // Busca as permissões do usuário
+        const { data: permissions, error: permissionsError } = await supabase
           .from('permissions')
-          .select('permission_name')
-          .eq('user_id', user.id)
-          .eq('permission_name', requiredPermission)
+          .select('*')
+          .eq('email', user.email)
           .single();
 
-        if (error || !data) {
-          console.error('Error fetching permissions:', error);
-          toast.error('Você não tem permissão para acessar esta página');
-          navigate('/404');
+        if (permissionsError) {
+          console.error('Erro ao buscar permissões:', permissionsError);
+          toast.error('Erro ao verificar permissões');
+          navigate('/');
           return;
         }
 
-        setIsAuthorized(true);
+        // Se encontrou permissão, autoriza o acesso
+        if (permissions) {
+          console.log('Permissões encontradas:', permissions);
+          setIsAuthorized(true);
+        } else {
+          console.log('Nenhuma permissão encontrada');
+          toast.error('Você não tem permissão para acessar esta página');
+          navigate('/');
+        }
       } catch (error) {
-        console.error('Error in permission check:', error);
-        navigate('/404');
+        console.error('Erro ao verificar permissões:', error);
+        toast.error('Erro ao verificar permissões');
+        navigate('/');
       } finally {
         setIsLoading(false);
       }
@@ -51,9 +63,11 @@ const ProtectedRoute = ({ children, requiredPermission }: ProtectedRouteProps) =
   }, [navigate, requiredPermission]);
 
   if (isLoading) {
-    return <div className="flex items-center justify-center min-h-screen">
-      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
-    </div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-gray-900"></div>
+      </div>
+    );
   }
 
   return isAuthorized ? children : null;
