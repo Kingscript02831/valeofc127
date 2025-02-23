@@ -29,3 +29,17 @@ export function formatDate(date: string | number | Date): string {
     });
   }
 }
+
+export function formatTextWithHashtags(text: string): React.ReactNode[] {
+  const words = text.split(/(\s+)/);
+  return words.map((word, index) => {
+    if (word.startsWith('#')) {
+      return (
+        <span key={index} className="text-[#0EA5E9] font-medium">
+          {word}
+        </span>
+      );
+    }
+    return word;
+  });
+}
