@@ -1,19 +1,19 @@
 
-import { Outlet } from "react-router-dom";
-import Navbar2 from "@/components/Navbar2";
-import SubNav2 from "@/components/SubNav2";
-import ProtectedRoute from "@/components/ProtectedRoute";
+import React from 'react';
+import { Outlet } from 'react-router-dom';
+import Navbar2 from '../components/Navbar2';
+import AdminNav from '../components/AdminNav';
 
-export default function Admin() {
+const Admin = () => {
   return (
-    <ProtectedRoute requiredPermission="admin">
-      <div className="min-h-screen">
-        <Navbar2 />
-        <SubNav2 />
-        <div className="container mx-auto py-8 px-4">
-          <Outlet />
-        </div>
-      </div>
-    </ProtectedRoute>
+    <div className="min-h-screen bg-gray-50">
+      <Navbar2 />
+      <AdminNav />
+      <main className="container mx-auto px-4 py-8">
+        <Outlet />
+      </main>
+    </div>
   );
-}
+};
+
+export default Admin;
