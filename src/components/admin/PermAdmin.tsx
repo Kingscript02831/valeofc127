@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -145,6 +144,7 @@ const PermAdmin = () => {
       permission: Omit<Permission, "id" | "created_at" | "pages">;
       pageIds: string[];
     }) => {
+      // First create the permission record
       const { data: perm, error: permError } = await supabase
         .from("permissions")
         .insert({
@@ -157,6 +157,7 @@ const PermAdmin = () => {
 
       if (permError) throw permError;
 
+      // Then create the permissions_pages associations
       if (data.pageIds.length > 0) {
         const { error: pagesError } = await supabase
           .from("permissions_pages")
