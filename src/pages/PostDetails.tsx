@@ -19,7 +19,6 @@ interface PostDetails {
   images: string[];
   video_urls: string[];
   created_at: string;
-  view_count: number;
   user: {
     id: string;
     username: string;
@@ -28,7 +27,6 @@ interface PostDetails {
   };
   likes: number;
   reaction_type?: string;
-  top_reactions: { type: string; count: number }[];
   comments: {
     id: string;
     content: string;
@@ -54,21 +52,7 @@ export default function PostDetails() {
 
   useEffect(() => {
     fetchPost();
-    recordView();
   }, [id]);
-
-  const recordView = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      await supabase.from('post_views').insert({
-        post_id: id,
-        user_id: user?.id || null
-      });
-    } catch (error) {
-      console.error('Error recording view:', error);
-    }
-  };
 
   const fetchPost = async () => {
     try {
@@ -93,16 +77,6 @@ export default function PostDetails() {
         .single();
 
       if (postError) throw postError;
-
-      // Fetch top reactions
-      const { data: reactionsData } = await supabase
-        .from('post_likes')
-        .select('reaction_type, count')
-        .eq('post_id', id)
-        .not('reaction_type', 'is', null)
-        .group_by('reaction_type')
-        .order('count', { ascending: false })
-        .limit(2);
 
       const { data: commentsData, error: commentsError } = await supabase
         .from('post_comments')
@@ -135,7 +109,6 @@ export default function PostDetails() {
         ...postData,
         reaction_type: postData.post_likes?.find(like => like.user_id === currentUser?.id)?.reaction_type,
         likes: postData.post_likes?.length || 0,
-        top_reactions: reactionsData || [],
         comments: formattedComments
       });
     } catch (error) {
@@ -360,55 +333,39 @@ export default function PostDetails() {
             )}
 
             {/* Action Buttons */}
-            <div className="flex items-center justify-between py-4 border-y">
-              <div className="flex items-center gap-4">
-                <div className="relative">
-                  <button
-                    className="flex items-center gap-2 transition-colors duration-200 hover:text-primary relative"
-                    onClick={() => setActiveReactionMenu(!activeReactionMenu)}
-                  >
-                    <span className="text-xl">
-                      {post.reaction_type ? getReactionIcon(post.reaction_type) : '👍'}
-                    </span>
-                    <span className="text-sm text-muted-foreground">
-                      {post.likes || 0}
-                    </span>
-                    {post.top_reactions?.length > 0 && (
-                      <div className="absolute -top-6 left-0 flex gap-1">
-                        {post.top_reactions.map((reaction, index) => (
-                          <span key={index} className="text-sm">
-                            {getReactionIcon(reaction.type)}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </button>
-                  
-                  <ReactionMenu 
-                    isOpen={activeReactionMenu}
-                    onSelect={handleReaction}
-                  />
-                </div>
-
-                <button className="flex items-center gap-2 hover:text-primary transition-colors duration-200">
-                  <MessageCircle className="w-5 h-5" />
+            <div className="flex items-center gap-4 py-4 border-y">
+              <div className="relative">
+                <button
+                  className="flex items-center gap-2 transition-colors duration-200 hover:text-primary"
+                  onClick={() => setActiveReactionMenu(!activeReactionMenu)}
+                >
+                  <span className="text-xl">
+                    {post.reaction_type ? getReactionIcon(post.reaction_type) : '👍'}
+                  </span>
                   <span className="text-sm text-muted-foreground">
-                    {post.comments?.length || 0}
+                    {post.likes || 0}
                   </span>
                 </button>
-
-                <button
-                  className="flex items-center transition-colors duration-200 hover:text-primary"
-                  onClick={handleShare}
-                >
-                  <Share2 className="w-5 h-5" />
-                </button>
+                
+                <ReactionMenu 
+                  isOpen={activeReactionMenu}
+                  onSelect={handleReaction}
+                />
               </div>
 
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span>👁️</span>
-                <span>{post.view_count?.toLocaleString('pt-BR') || 0} visualizações</span>
-              </div>
+              <button className="flex items-center gap-2 hover:text-primary transition-colors duration-200">
+                <MessageCircle className="w-5 h-5" />
+                <span className="text-sm text-muted-foreground">
+                  {post.comments?.length || 0}
+                </span>
+              </button>
+
+              <button
+                className="flex items-center transition-colors duration-200 hover:text-primary"
+                onClick={handleShare}
+              >
+                <Share2 className="w-5 h-5" />
+              </button>
             </div>
 
             {/* Comments Section */}
@@ -481,7 +438,6 @@ const getReactionIcon = (type: string) => {
       return '😞';
     case 'angry':
       return '🤬';
-    case 'like':
     default:
       return '👍';
   }
