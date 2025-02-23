@@ -492,6 +492,33 @@ export type Database = {
         }
         Relationships: []
       }
+      permissions: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          page_path: string
+          permission_name: string
+          user_name: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          page_path: string
+          permission_name: string
+          user_name: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          page_path?: string
+          permission_name?: string
+          user_name?: string
+        }
+        Relationships: []
+      }
       places: {
         Row: {
           address: string
