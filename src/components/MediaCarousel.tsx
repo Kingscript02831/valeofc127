@@ -18,7 +18,7 @@ interface MediaCarouselProps {
   showControls?: boolean;
 }
 
-const MediaCarousel = ({ 
+export const MediaCarousel = ({ 
   images, 
   videoUrls, 
   title, 
