@@ -32,16 +32,6 @@ interface Post {
     full_name: string;
     avatar_url: string;
   };
-  comments: {
-    id: string;
-    content: string;
-    created_at: string;
-    user: {
-      username: string;
-      full_name: string;
-      avatar_url: string;
-    };
-  }[];
 }
 
 const getReactionIcon = (type: string) => {
@@ -63,7 +53,7 @@ const getReactionIcon = (type: string) => {
   }
 };
 
-const Posts: React.FC = () => {
+export default function Posts() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -95,16 +85,6 @@ const Posts: React.FC = () => {
             post_likes (
               reaction_type,
               user_id
-            ),
-            post_comments (
-              id,
-              content,
-              created_at,
-              user:user_id (
-                username,
-                full_name,
-                avatar_url
-              )
             )
           `)
           .order('created_at', { ascending: false });
@@ -129,8 +109,7 @@ const Posts: React.FC = () => {
             ...post,
             isFollowing: count ? count > 0 : false,
             reaction_type: post.post_likes?.find(like => like.user_id === currentUser?.id)?.reaction_type,
-            likes: post.post_likes?.length || 0,
-            comments: post.post_comments?.slice(0, 2) || []
+            likes: post.post_likes?.length || 0
           };
         }));
 
@@ -447,28 +426,6 @@ const Posts: React.FC = () => {
                         <Share2 className="w-5 h-5 text-muted-foreground" />
                       </button>
                     </div>
-
-                    {post.comments && post.comments.length > 0 && (
-                      <div className="px-4 py-2 border-t border-border/40">
-                        {post.comments.map((comment) => (
-                          <div key={comment.id} className="flex items-start gap-2 mt-2">
-                            <Avatar className="h-8 w-8">
-                              <AvatarImage src={comment.user.avatar_url || "/placeholder.svg"} />
-                              <AvatarFallback>{comment.user.full_name?.charAt(0)}</AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium text-sm">{comment.user.full_name}</span>
-                                <span className="text-xs text-muted-foreground">
-                                  {formatDate(comment.created_at)}
-                                </span>
-                              </div>
-                              <p className="text-sm text-foreground/90">{comment.content}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
                   </CardContent>
                 </Card>
                 {index < posts.length - 1 && (
@@ -482,6 +439,4 @@ const Posts: React.FC = () => {
       <BottomNav />
     </div>
   );
-};
-
-export default Posts;
+}

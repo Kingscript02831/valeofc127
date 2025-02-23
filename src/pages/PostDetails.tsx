@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -291,33 +292,36 @@ export default function PostDetails() {
     }
   };
 
+  if (!post) return null;
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <main className="container max-w-4xl mx-auto py-8 px-4 pt-20 pb-24">
-        {post && (
-          <div className="space-y-6">
-            <div className="flex items-center gap-4">
-              <Avatar className="h-16 w-16 border-2 border-primary/10">
+      <main className="container mx-auto py-8 px-4 pt-20 pb-24">
+        <Card className="max-w-2xl mx-auto">
+          <CardContent className="p-6">
+            {/* User Info */}
+            <div className="flex items-center gap-3 mb-4">
+              <Avatar className="h-12 w-12 border-2 border-primary/10">
                 <AvatarImage src={post.user.avatar_url || "/placeholder.svg"} />
                 <AvatarFallback>
                   {post.user.full_name?.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div>
-                <h2 className="text-2xl font-bold">{post.user.full_name}</h2>
-                <p className="text-lg text-muted-foreground">@{post.user.username}</p>
+                <h2 className="font-semibold text-lg">{post.user.full_name}</h2>
+                <p className="text-muted-foreground">@{post.user.username}</p>
               </div>
             </div>
 
+            {/* Post Content */}
             {post.content && (
-              <p className="text-xl leading-relaxed whitespace-pre-wrap">
-                {post.content}
-              </p>
+              <p className="text-lg mb-4 whitespace-pre-wrap">{post.content}</p>
             )}
 
+            {/* Media */}
             {(post.images?.length > 0 || post.video_urls?.length > 0) && (
-              <div className="w-full">
+              <div className="mb-4 -mx-6">
                 <MediaCarousel
                   images={post.images || []}
                   videoUrls={post.video_urls || []}
@@ -328,78 +332,79 @@ export default function PostDetails() {
               </div>
             )}
 
-            <div className="flex items-center gap-6 py-6 border-y border-border/40">
+            {/* Action Buttons */}
+            <div className="flex items-center gap-4 py-4 border-y">
               <div className="relative">
                 <button
+                  className="flex items-center gap-2 transition-colors duration-200 hover:text-primary"
                   onClick={() => setActiveReactionMenu(!activeReactionMenu)}
-                  className="flex items-center gap-2 text-lg hover:text-primary transition-colors"
                 >
-                  {post.reaction_type ? (
-                    <span className="text-2xl">{getReactionIcon(post.reaction_type)}</span>
-                  ) : (
-                    <span className="text-2xl">👍</span>
-                  )}
-                  <span>{post.likes || 0}</span>
+                  <span className="text-xl">
+                    {post.reaction_type ? getReactionIcon(post.reaction_type) : '👍'}
+                  </span>
+                  <span className="text-sm text-muted-foreground">
+                    {post.likes || 0}
+                  </span>
                 </button>
+                
                 <ReactionMenu 
                   isOpen={activeReactionMenu}
                   onSelect={handleReaction}
                 />
               </div>
 
-              <button
-                onClick={() => handleCommentLike(post.id)}
-                className="flex items-center gap-2 text-lg hover:text-primary transition-colors"
-              >
-                <MessageCircle className="h-6 w-6" />
-                <span>{post.comments?.length || 0}</span>
+              <button className="flex items-center gap-2 hover:text-primary transition-colors duration-200">
+                <MessageCircle className="w-5 h-5" />
+                <span className="text-sm text-muted-foreground">
+                  {post.comments?.length || 0}
+                </span>
               </button>
 
               <button
+                className="flex items-center transition-colors duration-200 hover:text-primary"
                 onClick={handleShare}
-                className="flex items-center gap-2 text-lg hover:text-primary transition-colors"
               >
-                <Share2 className="h-6 w-6" />
-                <span>Compartilhar</span>
+                <Share2 className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="space-y-6">
-              <div className="flex gap-2">
+            {/* Comments Section */}
+            <div className="mt-6">
+              <div className="flex gap-2 mb-6">
                 <Input
-                  placeholder="Adicione um comentário..."
+                  placeholder={replyingTo ? `Respondendo @${replyingTo}...` : "Adicione um comentário..."}
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
-                  className="text-lg"
                 />
-                <Button onClick={handleComment} size="lg">
-                  Comentar
-                </Button>
+                <Button onClick={handleComment}>Comentar</Button>
               </div>
 
-              <div className="space-y-6">
+              <div className="space-y-4">
                 {post.comments?.map((comment) => (
-                  <div key={comment.id} className="flex gap-4">
-                    <Avatar className="h-12 w-12">
+                  <div key={comment.id} className="flex gap-3">
+                    <Avatar className="h-8 w-8">
                       <AvatarImage src={comment.user.avatar_url || "/placeholder.svg"} />
                       <AvatarFallback>
-                        {comment.user.full_name?.charAt(0)}
+                        {comment.user.full_name?.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-lg">
-                          {comment.user.full_name}
-                        </span>
-                        <span className="text-muted-foreground">
-                          {new Date(comment.created_at).toLocaleDateString()}
+                        <span className="font-medium">{comment.user.full_name}</span>
+                        <span className="text-sm text-muted-foreground">
+                          {new Date(comment.created_at).toLocaleDateString('pt-BR', {
+                            day: '2-digit',
+                            month: 'long',
+                          })}
                         </span>
                       </div>
-                      <p className="text-lg mt-1">{comment.content}</p>
+                      <p className="text-sm mt-1">{comment.content}</p>
                       <div className="flex gap-4 mt-2">
                         <button
                           onClick={() => handleCommentLike(comment.id)}
-                          className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                          className={`text-sm hover:text-primary transition-colors ${
+                            comment.has_liked ? 'text-primary' : 'text-muted-foreground'
+                          }`}
                         >
                           {comment.has_liked ? '❤️' : '🤍'} {comment.likes}
                         </button>
@@ -415,8 +420,8 @@ export default function PostDetails() {
                 ))}
               </div>
             </div>
-          </div>
-        )}
+          </CardContent>
+        </Card>
       </main>
       <BottomNav />
     </div>
