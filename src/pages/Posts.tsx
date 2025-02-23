@@ -172,8 +172,8 @@ const Posts: React.FC = () => {
           });
       }
 
-      queryClient.invalidateQueries(['posts']);
-      queryClient.invalidateQueries(['following']);
+      await queryClient.invalidateQueries({ queryKey: ['posts'] });
+      await queryClient.invalidateQueries({ queryKey: ['following'] });
 
       toast({
         title: isFollowing ? "Deixou de seguir" : "Seguindo",
@@ -254,25 +254,26 @@ const Posts: React.FC = () => {
     }
   };
 
-  const handleShare = async (postId: string) => {
+  const handleShare = async (post: Post) => {
     try {
-      await navigator.share({
-        url: `${window.location.origin}/posts/${postId}`,
-      });
+      const shareData = {
+        title: 'Vale OFC',
+        text: `Post de ${post.user.username}: ${post.content}`,
+        url: `${window.location.origin}/posts/${post.id}`
+      };
+
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(shareData.url);
+        toast({
+          title: "Link copiado!",
+          description: "O link do post foi copiado para sua área de transferência",
+        });
+      }
     } catch (error) {
       console.error('Error sharing:', error);
-      navigator.clipboard.writeText(`${window.location.origin}/posts/${postId}`);
-      toast({
-        title: "Link copiado",
-        description: "O link foi copiado para sua área de transferência",
-      });
     }
-  };
-
-  const handleWhatsAppShare = async (postId: string) => {
-    const postUrl = `${window.location.origin}/posts/${postId}`;
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(postUrl)}`;
-    window.open(whatsappUrl, '_blank');
   };
 
   const formatDate = (dateString: string) => {
