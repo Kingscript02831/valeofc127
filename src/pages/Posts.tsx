@@ -53,7 +53,7 @@ const getReactionIcon = (type: string) => {
   }
 };
 
-export default function Posts() {
+const Posts: React.FC = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -333,22 +333,6 @@ export default function Posts() {
                           <div className="flex items-center gap-2">
                             <h2 className="font-semibold">{post.user.full_name}</h2>
                             <p className="text-sm text-muted-foreground">@{post.user.username}</p>
-                            {currentUser && currentUser.id !== post.user_id && (
-                              <button
-                                onClick={() => handleFollow(post.user_id, post.isFollowing)}
-                                className={`flex items-center justify-center gap-2 py-2 px-4 rounded-xl ${
-                                  post.isFollowing 
-                                    ? 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700' 
-                                    : 'bg-primary/10 hover:bg-primary/20'
-                                } transition-colors`}
-                              >
-                                {post.isFollowing ? (
-                                  <UserCheck className="w-5 h-5 text-muted-foreground" />
-                                ) : (
-                                  <UserPlus className="w-5 h-5 text-primary" />
-                                )}
-                              </button>
-                            )}
                           </div>
                           <p className="text-sm text-muted-foreground">
                             {formatDate(post.created_at)}
@@ -439,4 +423,6 @@ export default function Posts() {
       <BottomNav />
     </div>
   );
-}
+};
+
+export default Posts;
