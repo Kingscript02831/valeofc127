@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { supabase } from "../integrations/supabase/client";
-import { MediaCarousel } from "../components/MediaCarousel";
+import { supabase } from "@/integrations/supabase/client";
+import { MediaCarousel } from "@/components/MediaCarousel";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Share2, 
@@ -20,9 +20,9 @@ import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import Navbar from "../components/Navbar";
-import BottomNav from "../components/BottomNav";
-import ReactionMenu from "../components/ReactionMenu";
+import Navbar from "@/components/Navbar";
+import BottomNav from "@/components/BottomNav";
+import ReactionMenu from "@/components/ReactionMenu";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -137,7 +137,6 @@ const PostDetails = () => {
 
       if (error) throw error;
 
-      // Get reply counts for each comment
       const commentsWithCounts = await Promise.all(comments.map(async (comment) => {
         const { count: repliesCount } = await supabase
           .from('post_comments')
@@ -155,6 +154,45 @@ const PostDetails = () => {
       return commentsWithCounts;
     },
     enabled: !!id,
+  });
+
+  const { data: replies, isLoading: isLoadingReplies } = useQuery({
+    queryKey: ['replies', id, showReplies],
+    queryFn: async () => {
+      const repliesData: { [key: string]: Comment[] } = {};
+      
+      for (const commentId of Object.keys(showReplies)) {
+        if (showReplies[commentId]) {
+          const { data: commentReplies, error } = await supabase
+            .from('post_comments')
+            .select(`
+              *,
+              user:user_id (
+                username,
+                full_name,
+                avatar_url
+              ),
+              comment_likes (
+                id,
+                user_id
+              )
+            `)
+            .eq('reply_to_id', commentId)
+            .order('created_at', { ascending: true });
+
+          if (!error && commentReplies) {
+            repliesData[commentId] = commentReplies.map(reply => ({
+              ...reply,
+              likes_count: reply.comment_likes?.length || 0,
+              user_has_liked: reply.comment_likes?.some(like => like.user_id === currentUser?.id) || false
+            }));
+          }
+        }
+      }
+      
+      return repliesData;
+    },
+    enabled: Object.values(showReplies).some(value => value)
   });
 
   const handleShare = async () => {
@@ -359,7 +397,7 @@ const PostDetails = () => {
     }
   };
 
-  if (isLoadingPost || isLoadingComments) {
+  if (isLoadingPost || isLoadingComments || isLoadingReplies) {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
@@ -396,7 +434,7 @@ const PostDetails = () => {
       <Navbar />
       <main className="container mx-auto py-8 px-4 pt-20 pb-24">
         <div className="max-w-xl mx-auto space-y-4">
-          <Card className="overflow-hidden">
+          <Card className="overflow-hidden bg-white dark:bg-card border-none shadow-sm">
             <div className="p-4">
               <div className="flex items-center gap-3 mb-4">
                 <Avatar>
@@ -426,10 +464,10 @@ const PostDetails = () => {
               )}
             </div>
 
-            <div className="flex items-center justify-between p-4 border-t">
-              <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between p-2 mt-2 border-t border-border/40">
+              <div className="relative">
                 <button
-                  className="flex items-center gap-2 hover:text-primary transition-colors"
+                  className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                   onClick={() => setActiveReactionMenu(activeReactionMenu === post.id ? null : post.id)}
                 >
                   {post.reaction_type ? (
@@ -437,9 +475,9 @@ const PostDetails = () => {
                       {getReactionIcon(post.reaction_type)}
                     </span>
                   ) : (
-                    <ThumbsUp className="w-5 h-5" />
+                    <ThumbsUp className="w-5 h-5 text-muted-foreground" />
                   )}
-                  <span className={post.reaction_type ? "text-blue-500" : ""}>
+                  <span className={`text-sm ${post.reaction_type ? 'text-blue-500' : 'text-muted-foreground'}`}>
                     {post.likes || 0}
                   </span>
                 </button>
@@ -452,33 +490,51 @@ const PostDetails = () => {
                 </div>
               </div>
 
-              <button className="flex items-center gap-2 hover:text-primary transition-colors">
-                <MessageCircle className="w-5 h-5" />
-                <span>{comments?.length || 0}</span>
+              <button 
+                className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              >
+                <MessageCircle className="w-5 h-5 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">
+                  {comments?.length || 0}
+                </span>
               </button>
 
-              <Button
-                variant="ghost"
-                size="sm"
-                className="hover:text-primary transition-colors"
+              <button
+                className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-[#25D366]/10 hover:bg-[#25D366]/20 transition-colors"
+                onClick={handleWhatsAppShare}
+              >
+                <MessageSquareMore className="w-5 h-5 text-[#25D366]" />
+              </button>
+
+              <button
+                className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                 onClick={handleShare}
               >
-                <Share2 className="w-5 h-5" />
-              </Button>
+                <Share2 className="w-5 h-5 text-muted-foreground" />
+              </button>
             </div>
           </Card>
 
           <Card className="p-4">
             <form onSubmit={handleSubmitComment} className="space-y-4">
               <Textarea
-                placeholder="Escreva um comentário..."
+                placeholder={replyTo ? "Escreva sua resposta..." : "Escreva um comentário..."}
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
                 className="min-h-[100px]"
               />
-              <div className="flex justify-end">
+              <div className="flex justify-between items-center">
+                {replyTo && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => setReplyTo(null)}
+                  >
+                    Cancelar resposta
+                  </Button>
+                )}
                 <Button type="submit">
-                  Comentar
+                  {replyTo ? "Responder" : "Comentar"}
                 </Button>
               </div>
             </form>
@@ -535,13 +591,61 @@ const PostDetails = () => {
                           }))}
                           className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors"
                         >
-                          <ChevronDown className="w-4 h-4" />
+                          <ChevronDown className={`w-4 h-4 transform transition-transform ${showReplies[comment.id] ? 'rotate-180' : ''}`} />
                           <span>
                             {comment.replies_count} resposta{comment.replies_count > 1 ? 's' : ''}
                           </span>
                         </button>
                       )}
                     </div>
+
+                    {showReplies[comment.id] && replies && replies[comment.id] && (
+                      <div className="mt-4 space-y-4 pl-8 border-l-2 border-border/40">
+                        {replies[comment.id].map((reply) => (
+                          <div key={reply.id} className="flex gap-3">
+                            <Avatar className="w-6 h-6">
+                              <AvatarImage src={reply.user.avatar_url} />
+                              <AvatarFallback>
+                                {reply.user.full_name?.charAt(0).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1">
+                              <div className="flex items-center">
+                                <span className="font-semibold text-sm">
+                                  {reply.user.full_name}
+                                </span>
+                                <span className="text-xs text-muted-foreground ml-2">
+                                  {formatDate(reply.created_at)}
+                                </span>
+                              </div>
+                              <p className="text-sm mt-1">{reply.content}</p>
+                              <div className="flex items-center gap-4 mt-2">
+                                <button
+                                  onClick={() => handleCommentLike(reply.id)}
+                                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
+                                >
+                                  <Flame 
+                                    className={`w-3 h-3 ${
+                                      reply.user_has_liked ? "text-red-500" : ""
+                                    }`}
+                                  />
+                                  <span>
+                                    {reply.likes_count || 0}
+                                  </span>
+                                </button>
+                                <button
+                                  onClick={() => setReplyTo(comment.id)}
+                                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
+                                >
+                                  <Reply className="w-3 h-3" />
+                                  <span>Responder</span>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               </Card>
