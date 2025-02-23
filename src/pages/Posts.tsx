@@ -1,8 +1,9 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Bell, Search, Share2, MessageCircle, MessageSquareMore, ThumbsUp, Heart, Smile, Frown, Angry, Flame } from "lucide-react";
+import { Bell, Search, Share2, MessageCircle, MessageSquareMore, ThumbsUp } from "lucide-react";
 import { MediaCarousel } from "@/components/MediaCarousel";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -10,12 +11,10 @@ import Navbar from "@/components/Navbar";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import ReactionMenu from "@/components/ReactionMenu";
-import { Separator } from "@/components/ui/separator";
 import BottomNav from "@/components/BottomNav";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { getReactionIcon } from "@/utils/emojisPosts";
 
 interface Post {
   id: string;
@@ -41,6 +40,7 @@ const Posts: React.FC = () => {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [activeReactionMenu, setActiveReactionMenu] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"following" | "forYou">("forYou");
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -50,8 +50,21 @@ const Posts: React.FC = () => {
     },
   });
 
+  const { data: following } = useQuery({
+    queryKey: ['following', currentUser?.id],
+    queryFn: async () => {
+      if (!currentUser) return [];
+      const { data } = await supabase
+        .from('follows')
+        .select('following_id')
+        .eq('follower_id', currentUser.id);
+      return data?.map(f => f.following_id) || [];
+    },
+    enabled: !!currentUser,
+  });
+
   const { data: posts, isLoading } = useQuery({
-    queryKey: ['posts', searchTerm],
+    queryKey: ['posts', searchTerm, activeTab, following],
     queryFn: async () => {
       try {
         let query = supabase
@@ -76,6 +89,10 @@ const Posts: React.FC = () => {
 
         if (searchTerm) {
           query = query.ilike('content', `%${searchTerm}%`);
+        }
+
+        if (activeTab === "following" && following?.length) {
+          query = query.in('user_id', following);
         }
 
         const { data: postsData, error } = await query;
@@ -220,6 +237,32 @@ const Posts: React.FC = () => {
               </div>
             </div>
           </div>
+
+          <div className="flex justify-center gap-4 mt-4">
+            <Button
+              variant={activeTab === "following" ? "default" : "ghost"}
+              onClick={() => {
+                if (!currentUser) {
+                  toast({
+                    title: "Faça login",
+                    description: "Você precisa estar logado para ver posts de quem você segue",
+                  });
+                  return;
+                }
+                setActiveTab("following");
+              }}
+              className="flex-1 max-w-[200px]"
+            >
+              Seguindo
+            </Button>
+            <Button
+              variant={activeTab === "forYou" ? "default" : "ghost"}
+              onClick={() => setActiveTab("forYou")}
+              className="flex-1 max-w-[200px]"
+            >
+              Para Você
+            </Button>
+          </div>
         </div>
 
         <div className="max-w-xl mx-auto space-y-4">
@@ -239,6 +282,14 @@ const Posts: React.FC = () => {
                   </CardContent>
                 </Card>
               ))}
+            </div>
+          ) : posts?.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">
+                {activeTab === "following" 
+                  ? "Nenhum post de pessoas que você segue." 
+                  : "Nenhum post encontrado."}
+              </p>
             </div>
           ) : (
             posts?.map((post: Post) => (
