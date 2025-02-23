@@ -1,16 +1,15 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { MediaCarousel } from "@/components/MediaCarousel";
+import { supabase } from "../integrations/supabase/client";
+import { MediaCarousel } from "../components/MediaCarousel";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Share2, 
-  MessageCircle, 
-  MessageSquareMore, 
   ThumbsUp, 
   Heart, 
   Smile, 
+  MessageCircle, 
+  MessageSquareMore, 
   Frown, 
   Angry,
   Reply,
@@ -21,49 +20,43 @@ import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import Navbar from "@/components/Navbar";
-import BottomNav from "@/components/BottomNav";
-import ReactionMenu from "@/components/ReactionMenu";
+import Navbar from "../components/Navbar";
+import BottomNav from "../components/BottomNav";
+import ReactionMenu from "../components/ReactionMenu";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
-interface PostDetails {
+interface Post {
   id: string;
+  user_id: string;
   content: string;
-  created_at: string;
   images: string[];
   video_urls: string[];
+  likes: number;
+  reaction_type?: string;
+  created_at: string;
+  user_has_liked?: boolean;
+  comment_count: number;
   user: {
-    id: string;
     username: string;
     full_name: string;
     avatar_url: string;
   };
-  comments: Comment[];
-  post_likes: PostLike[];
-  comment_count: number;
 }
 
 interface Comment {
   id: string;
   content: string;
   created_at: string;
+  user_id: string;
+  reply_to_id: string | null;
   user: {
-    id: string;
     username: string;
     full_name: string;
     avatar_url: string;
   };
-}
-
-interface PostLike {
-  user_id: string;
-  reaction_type: string;
-}
-
-interface CommentWithLikes extends Comment {
-  likes: number;
+  likes_count: number;
   user_has_liked: boolean;
   replies_count: number;
 }
@@ -73,19 +66,24 @@ const PostDetails = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [post, setPost] = useState<PostDetails | null>(null);
   const [newComment, setNewComment] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [replyTo, setReplyTo] = useState<string | null>(null);
   const [activeReactionMenu, setActiveReactionMenu] = useState<string | null>(null);
+  const [showReplies, setShowReplies] = useState<{ [key: string]: boolean }>({});
 
-  useEffect(() => {
-    fetchPost();
-  }, [id]);
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      return user;
+    },
+  });
 
-  const fetchPost = async () => {
-    try {
+  const { data: post, isLoading: isLoadingPost } = useQuery({
+    queryKey: ['post', id],
+    queryFn: async () => {
       const { data: post, error } = await supabase
-        .from("posts")
+        .from('posts')
         .select(`
           *,
           user:user_id (
@@ -94,130 +92,136 @@ const PostDetails = () => {
             full_name,
             avatar_url
           ),
-          comments:post_comments (
-            id,
-            content,
-            created_at,
-            user:user_id (
-              id,
-              username,
-              full_name,
-              avatar_url
-            )
-          ),
           post_likes (
-            user_id,
-            reaction_type
+            reaction_type,
+            user_id
+          ),
+          post_comments (
+            id
           )
         `)
-        .eq("id", id)
+        .eq('id', id)
         .single();
 
       if (error) throw error;
 
-      if (post.comments) {
-        const commentIds = post.comments.map((comment: Comment) => comment.id);
-        
-        const { data: commentLikes } = await supabase
-          .from('comment_likes')
-          .select('comment_id, user_id')
-          .in('comment_id', commentIds);
+      return {
+        ...post,
+        reaction_type: post.post_likes?.find(like => like.user_id === currentUser?.id)?.reaction_type,
+        likes: post.post_likes?.length || 0,
+        comment_count: post.post_comments?.length || 0
+      };
+    },
+  });
 
-        const { data: { user: currentUser } } = await supabase.auth.getUser();
-
-        const { data: repliesCounts } = await supabase
-          .from('post_comments')
-          .select('id, count(*)', { count: 'exact' })
-          .in('reply_to_id', commentIds)
-          .group('id');
-
-        const commentsWithLikes = post.comments.map((comment: Comment) => {
-          const likes = commentLikes?.filter(like => like.comment_id === comment.id).length || 0;
-          const userHasLiked = currentUser ? commentLikes?.some(like => 
-            like.comment_id === comment.id && like.user_id === currentUser.id
-          ) || false : false;
-          const repliesCount = repliesCounts?.find(r => r.id === comment.id)?.count || 0;
-          
-          return {
-            ...comment,
-            likes,
-            user_has_liked: userHasLiked,
-            replies_count: parseInt(repliesCount as unknown as string),
-          };
-        });
-
-        post.comments = commentsWithLikes;
-      }
-
-      const { count } = await supabase
+  const { data: comments, isLoading: isLoadingComments } = useQuery({
+    queryKey: ['comments', id],
+    queryFn: async () => {
+      const { data: comments, error } = await supabase
         .from('post_comments')
-        .select('*', { count: 'exact', head: true })
-        .eq('post_id', id);
+        .select(`
+          *,
+          user:user_id (
+            username,
+            full_name,
+            avatar_url
+          ),
+          comment_likes (
+            id,
+            user_id
+          )
+        `)
+        .eq('post_id', id)
+        .is('reply_to_id', null)
+        .order('created_at', { ascending: false });
 
-      setPost({ ...post, comment_count: count || 0 });
+      if (error) throw error;
+
+      // Get reply counts for each comment
+      const commentsWithCounts = await Promise.all(comments.map(async (comment) => {
+        const { count: repliesCount } = await supabase
+          .from('post_comments')
+          .select('*', { count: 'exact', head: true })
+          .eq('reply_to_id', comment.id);
+
+        return {
+          ...comment,
+          likes_count: comment.comment_likes?.length || 0,
+          user_has_liked: comment.comment_likes?.some(like => like.user_id === currentUser?.id) || false,
+          replies_count: repliesCount || 0
+        };
+      }));
+
+      return commentsWithCounts;
+    },
+    enabled: !!id,
+  });
+
+  const handleShare = async () => {
+    try {
+      await navigator.share({
+        title: post?.content,
+        url: `${window.location.origin}/posts/${id}`,
+      });
     } catch (error) {
-      console.error("Error fetching post:", error);
+      console.error('Error sharing:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível carregar o post",
+        description: "Não foi possível compartilhar o post",
         variant: "destructive",
       });
     }
   };
 
-  const handleReaction = async (postId: string, reactionType: string) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        toast({
-          title: "Erro",
-          description: "Você precisa estar logado para reagir a posts",
-          variant: "destructive",
-        });
-        return;
-      }
+  const handleWhatsAppShare = async () => {
+    const postUrl = `${window.location.origin}/posts/${id}`;
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(postUrl)}`;
+    window.open(whatsappUrl, '_blank');
+  };
 
+  const handleReaction = async (reactionType: string) => {
+    if (!currentUser) {
+      toast({
+        title: "Erro",
+        description: "Você precisa estar logado para reagir a posts",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
       const { data: existingReaction } = await supabase
         .from('post_likes')
         .select('*')
-        .eq('post_id', postId)
-        .eq('user_id', user.id)
+        .eq('post_id', id)
+        .eq('user_id', currentUser.id)
         .single();
 
       if (existingReaction) {
         if (existingReaction.reaction_type === reactionType) {
-          const { error: deleteError } = await supabase
+          await supabase
             .from('post_likes')
             .delete()
-            .eq('post_id', postId)
-            .eq('user_id', user.id);
-
-          if (deleteError) throw deleteError;
+            .eq('post_id', id)
+            .eq('user_id', currentUser.id);
         } else {
-          const { error: updateError } = await supabase
+          await supabase
             .from('post_likes')
             .update({ reaction_type: reactionType })
-            .eq('post_id', postId)
-            .eq('user_id', user.id);
-
-          if (updateError) throw updateError;
+            .eq('post_id', id)
+            .eq('user_id', currentUser.id);
         }
       } else {
-        const { error: insertError } = await supabase
+        await supabase
           .from('post_likes')
           .insert({
-            post_id: postId,
-            user_id: user.id,
+            post_id: id,
+            user_id: currentUser.id,
             reaction_type: reactionType
           });
-
-        if (insertError) throw insertError;
       }
 
-      setActiveReactionMenu(null);
-      await fetchPost();
-      
+      await queryClient.invalidateQueries({ queryKey: ['post', id] });
     } catch (error) {
       console.error('Error in reaction handler:', error);
       toast({
@@ -228,112 +232,93 @@ const PostDetails = () => {
     }
   };
 
-  const handleShare = async (postId: string) => {
-    try {
-      await navigator.share({
-        url: `${window.location.origin}/posts/${postId}`,
-      });
-    } catch (error) {
-      console.error('Error sharing:', error);
-      navigator.clipboard.writeText(`${window.location.origin}/posts/${postId}`);
+  const handleSubmitComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!currentUser) {
       toast({
-        title: "Link copiado",
-        description: "O link foi copiado para sua área de transferência",
+        title: "Erro",
+        description: "Você precisa estar logado para comentar",
+        variant: "destructive",
       });
+      return;
     }
-  };
 
-  const handleWhatsAppShare = async (postId: string) => {
-    const postUrl = `${window.location.origin}/posts/${postId}`;
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(postUrl)}`;
-    window.open(whatsappUrl, '_blank');
-  };
-
-  const handleSubmitComment = async () => {
-    if (!newComment.trim()) return;
-
-    setIsSubmitting(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        toast({
-          title: "Erro",
-          description: "Você precisa estar logado para comentar",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const { error } = await supabase.from("post_comments").insert({
-        post_id: id,
-        user_id: user.id,
-        content: newComment,
+    if (!newComment.trim()) {
+      toast({
+        title: "Erro",
+        description: "O comentário não pode estar vazio",
+        variant: "destructive",
       });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('post_comments')
+        .insert({
+          content: newComment.trim(),
+          post_id: id,
+          user_id: currentUser.id,
+          reply_to_id: replyTo
+        });
 
       if (error) throw error;
 
       setNewComment("");
-      await fetchPost();
+      setReplyTo(null);
+      await queryClient.invalidateQueries({ queryKey: ['comments', id] });
+      
       toast({
         title: "Sucesso",
         description: "Comentário adicionado com sucesso",
       });
     } catch (error) {
-      console.error("Error adding comment:", error);
+      console.error('Error adding comment:', error);
       toast({
         title: "Erro",
         description: "Não foi possível adicionar o comentário",
         variant: "destructive",
       });
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
   const handleCommentLike = async (commentId: string) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        toast({
-          title: "Erro",
-          description: "Você precisa estar logado para curtir comentários",
-          variant: "destructive",
-        });
-        return;
-      }
+    if (!currentUser) {
+      toast({
+        title: "Erro",
+        description: "Você precisa estar logado para curtir comentários",
+        variant: "destructive",
+      });
+      return;
+    }
 
+    try {
       const { data: existingLike } = await supabase
         .from('comment_likes')
-        .select('*')
+        .select()
         .eq('comment_id', commentId)
-        .eq('user_id', user.id)
+        .eq('user_id', currentUser.id)
         .single();
 
       if (existingLike) {
-        const { error: deleteError } = await supabase
+        await supabase
           .from('comment_likes')
           .delete()
           .eq('comment_id', commentId)
-          .eq('user_id', user.id);
-
-        if (deleteError) throw deleteError;
+          .eq('user_id', currentUser.id);
       } else {
-        const { error: insertError } = await supabase
+        await supabase
           .from('comment_likes')
           .insert({
             comment_id: commentId,
-            user_id: user.id,
+            user_id: currentUser.id
           });
-
-        if (insertError) throw insertError;
       }
 
-      await fetchPost();
-      
+      await queryClient.invalidateQueries({ queryKey: ['comments', id] });
     } catch (error) {
-      console.error('Error in comment like handler:', error);
+      console.error('Error toggling comment like:', error);
       toast({
         title: "Erro",
         description: "Não foi possível processar sua ação",
@@ -365,8 +350,6 @@ const PostDetails = () => {
         return <Heart className="w-5 h-5 text-red-500" />;
       case 'haha':
         return <Smile className="w-5 h-5 text-yellow-500" />;
-      case 'fire':
-        return <Flame className="w-5 h-5 text-orange-500" />;
       case 'sad':
         return <Frown className="w-5 h-5 text-purple-500" />;
       case 'angry':
@@ -376,27 +359,54 @@ const PostDetails = () => {
     }
   };
 
-  if (!post) return null;
+  if (isLoadingPost || isLoadingComments) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main className="container mx-auto py-8 px-4 pt-20 pb-24">
+          <div className="max-w-xl mx-auto">
+            <Card className="animate-pulse p-4">
+              <div className="h-4 bg-muted rounded w-3/4 mb-4"></div>
+              <div className="h-20 bg-muted rounded mb-4"></div>
+            </Card>
+          </div>
+        </main>
+        <BottomNav />
+      </div>
+    );
+  }
+
+  if (!post) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main className="container mx-auto py-8 px-4 pt-20 pb-24">
+          <div className="max-w-xl mx-auto text-center">
+            <h1 className="text-2xl font-bold mb-4">Post não encontrado</h1>
+            <Button onClick={() => navigate('/')}>Voltar para o início</Button>
+          </div>
+        </main>
+        <BottomNav />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
       <main className="container mx-auto py-8 px-4 pt-20 pb-24">
-        <div className="max-w-xl mx-auto">
-          <Card className="overflow-hidden bg-white dark:bg-card border-none shadow-sm">
-            <div className="p-3 space-y-2">
-              <div className="flex items-center gap-3">
-                <Avatar className="h-10 w-10 border-2 border-primary/10">
-                  <AvatarImage src={post.user.avatar_url || "/placeholder.svg"} />
+        <div className="max-w-xl mx-auto space-y-4">
+          <Card className="overflow-hidden">
+            <div className="p-4">
+              <div className="flex items-center gap-3 mb-4">
+                <Avatar>
+                  <AvatarImage src={post.user.avatar_url} />
                   <AvatarFallback>
                     {post.user.full_name?.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="font-semibold">{post.user.full_name}</h2>
-                    <p className="text-sm text-muted-foreground">@{post.user.username}</p>
-                  </div>
+                  <h2 className="font-semibold">{post.user.full_name}</h2>
                   <p className="text-sm text-muted-foreground">
                     {formatDate(post.created_at)}
                   </p>
@@ -404,139 +414,138 @@ const PostDetails = () => {
               </div>
 
               {post.content && (
-                <p className="text-foreground text-[15px] leading-normal">
-                  {post.content}
-                </p>
+                <p className="text-foreground mb-4">{post.content}</p>
               )}
-            </div>
 
-            {(post.images?.length > 0 || post.video_urls?.length > 0) && (
-              <div className="w-full">
+              {(post.images?.length > 0 || post.video_urls?.length > 0) && (
                 <MediaCarousel
                   images={post.images || []}
                   videoUrls={post.video_urls || []}
                   title={post.content || ""}
-                  autoplay={false}
-                  showControls={true}
-                  cropMode="contain"
                 />
-              </div>
-            )}
+              )}
+            </div>
 
-            <div className="flex items-center justify-between p-2 mt-2 border-t border-border/40">
-              <div className="relative">
+            <div className="flex items-center justify-between p-4 border-t">
+              <div className="flex items-center gap-2">
                 <button
-                  className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                  className="flex items-center gap-2 hover:text-primary transition-colors"
                   onClick={() => setActiveReactionMenu(activeReactionMenu === post.id ? null : post.id)}
                 >
-                  {post.post_likes?.length > 0 ? (
+                  {post.reaction_type ? (
                     <span className="text-blue-500">
-                      {getReactionIcon(post.post_likes[0]?.reaction_type)}
+                      {getReactionIcon(post.reaction_type)}
                     </span>
                   ) : (
-                    <ThumbsUp className="w-5 h-5 text-muted-foreground" />
+                    <ThumbsUp className="w-5 h-5" />
                   )}
-                  <span className={`text-sm ${post.post_likes?.length > 0 ? 'text-blue-500' : 'text-muted-foreground'}`}>
-                    {post.post_likes?.length || 0}
+                  <span className={post.reaction_type ? "text-blue-500" : ""}>
+                    {post.likes || 0}
                   </span>
                 </button>
 
                 <div className="relative">
                   <ReactionMenu
                     isOpen={activeReactionMenu === post.id}
-                    onSelect={(type) => handleReaction(post.id, type)}
+                    onSelect={(type) => handleReaction(type)}
                   />
                 </div>
               </div>
 
-              <button 
-                className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-              >
-                <MessageCircle className="w-5 h-5 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">
-                  {post.comment_count || 0}
-                </span>
+              <button className="flex items-center gap-2 hover:text-primary transition-colors">
+                <MessageCircle className="w-5 h-5" />
+                <span>{comments?.length || 0}</span>
               </button>
 
-              <button
-                className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-[#25D366]/10 hover:bg-[#25D366]/20 transition-colors"
-                onClick={() => handleWhatsAppShare(post.id)}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="hover:text-primary transition-colors"
+                onClick={handleShare}
               >
-                <MessageSquareMore className="w-5 h-5 text-[#25D366]" />
-              </button>
-
-              <button
-                className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                onClick={() => handleShare(post.id)}
-              >
-                <Share2 className="w-5 h-5 text-muted-foreground" />
-              </button>
+                <Share2 className="w-5 h-5" />
+              </Button>
             </div>
           </Card>
 
-          <div className="mt-6 space-y-4">
-            <div className="flex gap-4">
+          <Card className="p-4">
+            <form onSubmit={handleSubmitComment} className="space-y-4">
               <Textarea
-                placeholder="Adicione um comentário..."
+                placeholder="Escreva um comentário..."
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
-                className="flex-1"
+                className="min-h-[100px]"
               />
-              <Button 
-                onClick={handleSubmitComment}
-                disabled={isSubmitting || !newComment.trim()}
-              >
-                Comentar
-              </Button>
-            </div>
+              <div className="flex justify-end">
+                <Button type="submit">
+                  Comentar
+                </Button>
+              </div>
+            </form>
+          </Card>
 
-            <div className="space-y-4">
-              {post.comments?.map((comment: CommentWithLikes) => (
-                <Card key={comment.id} className="p-4">
-                  <div className="space-y-4">
-                    <div className="flex gap-3">
-                      <Avatar className="h-10 w-10">
-                        <AvatarImage src={comment.user.avatar_url || "/placeholder.svg"} />
-                        <AvatarFallback>
-                          {comment.user.full_name?.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <p className="font-semibold">{comment.user.full_name}</p>
-                          <p className="text-sm text-muted-foreground">@{comment.user.username}</p>
-                        </div>
-                        <p className="mt-1">{comment.content}</p>
-                        <div className="flex items-center gap-6 mt-2">
-                          <button 
-                            onClick={() => handleCommentLike(comment.id)}
-                            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
-                          >
-                            <ThumbsUp className={`h-4 w-4 ${comment.user_has_liked ? 'fill-current text-primary' : ''}`} />
-                            <span>{comment.likes || 0}</span>
-                          </button>
-                          <button className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors">
-                            <Reply className="h-4 w-4" />
-                            <span>Responder</span>
-                          </button>
-                          <p className="text-xs text-muted-foreground">
-                            {formatDate(comment.created_at)}
-                          </p>
-                        </div>
+          <div className="space-y-4">
+            {comments?.map((comment) => (
+              <Card key={comment.id} className="p-4">
+                <div className="flex gap-3">
+                  <Avatar className="w-8 h-8">
+                    <AvatarImage src={comment.user.avatar_url} />
+                    <AvatarFallback>
+                      {comment.user.full_name?.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="font-semibold">
+                          {comment.user.full_name}
+                        </span>
+                        <span className="text-sm text-muted-foreground ml-2">
+                          {formatDate(comment.created_at)}
+                        </span>
                       </div>
                     </div>
-                    {comment.replies_count > 0 && (
-                      <button 
-                        className="flex items-center gap-2 ml-12 text-sm text-primary hover:text-primary/80 transition-colors"
+                    <p className="mt-1">{comment.content}</p>
+                    <div className="flex items-center gap-4 mt-2">
+                      <button
+                        onClick={() => handleCommentLike(comment.id)}
+                        className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors"
                       >
-                        <ChevronDown className="h-4 w-4" />
-                        Ver {comment.replies_count} {comment.replies_count === 1 ? 'resposta anterior' : 'respostas anteriores'}
+                        <Flame 
+                          className={`w-4 h-4 ${
+                            comment.user_has_liked ? "text-red-500" : ""
+                          }`}
+                        />
+                        <span>
+                          {comment.likes_count || 0}
+                        </span>
                       </button>
-                    )}
+                      <button
+                        onClick={() => setReplyTo(comment.id)}
+                        className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors"
+                      >
+                        <Reply className="w-4 h-4" />
+                        <span>Responder</span>
+                      </button>
+                      {comment.replies_count > 0 && (
+                        <button
+                          onClick={() => setShowReplies(prev => ({
+                            ...prev,
+                            [comment.id]: !prev[comment.id]
+                          }))}
+                          className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors"
+                        >
+                          <ChevronDown className="w-4 h-4" />
+                          <span>
+                            {comment.replies_count} resposta{comment.replies_count > 1 ? 's' : ''}
+                          </span>
+                        </button>
+                      )}
+                    </div>
                   </div>
-                </Card>
-              ))}
-            </div>
+                </div>
+              </Card>
+            ))}
           </div>
         </div>
       </main>
