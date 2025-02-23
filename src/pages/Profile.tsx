@@ -1,16 +1,16 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import { supabase } from "../integrations/supabase/client";
+import { Button } from "../components/ui/button";
+import { useToast } from "../hooks/use-toast";
+import { Dialog, DialogTrigger } from "../components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "../components/ui/dropdown-menu";
 import { 
   LogOut, 
   MapPin, 
@@ -24,13 +24,13 @@ import {
   Globe,
   Instagram
 } from "lucide-react";
-import BottomNav from "@/components/BottomNav";
-import { useTheme } from "@/components/ThemeProvider";
-import ProfileTabs from "@/components/ProfileTabs";
-import EditProfileDialog from "@/components/EditProfileDialog";
-import EditPhotosButton from "@/components/EditPhotosButton";
-import PhotoUrlDialog from "@/components/PhotoUrlDialog";
-import type { Profile } from "@/types/profile";
+import BottomNav from "../components/BottomNav";
+import { useTheme } from "../components/ThemeProvider";
+import ProfileTabs from "../components/ProfileTabs";
+import EditProfileDialog from "../components/EditProfileDialog";
+import EditPhotosButton from "../components/EditPhotosButton";
+import PhotoUrlDialog from "../components/PhotoUrlDialog";
+import type { Profile } from "../types/profile";
 import { format } from "date-fns";
 
 const defaultAvatarImage = "/placeholder.svg";
@@ -255,13 +255,7 @@ export default function Profile() {
             <ArrowLeft className="h-6 w-6" />
           </button>
           <div className="flex flex-col">
-            <div className="flex items-center gap-2">
-              <h1 className="text-lg font-semibold">{profile?.full_name}</h1>
-              <div className="flex gap-2 text-sm text-gray-500 -mt-1">
-                <span>{followStats?.followers || 0} seguidores</span>
-                <span>{followStats?.following || 0} seguindo</span>
-              </div>
-            </div>
+            <h1 className="text-lg font-semibold">{profile?.full_name}</h1>
           </div>
         </div>
         <button onClick={handleLogout} className="flex items-center">
