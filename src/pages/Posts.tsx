@@ -2,7 +2,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Bell, Search, Share2, MessageCircle, MessageSquareMore, ThumbsUp, UserCheck, UserPlus } from "lucide-react";
+import { Bell, Search, Share2, MessageCircle, MessageSquareMore, ThumbsUp, Heart, Smile, Frown, Angry } from "lucide-react";
 import { MediaCarousel } from "@/components/MediaCarousel";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -36,20 +36,18 @@ interface Post {
 
 const getReactionIcon = (type: string) => {
   switch (type) {
-    case 'love':
-      return '❤️';
-    case 'haha':
-      return '😂';
-    case 'crying':
-      return '🥲';
-    case 'sad':
-      return '😞';
-    case 'angry':
-      return '🤬';
     case 'like':
-      return '👍';
+      return <ThumbsUp className="w-5 h-5 text-blue-500" />;
+    case 'love':
+      return <Heart className="w-5 h-5 text-red-500" />;
+    case 'haha':
+      return <Smile className="w-5 h-5 text-yellow-500" />;
+    case 'sad':
+      return <Frown className="w-5 h-5 text-purple-500" />;
+    case 'angry':
+      return <Angry className="w-5 h-5 text-orange-500" />;
     default:
-      return null;
+      return <ThumbsUp className="w-5 h-5 text-muted-foreground" />;
   }
 };
 
@@ -360,21 +358,30 @@ const Posts: React.FC = () => {
                   )}
 
                   <div className="flex items-center justify-between p-2 mt-2 border-t border-border/40">
-                    <button
-                      className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                      onClick={() => setActiveReactionMenu(activeReactionMenu === post.id ? null : post.id)}
-                    >
-                      {post.reaction_type ? (
-                        <span className="text-xl text-blue-500">
-                          {getReactionIcon(post.reaction_type)}
+                    <div className="relative">
+                      <button
+                        className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                        onClick={() => setActiveReactionMenu(activeReactionMenu === post.id ? null : post.id)}
+                      >
+                        {post.reaction_type ? (
+                          <span className="text-blue-500">
+                            {getReactionIcon(post.reaction_type)}
+                          </span>
+                        ) : (
+                          <ThumbsUp className="w-5 h-5 text-muted-foreground" />
+                        )}
+                        <span className={`text-sm ${post.reaction_type ? 'text-blue-500' : 'text-muted-foreground'}`}>
+                          {post.likes || 0}
                         </span>
-                      ) : (
-                        <ThumbsUp className="w-5 h-5 text-muted-foreground" />
-                      )}
-                      <span className={`text-sm ${post.reaction_type ? 'text-blue-500' : 'text-muted-foreground'}`}>
-                        {post.likes || 0}
-                      </span>
-                    </button>
+                      </button>
+
+                      <div className="relative">
+                        <ReactionMenu
+                          isOpen={activeReactionMenu === post.id}
+                          onSelect={(type) => handleReaction(post.id, type)}
+                        />
+                      </div>
+                    </div>
 
                     <button 
                       onClick={() => navigate(`/posts/${post.id}`)}
