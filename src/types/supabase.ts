@@ -7,59 +7,73 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
+export interface InstagramMedia {
+  url: string;
+  type: 'post' | 'video';
+}
+
 export interface Database {
   public: {
     Tables: {
-      site_configuration: {
+      posts: {
         Row: {
-          id: string
-          created_at: string
-          navbar_color: string | null
-          primary_color: string | null
-          text_color: string | null
-          like_emoji: string | null
-          love_emoji: string | null
-          haha_emoji: string | null
-          sad_emoji: string | null
-          angry_emoji: string | null
-        }
+          id: string;
+          user_id: string;
+          content: string;
+          images: string[];
+          video_urls: string[];
+          created_at: string;
+        },
         Insert: {
-          id?: string
-          created_at?: string
-          navbar_color?: string | null
-          primary_color?: string | null
-          text_color?: string | null
-          like_emoji?: string | null
-          love_emoji?: string | null
-          haha_emoji?: string | null
-          sad_emoji?: string | null
-          angry_emoji?: string | null
+          id?: string;
+          user_id: string;
+          content: string;
+          images?: string[];
+          video_urls?: string[];
+          created_at?: string;
         }
-        Update: {
-          id?: string
-          created_at?: string
-          navbar_color?: string | null
-          primary_color?: string | null
-          text_color?: string | null
-          like_emoji?: string | null
-          love_emoji?: string | null
-          haha_emoji?: string | null
-          sad_emoji?: string | null
-          angry_emoji?: string | null
+      },
+      follows: {
+        Row: {
+          id: string;
+          follower_id: string;
+          following_id: string;
+          created_at: string;
+        },
+        Insert: {
+          id?: string;
+          follower_id: string;
+          following_id: string;
+          created_at?: string;
+        }
+      },
+      profiles: {
+        Row: {
+          id: string;
+          username: string | null;
+          full_name: string | null;
+          avatar_url: string | null;
+          website: string | null;
+          updated_at: string | null;
+          created_at: string | null;
+        }
+      },
+      post_likes: {
+        Row: {
+          id: string;
+          post_id: string;
+          user_id: string;
+          reaction_type: string | null;
+          created_at: string;
+        },
+        Insert: {
+          id?: string;
+          post_id: string;
+          user_id: string;
+          reaction_type?: string;
+          created_at?: string;
         }
       }
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      [_ in never]: never
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
     }
   }
 }

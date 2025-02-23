@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,7 +16,6 @@ import BottomNav from "@/components/BottomNav";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { useSiteConfig } from "@/hooks/use-site-config";
 
 interface Post {
   id: string;
@@ -95,8 +95,6 @@ const Posts: React.FC = () => {
       }
     },
   });
-
-  const { data: config } = useSiteConfig();
 
   const handleReaction = async (postId: string, reactionType: string) => {
     try {
@@ -185,35 +183,15 @@ const Posts: React.FC = () => {
   const getReactionIcon = (type: string) => {
     switch (type) {
       case 'like':
-        return config?.like_emoji ? (
-          <img src={config.like_emoji} alt="like" className="w-5 h-5" />
-        ) : (
-          <ThumbsUp className="w-5 h-5 text-blue-500" />
-        );
+        return <ThumbsUp className="w-5 h-5 text-blue-500" />;
       case 'love':
-        return config?.love_emoji ? (
-          <img src={config.love_emoji} alt="love" className="w-5 h-5" />
-        ) : (
-          <Heart className="w-5 h-5 text-red-500" />
-        );
+        return <Heart className="w-5 h-5 text-red-500" />;
       case 'haha':
-        return config?.haha_emoji ? (
-          <img src={config.haha_emoji} alt="haha" className="w-5 h-5" />
-        ) : (
-          <Smile className="w-5 h-5 text-yellow-500" />
-        );
+        return <Smile className="w-5 h-5 text-yellow-500" />;
       case 'sad':
-        return config?.sad_emoji ? (
-          <img src={config.sad_emoji} alt="sad" className="w-5 h-5" />
-        ) : (
-          <Frown className="w-5 h-5 text-purple-500" />
-        );
+        return <Frown className="w-5 h-5 text-purple-500" />;
       case 'angry':
-        return config?.angry_emoji ? (
-          <img src={config.angry_emoji} alt="angry" className="w-5 h-5" />
-        ) : (
-          <Angry className="w-5 h-5 text-orange-500" />
-        );
+        return <Angry className="w-5 h-5 text-orange-500" />;
       default:
         return <ThumbsUp className="w-5 h-5 text-muted-foreground" />;
     }
