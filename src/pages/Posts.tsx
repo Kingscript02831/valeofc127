@@ -269,12 +269,6 @@ const Posts: React.FC = () => {
     }
   };
 
-  const formatTextWithHashtags = (text: string) => {
-    return text.replace(/#(\w+)/g, (match, hashtag) => {
-      return `<a href="/search?q=${hashtag}" class="text-blue-500 hover:underline">${hashtag}</a>`;
-    });
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-background">
       <Navbar />
@@ -321,7 +315,7 @@ const Posts: React.FC = () => {
               ))}
             </div>
           ) : (
-            posts?.map((post: any) => (
+            posts?.map((post: any, index) => (
               <Card key={post.id} className="overflow-hidden bg-white dark:bg-card border-none shadow-sm">
                 <CardContent className="p-0">
                   <div className="p-3 space-y-2">
@@ -345,7 +339,7 @@ const Posts: React.FC = () => {
 
                     {post.content && (
                       <p className="text-foreground text-[15px] leading-normal">
-                        {formatTextWithHashtags(post.content)}
+                        {post.content}
                       </p>
                     )}
                   </div>
