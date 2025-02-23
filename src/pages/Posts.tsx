@@ -318,104 +318,90 @@ const Posts: React.FC = () => {
             </div>
           ) : (
             posts?.map((post: any, index) => (
-              <div key={post.id}>
-                <Card className="border-none shadow-sm bg-card hover:bg-accent/5 transition-colors duration-200">
-                  <CardContent className="p-0">
-                    <div className="flex items-center justify-between px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-12 w-12 border-2 border-primary/10">
-                          <AvatarImage src={post.user.avatar_url || "/placeholder.svg"} />
-                          <AvatarFallback>
-                            {post.user.full_name?.charAt(0).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h2 className="font-semibold">{post.user.full_name}</h2>
-                            <p className="text-sm text-muted-foreground">@{post.user.username}</p>
-                          </div>
-                          <p className="text-sm text-muted-foreground">
-                            {formatDate(post.created_at)}
-                          </p>
+              <Card key={post.id} className="overflow-hidden bg-white dark:bg-card border-none shadow-sm">
+                <CardContent className="p-0">
+                  <div className="p-3 space-y-2">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-10 w-10 border-2 border-primary/10">
+                        <AvatarImage src={post.user.avatar_url || "/placeholder.svg"} />
+                        <AvatarFallback>
+                          {post.user.full_name?.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h2 className="font-semibold">{post.user.full_name}</h2>
+                          <p className="text-sm text-muted-foreground">@{post.user.username}</p>
                         </div>
+                        <p className="text-sm text-muted-foreground">
+                          {formatDate(post.created_at)}
+                        </p>
                       </div>
                     </div>
 
                     {post.content && (
-                      <div className="px-4 py-2">
-                        <p className="text-foreground text-[15px] leading-normal">
-                          {post.content}
-                        </p>
-                      </div>
+                      <p className="text-foreground text-[15px] leading-normal">
+                        {post.content}
+                      </p>
                     )}
+                  </div>
 
-                    {(post.images?.length > 0 || post.video_urls?.length > 0) && (
-                      <div className="w-full mt-2">
-                        <MediaCarousel
-                          images={post.images || []}
-                          videoUrls={post.video_urls || []}
-                          title={post.content || ""}
-                          autoplay={false}
-                          showControls={true}
-                          cropMode="contain"
-                        />
-                      </div>
-                    )}
-
-                    <div className="flex items-center justify-between px-4 py-3 border-t border-border/40">
-                      <div className="relative">
-                        <button
-                          className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                          onClick={() => setActiveReactionMenu(activeReactionMenu === post.id ? null : post.id)}
-                        >
-                          {post.reaction_type ? (
-                            <span className="text-xl text-blue-500">
-                              {getReactionIcon(post.reaction_type)}
-                            </span>
-                          ) : (
-                            <ThumbsUp className="w-5 h-5 text-muted-foreground" />
-                          )}
-                          <span className={`text-sm ${post.reaction_type ? 'text-blue-500' : 'text-muted-foreground'}`}>
-                            {post.likes || 0}
-                          </span>
-                        </button>
-                        
-                        <ReactionMenu 
-                          isOpen={activeReactionMenu === post.id}
-                          onSelect={(type) => handleReaction(post.id, type)}
-                        />
-                      </div>
-
-                      <button 
-                        onClick={() => navigate(`/posts/${post.id}`)}
-                        className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                      >
-                        <MessageCircle className="w-5 h-5 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">
-                          {post.comment_count || 0}
-                        </span>
-                      </button>
-
-                      <button
-                        className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-[#25D366]/10 hover:bg-[#25D366]/20 transition-colors"
-                        onClick={() => handleWhatsAppShare(post.id)}
-                      >
-                        <MessageSquareMore className="w-5 h-5 text-[#25D366]" />
-                      </button>
-
-                      <button
-                        className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                        onClick={() => handleShare(post.id)}
-                      >
-                        <Share2 className="w-5 h-5 text-muted-foreground" />
-                      </button>
+                  {(post.images?.length > 0 || post.video_urls?.length > 0) && (
+                    <div className="w-full">
+                      <MediaCarousel
+                        images={post.images || []}
+                        videoUrls={post.video_urls || []}
+                        title={post.content || ""}
+                        autoplay={false}
+                        showControls={true}
+                        cropMode="contain"
+                      />
                     </div>
-                  </CardContent>
-                </Card>
-                {index < posts.length - 1 && (
-                  <Separator className="my-4 opacity-40" />
-                )}
-              </div>
+                  )}
+
+                  <div className="flex items-center justify-between p-2 mt-2 border-t border-border/40">
+                    <button
+                      className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                      onClick={() => setActiveReactionMenu(activeReactionMenu === post.id ? null : post.id)}
+                    >
+                      {post.reaction_type ? (
+                        <span className="text-xl text-blue-500">
+                          {getReactionIcon(post.reaction_type)}
+                        </span>
+                      ) : (
+                        <ThumbsUp className="w-5 h-5 text-muted-foreground" />
+                      )}
+                      <span className={`text-sm ${post.reaction_type ? 'text-blue-500' : 'text-muted-foreground'}`}>
+                        {post.likes || 0}
+                      </span>
+                    </button>
+
+                    <button 
+                      onClick={() => navigate(`/posts/${post.id}`)}
+                      className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      <MessageCircle className="w-5 h-5 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">
+                        {post.comment_count || 0}
+                      </span>
+                    </button>
+
+                    <button
+                      className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-[#25D366]/10 hover:bg-[#25D366]/20 transition-colors"
+                      onClick={() => handleWhatsAppShare(post.id)}
+                    >
+                      <MessageSquareMore className="w-5 h-5 text-[#25D366]" />
+                    </button>
+
+                    <button
+                      className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                      onClick={() => handleShare(post.id)}
+                    >
+                      <Share2 className="w-5 h-5 text-muted-foreground" />
+                    </button>
+                  </div>
+                </CardContent>
+              </Card>
             ))
           )}
         </div>

@@ -54,27 +54,26 @@ export const MediaCarousel = ({
   };
 
   return (
-    <div className="relative w-full h-full bg-background overflow-hidden group">
+    <div className="relative w-full bg-background overflow-hidden group">
       {currentMedia.type === 'video' ? (
-        <div className="relative w-full h-0 pb-[177.78%]"> {/* Proporção 9:16 para vídeos */}
+        <div className="relative w-full">
           {currentMedia.url.includes('youtube.com') || currentMedia.url.includes('youtu.be') ? (
-            <iframe
-              src={getVideoUrl(currentMedia.url)}
-              className="absolute inset-0 w-full h-full"
-              allowFullScreen
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              title={title}
-            />
+            <div className="aspect-video">
+              <iframe
+                src={getVideoUrl(currentMedia.url)}
+                className="absolute inset-0 w-full h-full"
+                allowFullScreen
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                title={title}
+              />
+            </div>
           ) : (
             <video
               src={currentMedia.url}
               controls={showControls}
               loop
               playsInline
-              className={cn(
-                "absolute inset-0 w-full h-full",
-                cropMode === 'contain' ? "object-contain" : "object-cover"
-              )}
+              className="w-full max-h-[80vh] object-contain"
               controlsList="nodownload"
               autoPlay={autoplay}
             >
@@ -83,16 +82,12 @@ export const MediaCarousel = ({
           )}
         </div>
       ) : (
-        <div className="relative w-full h-0 pb-[177.78%]"> {/* Proporção 9:16 para imagens */}
-          <img
-            src={currentMedia.url}
-            alt={title}
-            className={cn(
-              "absolute inset-0 w-full h-full",
-              cropMode === 'contain' ? "object-contain" : "object-cover"
-            )}
-          />
-        </div>
+        <img
+          src={currentMedia.url}
+          alt={title}
+          className="w-full max-h-[80vh] object-contain"
+          loading="lazy"
+        />
       )}
 
       {/* Navigation arrows */}
