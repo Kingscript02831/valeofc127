@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../integrations/supabase/client";
@@ -11,9 +10,10 @@ import {
   ThumbsUp, 
   Heart, 
   Smile, 
-  Flame, 
   Frown, 
-  Angry 
+  Angry,
+  Reply,
+  ChevronDown
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -58,6 +58,12 @@ interface Comment {
 interface PostLike {
   user_id: string;
   reaction_type: string;
+}
+
+interface CommentWithLikes extends Comment {
+  likes: number;
+  user_has_liked: boolean;
+  replies_count: number;
 }
 
 const PostDetails = () => {
@@ -106,6 +112,40 @@ const PostDetails = () => {
         .single();
 
       if (error) throw error;
+
+      if (post.comments) {
+        const commentIds = post.comments.map((comment: Comment) => comment.id);
+        
+        const { data: commentLikes } = await supabase
+          .from('comment_likes')
+          .select('comment_id, user_id')
+          .in('comment_id', commentIds);
+
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
+
+        const { data: repliesCounts } = await supabase
+          .from('post_comments')
+          .select('id, count(*)', { count: 'exact' })
+          .in('reply_to_id', commentIds)
+          .group('id');
+
+        const commentsWithLikes = post.comments.map((comment: Comment) => {
+          const likes = commentLikes?.filter(like => like.comment_id === comment.id).length || 0;
+          const userHasLiked = currentUser ? commentLikes?.some(like => 
+            like.comment_id === comment.id && like.user_id === currentUser.id
+          ) || false : false;
+          const repliesCount = repliesCounts?.find(r => r.id === comment.id)?.count || 0;
+          
+          return {
+            ...comment,
+            likes,
+            user_has_liked: userHasLiked,
+            replies_count: parseInt(repliesCount as unknown as string),
+          };
+        });
+
+        post.comments = commentsWithLikes;
+      }
 
       const { count } = await supabase
         .from('post_comments')
@@ -246,6 +286,57 @@ const PostDetails = () => {
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleCommentLike = async (commentId: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Erro",
+          description: "Você precisa estar logado para curtir comentários",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { data: existingLike } = await supabase
+        .from('comment_likes')
+        .select('*')
+        .eq('comment_id', commentId)
+        .eq('user_id', user.id)
+        .single();
+
+      if (existingLike) {
+        const { error: deleteError } = await supabase
+          .from('comment_likes')
+          .delete()
+          .eq('comment_id', commentId)
+          .eq('user_id', user.id);
+
+        if (deleteError) throw deleteError;
+      } else {
+        const { error: insertError } = await supabase
+          .from('comment_likes')
+          .insert({
+            comment_id: commentId,
+            user_id: user.id,
+          });
+
+        if (insertError) throw insertError;
+      }
+
+      await fetchPost();
+      
+    } catch (error) {
+      console.error('Error in comment like handler:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível processar sua ação",
+        variant: "destructive",
+      });
     }
   };
 
@@ -398,25 +489,48 @@ const PostDetails = () => {
             </div>
 
             <div className="space-y-4">
-              {post.comments?.map((comment) => (
+              {post.comments?.map((comment: CommentWithLikes) => (
                 <Card key={comment.id} className="p-4">
-                  <div className="flex gap-3">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={comment.user.avatar_url || "/placeholder.svg"} />
-                      <AvatarFallback>
-                        {comment.user.full_name?.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <p className="font-semibold text-sm">{comment.user.full_name}</p>
-                        <p className="text-xs text-muted-foreground">@{comment.user.username}</p>
+                  <div className="space-y-4">
+                    <div className="flex gap-3">
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src={comment.user.avatar_url || "/placeholder.svg"} />
+                        <AvatarFallback>
+                          {comment.user.full_name?.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="font-semibold">{comment.user.full_name}</p>
+                          <p className="text-sm text-muted-foreground">@{comment.user.username}</p>
+                        </div>
+                        <p className="mt-1">{comment.content}</p>
+                        <div className="flex items-center gap-6 mt-2">
+                          <button 
+                            onClick={() => handleCommentLike(comment.id)}
+                            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
+                          >
+                            <ThumbsUp className={`h-4 w-4 ${comment.user_has_liked ? 'fill-current text-primary' : ''}`} />
+                            <span>{comment.likes || 0}</span>
+                          </button>
+                          <button className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors">
+                            <Reply className="h-4 w-4" />
+                            <span>Responder</span>
+                          </button>
+                          <p className="text-xs text-muted-foreground">
+                            {formatDate(comment.created_at)}
+                          </p>
+                        </div>
                       </div>
-                      <p className="text-sm mt-1">{comment.content}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {formatDate(comment.created_at)}
-                      </p>
                     </div>
+                    {comment.replies_count > 0 && (
+                      <button 
+                        className="flex items-center gap-2 ml-12 text-sm text-primary hover:text-primary/80 transition-colors"
+                      >
+                        <ChevronDown className="h-4 w-4" />
+                        Ver {comment.replies_count} {comment.replies_count === 1 ? 'resposta anterior' : 'respostas anteriores'}
+                      </button>
+                    )}
                   </div>
                 </Card>
               ))}
