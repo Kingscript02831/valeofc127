@@ -33,6 +33,7 @@ import NewsDetails from "./pages/NewsDetails";
 import Posts from "./pages/Posts";
 import PostForm from "./pages/PostForm";
 import PostDetails from "./pages/PostDetails";
+import Feed from "./pages/Feed";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +49,7 @@ const App: React.FC = () => {
               <AuthWrapper>
                 <Routes>
                   <Route path="/" element={<Index />} />
+                  <Route path="/feed" element={<Feed />} />
                   <Route path="/eventos" element={<Events />} />
                   <Route path="/lugares" element={<Places />} />
                   <Route path="/products" element={<Products />} />
