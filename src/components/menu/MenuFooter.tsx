@@ -1,5 +1,5 @@
 
-import { useTheme } from "../../ThemeProvider";
+import { useTheme } from "@/components/ThemeProvider";
 import { useSiteConfig } from "../../hooks/useSiteConfig";
 
 interface MenuFooterProps {
