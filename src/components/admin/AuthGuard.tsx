@@ -31,29 +31,16 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredPermission }) =
           return;
         }
 
-        // Check user permissions with proper table joins
+        // Check if user has permission for this page
         const { data: permissions, error } = await supabase
           .from('permissions')
-          .select(`
-            *,
-            permissions_pages (
-              admin_pages (
-                path
-              )
-            )
-          `)
-          .eq('email', user.email);
+          .select('*')
+          .eq('email', user.email)
+          .eq('page_path', requiredPermission);
 
         if (error) throw error;
 
-        // Check if user has the required permission
-        const hasPermission = permissions?.some(permission => 
-          permission.permissions_pages?.some(pp => 
-            pp.admin_pages?.path === requiredPermission
-          )
-        );
-
-        if (!hasPermission) {
+        if (!permissions || permissions.length === 0) {
           toast({
             title: "Acesso negado",
             description: "Você não tem permissão para acessar esta página",
