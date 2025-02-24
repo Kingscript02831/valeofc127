@@ -1,10 +1,10 @@
 
 import { Link, useNavigate } from "react-router-dom";
 import { useSiteConfig } from "../hooks/useSiteConfig";
-import MenuConfig from "./menuconfig";
+import MenuConfig from "@/components/menuconfig";
 import { Plus, Search } from "lucide-react";
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "../integrations/supabase/client";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,7 +14,6 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { toast } from "sonner";
 
 const Navbar = () => {
   const { data: config, isLoading, isError } = useSiteConfig();
@@ -83,16 +82,14 @@ const Navbar = () => {
         <div className="flex justify-between items-center h-16">
           <Link 
             to="/" 
-            className="flex items-center space-x-2 transform transition duration-300 hover:scale-105"
+            className="flex items-center space-x-2"
           >
             {config.navbar_logo_type === 'image' && config.navbar_logo_image ? (
               <img 
                 src={config.navbar_logo_image} 
                 alt="Logo" 
-                className="h-12 w-12 rounded-full object-cover border-2 transition-transform duration-300 hover:scale-110"
-                style={{ 
-                  borderColor: config.text_color,
-                }}
+                className="h-12 w-12 rounded-full object-cover"
+                style={{ borderColor: config.text_color }}
               />
             ) : (
               <span 
@@ -104,42 +101,20 @@ const Navbar = () => {
             )}
           </Link>
 
-          <div className="flex items-center space-x-4">
-            {/* Search Icon */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="relative"
-              onClick={() => setShowSearch(!showSearch)}
-              style={{
-                background: `${config.primary_color}15`,
-                color: config.text_color,
-              }}
-            >
-              <Search className="h-5 w-5" />
-            </Button>
-
+          <div className="flex items-center space-x-3">
             {/* Plus Icon */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
-                  variant="ghost"
                   size="icon"
-                  style={{
-                    background: `${config.primary_color}15`,
-                    color: config.text_color,
-                  }}
+                  className="w-11 h-11 rounded-full bg-white/90 hover:bg-white/75 transition-colors"
                 >
-                  <Plus className="h-5 w-5" />
+                  <Plus className="h-5 w-5 text-gray-700" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="end"
                 className="w-48"
-                style={{
-                  background: config.navbar_color,
-                  borderColor: `${config.primary_color}40`,
-                }}
               >
                 <DropdownMenuItem
                   className="cursor-pointer"
@@ -156,6 +131,16 @@ const Navbar = () => {
               </DropdownMenuContent>
             </DropdownMenu>
 
+            {/* Search Icon */}
+            <Button
+              size="icon"
+              onClick={() => setShowSearch(!showSearch)}
+              className="w-11 h-11 rounded-full bg-white/90 hover:bg-white/75 transition-colors"
+            >
+              <Search className="h-5 w-5 text-gray-700" />
+            </Button>
+
+            {/* Menu Config */}
             <MenuConfig />
           </div>
 
@@ -202,4 +187,3 @@ const Navbar = () => {
 };
 
 export default Navbar;
-
