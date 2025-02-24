@@ -2,9 +2,11 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "./ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { supabase } from "../integrations/supabase/client";
+import { useSiteConfig } from "../hooks/useSiteConfig";
 import { useTheme } from "./ThemeProvider";
+import { Menu } from "lucide-react";
+import { Button } from "./ui/button";
 
 interface MenuItem {
   icon: string;
@@ -95,16 +97,13 @@ const MenuConfig = () => {
 
   return (
     <>
-      <button
+      <Button
         onClick={toggleMenu}
-        className="flex items-center justify-center p-2.5 rounded-xl transition-all duration-300 hover:scale-105 hover:bg-accent/10"
-        style={{ 
-          color: config?.text_color,
-          background: config ? `${config.primary_color}10` : 'transparent',
-        }}
+        size="icon"
+        className="w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
       >
-        <img src="/menu-bars.png" alt="Menu" className="h-5 w-5" />
-      </button>
+        <Menu className="h-5 w-5" style={{ color: config?.text_color }} />
+      </Button>
 
       <div
         className={`fixed top-0 right-0 bottom-0 w-72 transform transition-transform duration-300 ease-in-out ${
