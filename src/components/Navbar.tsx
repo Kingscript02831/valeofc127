@@ -2,6 +2,7 @@
 import { Link } from "react-router-dom";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import MenuConfig from "./menuconfig";
+import { Menu } from "lucide-react";
 
 const Navbar = () => {
   const { data: config, isLoading, isError } = useSiteConfig();
@@ -56,7 +57,13 @@ const Navbar = () => {
           </Link>
 
           <div className="flex items-center space-x-4">
-            <MenuConfig />
+            <button
+              onClick={() => {}}
+              className="flex items-center p-2 rounded-xl transition-all duration-300 hover:scale-105"
+              style={{ color: config.text_color }}
+            >
+              <Menu className="h-6 w-6" strokeWidth={2} />
+            </button>
           </div>
         </div>
       </div>
