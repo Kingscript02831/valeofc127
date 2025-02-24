@@ -1,6 +1,6 @@
 
 import { Link, useNavigate } from "react-router-dom";
-import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { useSiteConfig } from "../hooks/useSiteConfig";
 import { Plus, Search } from "lucide-react";
 import MenuConfig from "./menuconfig";
 import {
@@ -65,18 +65,18 @@ const Navbar = () => {
             )}
           </Link>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-3">
             {/* Add button with dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
-                  className="flex items-center justify-center p-2.5 rounded-full transition-all duration-300 hover:scale-105"
+                  className="flex items-center justify-center w-11 h-11 rounded-full transition-all duration-300 hover:scale-105"
                   style={{ 
                     color: config.text_color,
-                    background: 'rgba(107, 114, 128, 0.3)'
+                    background: '#f3f3f3'
                   }}
                 >
-                  <Plus className="h-5 w-5" />
+                  <Plus className="h-6 w-6" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -94,13 +94,13 @@ const Navbar = () => {
             {/* Search button */}
             <button
               onClick={() => navigate('/search')}
-              className="flex items-center justify-center p-2.5 rounded-full transition-all duration-300 hover:scale-105"
+              className="flex items-center justify-center w-11 h-11 rounded-full transition-all duration-300 hover:scale-105"
               style={{ 
                 color: config.text_color,
-                background: 'rgba(107, 114, 128, 0.3)'
+                background: '#f3f3f3'
               }}
             >
-              <Search className="h-5 w-5" />
+              <Search className="h-6 w-6" />
             </button>
 
             {/* Menu button */}
