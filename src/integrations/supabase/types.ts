@@ -9,6 +9,27 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_pages: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          path: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          path: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          path?: string
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           background_color: string | null
@@ -491,6 +512,66 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      permissions: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          page_path: string
+          permission_name: string
+          user_id: string | null
+          user_name: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          page_path: string
+          permission_name: string
+          user_id?: string | null
+          user_name: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          page_path?: string
+          permission_name?: string
+          user_id?: string | null
+          user_name?: string
+        }
+        Relationships: []
+      }
+      permissions_pages: {
+        Row: {
+          page_id: string
+          permission_id: string
+        }
+        Insert: {
+          page_id: string
+          permission_id: string
+        }
+        Update: {
+          page_id?: string
+          permission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "permissions_pages_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "admin_pages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "permissions_pages_permission_id_fkey"
+            columns: ["permission_id"]
+            isOneToOne: false
+            referencedRelation: "permissions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       places: {
         Row: {
