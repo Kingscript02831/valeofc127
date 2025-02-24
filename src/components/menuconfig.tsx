@@ -1,8 +1,10 @@
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useToast } from "../components/ui/use-toast";
-import { supabase } from "../integrations/supabase/client";
-import { useSiteConfig } from "../hooks/useSiteConfig";
+import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { useTheme } from "@/components/ThemeProvider";
 
 interface MenuItem {
   icon: string;
@@ -53,6 +55,7 @@ const MenuConfig = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { data: config } = useSiteConfig();
+  const { theme, setTheme } = useTheme();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -115,12 +118,24 @@ const MenuConfig = () => {
         <div className="p-4 h-full flex flex-col">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-xl font-semibold" style={{ color: config?.text_color }}>Menu</h1>
-            <button
-              onClick={toggleMenu}
-              className="p-2 rounded-full hover:bg-white/10 transition-colors duration-200"
-            >
-              <img src="/close.png" alt="Fechar" className="h-5 w-5" style={{ filter: 'brightness(0) invert(1)' }} />
-            </button>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                className="p-2 rounded-full hover:bg-white/10 transition-colors duration-200"
+              >
+                <img 
+                  src={theme === "dark" ? "/sun.png" : "/moon.png"} 
+                  alt="Alternar tema"
+                  className="h-5 w-5"
+                />
+              </button>
+              <button
+                onClick={toggleMenu}
+                className="p-2 rounded-full hover:bg-white/10 transition-colors duration-200"
+              >
+                <img src="/close.png" alt="Fechar" className="h-5 w-5" />
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-3 gap-4 mb-6">
@@ -136,7 +151,6 @@ const MenuConfig = () => {
                     src={`/${item.icon}.png`}
                     alt={item.label}
                     className="w-6 h-6 object-contain"
-                    style={{ filter: 'brightness(0) invert(1)' }}
                   />
                 </div>
                 <span className="text-xs font-medium text-center">{item.label}</span>
@@ -156,7 +170,6 @@ const MenuConfig = () => {
                   src="/facebook.png"
                   alt="Facebook"
                   className="w-5 h-5 mr-3"
-                  style={{ filter: 'brightness(0) invert(1)' }}
                 />
                 <span className="text-sm">Facebook</span>
               </a>
@@ -173,7 +186,6 @@ const MenuConfig = () => {
                   src="/instagram.png"
                   alt="Instagram"
                   className="w-5 h-5 mr-3"
-                  style={{ filter: 'brightness(0) invert(1)' }}
                 />
                 <span className="text-sm">Instagram</span>
               </a>
@@ -187,7 +199,6 @@ const MenuConfig = () => {
                 src="/compartilhar.png"
                 alt="Compartilhar"
                 className="w-5 h-5 mr-3"
-                style={{ filter: 'brightness(0) invert(1)' }}
               />
               <span className="text-sm">Compartilhar</span>
             </button>
@@ -200,7 +211,6 @@ const MenuConfig = () => {
                 src="/sair.png"
                 alt="Sair"
                 className="w-5 h-5 mr-3"
-                style={{ filter: 'brightness(0) invert(1)' }}
               />
               <span className="text-sm">Sair</span>
             </button>
