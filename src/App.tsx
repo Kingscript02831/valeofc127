@@ -47,7 +47,8 @@ const App: React.FC = () => {
             <BrowserRouter>
               <AuthWrapper>
                 <Routes>
-                  <Route path="/" element={<Index />} />
+                  <Route path="/" element={<Posts />} />
+                  <Route path="/noticias" element={<Index />} />
                   <Route path="/eventos" element={<Events />} />
                   <Route path="/lugares" element={<Places />} />
                   <Route path="/products" element={<Products />} />
@@ -70,7 +71,6 @@ const App: React.FC = () => {
                   </Route> 
                   <Route path="/user-products" element={<UserProducts />} />
                   <Route path="/noticias/:id" element={<NewsDetails />} />
-                  <Route path="/posts" element={<Posts />} />
                   <Route path="/posts/:id" element={<PostDetails />} />
                   <Route path="/posts/new" element={<PostForm />} />
                   <Route path="*" element={<NotFound />} />

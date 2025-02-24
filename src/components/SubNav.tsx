@@ -11,8 +11,8 @@ const SubNav = () => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const links = [
-    { path: "/", label: "Notícias" },
-    { path: "/posts", label: "Posts" },
+    { path: "/", label: "Posts" },
+    { path: "/noticias", label: "Notícias" },
     { path: "/eventos", label: "Eventos" },
     { path: "/lugares", label: "Lugares" },
     { path: "/products", label: "Marketplace" },
