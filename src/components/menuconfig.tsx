@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ChevronRight, Settings, HelpCircle, LogOut, Menu, Share2, Sun, Moon, Facebook, Instagram } from "lucide-react";
+import { Share2, Facebook, Instagram } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -108,7 +108,7 @@ export const MenuConfig = () => {
           background: config ? `${config.primary_color}10` : 'transparent',
         }}
       >
-        <Menu className="h-5 w-5" strokeWidth={2} />
+        <img src="/menu.png" alt="Menu" className="h-5 w-5" />
       </button>
 
       <div
@@ -176,42 +176,25 @@ export const MenuConfig = () => {
               onClick={toggleTheme}
               className="flex items-center p-3 w-full hover:bg-accent rounded-lg transition-colors duration-200"
             >
-              {theme === 'dark' ? (
-                <>
-                  <Sun className="w-5 h-5 mr-3 text-muted-foreground" />
-                  <span className="text-sm">Modo Claro</span>
-                </>
-              ) : (
-                <>
-                  <Moon className="w-5 h-5 mr-3 text-muted-foreground" />
-                  <span className="text-sm">Modo Escuro</span>
-                </>
-              )}
+              <img
+                src={theme === 'dark' ? '/sun.png' : '/moon.png'}
+                alt={theme === 'dark' ? "Modo Claro" : "Modo Escuro"}
+                className="w-5 h-5 mr-3 text-muted-foreground"
+              />
+              <span className="text-sm">
+                {theme === 'dark' ? "Modo Claro" : "Modo Escuro"}
+              </span>
             </button>
 
-            <Link
-              to="/config"
-              onClick={toggleMenu}
-              className="flex items-center p-3 hover:bg-accent rounded-lg transition-colors duration-200"
-            >
-              <Settings className="w-5 h-5 mr-3 text-muted-foreground" />
-              <span className="text-sm">Configurações</span>
-            </Link>
-            
-            <Link
-              to="/ajuda"
-              onClick={toggleMenu}
-              className="flex items-center p-3 hover:bg-accent rounded-lg transition-colors duration-200"
-            >
-              <HelpCircle className="w-5 h-5 mr-3 text-muted-foreground" />
-              <span className="text-sm">Ajuda e suporte</span>
-            </Link>
-            
             <button
               onClick={handleLogout}
               className="flex items-center p-3 w-full hover:bg-accent rounded-lg transition-colors duration-200"
             >
-              <LogOut className="w-5 h-5 mr-3 text-muted-foreground" />
+              <img
+                src="/logout.png"
+                alt="Sair"
+                className="w-5 h-5 mr-3 text-muted-foreground"
+              />
               <span className="text-sm">Sair</span>
             </button>
           </div>
