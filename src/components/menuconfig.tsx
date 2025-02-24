@@ -1,8 +1,6 @@
 
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Share2, Facebook, Instagram } from "lucide-react";
-import { useTheme } from "./ThemeProvider";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useSiteConfig } from "../hooks/useSiteConfig";
@@ -55,7 +53,6 @@ const MenuConfig = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { setTheme, theme } = useTheme();
   const { data: config } = useSiteConfig();
 
   const toggleMenu = () => {
@@ -92,10 +89,6 @@ const MenuConfig = () => {
         variant: "destructive",
       });
     }
-  };
-
-  const toggleTheme = () => {
-    setTheme(theme === "dark" ? "light" : "dark");
   };
 
   return (
@@ -201,21 +194,6 @@ const MenuConfig = () => {
             </button>
 
             <button
-              onClick={toggleTheme}
-              className="flex items-center p-3 w-full hover:bg-white/10 rounded-lg transition-colors duration-200"
-            >
-              <img
-                src={theme === 'dark' ? '/sun.png' : '/moon.png'}
-                alt={theme === 'dark' ? "Modo Claro" : "Modo Escuro"}
-                className="w-5 h-5 mr-3"
-                style={{ filter: 'brightness(0) invert(1)' }}
-              />
-              <span className="text-sm">
-                {theme === 'dark' ? "Modo Claro" : "Modo Escuro"}
-              </span>
-            </button>
-
-            <button
               onClick={handleLogout}
               className="flex items-center p-3 w-full hover:bg-white/10 rounded-lg transition-colors duration-200"
             >
@@ -235,3 +213,4 @@ const MenuConfig = () => {
 };
 
 export default MenuConfig;
+
