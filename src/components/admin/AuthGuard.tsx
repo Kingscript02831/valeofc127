@@ -18,49 +18,45 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredPermission }) =
   useEffect(() => {
     const checkPermission = async () => {
       try {
+        // Get current user
         const { data: { user } } = await supabase.auth.getUser();
         
         if (!user) {
+          console.log('No user found');
           navigate('/login');
           return;
         }
 
-        // If no specific permission is required, allow access
+        // If no permission required, allow access
         if (!requiredPermission) {
           setIsAuthorized(true);
           setIsLoading(false);
           return;
         }
 
-        console.log('Checking permission for:', {
-          email: user.email,
+        // Log check attempt
+        console.log('Checking permission:', {
+          userEmail: user.email,
           requiredPath: requiredPermission
         });
 
-        // First get the user's permissions
-        const { data: permissions, error: permissionsError } = await supabase
+        // Simple query to check permission
+        const { data, error } = await supabase
           .from('permissions')
-          .select(`
-            id,
-            email,
-            page_path
-          `)
-          .eq('email', user.email);
+          .select('*')
+          .eq('email', user.email)
+          .single();
 
-        if (permissionsError) {
-          console.error('Error fetching permissions:', permissionsError);
-          throw permissionsError;
+        // Log results
+        console.log('Permission check result:', { data, error });
+
+        if (error) {
+          console.error('Permission check error:', error);
+          throw error;
         }
 
-        console.log('User permissions:', permissions);
-
-        // Check if the user has the required permission
-        const hasPermission = permissions?.some(
-          permission => permission.page_path === requiredPermission
-        );
-
-        if (!hasPermission) {
-          console.log('Permission denied. Available permissions:', permissions);
+        if (!data) {
+          console.log('No permission found');
           toast({
             title: "Acesso negado",
             description: "Você não tem permissão para acessar esta página",
@@ -70,10 +66,27 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredPermission }) =
           return;
         }
 
-        console.log('Permission granted');
+        // Check if the page_path matches
+        if (data.page_path !== requiredPermission) {
+          console.log('Permission mismatch:', {
+            required: requiredPermission,
+            found: data.page_path
+          });
+          toast({
+            title: "Acesso negado",
+            description: "Você não tem permissão para acessar esta página",
+            variant: "destructive",
+          });
+          navigate('/');
+          return;
+        }
+
+        // If we got here, user is authorized
+        console.log('Access granted');
         setIsAuthorized(true);
+
       } catch (error) {
-        console.error('Error checking permissions:', error);
+        console.error('Auth check failed:', error);
         toast({
           title: "Erro",
           description: "Erro ao verificar permissões",
