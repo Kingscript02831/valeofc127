@@ -1,15 +1,16 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
-import Navbar from "@/components/Navbar";
-import BottomNav from "@/components/BottomNav";
-import { Card } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import NewsCard from "@/components/NewsCard";
-import EventCard from "@/components/EventCard";
-import PlaceCard from "@/components/PlaceCard";
-import { MediaCarousel } from "@/components/MediaCarousel";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { supabase } from "../lib/supabase";
+import Navbar from "../components/Navbar";
+import BottomNav from "../components/BottomNav";
+import { Card } from "../components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import NewsCard from "../components/NewsCard";
+import EventCard from "../components/EventCard";
+import PlaceCard from "../components/PlaceCard";
+import { MediaCarousel } from "../components/MediaCarousel";
+import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";

@@ -1,5 +1,6 @@
+
 import { Link, useLocation } from "react-router-dom";
-import { useSiteConfig } from "@/lib/hooks/useSiteConfig";
+import { useSiteConfig } from "../hooks/useSiteConfig";
 import { useEffect, useRef, useState } from "react";
 
 const SubNav = () => {
