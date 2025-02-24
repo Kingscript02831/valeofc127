@@ -1,7 +1,8 @@
+
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { useSiteConfig } from "@/hooks/useSiteConfig";
-import { Plus, Search, Menu } from "lucide-react";
+import { useSiteConfig } from "../hooks/useSiteConfig";
+import { Plus, Search } from "lucide-react";
 import MenuConfig from "./menuconfig";
 import { SearchUsersDialog } from "./SearchUsersDialog";
 import { useTheme } from "./ThemeProvider";
