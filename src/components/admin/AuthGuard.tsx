@@ -32,24 +32,35 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredPermission }) =
           return;
         }
 
-        // Verify if user has permission for this page path
-        const { data: userPermissions, error } = await supabase
-          .from('permissions')
-          .select('id, permission_name, page_path')
-          .eq('email', user.email)
-          .eq('page_path', requiredPermission)
-          .limit(1)
-          .single();
+        console.log('Checking permission for:', {
+          email: user.email,
+          requiredPath: requiredPermission
+        });
 
-        if (error && error.code !== 'PGRST116') { // Ignore not found error
-          throw error;
+        // First get the user's permissions
+        const { data: permissions, error: permissionsError } = await supabase
+          .from('permissions')
+          .select(`
+            id,
+            email,
+            page_path
+          `)
+          .eq('email', user.email);
+
+        if (permissionsError) {
+          console.error('Error fetching permissions:', permissionsError);
+          throw permissionsError;
         }
 
-        if (!userPermissions) {
-          console.log('Permission denied for:', {
-            email: user.email,
-            requiredPath: requiredPermission
-          });
+        console.log('User permissions:', permissions);
+
+        // Check if the user has the required permission
+        const hasPermission = permissions?.some(
+          permission => permission.page_path === requiredPermission
+        );
+
+        if (!hasPermission) {
+          console.log('Permission denied. Available permissions:', permissions);
           toast({
             title: "Acesso negado",
             description: "Você não tem permissão para acessar esta página",
@@ -59,6 +70,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredPermission }) =
           return;
         }
 
+        console.log('Permission granted');
         setIsAuthorized(true);
       } catch (error) {
         console.error('Error checking permissions:', error);
