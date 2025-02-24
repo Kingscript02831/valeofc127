@@ -1,5 +1,5 @@
 
-import { Home, Bell, User, Plus } from "lucide-react";
+import { Home, Bell, User, Plus, Search } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSiteConfig } from "../hooks/useSiteConfig";
 import { supabase } from "../integrations/supabase/client";
@@ -18,6 +18,7 @@ const BottomNav = () => {
   const navigate = useNavigate();
   const { data: config } = useSiteConfig();
   const [session, setSession] = useState<any>(null);
+  const [showSearch, setShowSearch] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -89,6 +90,14 @@ const BottomNav = () => {
             <Home className="h-6 w-6" strokeWidth={2} />
           </Link>
 
+          <button
+            onClick={(e) => handleNavigation("/search", e)}
+            className="flex items-center p-2 rounded-xl transition-all duration-300 hover:scale-105"
+            style={getItemStyle(isActive("/search"))}
+          >
+            <Search className="h-6 w-6" strokeWidth={2} />
+          </button>
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
@@ -158,3 +167,4 @@ const BottomNav = () => {
 };
 
 export default BottomNav;
+
