@@ -108,7 +108,7 @@ const MenuConfig = () => {
           background: config ? `${config.primary_color}10` : 'transparent',
         }}
       >
-        <img src="/menu.png" alt="Menu" className="h-5 w-5" />
+        <img src="/menu-bars.png" alt="Menu" className="h-5 w-5" />
       </button>
 
       <div
@@ -121,7 +121,15 @@ const MenuConfig = () => {
         }}
       >
         <div className="p-4 h-full flex flex-col">
-          <h1 className="text-xl font-semibold mb-6" style={{ color: config?.text_color }}>Menu</h1>
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-xl font-semibold" style={{ color: config?.text_color }}>Menu</h1>
+            <button
+              onClick={toggleMenu}
+              className="p-2 rounded-full hover:bg-white/10 transition-colors duration-200"
+            >
+              <img src="/close.png" alt="Fechar" className="h-5 w-5" style={{ filter: 'brightness(0) invert(1)' }} />
+            </button>
+          </div>
 
           <div className="grid grid-cols-3 gap-4 mb-6">
             {menuItems.map((item) => (
@@ -217,3 +225,4 @@ const MenuConfig = () => {
 };
 
 export default MenuConfig;
+
