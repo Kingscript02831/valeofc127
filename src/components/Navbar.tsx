@@ -1,7 +1,6 @@
 
 import { Link } from "react-router-dom";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
-import MenuConfig from "./menuconfig";
 
 const Navbar = () => {
   const { data: config, isLoading, isError } = useSiteConfig();
@@ -54,10 +53,6 @@ const Navbar = () => {
               </span>
             )}
           </Link>
-
-          <div className="flex items-center space-x-4">
-            <MenuConfig />
-          </div>
         </div>
       </div>
     </nav>
