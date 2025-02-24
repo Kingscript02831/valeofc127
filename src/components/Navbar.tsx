@@ -1,9 +1,10 @@
 
-import { Share2, Facebook, Instagram } from "lucide-react";
+import { Share2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { useSiteConfig } from "../hooks/useSiteConfig";
 import { ThemeToggle } from "./ThemeToggle";
 import { toast } from "sonner";
+import { MenuConfig } from "./menuconfig";
 
 const Navbar = () => {
   const { data: config, isLoading, isError } = useSiteConfig();
@@ -86,52 +87,7 @@ const Navbar = () => {
           </a>
 
           <div className="flex items-center space-x-3 whitespace-nowrap">
-            {config.navbar_social_facebook && (
-              <a
-                href={config.navbar_social_facebook}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="transition-all duration-300 ease-out hover:scale-110 p-2.5 rounded-xl hover:shadow-lg"
-                style={{ 
-                  color: config.text_color,
-                  background: `${config.primary_color}10`,
-                }}
-                aria-label="Facebook"
-              >
-                <Facebook className="h-5 w-5" strokeWidth={2} />
-              </a>
-            )}
-
-            {config.navbar_social_instagram && (
-              <a
-                href={config.navbar_social_instagram}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="transition-all duration-300 ease-out hover:scale-110 p-2.5 rounded-xl hover:shadow-lg"
-                style={{ 
-                  color: config.text_color,
-                  background: `${config.primary_color}10`,
-                }}
-                aria-label="Instagram"
-              >
-                <Instagram className="h-5 w-5" strokeWidth={2} />
-              </a>
-            )}
-
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleShare}
-              className="transition-all duration-300 ease-out hover:scale-110 rounded-xl p-2.5 hover:shadow-lg"
-              style={{ 
-                color: config.text_color,
-                background: `${config.primary_color}10`,
-              }}
-              aria-label="Compartilhar"
-            >
-              <Share2 className="h-5 w-5" strokeWidth={2} />
-            </Button>
-
+            <MenuConfig />
             <ThemeToggle />
           </div>
         </div>
@@ -141,3 +97,4 @@ const Navbar = () => {
 };
 
 export default Navbar;
+

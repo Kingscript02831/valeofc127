@@ -1,9 +1,11 @@
 
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ChevronRight, Settings, HelpCircle, LogOut, Menu } from "lucide-react";
+import { ChevronRight, Settings, HelpCircle, LogOut, Menu, Share2, Sun, Moon, Facebook, Instagram } from "lucide-react";
+import { useTheme } from "./ThemeProvider";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useSiteConfig } from "../hooks/useSiteConfig";
 
 interface MenuItem {
   icon: string;
@@ -33,16 +35,6 @@ export const menuItems: MenuItem[] = [
     path: "/perfil",
   },
   {
-    icon: "share2",
-    label: "Compartilhar",
-    path: "/share",
-  },
-  {
-    icon: "plus-circle",
-    label: "Criar",
-    path: "/criar",
-  },
-  {
     icon: "bell",
     label: "Notificações",
     path: "/notify",
@@ -63,9 +55,22 @@ export const MenuConfig = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { setTheme, theme } = useTheme();
+  const { data: config } = useSiteConfig();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
+  };
+
+  const handleShare = async () => {
+    try {
+      await navigator.share({
+        title: "Vale Notícias",
+        url: window.location.href,
+      });
+    } catch (err) {
+      console.error("Error sharing:", err);
+    }
   };
 
   const handleLogout = async () => {
@@ -89,17 +94,21 @@ export const MenuConfig = () => {
     }
   };
 
+  const toggleTheme = () => {
+    setTheme(theme === "dark" ? "light" : "dark");
+  };
+
   return (
-    <div className="fixed top-0 right-0 bottom-0 z-50">
+    <>
       <button
         onClick={toggleMenu}
-        className="fixed top-4 right-4 p-2 bg-primary text-white rounded-full shadow-lg hover:bg-primary/90 transition-colors duration-200"
+        className="transition-all duration-300 ease-out hover:scale-110 p-2.5 rounded-xl hover:shadow-lg"
+        style={{ 
+          color: config?.text_color,
+          background: config ? `${config.primary_color}10` : 'transparent',
+        }}
       >
-        {isMenuOpen ? (
-          <ChevronRight className="w-6 h-6 transform transition-transform duration-300" />
-        ) : (
-          <Menu className="w-6 h-6 transform transition-transform duration-300" />
-        )}
+        <Menu className="h-5 w-5" strokeWidth={2} />
       </button>
 
       <div
@@ -131,6 +140,55 @@ export const MenuConfig = () => {
           </div>
 
           <div className="mt-auto border-t border-border pt-4 space-y-2">
+            {config?.navbar_social_facebook && (
+              <a
+                href={config.navbar_social_facebook}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center p-3 hover:bg-accent rounded-lg transition-colors duration-200"
+              >
+                <Facebook className="w-5 h-5 mr-3 text-muted-foreground" />
+                <span className="text-sm">Facebook</span>
+              </a>
+            )}
+
+            {config?.navbar_social_instagram && (
+              <a
+                href={config.navbar_social_instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center p-3 hover:bg-accent rounded-lg transition-colors duration-200"
+              >
+                <Instagram className="w-5 h-5 mr-3 text-muted-foreground" />
+                <span className="text-sm">Instagram</span>
+              </a>
+            )}
+
+            <button
+              onClick={handleShare}
+              className="flex items-center p-3 w-full hover:bg-accent rounded-lg transition-colors duration-200"
+            >
+              <Share2 className="w-5 h-5 mr-3 text-muted-foreground" />
+              <span className="text-sm">Compartilhar</span>
+            </button>
+
+            <button
+              onClick={toggleTheme}
+              className="flex items-center p-3 w-full hover:bg-accent rounded-lg transition-colors duration-200"
+            >
+              {theme === 'dark' ? (
+                <>
+                  <Sun className="w-5 h-5 mr-3 text-muted-foreground" />
+                  <span className="text-sm">Modo Claro</span>
+                </>
+              ) : (
+                <>
+                  <Moon className="w-5 h-5 mr-3 text-muted-foreground" />
+                  <span className="text-sm">Modo Escuro</span>
+                </>
+              )}
+            </button>
+
             <Link
               to="/config"
               onClick={toggleMenu}
@@ -159,7 +217,7 @@ export const MenuConfig = () => {
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
