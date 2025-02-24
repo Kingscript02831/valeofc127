@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -144,13 +145,22 @@ const PermAdmin = () => {
       permission: Omit<Permission, "id" | "created_at" | "pages">;
       pageIds: string[];
     }) => {
-      // First create the permission record
+      // First get the pages to get their paths
+      const { data: selectedPages, error: pagesError } = await supabase
+        .from("admin_pages")
+        .select("*")
+        .in("id", data.pageIds);
+
+      if (pagesError) throw pagesError;
+
+      // Now create the permission record
       const { data: perm, error: permError } = await supabase
         .from("permissions")
         .insert({
           user_name: data.permission.user_name,
           email: data.permission.email,
           permission_name: data.permission.permission_name,
+          page_path: selectedPages[0].path // Use the first selected page's path
         })
         .select()
         .single();
@@ -202,12 +212,21 @@ const PermAdmin = () => {
       permission: Permission;
       pageIds: string[];
     }) => {
+      // First get the pages to get their paths
+      const { data: selectedPages, error: pagesError } = await supabase
+        .from("admin_pages")
+        .select("*")
+        .in("id", data.pageIds);
+
+      if (pagesError) throw pagesError;
+
       const { error: permError } = await supabase
         .from("permissions")
         .update({
           user_name: data.permission.user_name,
           email: data.permission.email,
           permission_name: data.permission.permission_name,
+          page_path: selectedPages[0].path // Use the first selected page's path
         })
         .eq("id", data.permission.id);
 
