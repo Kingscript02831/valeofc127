@@ -1,10 +1,57 @@
 
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useSiteConfig } from "../hooks/useSiteConfig";
 import MenuConfig from "./menuconfig";
+import { Plus, Search } from "lucide-react";
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { toast } from "sonner";
 
 const Navbar = () => {
   const { data: config, isLoading, isError } = useSiteConfig();
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const navigate = useNavigate();
+
+  const handleSearch = async (query: string) => {
+    setSearchQuery(query);
+    if (query.startsWith("@")) {
+      const searchTerm = query.substring(1);
+      if (searchTerm.length > 0) {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("id, username, avatar_url, full_name")
+          .ilike("username", `${searchTerm}%`)
+          .limit(5);
+
+        if (error) {
+          console.error("Erro na busca:", error);
+          return;
+        }
+
+        setSearchResults(data || []);
+      } else {
+        setSearchResults([]);
+      }
+    }
+  };
+
+  const navigateToProfile = (username: string) => {
+    setShowSearch(false);
+    setSearchQuery("");
+    setSearchResults([]);
+    navigate(`/perfil/${username}`);
+  };
 
   if (isLoading) {
     return (
@@ -56,7 +103,98 @@ const Navbar = () => {
               </span>
             )}
           </Link>
-          <MenuConfig />
+
+          <div className="flex items-center space-x-4">
+            {/* Search Icon */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative"
+              onClick={() => setShowSearch(!showSearch)}
+              style={{
+                background: `${config.primary_color}15`,
+                color: config.text_color,
+              }}
+            >
+              <Search className="h-5 w-5" />
+            </Button>
+
+            {/* Plus Icon */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  style={{
+                    background: `${config.primary_color}15`,
+                    color: config.text_color,
+                  }}
+                >
+                  <Plus className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="w-48"
+                style={{
+                  background: config.navbar_color,
+                  borderColor: `${config.primary_color}40`,
+                }}
+              >
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => navigate("/products/new")}
+                >
+                  Adicionar Produto
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => navigate("/posts/new")}
+                >
+                  Criar Post
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <MenuConfig />
+          </div>
+
+          {/* Search Overlay */}
+          {showSearch && (
+            <div className="absolute top-16 left-0 right-0 bg-background border-b border-border p-4 shadow-lg">
+              <Input
+                type="text"
+                placeholder="Digite @ para buscar usuários..."
+                value={searchQuery}
+                onChange={(e) => handleSearch(e.target.value)}
+                className="max-w-md mx-auto"
+              />
+              {searchResults.length > 0 && (
+                <div className="max-w-md mx-auto mt-2 bg-background rounded-lg border border-border">
+                  {searchResults.map((user) => (
+                    <button
+                      key={user.id}
+                      onClick={() => navigateToProfile(user.username)}
+                      className="flex items-center space-x-3 w-full p-3 hover:bg-accent/10 transition-colors"
+                    >
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={user.avatar_url} />
+                        <AvatarFallback>
+                          {user.username?.[0]?.toUpperCase() || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="text-left">
+                        <p className="font-medium">{user.username}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {user.full_name}
+                        </p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </nav>
@@ -64,3 +202,4 @@ const Navbar = () => {
 };
 
 export default Navbar;
+

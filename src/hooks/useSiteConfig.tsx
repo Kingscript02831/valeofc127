@@ -15,7 +15,11 @@ export function useSiteConfig() {
 
       if (error) throw error;
 
-      return data as SiteConfiguration;
+      return {
+        ...data,
+        navbar_title: data.navbar_logo_text || 'Vale Notícias'
+      } as SiteConfiguration;
     },
   });
 }
+
