@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,7 +40,6 @@ import {
 } from "lucide-react";
 import SystemSettings from "@/components/admin/SystemSettings";
 import LocationsManagement from "@/components/admin/LocationsManagement";
-import PermAdmin from "@/components/admin/PermAdmin";
 
 interface UserAuditLog {
   id: string;
@@ -417,7 +417,6 @@ const AdminSistema = () => {
 
       <SystemSettings />
       <LocationsManagement />
-      <PermAdmin />
     </div>
   );
 };
