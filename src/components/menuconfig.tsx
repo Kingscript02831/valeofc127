@@ -97,10 +97,10 @@ const MenuConfig = () => {
     <>
       <button
         onClick={toggleMenu}
-        className="flex items-center justify-center p-2.5 rounded-xl transition-all duration-300 hover:scale-105 hover:bg-accent/10"
+        className="flex items-center justify-center p-2.5 rounded-full transition-all duration-300 hover:scale-105"
         style={{ 
           color: config?.text_color,
-          background: config ? `${config.primary_color}10` : 'transparent',
+          background: 'rgba(107, 114, 128, 0.3)'
         }}
       >
         <img src="/menu-bars.png" alt="Menu" className="h-5 w-5" />
