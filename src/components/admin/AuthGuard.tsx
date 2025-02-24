@@ -31,7 +31,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredPermission }) =
           return;
         }
 
-        // Check user permissions
+        // Check user permissions with proper table joins
         const { data: permissions, error } = await supabase
           .from('permissions')
           .select(`
