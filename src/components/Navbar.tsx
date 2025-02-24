@@ -1,10 +1,12 @@
 
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useSiteConfig } from "../hooks/useSiteConfig";
+import { Plus, Search, Menu } from "lucide-react";
 import MenuConfig from "./menuconfig";
 
 const Navbar = () => {
   const { data: config, isLoading, isError } = useSiteConfig();
+  const navigate = useNavigate();
 
   if (isLoading) {
     return (
@@ -56,7 +58,35 @@ const Navbar = () => {
               </span>
             )}
           </Link>
-          <MenuConfig />
+
+          <div className="flex items-center space-x-2">
+            {/* Add button */}
+            <button
+              onClick={() => navigate('/products/new')}
+              className="flex items-center justify-center p-2.5 rounded-full transition-all duration-300 hover:scale-105 hover:bg-accent/10"
+              style={{ 
+                color: config.text_color,
+                background: `${config.primary_color}10`
+              }}
+            >
+              <Plus className="h-5 w-5" />
+            </button>
+
+            {/* Search button */}
+            <button
+              onClick={() => navigate('/search')}
+              className="flex items-center justify-center p-2.5 rounded-full transition-all duration-300 hover:scale-105 hover:bg-accent/10"
+              style={{ 
+                color: config.text_color,
+                background: `${config.primary_color}10`
+              }}
+            >
+              <Search className="h-5 w-5" />
+            </button>
+
+            {/* Menu button */}
+            <MenuConfig />
+          </div>
         </div>
       </div>
     </nav>
