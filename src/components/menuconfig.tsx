@@ -20,7 +20,7 @@ export const menuItems: MenuItem[] = [
     path: "/",
   },
   {
-    icon: "eventos.png",
+    icon: "eventos",
     label: "Eventos",
     path: "/eventos",
   },
