@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "./ui/use-toast";
@@ -6,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { useTheme } from "@/components/ThemeProvider";
 import { Menu } from "lucide-react";
+import { Button } from "./ui/button";
 
 interface MenuItem {
   icon: string;
@@ -52,10 +52,15 @@ export const menuItems: MenuItem[] = [
 ];
 
 const MenuConfig = () => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { data: config } = useSiteConfig();
   const { theme, setTheme } = useTheme();
+
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
 
   const handleShare = async () => {
     try {
@@ -90,86 +95,109 @@ const MenuConfig = () => {
   };
 
   return (
-    <div className="fixed top-0 right-0 bottom-0 w-72 transform transition-transform duration-300 bg-background dark:bg-background shadow-lg border-l border-border">
-      <div className="p-4 h-full flex flex-col">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-xl font-semibold text-foreground">Menu</h1>
-        </div>
+    <>
+      <Button
+        onClick={toggleMenu}
+        size="icon"
+        className="w-14 h-14 rounded-full bg-gray-100/20 hover:bg-gray-100/30 transition-colors"
+      >
+        <Menu className="h-7 w-7" style={{ color: config?.text_color }} />
+      </Button>
 
-        <div className="grid grid-cols-2 gap-3 mb-6">
-          {menuItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className="flex flex-col items-center p-3 rounded-xl hover:bg-accent/10 transition-colors duration-200 group"
+      <div
+        className={`fixed top-0 right-0 bottom-0 w-72 transform transition-transform duration-300 ease-in-out ${
+          isMenuOpen ? "translate-x-0" : "translate-x-full"
+        } bg-background dark:bg-background shadow-lg border-l border-border`}
+      >
+        <div className="p-4 h-full flex flex-col">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-xl font-semibold text-foreground">Menu</h1>
+            <Button
+              onClick={toggleMenu}
+              size="icon"
+              variant="ghost"
+              className="rounded-full hover:bg-accent/10"
             >
-              <div className="w-12 h-12 flex items-center justify-center rounded-full bg-primary/10 mb-2 group-hover:bg-primary/20 transition-colors duration-200">
-                <img
-                  src={`/${item.icon}.png`}
-                  alt={item.label}
-                  className="w-6 h-6 object-contain"
-                />
-              </div>
-              <span className="text-xs font-medium text-center text-foreground">{item.label}</span>
-            </Link>
-          ))}
-        </div>
+              <Menu className="h-5 w-5" />
+            </Button>
+          </div>
 
-        <div className="mt-auto border-t border-border pt-4 space-y-3">
-          <a
-            href={config?.navbar_social_facebook}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center p-3 hover:bg-accent/10 rounded-lg transition-colors duration-200"
-          >
-            <img src="/facebook.png" alt="Facebook" className="w-5 h-5 mr-3" />
-            <span className="text-sm text-foreground">Facebook</span>
-          </a>
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            {menuItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                onClick={toggleMenu}
+                className="flex flex-col items-center p-3 rounded-xl hover:bg-accent/10 transition-colors duration-200 group"
+              >
+                <div className="w-12 h-12 flex items-center justify-center rounded-full bg-primary/10 mb-2 group-hover:bg-primary/20 transition-colors duration-200">
+                  <img
+                    src={`/${item.icon}.png`}
+                    alt={item.label}
+                    className="w-6 h-6 object-contain"
+                  />
+                </div>
+                <span className="text-xs font-medium text-center text-foreground">{item.label}</span>
+              </Link>
+            ))}
+          </div>
 
-          {config?.navbar_social_instagram && (
+          <div className="mt-auto border-t border-border pt-4 space-y-3">
             <a
-              href={config.navbar_social_instagram}
+              href={config?.navbar_social_facebook}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center p-3 hover:bg-accent/10 rounded-lg transition-colors duration-200"
             >
-              <img src="/instagram.png" alt="Instagram" className="w-5 h-5 mr-3" />
-              <span className="text-sm text-foreground">Instagram</span>
+              <img src="/facebook.png" alt="Facebook" className="w-5 h-5 mr-3" />
+              <span className="text-sm text-foreground">Facebook</span>
             </a>
-          )}
 
-          <button
-            onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-            className="w-full flex items-center p-3 hover:bg-accent/10 rounded-lg transition-colors duration-200"
-          >
-            <img 
-              src={theme === "light" ? "/modoescuro.png" : "/sun.png"} 
-              alt="Alterar tema" 
-              className="w-5 h-5 mr-3" 
-            />
-            <span className="text-sm text-foreground">
-              {theme === "light" ? "Modo escuro" : "Modo claro"}
-            </span>
-          </button>
+            {config?.navbar_social_instagram && (
+              <a
+                href={config.navbar_social_instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center p-3 hover:bg-accent/10 rounded-lg transition-colors duration-200"
+              >
+                <img src="/instagram.png" alt="Instagram" className="w-5 h-5 mr-3" />
+                <span className="text-sm text-foreground">Instagram</span>
+              </a>
+            )}
 
-          <button
-            onClick={handleShare}
-            className="w-full flex items-center p-3 hover:bg-accent/10 rounded-lg transition-colors duration-200"
-          >
-            <img src="/compartilhar.png" alt="Compartilhar" className="w-5 h-5 mr-3" />
-            <span className="text-sm text-foreground">Compartilhar</span>
-          </button>
+            <button
+              onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+              className="w-full flex items-center p-3 hover:bg-accent/10 rounded-lg transition-colors duration-200"
+            >
+              <img 
+                src={theme === "light" ? "/modoescuro.png" : "/sun.png"} 
+                alt="Alterar tema" 
+                className="w-5 h-5 mr-3" 
+              />
+              <span className="text-sm text-foreground">
+                {theme === "light" ? "Modo escuro" : "Modo claro"}
+              </span>
+            </button>
 
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center p-3 hover:bg-destructive/10 hover:text-destructive rounded-lg transition-colors duration-200"
-          >
-            <img src="/sair.png" alt="Sair" className="w-5 h-5 mr-3" />
-            <span className="text-sm">Sair</span>
-          </button>
+            <button
+              onClick={handleShare}
+              className="w-full flex items-center p-3 hover:bg-accent/10 rounded-lg transition-colors duration-200"
+            >
+              <img src="/compartilhar.png" alt="Compartilhar" className="w-5 h-5 mr-3" />
+              <span className="text-sm text-foreground">Compartilhar</span>
+            </button>
+
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center p-3 hover:bg-destructive/10 hover:text-destructive rounded-lg transition-colors duration-200"
+            >
+              <img src="/sair.png" alt="Sair" className="w-5 h-5 mr-3" />
+              <span className="text-sm">Sair</span>
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

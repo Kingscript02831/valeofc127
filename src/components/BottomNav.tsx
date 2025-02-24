@@ -1,9 +1,9 @@
 
-import { Home, Bell, User, Plus, Search, Menu } from "lucide-react";
+import { Home, Bell, User, Plus, Search } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useSiteConfig } from "@/hooks/useSiteConfig";
-import { supabase } from "@/integrations/supabase/client";
-import { useEffect, useState, TouchEvent } from "react";
+import { useSiteConfig } from "../hooks/useSiteConfig";
+import { supabase } from "../integrations/supabase/client";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -13,7 +13,6 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import LupaUsuario from "./lupausuario";
-import MenuConfig from "./menuconfig";
 
 const BottomNav = () => {
   const location = useLocation();
@@ -21,8 +20,6 @@ const BottomNav = () => {
   const { data: config } = useSiteConfig();
   const [session, setSession] = useState<any>(null);
   const [showSearch, setShowSearch] = useState(false);
-  const [showMenu, setShowMenu] = useState(false);
-  const [touchStart, setTouchStart] = useState(0);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -37,25 +34,6 @@ const BottomNav = () => {
 
     return () => subscription.unsubscribe();
   }, []);
-
-  const handleTouchStart = (e: TouchEvent) => {
-    setTouchStart(e.touches[0].clientX);
-  };
-
-  const handleTouchEnd = (e: TouchEvent) => {
-    const touchEnd = e.changedTouches[0].clientX;
-    const difference = touchStart - touchEnd;
-
-    // Se o usuário deslizar da direita para a esquerda (difference > 0)
-    // ou da esquerda para a direita (difference < 0)
-    if (Math.abs(difference) > 50) {
-      if (difference > 0) {
-        setShowMenu(false); // Fecha o menu
-      } else {
-        setShowMenu(true); // Abre o menu
-      }
-    }
-  };
 
   const { data: unreadCount } = useQuery({
     queryKey: ["unreadNotifications"],
@@ -107,8 +85,6 @@ const BottomNav = () => {
       <nav 
         className="fixed bottom-0 left-0 right-0 shadow-lg transition-all duration-300 md:hidden"
         style={navStyle}
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
       >
         <div className="container mx-auto px-4">
           <div className="flex justify-around items-center py-2">
@@ -183,21 +159,13 @@ const BottomNav = () => {
               )}
             </button>
 
-            <div className="flex items-center space-x-2">
-              <Link
-                to={session ? "/perfil" : "/login"}
-                className="flex items-center p-2 rounded-xl transition-all duration-300 hover:scale-105"
-                style={getItemStyle(isActive("/perfil") || isActive("/login"))}
-              >
-                <User className="h-6 w-6" strokeWidth={2} />
-              </Link>
-              <button
-                onClick={() => setShowMenu(true)}
-                className="flex items-center p-2 rounded-xl transition-all duration-300 hover:scale-105"
-              >
-                <Menu className="h-6 w-6" strokeWidth={2} />
-              </button>
-            </div>
+            <Link
+              to={session ? "/perfil" : "/login"}
+              className="flex items-center p-2 rounded-xl transition-all duration-300 hover:scale-105"
+              style={getItemStyle(isActive("/perfil") || isActive("/login"))}
+            >
+              <User className="h-6 w-6" strokeWidth={2} />
+            </Link>
           </div>
         </div>
       </nav>
@@ -208,8 +176,6 @@ const BottomNav = () => {
           onSelectUser={handleNavigateToProfile}
         />
       )}
-
-      {showMenu && <MenuConfig />}
     </>
   );
 };
