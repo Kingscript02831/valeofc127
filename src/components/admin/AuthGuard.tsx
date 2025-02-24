@@ -25,22 +25,31 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredPermission }) =
           return;
         }
 
+        // If no specific permission is required, allow access
         if (!requiredPermission) {
           setIsAuthorized(true);
           setIsLoading(false);
           return;
         }
 
-        // Check if user has permission for this page
-        const { data: permissions, error } = await supabase
+        // Verify if user has permission for this page path
+        const { data: userPermissions, error } = await supabase
           .from('permissions')
-          .select('*')
+          .select('id, permission_name, page_path')
           .eq('email', user.email)
-          .eq('page_path', requiredPermission);
+          .eq('page_path', requiredPermission)
+          .limit(1)
+          .single();
 
-        if (error) throw error;
+        if (error && error.code !== 'PGRST116') { // Ignore not found error
+          throw error;
+        }
 
-        if (!permissions || permissions.length === 0) {
+        if (!userPermissions) {
+          console.log('Permission denied for:', {
+            email: user.email,
+            requiredPath: requiredPermission
+          });
           toast({
             title: "Acesso negado",
             description: "Você não tem permissão para acessar esta página",
