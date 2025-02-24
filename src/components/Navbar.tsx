@@ -1,7 +1,7 @@
 
 import { Link, useNavigate } from "react-router-dom";
 import { useSiteConfig } from "../hooks/useSiteConfig";
-import MenuConfig from "@/components/menuconfig";
+import MenuConfig from "./menuconfig";
 import { Plus, Search } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "../integrations/supabase/client";
@@ -107,9 +107,9 @@ const Navbar = () => {
               <DropdownMenuTrigger asChild>
                 <Button
                   size="icon"
-                  className="w-11 h-11 rounded-full bg-white/90 hover:bg-white/75 transition-colors"
+                  className="w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
                 >
-                  <Plus className="h-5 w-5 text-gray-700" />
+                  <Plus className="h-5 w-5" style={{ color: config.text_color }} />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
@@ -135,9 +135,9 @@ const Navbar = () => {
             <Button
               size="icon"
               onClick={() => setShowSearch(!showSearch)}
-              className="w-11 h-11 rounded-full bg-white/90 hover:bg-white/75 transition-colors"
+              className="w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
             >
-              <Search className="h-5 w-5 text-gray-700" />
+              <Search className="h-5 w-5" style={{ color: config.text_color }} />
             </Button>
 
             {/* Menu Config */}
