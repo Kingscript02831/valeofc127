@@ -160,7 +160,12 @@ const MenuConfig = () => {
                 rel="noopener noreferrer"
                 className="flex items-center p-3 hover:bg-white/10 rounded-lg transition-colors duration-200"
               >
-                <Facebook className="w-5 h-5 mr-3" />
+                <img
+                  src="/facebook.png"
+                  alt="Facebook"
+                  className="w-5 h-5 mr-3"
+                  style={{ filter: 'brightness(0) invert(1)' }}
+                />
                 <span className="text-sm">Facebook</span>
               </a>
             )}
@@ -172,7 +177,12 @@ const MenuConfig = () => {
                 rel="noopener noreferrer"
                 className="flex items-center p-3 hover:bg-white/10 rounded-lg transition-colors duration-200"
               >
-                <Instagram className="w-5 h-5 mr-3" />
+                <img
+                  src="/instagram.png"
+                  alt="Instagram"
+                  className="w-5 h-5 mr-3"
+                  style={{ filter: 'brightness(0) invert(1)' }}
+                />
                 <span className="text-sm">Instagram</span>
               </a>
             )}
@@ -225,4 +235,3 @@ const MenuConfig = () => {
 };
 
 export default MenuConfig;
-
