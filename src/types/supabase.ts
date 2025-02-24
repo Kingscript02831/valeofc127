@@ -7,8 +7,7 @@ export interface SiteConfiguration {
   text_color: string;
   navbar_logo_type: 'text' | 'image';
   navbar_logo_image?: string;
-  navbar_logo_text?: string;
-  navbar_title_color?: string;
+  navbar_title?: string;
   navbar_social_facebook?: string;
   navbar_social_instagram?: string;
 }
