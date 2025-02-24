@@ -2,10 +2,12 @@
 import { Link, useLocation } from "react-router-dom";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { useEffect, useRef, useState } from "react";
+import { useTheme } from "./ThemeProvider";
 
 const SubNav = () => {
   const { data: config, isLoading, isError } = useSiteConfig();
   const location = useLocation();
+  const { theme } = useTheme();
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -46,6 +48,19 @@ const SubNav = () => {
     }
   };
 
+  const getNavStyle = () => {
+    if (theme === 'dark') {
+      return {
+        background: '#1A1F2C',
+        borderColor: '#333333'
+      };
+    }
+    return {
+      background: `linear-gradient(to right, ${config?.navbar_color}, ${config?.primary_color})`,
+      borderColor: `${config?.primary_color}20`
+    };
+  };
+
   if (isLoading) {
     return (
       <nav className="w-full border-b mt-16 h-12 animate-pulse bg-gray-200" />
@@ -75,10 +90,7 @@ const SubNav = () => {
   return (
     <nav 
       className="w-full border-b mt-16 shadow-sm"
-      style={{ 
-        background: `linear-gradient(to right, ${config.navbar_color}, ${config.primary_color})`,
-        borderColor: `${config.primary_color}20`
-      }}
+      style={getNavStyle()}
     >
       <div className="max-w-screen-2xl mx-auto px-4 overflow-hidden">
         <div 
@@ -98,9 +110,11 @@ const SubNav = () => {
                   : "hover:opacity-80"
               }`}
               style={{
-                color: config.text_color,
+                color: theme === 'dark' ? '#ffffff' : config.text_color,
                 background: location.pathname === link.path 
-                  ? `${config.primary_color}15`
+                  ? theme === 'dark' 
+                    ? '#333333' 
+                    : `${config.primary_color}15`
                   : 'transparent',
               }}
             >
@@ -109,7 +123,7 @@ const SubNav = () => {
                 <span 
                   className="absolute bottom-0 left-0 w-full h-0.5 rounded-full transition-all duration-300"
                   style={{
-                    background: config.text_color
+                    background: theme === 'dark' ? '#ffffff' : config.text_color
                   }}
                 />
               )}

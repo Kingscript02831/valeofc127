@@ -5,6 +5,7 @@ import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { Plus, Search, Menu } from "lucide-react";
 import MenuConfig from "./menuconfig";
 import { SearchUsersDialog } from "./SearchUsersDialog";
+import { useTheme } from "./ThemeProvider";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,6 +17,8 @@ const Navbar = () => {
   const { data: config, isLoading, isError } = useSiteConfig();
   const navigate = useNavigate();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { theme } = useTheme();
 
   if (isLoading) {
     return (
@@ -35,14 +38,37 @@ const Navbar = () => {
     );
   }
 
+  const getNavbarStyle = () => {
+    if (theme === 'dark') {
+      return {
+        background: '#1A1F2C',
+        borderColor: '#333333'
+      };
+    }
+    return {
+      background: `linear-gradient(to right, ${config.navbar_color}, ${config.primary_color})`,
+      borderColor: `${config.primary_color}20`
+    };
+  };
+
+  const getButtonStyle = () => {
+    if (theme === 'dark') {
+      return {
+        color: '#ffffff',
+        background: '#333333'
+      };
+    }
+    return {
+      color: config.text_color,
+      background: '#f3f3f3'
+    };
+  };
+
   return (
     <>
       <nav 
         className="w-full fixed top-0 z-50 shadow-md"
-        style={{ 
-          background: `linear-gradient(to right, ${config.navbar_color}, ${config.primary_color})`,
-          borderColor: `${config.primary_color}20`
-        }}
+        style={getNavbarStyle()}
       >
         <div className="max-w-screen-2xl mx-auto px-4">
           <div className="flex justify-between items-center h-16">
@@ -56,13 +82,13 @@ const Navbar = () => {
                   alt="Logo" 
                   className="h-12 w-12 rounded-full object-cover border-2 transition-transform duration-300 hover:scale-110"
                   style={{ 
-                    borderColor: config.text_color,
+                    borderColor: theme === 'dark' ? '#ffffff' : config.text_color,
                   }}
                 />
               ) : (
                 <span 
                   className="text-3xl font-bold tracking-tighter"
-                  style={{ color: config.navbar_title_color || config.text_color }}
+                  style={{ color: theme === 'dark' ? '#ffffff' : config.navbar_title_color || config.text_color }}
                 >
                   {config.navbar_logo_text || 'Vale Notícias'}
                 </span>
@@ -70,15 +96,11 @@ const Navbar = () => {
             </Link>
 
             <div className="flex items-center space-x-3">
-              {/* Add button with dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
                     className="flex items-center justify-center w-11 h-11 rounded-full transition-all duration-300 hover:scale-105"
-                    style={{ 
-                      color: config.text_color,
-                      background: '#f3f3f3'
-                    }}
+                    style={getButtonStyle()}
                   >
                     <Plus className="h-6 w-6" />
                   </button>
@@ -95,29 +117,15 @@ const Navbar = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              {/* Search button */}
               <button
                 onClick={() => setIsSearchOpen(true)}
                 className="flex items-center justify-center w-11 h-11 rounded-full transition-all duration-300 hover:scale-105"
-                style={{ 
-                  color: config.text_color,
-                  background: '#f3f3f3'
-                }}
+                style={getButtonStyle()}
               >
                 <Search className="h-6 w-6" />
               </button>
 
-              {/* Menu button */}
-              <button
-                onClick={() => setIsSearchOpen(true)}
-                className="flex items-center justify-center w-11 h-11 rounded-full transition-all duration-300 hover:scale-105"
-                style={{ 
-                  color: config.text_color,
-                  background: '#f3f3f3'
-                }}
-              >
-                <Menu className="h-6 w-6" />
-              </button>
+              <MenuConfig />
             </div>
           </div>
         </div>
