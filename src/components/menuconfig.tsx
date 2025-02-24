@@ -15,43 +15,43 @@ interface MenuItem {
 
 export const menuItems: MenuItem[] = [
   {
-    icon: "newspaper",
+    icon: "noticias",
     label: "Notícias",
     path: "/",
   },
   {
-    icon: "calendar",
+    icon: "eventos",
     label: "Eventos",
     path: "/eventos",
   },
   {
-    icon: "shopping-bag",
+    icon: "produtos",
     label: "Produtos",
     path: "/products",
   },
   {
-    icon: "user",
+    icon: "perfil",
     label: "Perfil",
     path: "/perfil",
   },
   {
-    icon: "bell",
+    icon: "notificacoes",
     label: "Notificações",
     path: "/notify",
   },
   {
-    icon: "play-circle",
+    icon: "reels",
     label: "Reels",
     path: "/reels",
   },
   {
-    icon: "message-square",
+    icon: "posts",
     label: "Posts",
     path: "/posts",
   },
 ];
 
-export const MenuConfig = () => {
+const MenuConfig = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -112,12 +112,16 @@ export const MenuConfig = () => {
       </button>
 
       <div
-        className={`fixed top-0 right-0 bottom-0 w-72 bg-background/95 backdrop-blur-sm shadow-lg transform transition-transform duration-300 ${
+        className={`fixed top-0 right-0 bottom-0 w-72 shadow-lg transform transition-transform duration-300 ${
           isMenuOpen ? "translate-x-0" : "translate-x-full"
         }`}
+        style={{ 
+          background: config ? `linear-gradient(to right, ${config.navbar_color}, ${config.primary_color})` : 'background',
+          color: config?.text_color
+        }}
       >
         <div className="p-4 h-full flex flex-col">
-          <h1 className="text-xl font-semibold mb-6">Menu</h1>
+          <h1 className="text-xl font-semibold mb-6" style={{ color: config?.text_color }}>Menu</h1>
 
           <div className="grid grid-cols-3 gap-4 mb-6">
             {menuItems.map((item) => (
@@ -125,13 +129,14 @@ export const MenuConfig = () => {
                 key={item.path}
                 to={item.path}
                 onClick={toggleMenu}
-                className="flex flex-col items-center p-3 rounded-xl hover:bg-accent transition-colors duration-200"
+                className="flex flex-col items-center p-3 rounded-xl hover:bg-white/10 transition-colors duration-200"
               >
-                <div className="w-12 h-12 flex items-center justify-center rounded-full bg-primary/10 mb-2">
+                <div className="w-12 h-12 flex items-center justify-center rounded-full bg-white/10 mb-2">
                   <img
                     src={`/${item.icon}.png`}
                     alt={item.label}
-                    className="w-6 h-6 object-contain opacity-80"
+                    className="w-6 h-6 object-contain"
+                    style={{ filter: 'brightness(0) invert(1)' }}
                   />
                 </div>
                 <span className="text-xs font-medium text-center">{item.label}</span>
@@ -139,15 +144,15 @@ export const MenuConfig = () => {
             ))}
           </div>
 
-          <div className="mt-auto border-t border-border pt-4 space-y-2">
+          <div className="mt-auto border-t border-white/20 pt-4 space-y-2">
             {config?.navbar_social_facebook && (
               <a
                 href={config.navbar_social_facebook}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center p-3 hover:bg-accent rounded-lg transition-colors duration-200"
+                className="flex items-center p-3 hover:bg-white/10 rounded-lg transition-colors duration-200"
               >
-                <Facebook className="w-5 h-5 mr-3 text-muted-foreground" />
+                <Facebook className="w-5 h-5 mr-3" />
                 <span className="text-sm">Facebook</span>
               </a>
             )}
@@ -157,29 +162,35 @@ export const MenuConfig = () => {
                 href={config.navbar_social_instagram}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center p-3 hover:bg-accent rounded-lg transition-colors duration-200"
+                className="flex items-center p-3 hover:bg-white/10 rounded-lg transition-colors duration-200"
               >
-                <Instagram className="w-5 h-5 mr-3 text-muted-foreground" />
+                <Instagram className="w-5 h-5 mr-3" />
                 <span className="text-sm">Instagram</span>
               </a>
             )}
 
             <button
               onClick={handleShare}
-              className="flex items-center p-3 w-full hover:bg-accent rounded-lg transition-colors duration-200"
+              className="flex items-center p-3 w-full hover:bg-white/10 rounded-lg transition-colors duration-200"
             >
-              <Share2 className="w-5 h-5 mr-3 text-muted-foreground" />
+              <img
+                src="/compartilhar.png"
+                alt="Compartilhar"
+                className="w-5 h-5 mr-3"
+                style={{ filter: 'brightness(0) invert(1)' }}
+              />
               <span className="text-sm">Compartilhar</span>
             </button>
 
             <button
               onClick={toggleTheme}
-              className="flex items-center p-3 w-full hover:bg-accent rounded-lg transition-colors duration-200"
+              className="flex items-center p-3 w-full hover:bg-white/10 rounded-lg transition-colors duration-200"
             >
               <img
                 src={theme === 'dark' ? '/sun.png' : '/moon.png'}
                 alt={theme === 'dark' ? "Modo Claro" : "Modo Escuro"}
-                className="w-5 h-5 mr-3 text-muted-foreground"
+                className="w-5 h-5 mr-3"
+                style={{ filter: 'brightness(0) invert(1)' }}
               />
               <span className="text-sm">
                 {theme === 'dark' ? "Modo Claro" : "Modo Escuro"}
@@ -188,12 +199,13 @@ export const MenuConfig = () => {
 
             <button
               onClick={handleLogout}
-              className="flex items-center p-3 w-full hover:bg-accent rounded-lg transition-colors duration-200"
+              className="flex items-center p-3 w-full hover:bg-white/10 rounded-lg transition-colors duration-200"
             >
               <img
-                src="/logout.png"
+                src="/sair.png"
                 alt="Sair"
-                className="w-5 h-5 mr-3 text-muted-foreground"
+                className="w-5 h-5 mr-3"
+                style={{ filter: 'brightness(0) invert(1)' }}
               />
               <span className="text-sm">Sair</span>
             </button>
