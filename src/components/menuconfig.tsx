@@ -1,10 +1,9 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "./ui/use-toast";
-import { supabase } from "../integrations/supabase/client";
-import { useSiteConfig } from "../hooks/useSiteConfig";
-import { useTheme } from "./ThemeProvider";
+import { supabase } from "@/integrations/supabase/client";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { useTheme } from "@/components/ThemeProvider";
 import { Menu } from "lucide-react";
 import { Button } from "./ui/button";
 
@@ -100,9 +99,9 @@ const MenuConfig = () => {
       <Button
         onClick={toggleMenu}
         size="icon"
-        className="w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+        className="w-14 h-14 rounded-full bg-gray-100/20 hover:bg-gray-100/30 transition-colors"
       >
-        <Menu className="h-5 w-5" style={{ color: config?.text_color }} />
+        <Menu className="h-7 w-7" style={{ color: config?.text_color }} />
       </Button>
 
       <div
@@ -113,12 +112,14 @@ const MenuConfig = () => {
         <div className="p-4 h-full flex flex-col">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-xl font-semibold text-foreground">Menu</h1>
-            <button
+            <Button
               onClick={toggleMenu}
-              className="p-2 rounded-full hover:bg-accent/10 transition-colors duration-200"
+              size="icon"
+              variant="ghost"
+              className="rounded-full hover:bg-accent/10"
             >
-              <img src="/close.png" alt="Fechar" className="h-5 w-5" />
-            </button>
+              <Menu className="h-5 w-5" />
+            </Button>
           </div>
 
           <div className="grid grid-cols-2 gap-3 mb-6">

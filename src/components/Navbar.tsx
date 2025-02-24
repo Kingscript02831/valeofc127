@@ -1,10 +1,10 @@
 
 import { Link, useNavigate } from "react-router-dom";
-import { useSiteConfig } from "../hooks/useSiteConfig";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
 import MenuConfig from "./menuconfig";
 import { Plus, Search } from "lucide-react";
 import { useState } from "react";
-import { supabase } from "../integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -101,15 +101,15 @@ const Navbar = () => {
             )}
           </Link>
 
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-4">
             {/* Plus Icon */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
                   size="icon"
-                  className="w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                  className="w-14 h-14 rounded-full bg-gray-100/20 hover:bg-gray-100/30 transition-colors"
                 >
-                  <Plus className="h-5 w-5" style={{ color: config.text_color }} />
+                  <Plus className="h-7 w-7" style={{ color: config.text_color }} />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
@@ -135,9 +135,9 @@ const Navbar = () => {
             <Button
               size="icon"
               onClick={() => setShowSearch(!showSearch)}
-              className="w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+              className="w-14 h-14 rounded-full bg-gray-100/20 hover:bg-gray-100/30 transition-colors"
             >
-              <Search className="h-5 w-5" style={{ color: config.text_color }} />
+              <Search className="h-7 w-7" style={{ color: config.text_color }} />
             </Button>
 
             {/* Menu Config */}
