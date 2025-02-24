@@ -1,10 +1,10 @@
 
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { useSiteConfig } from "@/hooks/useSiteConfig";
-import { useTheme } from "@/components/ThemeProvider";
+import { useToast } from "../components/ui/use-toast";
+import { supabase } from "../integrations/supabase/client";
+import { useSiteConfig } from "../hooks/useSiteConfig";
+import { useTheme } from "../components/ThemeProvider";
 
 interface MenuItem {
   icon: string;
