@@ -1,6 +1,6 @@
 
 import { Link, useLocation } from "react-router-dom";
-import { useSiteConfig } from "../hooks/useSiteConfig";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { useEffect, useRef, useState } from "react";
 
 const SubNav = () => {
@@ -11,7 +11,6 @@ const SubNav = () => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const links = [
-    { path: "/feed", label: "Feed" },
     { path: "/", label: "Notícias" },
     { path: "/posts", label: "Posts" },
     { path: "/eventos", label: "Eventos" },
@@ -77,8 +76,8 @@ const SubNav = () => {
     <nav 
       className="w-full border-b mt-16 shadow-sm"
       style={{ 
-        background: `linear-gradient(to right, ${config?.navbar_color}, ${config?.primary_color})`,
-        borderColor: `${config?.primary_color}20`
+        background: `linear-gradient(to right, ${config.navbar_color}, ${config.primary_color})`,
+        borderColor: `${config.primary_color}20`
       }}
     >
       <div className="max-w-screen-2xl mx-auto px-4 overflow-hidden">
@@ -99,9 +98,9 @@ const SubNav = () => {
                   : "hover:opacity-80"
               }`}
               style={{
-                color: config?.text_color,
+                color: config.text_color,
                 background: location.pathname === link.path 
-                  ? `${config?.primary_color}15`
+                  ? `${config.primary_color}15`
                   : 'transparent',
               }}
             >
@@ -110,7 +109,7 @@ const SubNav = () => {
                 <span 
                   className="absolute bottom-0 left-0 w-full h-0.5 rounded-full transition-all duration-300"
                   style={{
-                    background: config?.text_color
+                    background: config.text_color
                   }}
                 />
               )}

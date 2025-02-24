@@ -5,8 +5,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { ThemeProvider } from "@/components/ThemeProvider";
-import AuthWrapper from "@/components/AuthWrapper";
+import { ThemeProvider } from "./components/ThemeProvider";
+import AuthWrapper from "./components/AuthWrapper";
 import Index from "./pages/Index";
 import Events from "./pages/Events";
 import Places from "./pages/Places";
@@ -33,7 +33,6 @@ import NewsDetails from "./pages/NewsDetails";
 import Posts from "./pages/Posts";
 import PostForm from "./pages/PostForm";
 import PostDetails from "./pages/PostDetails";
-import Feed from "./pages/Feed";
 
 const queryClient = new QueryClient();
 
@@ -49,7 +48,6 @@ const App: React.FC = () => {
               <AuthWrapper>
                 <Routes>
                   <Route path="/" element={<Index />} />
-                  <Route path="/feed" element={<Feed />} />
                   <Route path="/eventos" element={<Events />} />
                   <Route path="/lugares" element={<Places />} />
                   <Route path="/products" element={<Products />} />

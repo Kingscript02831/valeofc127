@@ -1,5 +1,6 @@
 
 import { createContext, useContext, useEffect, useState } from "react"
+import { supabase } from "@/integrations/supabase/client"
 
 type Theme = "dark" | "light" | "system"
 
@@ -32,6 +33,25 @@ export function ThemeProvider({
   )
 
   useEffect(() => {
+    const loadUserThemePreference = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.user?.id) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('theme_preference')
+          .eq('id', session.user.id)
+          .single()
+
+        if (profile?.theme_preference) {
+          setTheme(profile.theme_preference as Theme)
+        }
+      }
+    }
+
+    loadUserThemePreference()
+  }, [])
+
+  useEffect(() => {
     const root = window.document.documentElement
     root.classList.remove("light", "dark")
 
@@ -44,13 +64,30 @@ export function ThemeProvider({
     } else {
       root.classList.add(theme)
     }
+
+    // Atualizar as cores do fundo e texto com base no tema
+    if (theme === "light") {
+      document.body.style.backgroundColor = "white"
+      document.body.style.color = "black"
+    } else {
+      document.body.style.backgroundColor = "black"
+      document.body.style.color = "white"
+    }
   }, [theme])
 
   const value = {
     theme,
-    setTheme: (theme: Theme) => {
-      localStorage.setItem(storageKey, theme)
-      setTheme(theme)
+    setTheme: async (newTheme: Theme) => {
+      localStorage.setItem(storageKey, newTheme)
+      setTheme(newTheme)
+
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.user?.id) {
+        await supabase
+          .from('profiles')
+          .update({ theme_preference: newTheme })
+          .eq('id', session.user.id)
+      }
     },
   }
 
