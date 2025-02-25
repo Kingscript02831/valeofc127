@@ -1,10 +1,10 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Plus } from "lucide-react";
-import { PhotoUrlDialog } from "./PhotoUrlDialog";
+import PhotoUrlDialog from "./PhotoUrlDialog";
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 
 interface Story {
