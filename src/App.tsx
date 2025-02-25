@@ -1,55 +1,87 @@
-import { lazy } from "react";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+
+import React from "react";
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ThemeProvider } from "./components/ThemeProvider";
+import AuthWrapper from "./components/AuthWrapper";
 import Index from "./pages/Index";
-import Login from "./pages/Login";
-import SignUp from "./pages/SignUp";
-import ResetPassword from "./pages/ResetPassword";
-import UpdatePassword from "./pages/UpdatePassword";
-import Products from "./pages/Products";
-import ProductDetails from "./pages/ProductDetails";
-import Posts from "./pages/Posts";
-import StoryView from "./pages/StoryView";
-import Profile from "./pages/Profile";
 import Events from "./pages/Events";
 import Places from "./pages/Places";
-import NotFound from "./pages/NotFound";
+import Products from "./pages/Products";
+import ProductDetails from "./pages/ProductDetails";
+import ProductForm from "./pages/ProductForm";
 import Notify from "./pages/Notify";
-import { ThemeProvider } from "./components/ThemeProvider";
-import { Toaster } from "./components/ui/toaster";
-import AuthWrapper from "./components/AuthWrapper";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import "./App.css";
+import Login from "./pages/Login";
+import SignUp from "./pages/SignUp";
+import Config from "./pages/config";
+import Admin from "./pages/Admin";
+import AdminPlaces from "./pages/AdminPlaces";
+import AdminEvents from "./pages/AdminEvents";
+import AdminNews from "./pages/AdminNews";
+import AdminCategories from "./pages/AdminCategories";
+import AdminSistema from "./pages/AdminSistema";
+import Profile from "./pages/Profile";
+import UserProfile from "./pages/UserProfile";
+import NotFound from "./pages/NotFound"; 
+import ResetPassword from "./pages/ResetPassword";
+import UpdatePassword from "./pages/UpdatePassword";
+import UserProducts from "./pages/UserProducts";
+import NewsDetails from "./pages/NewsDetails";
+import Posts from "./pages/Posts";
+import PostForm from "./pages/PostForm";
+import PostDetails from "./pages/PostDetails";
 
-function App() {
-  const queryClient = new QueryClient();
+const queryClient = new QueryClient();
 
+const App: React.FC = () => {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <BrowserRouter>
-          <AuthWrapper>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<SignUp />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/update-password" element={<UpdatePassword />} />
-              <Route path="/products" element={<Products />} />
-              <Route path="/products/:id" element={<ProductDetails />} />
-              <Route path="/posts" element={<Posts />} />
-              <Route path="/stories/:id" element={<StoryView />} />
-              <Route path="/perfil/:username" element={<Profile />} />
-              <Route path="/events" element={<Events />} />
-              <Route path="/places" element={<Places />} />
-              <Route path="/notify" element={<Notify />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </AuthWrapper>
-          <Toaster />
-        </BrowserRouter>
+    <React.StrictMode>
+      <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+        <QueryClientProvider client={queryClient}>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <AuthWrapper>
+                <Routes>
+                  <Route path="/" element={<Posts />} />
+                  <Route path="/noticias" element={<Index />} />
+                  <Route path="/eventos" element={<Events />} />
+                  <Route path="/lugares" element={<Places />} />
+                  <Route path="/products" element={<Products />} />
+                  <Route path="/product/:id" element={<ProductDetails />} />
+                  <Route path="/products/new" element={<ProductForm />} />
+                  <Route path="/notify" element={<Notify />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/signup" element={<SignUp />} />
+                  <Route path="/perfil" element={<Profile />} />
+                  <Route path="/perfil/:username" element={<UserProfile />} />
+                  <Route path="/config" element={<Config />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/update-password" element={<UpdatePassword />} />
+                  <Route path="/admin" element={<Admin />}>    
+                    <Route path="lugares" element={<AdminPlaces />} />
+                    <Route path="eventos" element={<AdminEvents />} />
+                    <Route path="noticias" element={<AdminNews />} />
+                    <Route path="categorias" element={<AdminCategories />} />
+                    <Route path="sistema" element={<AdminSistema />} />
+                  </Route> 
+                  <Route path="/user-products" element={<UserProducts />} />
+                  <Route path="/noticias/:id" element={<NewsDetails />} />
+                  <Route path="/posts/:id" element={<PostDetails />} />
+                  <Route path="/posts/new" element={<PostForm />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </AuthWrapper>
+            </BrowserRouter>
+          </TooltipProvider>
+        </QueryClientProvider>
       </ThemeProvider>
-    </QueryClientProvider>
+    </React.StrictMode>
   );
-}
+};
 
 export default App;
