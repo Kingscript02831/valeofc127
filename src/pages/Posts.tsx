@@ -4,7 +4,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Share2, MessageCircle, MessageSquareMore, ThumbsUp } from "lucide-react";
 import { MediaCarousel } from "@/components/MediaCarousel";
-import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -14,6 +13,7 @@ import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { getReactionIcon } from "@/utils/emojisPosts";
+import { Stories } from "@/components/Stories";
 
 interface Post {
   id: string;
@@ -190,7 +190,8 @@ const Posts: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-background">
       <Navbar />
-      <main className="container mx-auto py-8 px-4 pt-20 pb-24">
+      <main className="container mx-auto px-4 pt-20 pb-24">
+        <Stories />
         <div className="max-w-xl mx-auto space-y-4">
           {isLoading ? (
             <div className="space-y-4">
