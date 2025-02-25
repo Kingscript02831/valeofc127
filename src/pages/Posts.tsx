@@ -2,7 +2,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Bell, Search, Share2, MessageCircle, MessageSquareMore, ThumbsUp, Heart, Smile, Frown, Angry, Flame } from "lucide-react";
+import { Bell, Search, Share2, MessageCircle, MessageSquareMore, ThumbsUp } from "lucide-react";
 import { MediaCarousel } from "@/components/MediaCarousel";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { getReactionIcon } from "@/utils/emojisPosts";
+import Stories from "@/components/Stories";
 
 interface Post {
   id: string;
@@ -198,9 +199,9 @@ const Posts: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-background">
       <Navbar />
-      <main className="container mx-auto py-8 px-4 pt-20 pb-24">
+      <main className="container mx-auto pt-20 pb-24">
         <div className="sticky top-16 z-10 bg-background/80 backdrop-blur-sm pb-4">
-          <div className="flex gap-2">
+          <div className="flex gap-2 px-4">
             <Button
               variant="ghost"
               size="icon"
@@ -222,7 +223,9 @@ const Posts: React.FC = () => {
           </div>
         </div>
 
-        <div className="max-w-xl mx-auto space-y-4">
+        <Stories />
+        
+        <div className="max-w-xl mx-auto space-y-4 px-4">
           {isLoading ? (
             <div className="space-y-4">
               {[1, 2, 3].map((i) => (
