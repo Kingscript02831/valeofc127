@@ -32,17 +32,6 @@ import EditPhotosButton from "../components/EditPhotosButton";
 import PhotoUrlDialog from "../components/PhotoUrlDialog";
 import type { Profile } from "../types/profile";
 import { format } from "date-fns";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "../components/ui/alert-dialog";
-import { Trash2 } from "lucide-react";
 
 const defaultAvatarImage = "/placeholder.svg";
 const defaultCoverImage = "/placeholder.svg";
@@ -258,54 +247,6 @@ export default function Profile() {
     );
   }
 
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-
-  const handleDeleteAccount = async () => {
-    try {
-      const { error } = await supabase.auth.admin.deleteUser(
-        profile?.id as string
-      );
-
-      if (error) throw error;
-
-      await supabase.auth.signOut();
-      navigate("/login");
-    } catch (error) {
-      toast({
-        title: "Erro ao excluir conta",
-        description: "Não foi possível excluir sua conta. Tente novamente mais tarde.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  // Fetch site configuration
-  const { data: siteConfig } = useQuery({
-    queryKey: ["site-configuration"],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("site_configuration")
-        .select("*")
-        .single();
-      return data;
-    },
-  });
-
-  // Calculate days until basic info can be updated
-  const getDaysUntilUpdate = () => {
-    if (!profile?.basic_info_updated_at || !siteConfig?.basic_info_update_interval) {
-      return 0;
-    }
-
-    const lastUpdate = new Date(profile.basic_info_updated_at);
-    const daysRequired = siteConfig.basic_info_update_interval;
-    const daysPassed = differenceInDays(new Date(), lastUpdate);
-    return Math.max(0, daysRequired - daysPassed);
-  };
-
-  const daysUntilUpdate = getDaysUntilUpdate();
-  const canUpdateBasicInfo = daysUntilUpdate === 0;
-
   return (
     <div className={`min-h-screen ${theme === 'light' ? 'bg-white text-black' : 'bg-black text-white'}`}>
       <div className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between p-4 ${theme === 'light' ? 'bg-white/90' : 'bg-black/90'} backdrop-blur`}>
@@ -462,7 +403,6 @@ export default function Profile() {
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
-                    
                     <DropdownMenuContent className="bg-gray-900 border-gray-800">
                       <DropdownMenuItem onClick={copyProfileLink} className="text-white cursor-pointer">
                         <Link2 className="h-4 w-4 mr-2" />
@@ -472,20 +412,6 @@ export default function Profile() {
                         <Eye className="h-4 w-4 mr-2" />
                         Ver como
                       </DropdownMenuItem>
-                      {canUpdateBasicInfo ? (
-                        <DropdownMenuItem 
-                          onClick={() => setShowDeleteDialog(true)} 
-                          className="text-red-500 cursor-pointer"
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Excluir conta
-                        </DropdownMenuItem>
-                      ) : (
-                        <DropdownMenuItem className="text-gray-500 cursor-not-allowed">
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Excluir conta (aguarde {daysUntilUpdate} dias)
-                        </DropdownMenuItem>
-                      )}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
@@ -515,27 +441,6 @@ export default function Profile() {
         avatarCount={avatarCount}
         coverCount={coverCount}
       />
-
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Esta ação não pode ser desfeita. Isso excluirá permanentemente sua conta
-              e removerá seus dados de nossos servidores.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteAccount}
-              className="bg-red-500 hover:bg-red-600"
-            >
-              Excluir conta
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       <PhotoUrlDialog
         isOpen={isAvatarDialogOpen}
