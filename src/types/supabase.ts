@@ -10,4 +10,17 @@ export interface SiteConfiguration {
   navbar_title?: string;
   navbar_social_facebook?: string;
   navbar_social_instagram?: string;
+  login_text_color?: string;
+  signup_text_color?: string;
+  button_secondary_color?: string;
+  button_color?: string;
+  bottom_nav_primary_color?: string;
+  bottom_nav_secondary_color?: string;
+  bottom_nav_icon_color?: string;
+  bottom_nav_text_color?: string;
+  pwa_install_message?: string;
+  favorite_heart_color?: string;
+  buy_button_color?: string;
+  buy_button_text?: string;
+  whatsapp_message?: string;
 }
