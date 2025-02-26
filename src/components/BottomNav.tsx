@@ -61,13 +61,17 @@ const BottomNav = () => {
   };
 
   const navStyle = {
-    background: "#000000e6",
-    borderTop: "1px solid rgba(255, 255, 255, 0.1)",
+    background: config?.bottom_nav_primary_color || "#000000e6",
+    borderTop: `1px solid ${config?.bottom_nav_secondary_color || "rgba(255, 255, 255, 0.1)"}`,
   };
 
   const getItemStyle = (active: boolean) => ({
-    color: active ? "#ffffff" : "#ffffff80",
-    background: active ? "rgba(255, 255, 255, 0.1)" : "transparent",
+    color: active 
+      ? config?.bottom_nav_icon_color || "#ffffff" 
+      : config?.bottom_nav_text_color || "#ffffff80",
+    background: active 
+      ? `${config?.bottom_nav_secondary_color}15` || "rgba(255, 255, 255, 0.1)" 
+      : "transparent",
   });
 
   return (
@@ -79,7 +83,7 @@ const BottomNav = () => {
         <div className="flex justify-around items-center py-2">
           <Link
             to="/"
-            className="flex items-center p-2 rounded-xl transition-all duration-300 hover:scale-105"
+            className="flex items-center p-2 rounded-xl"
             style={getItemStyle(location.pathname === "/")}
           >
             <Home className="h-6 w-6" strokeWidth={2} />
@@ -98,17 +102,14 @@ const BottomNav = () => {
               <button
                 className="flex items-center p-2 rounded-xl transition-all duration-300 hover:scale-105"
                 style={{
-                  color: "#ffffff",
-                  background: "rgba(255, 255, 255, 0.1)",
+                  color: config?.bottom_nav_icon_color || "#ffffff",
+                  background: config?.bottom_nav_secondary_color || "rgba(255, 255, 255, 0.1)",
                   opacity: session ? 1 : 0.5,
                 }}
               >
                 <Plus 
                   className="h-6 w-6" 
                   strokeWidth={2.5}
-                  style={{
-                    filter: "drop-shadow(0 2px 4px rgba(255, 255, 255, 0.2))"
-                  }}
                 />
               </button>
             </DropdownMenuTrigger>

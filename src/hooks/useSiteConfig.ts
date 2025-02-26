@@ -1,6 +1,9 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/types/supabase";
+
+export type SiteConfig = Database['public']['Tables']['site_configuration']['Row'];
 
 export const useSiteConfig = () => {
   return useQuery({
@@ -12,7 +15,7 @@ export const useSiteConfig = () => {
         .single();
 
       if (error) throw error;
-      return data;
+      return data as SiteConfig;
     },
   });
 };
