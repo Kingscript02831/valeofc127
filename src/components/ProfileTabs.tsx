@@ -1,16 +1,20 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ProductWithDistance } from "@/types/products";
 import { useTheme } from "./ThemeProvider";
 import { Link } from "react-router-dom";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/card";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { MessageCircle, ThumbsUp } from "lucide-react";
 import { MediaCarousel } from "./MediaCarousel";
-import Tags from "./Tags";
+
+interface Product {
+  id: string;
+  title: string;
+  price: number;
+  images?: string[];
+}
 
 interface Post {
   id: string;
@@ -30,7 +34,7 @@ interface Post {
 }
 
 interface ProfileTabsProps {
-  userProducts: ProductWithDistance[] | undefined;
+  userProducts: Product[] | undefined;
   userPosts: Post[] | undefined;
   isLoading?: boolean;
 }
@@ -41,6 +45,18 @@ const ProfileTabs = ({ userProducts, userPosts, isLoading }: ProfileTabsProps) =
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return format(date, "d 'de' MMMM 'às' HH:mm", { locale: ptBR });
+  };
+
+  // Função para renderizar hashtags e menções
+  const renderContent = (content: string) => {
+    return content.split(' ').map((word, index) => {
+      if (word.startsWith('#')) {
+        return <span key={index} className="text-blue-500">{word} </span>;
+      } else if (word.startsWith('@')) {
+        return <span key={index} className="text-blue-500">{word} </span>;
+      }
+      return word + ' ';
+    });
   };
 
   return (
@@ -107,7 +123,7 @@ const ProfileTabs = ({ userProducts, userPosts, isLoading }: ProfileTabsProps) =
 
                       {post.content && (
                         <p className="text-sm">
-                          <Tags content={post.content} />
+                          {renderContent(post.content)}
                         </p>
                       )}
 
