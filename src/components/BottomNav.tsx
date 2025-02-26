@@ -12,14 +12,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import LupaUsuario from "./lupausuario";
 
 const BottomNav = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { data: config } = useSiteConfig();
   const [session, setSession] = useState<any>(null);
-  const [showSearch, setShowSearch] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -62,14 +60,6 @@ const BottomNav = () => {
     navigate(path);
   };
 
-  const handleNavigateToProfile = (username: string) => {
-    navigate(`/perfil/${username}`);
-  };
-
-  const isActive = (path: string) => {
-    return location.pathname === path;
-  };
-
   const navStyle = {
     background: `linear-gradient(to right, ${config?.bottom_nav_primary_color || '#1A1F2C'}, ${config?.bottom_nav_secondary_color || '#D6BCFA'})`,
     borderTop: `1px solid ${config?.bottom_nav_primary_color}20 || '#1A1F2C20'`,
@@ -81,102 +71,93 @@ const BottomNav = () => {
   });
 
   return (
-    <>
-      <nav 
-        className="fixed bottom-0 left-0 right-0 shadow-lg transition-all duration-300 md:hidden"
-        style={navStyle}
-      >
-        <div className="container mx-auto px-4">
-          <div className="flex justify-around items-center py-2">
-            <Link
-              to="/"
-              className="flex items-center p-2 rounded-xl transition-all duration-300 hover:scale-105"
-              style={getItemStyle(isActive("/"))}
-            >
-              <Home className="h-6 w-6" strokeWidth={2} />
-            </Link>
+    <nav 
+      className="fixed bottom-0 left-0 right-0 shadow-lg transition-all duration-300 md:hidden"
+      style={navStyle}
+    >
+      <div className="container mx-auto px-4">
+        <div className="flex justify-around items-center py-2">
+          <Link
+            to="/"
+            className="flex items-center p-2 rounded-xl transition-all duration-300 hover:scale-105"
+            style={getItemStyle(location.pathname === "/")}
+          >
+            <Home className="h-6 w-6" strokeWidth={2} />
+          </Link>
 
-            <button
-              onClick={() => setShowSearch(true)}
-              className="flex items-center p-2 rounded-xl transition-all duration-300 hover:scale-105"
-              style={getItemStyle(showSearch)}
-            >
-              <Search className="h-6 w-6" strokeWidth={2} />
-            </button>
+          <Link
+            to="/search"
+            className="flex items-center p-2 rounded-xl transition-all duration-300 hover:scale-105"
+            style={getItemStyle(location.pathname === "/search")}
+          >
+            <Search className="h-6 w-6" strokeWidth={2} />
+          </Link>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  className="flex items-center p-2 rounded-xl transition-all duration-300 hover:scale-105"
-                  style={{
-                    color: config?.bottom_nav_icon_color,
-                    background: `${config?.primary_color}15`,
-                    opacity: session ? 1 : 0.5,
-                  }}
-                >
-                  <Plus 
-                    className="h-6 w-6" 
-                    strokeWidth={2.5}
-                    style={{
-                      filter: `drop-shadow(0 2px 4px ${config?.primary_color}40)`
-                    }}
-                  />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                side="top"
-                className="mb-2"
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className="flex items-center p-2 rounded-xl transition-all duration-300 hover:scale-105"
                 style={{
-                  background: config?.bottom_nav_primary_color,
-                  borderColor: `${config?.bottom_nav_primary_color}40`,
+                  color: config?.bottom_nav_icon_color,
+                  background: `${config?.primary_color}15`,
+                  opacity: session ? 1 : 0.5,
                 }}
               >
-                <DropdownMenuItem
-                  className="cursor-pointer"
-                  onClick={(e) => handleNavigation("/products/new", e)}
-                >
-                  Adicionar Produto
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="cursor-pointer"
-                  onClick={(e) => handleNavigation("/posts/new", e)}
-                >
-                  Criar Post
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <button
-              onClick={(e) => handleNavigation("/notify", e)}
-              className="flex items-center p-2 rounded-xl transition-all duration-300 hover:scale-105 relative"
-              style={getItemStyle(isActive("/notify"))}
+                <Plus 
+                  className="h-6 w-6" 
+                  strokeWidth={2.5}
+                  style={{
+                    filter: `drop-shadow(0 2px 4px ${config?.primary_color}40)`
+                  }}
+                />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              side="top"
+              className="mb-2"
+              style={{
+                background: config?.bottom_nav_primary_color,
+                borderColor: `${config?.bottom_nav_primary_color}40`,
+              }}
             >
-              <Bell className="h-6 w-6" strokeWidth={2} />
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center animate-pulse">
-                  {unreadCount}
-                </span>
-              )}
-            </button>
+              <DropdownMenuItem
+                className="cursor-pointer"
+                onClick={(e) => handleNavigation("/products/new", e)}
+              >
+                Adicionar Produto
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="cursor-pointer"
+                onClick={(e) => handleNavigation("/posts/new", e)}
+              >
+                Criar Post
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
-            <Link
-              to={session ? "/perfil" : "/login"}
-              className="flex items-center p-2 rounded-xl transition-all duration-300 hover:scale-105"
-              style={getItemStyle(isActive("/perfil") || isActive("/login"))}
-            >
-              <User className="h-6 w-6" strokeWidth={2} />
-            </Link>
-          </div>
+          <button
+            onClick={(e) => handleNavigation("/notify", e)}
+            className="flex items-center p-2 rounded-xl transition-all duration-300 hover:scale-105 relative"
+            style={getItemStyle(location.pathname === "/notify")}
+          >
+            <Bell className="h-6 w-6" strokeWidth={2} />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center animate-pulse">
+                {unreadCount}
+              </span>
+            )}
+          </button>
+
+          <Link
+            to={session ? "/menu" : "/login"}
+            className="flex items-center p-2 rounded-xl transition-all duration-300 hover:scale-105"
+            style={getItemStyle(location.pathname === "/menu" || location.pathname === "/login")}
+          >
+            <User className="h-6 w-6" strokeWidth={2} />
+          </Link>
         </div>
-      </nav>
-
-      {showSearch && (
-        <LupaUsuario 
-          onClose={() => setShowSearch(false)}
-          onSelectUser={handleNavigateToProfile}
-        />
-      )}
-    </>
+      </div>
+    </nav>
   );
 };
 

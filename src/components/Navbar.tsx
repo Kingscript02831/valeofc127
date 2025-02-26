@@ -1,13 +1,11 @@
 
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
-import MenuConfig from "./menuconfig";
 import { Menu } from "lucide-react";
-import { useState } from "react";
 
 const Navbar = () => {
   const { data: config, isLoading, isError } = useSiteConfig();
-  const [showMenu, setShowMenu] = useState(false);
+  const navigate = useNavigate();
 
   if (isLoading) {
     return (
@@ -60,7 +58,7 @@ const Navbar = () => {
 
           <div className="flex items-center space-x-4">
             <button
-              onClick={() => setShowMenu(true)}
+              onClick={() => navigate("/menu")}
               className="flex items-center p-2 rounded-xl transition-all duration-300 hover:scale-105"
               style={{ color: config.text_color }}
             >
@@ -69,8 +67,6 @@ const Navbar = () => {
           </div>
         </div>
       </div>
-
-      {showMenu && <MenuConfig onClose={() => setShowMenu(false)} />}
     </nav>
   );
 };
