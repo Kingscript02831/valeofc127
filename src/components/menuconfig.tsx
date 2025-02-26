@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "./ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
-import { useTheme } from "@/components/ThemeProvider";
+import { useTheme } from "./ThemeProvider";
 import { ArrowLeft } from "lucide-react";
 
 interface MenuItem {
@@ -102,91 +102,93 @@ const MenuConfig = ({ onClose }: MenuConfigProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-6">
-        <div className="flex items-center gap-3 mb-8">
-          <button
-            onClick={handleBack}
-            className="p-2 rounded-full hover:bg-accent/10"
-          >
-            <ArrowLeft className="h-6 w-6" />
-          </button>
-          <h1 className="text-2xl font-semibold text-foreground">Menu</h1>
+    <div className="min-h-screen w-full bg-background overflow-y-auto">
+      <div className="fixed top-0 left-0 right-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleBack}
+              className="p-2 rounded-full hover:bg-accent/10"
+            >
+              <ArrowLeft className="h-6 w-6" />
+            </button>
+            <h1 className="text-2xl font-semibold text-foreground">Menu</h1>
+          </div>
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4 pt-20 pb-6">
+        <div className="grid grid-cols-2 gap-4 mb-8">
+          {menuItems.map((item) => (
+            <button
+              key={item.path}
+              onClick={() => handleLinkClick(item.path)}
+              className="flex flex-col items-center p-6 rounded-xl hover:bg-accent/10 transition-colors duration-200 group"
+            >
+              <div className="w-20 h-20 flex items-center justify-center rounded-full bg-primary/10 mb-4 group-hover:bg-primary/20 transition-colors duration-200">
+                <img
+                  src={`/${item.icon}.png`}
+                  alt={item.label}
+                  className="w-10 h-10 object-contain"
+                />
+              </div>
+              <span className="text-base font-medium text-center text-foreground">{item.label}</span>
+            </button>
+          ))}
         </div>
 
-        <div className="max-w-3xl mx-auto">
-          <div className="grid grid-cols-2 sm:grid-cols-2 gap-4 mb-8">
-            {menuItems.map((item) => (
-              <button
-                key={item.path}
-                onClick={() => handleLinkClick(item.path)}
-                className="flex flex-col items-center p-6 rounded-xl hover:bg-accent/10 transition-colors duration-200 group"
-              >
-                <div className="w-20 h-20 flex items-center justify-center rounded-full bg-primary/10 mb-4 group-hover:bg-primary/20 transition-colors duration-200">
-                  <img
-                    src={`/${item.icon}.png`}
-                    alt={item.label}
-                    className="w-10 h-10 object-contain"
-                  />
-                </div>
-                <span className="text-base font-medium text-center text-foreground">{item.label}</span>
-              </button>
-            ))}
-          </div>
+        <div className="border-t border-border pt-6 space-y-4">
+          <a
+            href={config?.navbar_social_facebook}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center p-4 hover:bg-accent/10 rounded-lg transition-colors duration-200"
+          >
+            <img src="/facebook.png" alt="Facebook" className="w-7 h-7 mr-4" />
+            <span className="text-base text-foreground">Facebook</span>
+          </a>
 
-          <div className="border-t border-border pt-6 space-y-4 max-w-md mx-auto">
+          {config?.navbar_social_instagram && (
             <a
-              href={config?.navbar_social_facebook}
+              href={config.navbar_social_instagram}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center p-4 hover:bg-accent/10 rounded-lg transition-colors duration-200"
             >
-              <img src="/facebook.png" alt="Facebook" className="w-7 h-7 mr-4" />
-              <span className="text-base text-foreground">Facebook</span>
+              <img src="/instagram.png" alt="Instagram" className="w-7 h-7 mr-4" />
+              <span className="text-base text-foreground">Instagram</span>
             </a>
+          )}
 
-            {config?.navbar_social_instagram && (
-              <a
-                href={config.navbar_social_instagram}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center p-4 hover:bg-accent/10 rounded-lg transition-colors duration-200"
-              >
-                <img src="/instagram.png" alt="Instagram" className="w-7 h-7 mr-4" />
-                <span className="text-base text-foreground">Instagram</span>
-              </a>
-            )}
+          <button
+            onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+            className="w-full flex items-center p-4 hover:bg-accent/10 rounded-lg transition-colors duration-200"
+          >
+            <img 
+              src="/modoescuro.png"
+              alt="Alterar tema" 
+              className="w-7 h-7 mr-4" 
+            />
+            <span className="text-base text-foreground">
+              {theme === "light" ? "Modo escuro" : "Modo claro"}
+            </span>
+          </button>
 
-            <button
-              onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-              className="w-full flex items-center p-4 hover:bg-accent/10 rounded-lg transition-colors duration-200"
-            >
-              <img 
-                src="/modoescuro.png"
-                alt="Alterar tema" 
-                className="w-7 h-7 mr-4" 
-              />
-              <span className="text-base text-foreground">
-                {theme === "light" ? "Modo escuro" : "Modo claro"}
-              </span>
-            </button>
+          <button
+            onClick={handleShare}
+            className="w-full flex items-center p-4 hover:bg-accent/10 rounded-lg transition-colors duration-200"
+          >
+            <img src="/compartilhar.png" alt="Compartilhar" className="w-7 h-7 mr-4" />
+            <span className="text-base text-foreground">Compartilhar</span>
+          </button>
 
-            <button
-              onClick={handleShare}
-              className="w-full flex items-center p-4 hover:bg-accent/10 rounded-lg transition-colors duration-200"
-            >
-              <img src="/compartilhar.png" alt="Compartilhar" className="w-7 h-7 mr-4" />
-              <span className="text-base text-foreground">Compartilhar</span>
-            </button>
-
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center p-4 hover:bg-destructive/10 hover:text-destructive rounded-lg transition-colors duration-200"
-            >
-              <img src="/sair.png" alt="Sair" className="w-7 h-7 mr-4" />
-              <span className="text-base">Sair</span>
-            </button>
-          </div>
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center p-4 hover:bg-destructive/10 hover:text-destructive rounded-lg transition-colors duration-200"
+          >
+            <img src="/sair.png" alt="Sair" className="w-7 h-7 mr-4" />
+            <span className="text-base">Sair</span>
+          </button>
         </div>
       </div>
     </div>

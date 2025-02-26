@@ -2,7 +2,11 @@
 import MenuConfig from "@/components/menuconfig";
 
 const Menu = () => {
-  return <MenuConfig />;
+  return (
+    <div className="min-h-screen w-full">
+      <MenuConfig />
+    </div>
+  );
 };
 
 export default Menu;
