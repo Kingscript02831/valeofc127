@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { supabase } from "../integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Search as SearchIcon } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
@@ -14,21 +14,24 @@ const Search = () => {
 
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
-    if (query.length > 0) {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, username, avatar_url, full_name")
-        .or(`username.ilike.%${query}%,full_name.ilike.%${query}%`)
-        .limit(5);
+    if (query.startsWith("@")) {
+      const searchTerm = query.substring(1);
+      if (searchTerm.length > 0) {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("id, username, avatar_url, full_name")
+          .ilike("username", `${searchTerm}%`)
+          .limit(5);
 
-      if (error) {
-        console.error("Erro na busca:", error);
-        return;
+        if (error) {
+          console.error("Erro na busca:", error);
+          return;
+        }
+
+        setSearchResults(data || []);
+      } else {
+        setSearchResults([]);
       }
-
-      setSearchResults(data || []);
-    } else {
-      setSearchResults([]);
     }
   };
 
