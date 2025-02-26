@@ -99,8 +99,9 @@ const BottomNav = () => {
                 className="flex items-center p-2 rounded-xl transition-all duration-300 hover:scale-105"
                 style={{
                   color: config?.bottom_nav_icon_color,
-                  background: `${config?.primary_color}15`,
+                  background: `${config?.bottom_nav_primary_color}15`,
                   opacity: session ? 1 : 0.5,
+                  backgroundColor: '#F1F0FB', // Adicionado para melhor visibilidade no modo claro
                 }}
               >
                 <Plus 
@@ -149,9 +150,9 @@ const BottomNav = () => {
           </button>
 
           <Link
-            to={session ? "/menu" : "/login"}
+            to={session ? "/perfil" : "/login"}
             className="flex items-center p-2 rounded-xl transition-all duration-300 hover:scale-105"
-            style={getItemStyle(location.pathname === "/menu" || location.pathname === "/login")}
+            style={getItemStyle(location.pathname === "/perfil" || location.pathname === "/login")}
           >
             <User className="h-6 w-6" strokeWidth={2} />
           </Link>
@@ -162,3 +163,4 @@ const BottomNav = () => {
 };
 
 export default BottomNav;
+
