@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,6 +13,7 @@ import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { getReactionIcon } from "@/utils/emojisPosts";
+import Tags from "@/components/Tags";
 
 interface Post {
   id: string;
@@ -238,7 +238,7 @@ const Posts: React.FC = () => {
 
                     {post.content && (
                       <p className="text-foreground text-[15px] leading-normal">
-                        {post.content}
+                        <Tags content={post.content} />
                       </p>
                     )}
                   </div>
