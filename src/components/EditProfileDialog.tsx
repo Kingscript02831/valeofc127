@@ -1,4 +1,3 @@
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "./ui/form";
 import { Input } from "./ui/input";
@@ -28,18 +27,16 @@ const formSchema = z.object({
   status: z.string().optional(),
   location_id: z.string().optional(),
   relationship_status: z.enum(["single", "dating", "widowed"]).nullable(),
-  instagram_url: z.union([
-    z.string()
-      .refine((val) => val.startsWith('https://'), {
-        message: "A URL deve começar com https://",
-      })
-      .refine((val) => val.includes('instagram.com'), {
-        message: "A URL deve ser do Instagram",
-      }),
-    z.literal(""),
-    z.null(),
-    z.undefined()
-  ])
+  instagram_url: z.string()
+    .refine((val) => !val || val.startsWith('https://'), {
+      message: "A URL deve começar com https://",
+    })
+    .refine((val) => !val || val.includes('instagram.com'), {
+      message: "A URL deve ser do Instagram",
+    })
+    .optional()
+    .or(z.literal(""))
+    .nullable()
 });
 
 interface EditProfileDialogProps {
