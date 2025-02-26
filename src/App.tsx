@@ -33,8 +33,6 @@ import NewsDetails from "./pages/NewsDetails";
 import Posts from "./pages/Posts";
 import PostForm from "./pages/PostForm";
 import PostDetails from "./pages/PostDetails";
-import Menu from "./pages/Menu";
-import Search from "./pages/Search";
 
 const queryClient = new QueryClient();
 
@@ -75,8 +73,6 @@ const App: React.FC = () => {
                   <Route path="/noticias/:id" element={<NewsDetails />} />
                   <Route path="/posts/:id" element={<PostDetails />} />
                   <Route path="/posts/new" element={<PostForm />} />
-                  <Route path="/menu" element={<Menu />} />
-                  <Route path="/search" element={<Search />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </AuthWrapper>
