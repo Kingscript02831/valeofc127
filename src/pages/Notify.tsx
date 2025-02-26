@@ -11,6 +11,8 @@ import { ptBR } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import Navbar from "@/components/Navbar";
+import SubNav from "@/components/SubNav";
 import BottomNav from "@/components/BottomNav";
 
 interface Notification {
@@ -227,31 +229,21 @@ const Notify = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background">
-        <div className="animate-pulse">
-          <div className="flex flex-col md:flex-row md:items-center justify-between p-4 md:p-6 mb-6 gap-4">
-            <div className="flex items-center gap-3">
-              <div className="h-6 w-6 bg-gray-200 rounded-full" />
-              <div className="h-6 w-32 bg-gray-200 rounded" />
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="h-6 w-32 bg-gray-200 rounded" />
-              <div className="h-8 w-40 bg-gray-200 rounded" />
-            </div>
-          </div>
-          <div className="space-y-2 px-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-24 bg-gray-200 rounded-lg" />
-            ))}
-          </div>
+      <>
+        <Navbar />
+        <SubNav />
+        <div className="flex items-center justify-center min-h-screen">
+          <p>Carregando...</p>
         </div>
-        <div className="fixed bottom-0 left-0 right-0 h-16 animate-pulse bg-gray-200" />
-      </div>
+        <BottomNav />
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
+      <Navbar />
+      <SubNav />
       <div className="max-w-3xl mx-auto p-4 md:p-6 mb-20">
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
           <div className="flex items-center gap-3">
@@ -392,7 +384,7 @@ const Notify = () => {
         </div>
       </div>
       <BottomNav />
-    </div>
+    </>
   );
 };
 
