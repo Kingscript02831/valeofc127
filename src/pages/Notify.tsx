@@ -11,8 +11,6 @@ import { ptBR } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import Navbar from "@/components/Navbar";
-import SubNav from "@/components/SubNav";
 import BottomNav from "@/components/BottomNav";
 
 interface Notification {
@@ -230,8 +228,6 @@ const Notify = () => {
   if (isLoading) {
     return (
       <>
-        <Navbar />
-        <SubNav />
         <div className="flex items-center justify-center min-h-screen">
           <p>Carregando...</p>
         </div>
@@ -242,8 +238,6 @@ const Notify = () => {
 
   return (
     <>
-      <Navbar />
-      <SubNav />
       <div className="max-w-3xl mx-auto p-4 md:p-6 mb-20">
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
           <div className="flex items-center gap-3">
