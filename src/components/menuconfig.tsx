@@ -112,7 +112,7 @@ const MenuConfig = ({ onClose }: MenuConfigProps) => {
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-3 mb-6">
+        <div className="grid grid-cols-2 gap-3">
           {menuItems.map((item) => (
             <button
               key={item.path}
@@ -159,7 +159,7 @@ const MenuConfig = ({ onClose }: MenuConfigProps) => {
             className="w-full flex items-center p-3 hover:bg-accent/10 rounded-lg transition-colors duration-200"
           >
             <img 
-              src={theme === "light" ? "/modoescuro.png" : "/sun.png"} 
+              src="/modoescuro.png"
               alt="Alterar tema" 
               className="w-5 h-5 mr-3" 
             />
