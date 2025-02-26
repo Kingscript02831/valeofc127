@@ -3,8 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "./ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
-import { useTheme } from "./ThemeProvider";
-import { ArrowLeft, Menu, X } from "lucide-react";
+import { useTheme } from "@/components/ThemeProvider";
+import { ArrowLeft } from "lucide-react";
 
 interface MenuItem {
   icon: string;
@@ -102,99 +102,91 @@ const MenuConfig = ({ onClose }: MenuConfigProps) => {
   };
 
   return (
-    <div className="fixed top-0 right-0 bottom-0 w-96 transform transition-transform duration-300 bg-background dark:bg-background shadow-lg border-l border-border">
-      <div className="p-6 h-full flex flex-col">
-        <div className="flex justify-between items-center mb-8">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleBack}
-              className="p-2 rounded-full hover:bg-accent/10"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </button>
-            <h1 className="text-2xl font-semibold text-foreground">Menu</h1>
-          </div>
-          {onClose && (
-            <button
-              onClick={onClose}
-              className="p-2 rounded-full hover:bg-accent/10"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          )}
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          {menuItems.map((item) => (
-            <button
-              key={item.path}
-              onClick={() => handleLinkClick(item.path)}
-              className="flex flex-col items-center p-4 rounded-xl hover:bg-accent/10 transition-colors duration-200 group"
-            >
-              <div className="w-16 h-16 flex items-center justify-center rounded-full bg-primary/10 mb-3 group-hover:bg-primary/20 transition-colors duration-200">
-                <img
-                  src={`/${item.icon}.png`}
-                  alt={item.label}
-                  className="w-8 h-8 object-contain"
-                />
-              </div>
-              <span className="text-sm font-medium text-center text-foreground">{item.label}</span>
-            </button>
-          ))}
-        </div>
-
-        <div className="mt-auto border-t border-border pt-6 space-y-3">
-          <a
-            href={config?.navbar_social_facebook}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center p-3 hover:bg-accent/10 rounded-lg transition-colors duration-200"
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-6">
+        <div className="flex items-center gap-3 mb-8">
+          <button
+            onClick={handleBack}
+            className="p-2 rounded-full hover:bg-accent/10"
           >
-            <img src="/facebook.png" alt="Facebook" className="w-6 h-6 mr-3" />
-            <span className="text-sm text-foreground">Facebook</span>
-          </a>
+            <ArrowLeft className="h-6 w-6" />
+          </button>
+          <h1 className="text-2xl font-semibold text-foreground">Menu</h1>
+        </div>
 
-          {config?.navbar_social_instagram && (
+        <div className="max-w-3xl mx-auto">
+          <div className="grid grid-cols-2 sm:grid-cols-2 gap-4 mb-8">
+            {menuItems.map((item) => (
+              <button
+                key={item.path}
+                onClick={() => handleLinkClick(item.path)}
+                className="flex flex-col items-center p-6 rounded-xl hover:bg-accent/10 transition-colors duration-200 group"
+              >
+                <div className="w-20 h-20 flex items-center justify-center rounded-full bg-primary/10 mb-4 group-hover:bg-primary/20 transition-colors duration-200">
+                  <img
+                    src={`/${item.icon}.png`}
+                    alt={item.label}
+                    className="w-10 h-10 object-contain"
+                  />
+                </div>
+                <span className="text-base font-medium text-center text-foreground">{item.label}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="border-t border-border pt-6 space-y-4 max-w-md mx-auto">
             <a
-              href={config.navbar_social_instagram}
+              href={config?.navbar_social_facebook}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center p-3 hover:bg-accent/10 rounded-lg transition-colors duration-200"
+              className="flex items-center p-4 hover:bg-accent/10 rounded-lg transition-colors duration-200"
             >
-              <img src="/instagram.png" alt="Instagram" className="w-6 h-6 mr-3" />
-              <span className="text-sm text-foreground">Instagram</span>
+              <img src="/facebook.png" alt="Facebook" className="w-7 h-7 mr-4" />
+              <span className="text-base text-foreground">Facebook</span>
             </a>
-          )}
 
-          <button
-            onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-            className="w-full flex items-center p-3 hover:bg-accent/10 rounded-lg transition-colors duration-200"
-          >
-            <img 
-              src="/modoescuro.png"
-              alt="Alterar tema" 
-              className="w-6 h-6 mr-3" 
-            />
-            <span className="text-sm text-foreground">
-              {theme === "light" ? "Modo escuro" : "Modo claro"}
-            </span>
-          </button>
+            {config?.navbar_social_instagram && (
+              <a
+                href={config.navbar_social_instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center p-4 hover:bg-accent/10 rounded-lg transition-colors duration-200"
+              >
+                <img src="/instagram.png" alt="Instagram" className="w-7 h-7 mr-4" />
+                <span className="text-base text-foreground">Instagram</span>
+              </a>
+            )}
 
-          <button
-            onClick={handleShare}
-            className="w-full flex items-center p-3 hover:bg-accent/10 rounded-lg transition-colors duration-200"
-          >
-            <img src="/compartilhar.png" alt="Compartilhar" className="w-6 h-6 mr-3" />
-            <span className="text-sm text-foreground">Compartilhar</span>
-          </button>
+            <button
+              onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+              className="w-full flex items-center p-4 hover:bg-accent/10 rounded-lg transition-colors duration-200"
+            >
+              <img 
+                src="/modoescuro.png"
+                alt="Alterar tema" 
+                className="w-7 h-7 mr-4" 
+              />
+              <span className="text-base text-foreground">
+                {theme === "light" ? "Modo escuro" : "Modo claro"}
+              </span>
+            </button>
 
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center p-3 hover:bg-destructive/10 hover:text-destructive rounded-lg transition-colors duration-200"
-          >
-            <img src="/sair.png" alt="Sair" className="w-6 h-6 mr-3" />
-            <span className="text-sm">Sair</span>
-          </button>
+            <button
+              onClick={handleShare}
+              className="w-full flex items-center p-4 hover:bg-accent/10 rounded-lg transition-colors duration-200"
+            >
+              <img src="/compartilhar.png" alt="Compartilhar" className="w-7 h-7 mr-4" />
+              <span className="text-base text-foreground">Compartilhar</span>
+            </button>
+
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center p-4 hover:bg-destructive/10 hover:text-destructive rounded-lg transition-colors duration-200"
+            >
+              <img src="/sair.png" alt="Sair" className="w-7 h-7 mr-4" />
+              <span className="text-base">Sair</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
