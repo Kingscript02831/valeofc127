@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "./ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
-import { useTheme } from "@/components/ThemeProvider";
+import { useTheme } from "./ThemeProvider";
 import { ArrowLeft } from "lucide-react";
 
 interface MenuItem {
@@ -62,10 +62,9 @@ const MenuConfig = ({ onClose }: MenuConfigProps) => {
 
   const handleShare = async () => {
     try {
-      const baseUrl = window.location.origin;
       await navigator.share({
         title: "Vale Notícias",
-        url: `${baseUrl}/`,
+        url: window.location.href,
       });
     } catch (err) {
       console.error("Error sharing:", err);
