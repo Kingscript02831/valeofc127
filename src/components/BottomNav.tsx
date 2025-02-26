@@ -1,8 +1,8 @@
 
 import { Home, Bell, User, Plus, Search } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useSiteConfig } from "../hooks/useSiteConfig";
-import { supabase } from "../integrations/supabase/client";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
@@ -114,19 +114,17 @@ const BottomNav = () => {
             </DropdownMenuTrigger>
             <DropdownMenuContent
               side="top"
-              className="mb-2 bg-background border border-border"
-              style={{
-                borderColor: `${config?.bottom_nav_primary_color}40`,
-              }}
+              align="center"
+              className="mb-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 shadow-lg"
             >
               <DropdownMenuItem
-                className="cursor-pointer"
+                className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
                 onClick={(e) => handleNavigation("/products/new", e)}
               >
                 Adicionar Produto
               </DropdownMenuItem>
               <DropdownMenuItem
-                className="cursor-pointer"
+                className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
                 onClick={(e) => handleNavigation("/posts/new", e)}
               >
                 Criar Post
@@ -161,4 +159,3 @@ const BottomNav = () => {
 };
 
 export default BottomNav;
-
