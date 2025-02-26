@@ -18,8 +18,9 @@ export default function UserProfile() {
   const { username } = useParams();
   const navigate = useNavigate();
   const { theme } = useTheme();
+  const [isLoading, setIsLoading] = useState(true);
 
-  const { data: profile, isLoading } = useQuery({
+  const { data: profile } = useQuery({
     queryKey: ["userProfile", username],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -69,6 +70,36 @@ export default function UserProfile() {
         .from("products")
         .select("*")
         .eq("user_id", profile.id);
+
+      return data || [];
+    },
+    enabled: !!profile?.id,
+  });
+
+  const { data: userPosts, isLoading: isLoadingPosts } = useQuery({
+    queryKey: ["userPosts", profile?.id],
+    queryFn: async () => {
+      if (!profile?.id) return [];
+
+      const { data } = await supabase
+        .from("posts")
+        .select(`
+          *,
+          user:user_id (
+            username,
+            full_name,
+            avatar_url
+          ),
+          post_likes (
+            reaction_type,
+            user_id
+          ),
+          post_comments (
+            id
+          )
+        `)
+        .eq("user_id", profile.id)
+        .order("created_at", { ascending: false });
 
       return data || [];
     },
@@ -229,7 +260,11 @@ export default function UserProfile() {
               </div>
 
               <div className="mt-6">
-                <ProfileTabs userProducts={userProducts} />
+                <ProfileTabs 
+                  userProducts={userProducts} 
+                  userPosts={userPosts}
+                  isLoading={isLoadingPosts}
+                />
               </div>
             </div>
           </div>
