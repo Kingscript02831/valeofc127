@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ChatHeader } from "@/components/chat/ChatHeader";
@@ -168,12 +169,45 @@ const Chat = () => {
     try {
       const chatRoomId = [currentUserId, recipientId].sort().join('_');
       
+      // Verificar se o chat existe
+      const { data: chatData, error: chatError } = await supabase
+        .from('chats')
+        .select('id')
+        .eq('id', chatRoomId)
+        .single();
+        
+      // Se o chat não existir, criá-lo
+      if (chatError) {
+        // Criar o chat
+        const { data: newChat, error: createChatError } = await supabase
+          .from('chats')
+          .insert({ id: chatRoomId })
+          .select()
+          .single();
+          
+        if (createChatError) {
+          throw new Error("Erro ao criar chat: " + createChatError.message);
+        }
+        
+        // Adicionar participantes
+        const { error: participantsError } = await supabase
+          .from('chat_participants')
+          .insert([
+            { chat_id: chatRoomId, user_id: currentUserId },
+            { chat_id: chatRoomId, user_id: recipientId }
+          ]);
+          
+        if (participantsError) {
+          throw new Error("Erro ao adicionar participantes: " + participantsError.message);
+        }
+      }
+      
+      // Inserir a mensagem
       const { data: newMessageData, error: messageError } = await supabase
         .from('messages')
         .insert({
           chat_id: chatRoomId,
           sender_id: currentUserId,
-          recipient_id: recipientId,
           content: text,
           created_at: new Date().toISOString(),
           read: false
@@ -181,7 +215,9 @@ const Chat = () => {
         .select()
         .single();
       
-      if (messageError) throw messageError;
+      if (messageError) {
+        throw new Error("Erro ao enviar mensagem: " + messageError.message);
+      }
       
       const newMessage: MessageType = {
         id: newMessageData?.id || uuidv4(),
@@ -191,31 +227,6 @@ const Chat = () => {
       };
       
       setMessages((prev) => [...prev, newMessage]);
-      
-      if (Math.random() > 0.5) {
-        setTimeout(() => {
-          if (recipientId) {
-            const respostas = [
-              "Que legal! 😊",
-              "Entendi! Vou pensar sobre isso 🤔",
-              "Nossa, que interessante! Conte-me mais...",
-              "Que bom saber! 👍",
-              "Legal! E o que mais?",
-              "Isso é muito interessante! 🌟"
-            ];
-            
-            const resposta = respostas[Math.floor(Math.random() * respostas.length)];
-            
-            const responseMessage: MessageType = {
-              id: uuidv4(),
-              text: resposta,
-              sender: recipientId,
-              timestamp: new Date(),
-            };
-            setMessages((prev) => [...prev, responseMessage]);
-          }
-        }, 1000 + Math.random() * 2000);
-      }
     } catch (error) {
       console.error("Erro ao enviar mensagem:", error);
       toast.error("Erro ao enviar mensagem");
