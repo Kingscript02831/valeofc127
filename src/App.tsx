@@ -34,6 +34,8 @@ import PostForm from "./pages/PostForm";
 import PostDetails from "./pages/PostDetails";
 import Menu from "./pages/Menu";
 import Search from "./pages/Search";
+import Chathome from './pages/Chathome';
+import Chat from './pages/Chat';
 
 const queryClient = new QueryClient();
 
@@ -69,6 +71,8 @@ const App: React.FC = () => {
                     <Route path="noticias" element={<AdminNews />} />
                     <Route path="categorias" element={<AdminCategories />} />
                     <Route path="sistema" element={<AdminSistema />} />
+                    <Route path="/chathome" element={<chathome />} />
+                    <Route path="/chat/:roomId" element={<chat />} />
                   </Route> 
                   <Route path="/user-products" element={<UserProducts />} />
                   <Route path="/noticias/:id" element={<NewsDetails />} />
