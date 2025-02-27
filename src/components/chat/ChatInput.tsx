@@ -1,16 +1,18 @@
 
 import { useState } from "react";
+import { Spinner } from "@/components/ui/spinner";
 
 interface ChatInputProps {
   onSend: (message: string) => void;
+  isLoading?: boolean;
 }
 
-export const ChatInput = ({ onSend }: ChatInputProps) => {
+export const ChatInput = ({ onSend, isLoading = false }: ChatInputProps) => {
   const [message, setMessage] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (message.trim()) {
+    if (message.trim() && !isLoading) {
       onSend(message);
       setMessage("");
     }
@@ -33,17 +35,22 @@ export const ChatInput = ({ onSend }: ChatInputProps) => {
         type="text"
         value={message}
         onChange={(e) => setMessage(e.target.value)}
-        placeholder="Type a message"
+        placeholder="Digite uma mensagem"
         className="flex-1 bg-white rounded-full px-4 py-2 focus:outline-none"
+        disabled={isLoading}
       />
       <button 
         type="submit"
-        className="ml-2 bg-[#075E54] text-white p-2 rounded-full"
-        disabled={!message.trim()}
+        className={`ml-2 bg-[#075E54] text-white p-2 rounded-full flex items-center justify-center ${isLoading || !message.trim() ? 'opacity-50' : ''}`}
+        disabled={isLoading || !message.trim()}
       >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-        </svg>
+        {isLoading ? (
+          <Spinner className="h-5 w-5 text-white" />
+        ) : (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+          </svg>
+        )}
       </button>
     </form>
   );

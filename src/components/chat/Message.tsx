@@ -1,5 +1,7 @@
 
 import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 export type MessageType = {
   id: string;
@@ -31,10 +33,7 @@ export const Message = ({ message, isCurrentUser }: MessageProps) => {
       >
         <p className="text-sm break-words">{message.text}</p>
         <p className="text-right text-xs text-gray-500 mt-1">
-          {message.timestamp.toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
+          {format(message.timestamp, "HH:mm")}
         </p>
       </div>
     </div>

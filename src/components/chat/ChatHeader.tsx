@@ -1,19 +1,43 @@
 
+import { useNavigate } from "react-router-dom";
+
 interface ChatHeaderProps {
   recipient: string;
   status?: string;
+  avatar?: string;
 }
 
-export const ChatHeader = ({ recipient, status = "online" }: ChatHeaderProps) => {
+export const ChatHeader = ({ recipient, status = "online", avatar }: ChatHeaderProps) => {
+  const navigate = useNavigate();
+  
   return (
     <div className="bg-[#075E54] text-white p-3 flex items-center shadow-md">
-      <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-bold mr-3">
-        {recipient.charAt(0).toUpperCase()}
+      <button 
+        onClick={() => navigate("/chat-home")} 
+        className="mr-2 text-white"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+      
+      <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-bold mr-3 overflow-hidden">
+        {avatar ? (
+          <img 
+            src={avatar} 
+            alt={recipient}
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          recipient.charAt(0).toUpperCase()
+        )}
       </div>
+      
       <div className="flex-1">
         <h2 className="font-medium">{recipient}</h2>
         <p className="text-xs opacity-75">{status}</p>
       </div>
+      
       <div className="flex space-x-4">
         <button className="text-white">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
