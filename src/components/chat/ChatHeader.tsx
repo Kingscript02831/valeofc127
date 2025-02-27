@@ -1,51 +1,31 @@
 
-import { ArrowLeft, MoreVertical } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-
 interface ChatHeaderProps {
   recipient: string;
-  avatar?: string;
-  isOnline?: boolean;
+  status?: string;
 }
 
-export const ChatHeader = ({ recipient, avatar, isOnline = false }: ChatHeaderProps) => {
-  const navigate = useNavigate();
-
+export const ChatHeader = ({ recipient, status = "online" }: ChatHeaderProps) => {
   return (
-    <div className="bg-primary text-white p-4 flex items-center gap-2 sticky top-0 z-10">
-      <button onClick={() => navigate("/chat")} className="p-1">
-        <ArrowLeft className="h-6 w-6" />
-      </button>
-      
-      <div className="relative">
-        <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200">
-          {avatar ? (
-            <img 
-              src={avatar} 
-              alt={recipient} 
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gray-300 text-gray-600">
-              {recipient[0].toUpperCase()}
-            </div>
-          )}
-        </div>
-        {isOnline && (
-          <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-primary" />
-        )}
+    <div className="bg-[#075E54] text-white p-3 flex items-center shadow-md">
+      <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-bold mr-3">
+        {recipient.charAt(0).toUpperCase()}
       </div>
-      
-      <div className="flex-1 ml-1">
-        <h1 className="font-semibold">{recipient}</h1>
-        <p className="text-xs opacity-80">
-          {isOnline ? 'Online agora' : 'Offline'}
-        </p>
+      <div className="flex-1">
+        <h2 className="font-medium">{recipient}</h2>
+        <p className="text-xs opacity-75">{status}</p>
       </div>
-      
-      <button className="p-2">
-        <MoreVertical className="h-5 w-5" />
-      </button>
+      <div className="flex space-x-4">
+        <button className="text-white">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+          </svg>
+        </button>
+        <button className="text-white">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+          </svg>
+        </button>
+      </div>
     </div>
   );
 };
