@@ -74,38 +74,72 @@ export default function UserProfile() {
 
   const createChatMutation = useMutation({
     mutationFn: async () => {
-      if (!profile?.id || !currentUser?.id) throw new Error("No profile ID or user ID");
-      setIsLoadingChat(true);
+      try {
+        if (!profile?.id || !currentUser?.id) {
+          throw new Error("No profile ID or user ID");
+        }
+        setIsLoadingChat(true);
 
-      // Criar novo chat
-      const { data: newChat, error: chatError } = await supabase
-        .from('chats')
-        .insert({})
-        .select()
-        .single();
+        // Primeiro passo: Verificar se já existe um chat entre os usuários
+        const { data: existingChats } = await supabase
+          .from('chat_participants')
+          .select(`
+            chat_id,
+            chats!inner(id)
+          `)
+          .eq('user_id', currentUser.id)
+          .in('chat_id', (
+            supabase
+              .from('chat_participants')
+              .select('chat_id')
+              .eq('user_id', profile.id)
+          ));
 
-      if (chatError) {
-        console.error("Error creating chat:", chatError);
-        throw chatError;
+        // Se existir, retorna o ID do chat existente
+        if (existingChats && existingChats.length > 0) {
+          return existingChats[0].chat_id;
+        }
+
+        // Segundo passo: Criar um novo chat
+        const { data: newChat, error: chatError } = await supabase
+          .from('chats')
+          .insert({})
+          .select()
+          .single();
+
+        if (chatError) {
+          console.error("Error creating chat:", chatError);
+          throw chatError;
+        }
+
+        const timestamp = new Date().toISOString();
+
+        // Terceiro passo: Adicionar os participantes ao chat
+        const { error: participantsError } = await supabase
+          .from('chat_participants')
+          .insert([
+            { 
+              chat_id: newChat.id, 
+              user_id: currentUser.id,
+              last_read_at: timestamp
+            },
+            { 
+              chat_id: newChat.id, 
+              user_id: profile.id,
+              last_read_at: timestamp
+            }
+          ]);
+
+        if (participantsError) {
+          console.error("Error adding participants:", participantsError);
+          throw participantsError;
+        }
+
+        return newChat.id;
+      } catch (error) {
+        console.error("Error in create chat mutation:", error);
+        throw error;
       }
-
-      // Define a current timestamp for last_read_at
-      const currentTimestamp = new Date().toISOString();
-
-      // Adicionar participantes
-      const { error: participantsError } = await supabase
-        .from('chat_participants')
-        .insert([
-          { chat_id: newChat.id, user_id: currentUser.id, last_read_at: currentTimestamp },
-          { chat_id: newChat.id, user_id: profile.id, last_read_at: currentTimestamp }
-        ]);
-
-      if (participantsError) {
-        console.error("Error adding participants:", participantsError);
-        throw participantsError;
-      }
-
-      return newChat.id;
     },
     onSuccess: (chatId) => {
       setIsLoadingChat(false);
