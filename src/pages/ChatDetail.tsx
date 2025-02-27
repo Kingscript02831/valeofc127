@@ -24,6 +24,7 @@ const ChatDetail: React.FC = () => {
   useEffect(() => {
     const checkSession = async () => {
       const { data } = await supabase.auth.getSession();
+      console.log("Current session user:", data.session?.user.id);
       setUserId(data.session?.user.id || null);
     };
     
@@ -34,6 +35,8 @@ const ChatDetail: React.FC = () => {
   useEffect(() => {
     if (!chatId) return;
 
+    console.log("Setting up subscription for chat:", chatId);
+    
     const subscription = supabase
       .channel(`chat:${chatId}`)
       .on('postgres_changes', { 
@@ -41,12 +44,14 @@ const ChatDetail: React.FC = () => {
         schema: 'public', 
         table: 'messages',
         filter: `chat_id=eq.${chatId}`
-      }, () => {
+      }, (payload) => {
+        console.log("New message received:", payload);
         queryClient.invalidateQueries({ queryKey: ["chat", chatId] });
       })
       .subscribe();
 
     return () => {
+      console.log("Unsubscribing from chat:", chatId);
       subscription.unsubscribe();
     };
   }, [chatId, queryClient]);
@@ -56,20 +61,30 @@ const ChatDetail: React.FC = () => {
     const markMessagesAsRead = async () => {
       if (!chatId || !userId) return;
 
+      console.log("Marking messages as read for chat:", chatId, "user:", userId);
+
       // Mark messages as read
-      await supabase
+      const { error: readError } = await supabase
         .from('messages')
         .update({ read: true })
         .eq('chat_id', chatId)
         .neq('sender_id', userId)
         .eq('read', false);
+        
+      if (readError) {
+        console.error("Error marking messages as read:", readError);
+      }
 
       // Update last_read_at for the participant
-      await supabase
+      const { error: updateError } = await supabase
         .from('chat_participants')
         .update({ last_read_at: new Date().toISOString() })
         .eq('chat_id', chatId)
         .eq('user_id', userId);
+        
+      if (updateError) {
+        console.error("Error updating last_read_at:", updateError);
+      }
 
       // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: ["chats"] });
@@ -82,6 +97,8 @@ const ChatDetail: React.FC = () => {
     queryKey: ["chat", chatId],
     queryFn: async () => {
       if (!chatId) throw new Error("Chat ID is required");
+      
+      console.log("Fetching chat data for:", chatId);
       
       // Fetch chat details and participants
       const { data: chatData, error: chatError } = await supabase
@@ -105,7 +122,12 @@ const ChatDetail: React.FC = () => {
         .eq('id', chatId)
         .single();
 
-      if (chatError) throw chatError;
+      if (chatError) {
+        console.error("Error fetching chat:", chatError);
+        throw chatError;
+      }
+
+      console.log("Chat data fetched:", chatData);
 
       // Fetch messages
       const { data: messagesData, error: messagesError } = await supabase
@@ -114,7 +136,12 @@ const ChatDetail: React.FC = () => {
         .eq('chat_id', chatId)
         .order('created_at', { ascending: true });
 
-      if (messagesError) throw messagesError;
+      if (messagesError) {
+        console.error("Error fetching messages:", messagesError);
+        throw messagesError;
+      }
+
+      console.log("Messages fetched:", messagesData?.length || 0, "messages");
 
       return {
         ...chatData,
@@ -135,6 +162,8 @@ const ChatDetail: React.FC = () => {
       if (!chatId || !userId || !content.trim()) 
         throw new Error("Missing required data");
 
+      console.log("Sending message:", content, "to chat:", chatId, "from user:", userId);
+
       const newMessage = {
         chat_id: chatId,
         sender_id: userId,
@@ -148,13 +177,22 @@ const ChatDetail: React.FC = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error sending message:", error);
+        throw error;
+      }
+
+      console.log("Message sent successfully:", data);
 
       // Update chat's updated_at timestamp
-      await supabase
+      const { error: updateError } = await supabase
         .from('chats')
         .update({ updated_at: new Date().toISOString() })
         .eq('id', chatId);
+        
+      if (updateError) {
+        console.error("Error updating chat timestamp:", updateError);
+      }
 
       return data;
     },

@@ -17,6 +17,7 @@ const Chats: React.FC = () => {
   useEffect(() => {
     const checkSession = async () => {
       const { data } = await supabase.auth.getSession();
+      console.log("Current session user:", data.session?.user.id);
       setUserId(data.session?.user.id || null);
     };
     
@@ -27,6 +28,8 @@ const Chats: React.FC = () => {
     queryKey: ["chats", userId],
     queryFn: async () => {
       if (!userId) return [];
+      
+      console.log("Fetching chats for user:", userId);
       
       const { data, error } = await supabase
         .from('chats')
@@ -60,6 +63,8 @@ const Chats: React.FC = () => {
         throw error;
       }
 
+      console.log("Chats fetched:", data?.length || 0, "chats");
+      
       return data.map((chat: any) => ({
         ...chat,
         participants: chat.chat_participants,
@@ -88,6 +93,7 @@ const Chats: React.FC = () => {
   };
 
   const handleChatClick = (chatId: string) => {
+    console.log("Navigating to chat:", chatId);
     navigate(`/chat/${chatId}`);
   };
 

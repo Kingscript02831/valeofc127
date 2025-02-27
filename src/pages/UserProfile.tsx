@@ -2,15 +2,15 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { useTheme } from "@/components/ThemeProvider";
-import ProfileTabs from "@/components/ProfileTabs";
+import { supabase } from "../integrations/supabase/client";
+import { Button } from "../components/ui/button";
+import { useTheme } from "../components/ThemeProvider";
+import ProfileTabs from "../components/ProfileTabs";
 import { ArrowLeft, MapPin, Heart, Calendar, Globe, Instagram, MessageCircle } from "lucide-react";
-import BottomNav from "@/components/BottomNav";
-import type { Profile } from "@/types/profile";
+import BottomNav from "../components/BottomNav";
+import type { Profile } from "../types/profile";
 import { format } from "date-fns";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "../hooks/use-toast";
 
 const defaultAvatarImage = "/placeholder.svg";
 const defaultCoverImage = "/placeholder.svg";
@@ -79,12 +79,37 @@ export default function UserProfile() {
           throw new Error("No profile ID or user ID");
         }
         setIsLoadingChat(true);
+        console.log("Creating chat between", currentUser.id, "and", profile.id);
 
+        // Verificar se já existe um chat entre os usuários
+        const { data: existingChats, error: checkError } = await supabase
+          .from('chat_participants')
+          .select(`
+            chat_id
+          `)
+          .eq('user_id', currentUser.id)
+          .in('chat_id', (
+            supabase
+              .from('chat_participants')
+              .select('chat_id')
+              .eq('user_id', profile.id)
+          ));
+
+        console.log("Existing chats check:", existingChats, checkError);
+
+        if (existingChats && existingChats.length > 0) {
+          console.log("Found existing chat:", existingChats[0].chat_id);
+          return existingChats[0].chat_id;
+        }
+
+        // Criar novo chat
         const { data: newChat, error: chatError } = await supabase
           .from('chats')
-          .insert([{}])
+          .insert({})
           .select()
           .single();
+
+        console.log("New chat created:", newChat, chatError);
 
         if (chatError || !newChat) {
           console.error("Error creating chat:", chatError);
@@ -93,22 +118,26 @@ export default function UserProfile() {
 
         const timestamp = new Date().toISOString();
 
+        // Adicionar participantes
         const { error: participantsError } = await supabase
           .from('chat_participants')
           .insert([
             { 
-              chat_id: newChat.id, 
               user_id: currentUser.id,
+              chat_id: newChat.id,
               last_read_at: timestamp
             },
             { 
-              chat_id: newChat.id, 
               user_id: profile.id,
+              chat_id: newChat.id, 
               last_read_at: timestamp
             }
           ]);
 
+        console.log("Participants added, error:", participantsError);
+
         if (participantsError) {
+          // Limpar chat em caso de erro
           await supabase
             .from('chats')
             .delete()
@@ -116,6 +145,23 @@ export default function UserProfile() {
             
           console.error("Error adding participants:", participantsError);
           throw new Error("Erro ao adicionar participantes");
+        }
+
+        // Adicionar mensagem inicial vazia para criar o chat
+        const { error: messageError } = await supabase
+          .from('messages')
+          .insert({
+            chat_id: newChat.id,
+            sender_id: currentUser.id,
+            content: "Olá, tudo bem?",
+            read: false
+          });
+
+        console.log("Initial message added, error:", messageError);
+
+        if (messageError) {
+          console.error("Error adding initial message:", messageError);
+          // Não lançamos erro aqui, apenas logamos
         }
 
         return newChat.id;
@@ -126,6 +172,7 @@ export default function UserProfile() {
     },
     onSuccess: (chatId) => {
       setIsLoadingChat(false);
+      console.log("Chat created successfully, navigating to:", chatId);
       navigate(`/chat/${chatId}`);
     },
     onError: (error) => {
@@ -139,7 +186,7 @@ export default function UserProfile() {
     },
   });
 
-  const handleStartChat = async () => {
+  const handleStartChat = () => {
     if (!currentUser) {
       toast({
         title: "Atenção",
@@ -158,22 +205,8 @@ export default function UserProfile() {
       return;
     }
 
-    const { data: existingChats } = await supabase
-      .from('chat_participants')
-      .select(`
-        chat_id,
-        chats!inner(id)
-      `)
-      .eq('user_id', currentUser.id)
-      .in('chat_id', (
-        supabase
-          .from('chat_participants')
-          .select('chat_id')
-          .eq('user_id', profile.id)
-      ));
-
-    if (existingChats && existingChats.length > 0) {
-      navigate(`/chat/${existingChats[0].chat_id}`);
+    if (existingChat) {
+      navigate(`/chat/${existingChat}`);
     } else {
       createChatMutation.mutate();
     }
