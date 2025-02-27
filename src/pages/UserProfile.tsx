@@ -2,15 +2,15 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { supabase } from "../integrations/supabase/client";
-import { Button } from "../components/ui/button";
-import { useTheme } from "../components/ThemeProvider";
-import ProfileTabs from "../components/ProfileTabs";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { useTheme } from "@/components/ThemeProvider";
+import ProfileTabs from "@/components/ProfileTabs";
 import { ArrowLeft, MapPin, Heart, Calendar, Globe, Instagram, MessageCircle } from "lucide-react";
-import BottomNav from "../components/BottomNav";
-import type { Profile } from "../types/profile";
+import BottomNav from "@/components/BottomNav";
+import type { Profile } from "@/types/profile";
 import { format } from "date-fns";
-import { useToast } from "../hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 const defaultAvatarImage = "/placeholder.svg";
 const defaultCoverImage = "/placeholder.svg";
