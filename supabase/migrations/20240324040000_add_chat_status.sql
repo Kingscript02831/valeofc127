@@ -8,6 +8,10 @@ ADD COLUMN IF NOT EXISTS initiator_id UUID REFERENCES auth.users(id);
 ALTER TABLE notifications
 ADD COLUMN IF NOT EXISTS metadata JSONB DEFAULT NULL;
 
+-- Adicionar coluna deleted na tabela messages caso não exista
+ALTER TABLE messages
+ADD COLUMN IF NOT EXISTS deleted BOOLEAN DEFAULT false;
+
 -- Atualizar chats existentes para status ativo
 UPDATE chats SET status = 'active' WHERE status IS NULL;
 
