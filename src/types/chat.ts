@@ -5,7 +5,7 @@ export interface Message {
   sender_id: string;
   content: string;
   created_at: string;
-  read?: boolean; // Campo opcional
+  read?: boolean;
 }
 
 export interface Chat {
