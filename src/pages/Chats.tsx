@@ -3,7 +3,6 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { Chat, ChatParticipant } from "../types/chat";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { Card, CardContent } from "../components/ui/card";
 import { format, isToday, isYesterday } from "date-fns";
@@ -72,7 +71,7 @@ const Chats: React.FC = () => {
     enabled: !!userId,
   });
 
-  const getOtherParticipant = (chat: any): ChatParticipant | undefined => {
+  const getOtherParticipant = (chat: any) => {
     return chat.participants.find((p: any) => p.user_id !== userId);
   };
 

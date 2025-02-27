@@ -18,15 +18,14 @@ export interface Chat {
 
 export interface ChatParticipant {
   id: string;
-  chat_id: string;
+  chat_id?: string;
   user_id: string;
-  created_at: string;
+  created_at?: string;
   last_read_at: string;
-  profile?: {
+  profiles: {
+    id?: string;
     username?: string;
     avatar_url?: string;
-    name?: string;
-    online_status?: boolean;
-    last_seen?: string;
+    full_name?: string;
   };
 }

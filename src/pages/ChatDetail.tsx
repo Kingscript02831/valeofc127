@@ -78,11 +78,6 @@ const ChatDetail: React.FC = () => {
     markMessagesAsRead();
   }, [chatId, userId, queryClient]);
 
-  // Auto scroll to bottom when new messages arrive
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
   const { data: chat, isLoading } = useQuery({
     queryKey: ["chat", chatId],
     queryFn: async () => {
@@ -129,6 +124,11 @@ const ChatDetail: React.FC = () => {
     },
     enabled: !!chatId,
   });
+
+  // Auto scroll to bottom when new messages arrive
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chat?.messages]);
 
   const sendMessageMutation = useMutation({
     mutationFn: async (content: string) => {
@@ -180,7 +180,7 @@ const ChatDetail: React.FC = () => {
     }
   };
 
-  const getOtherParticipant = (): ChatParticipant | undefined => {
+  const getOtherParticipant = () => {
     if (!chat || !userId) return undefined;
     return chat.participants.find(p => p.user_id !== userId);
   };
