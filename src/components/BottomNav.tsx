@@ -1,87 +1,161 @@
-
-import { useNavigate, useLocation } from "react-router-dom";
+import { Home, Bell, User, Plus, Search } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
 import {
-  Home,
-  CalendarDays,
-  ShoppingBag,
-  Map,
-  User,
-  MessageSquare
-} from "lucide-react";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 
-export default function BottomNav() {
-  const navigate = useNavigate();
+const BottomNav = () => {
   const location = useLocation();
-  const path = location.pathname;
+  const navigate = useNavigate();
+  const { data: config } = useSiteConfig();
+  const [session, setSession] = useState<any>(null);
 
-  const isActive = (route: string) => {
-    if (route === "/" && path === "/") return true;
-    return route !== "/" && path.startsWith(route);
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const { data: unreadCount } = useQuery({
+    queryKey: ["unreadNotifications"],
+    queryFn: async () => {
+      if (!session) return 0;
+      
+      const { count, error } = await supabase
+        .from("notifications")
+        .select("*", { count: 'exact', head: true })
+        .eq("read", false);
+
+      if (error) throw error;
+      return count || 0;
+    },
+    enabled: !!session,
+    refetchInterval: 30000,
+  });
+
+  const handleNavigation = (path: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!session) {
+      toast.error("Você precisa fazer login para acessar esta área");
+      navigate("/login");
+      return;
+    }
+    navigate(path);
   };
 
+  const navStyle = {
+    background: config?.bottom_nav_primary_color || "#000000e6",
+    borderTop: `1px solid ${config?.bottom_nav_secondary_color || "rgba(255, 255, 255, 0.1)"}`,
+  };
+
+  const getItemStyle = (active: boolean) => ({
+    color: active 
+      ? config?.bottom_nav_icon_color || "#ffffff" 
+      : config?.bottom_nav_text_color || "#ffffff80",
+    background: active 
+      ? `${config?.bottom_nav_secondary_color}15` || "rgba(255, 255, 255, 0.1)" 
+      : "transparent",
+  });
+
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border h-16 z-50">
-      <div className="grid grid-cols-6 h-full">
-        <button
-          onClick={() => navigate("/")}
-          className={`flex flex-col items-center justify-center space-y-1 ${
-            isActive("/") ? "text-primary" : "text-foreground/60"
-          }`}
-        >
-          <Home className="h-5 w-5" />
-          <span className="text-xs">Home</span>
-        </button>
+    <nav 
+      className="fixed bottom-0 left-0 right-0 shadow-lg transition-all duration-300 md:hidden"
+      style={navStyle}
+    >
+      <div className="container mx-auto px-4">
+        <div className="flex justify-around items-center py-2">
+          <Link
+            to="/"
+            className="flex items-center p-2 rounded-xl"
+            style={getItemStyle(location.pathname === "/")}
+          >
+            <Home className="h-6 w-6" strokeWidth={2} />
+          </Link>
 
-        <button
-          onClick={() => navigate("/eventos")}
-          className={`flex flex-col items-center justify-center space-y-1 ${
-            isActive("/eventos") ? "text-primary" : "text-foreground/60"
-          }`}
-        >
-          <CalendarDays className="h-5 w-5" />
-          <span className="text-xs">Eventos</span>
-        </button>
+          <Link
+            to="/search"
+            className="flex items-center p-2 rounded-xl transition-all duration-300 hover:scale-105"
+            style={getItemStyle(location.pathname === "/search")}
+          >
+            <Search className="h-6 w-6" strokeWidth={2} />
+          </Link>
 
-        <button
-          onClick={() => navigate("/products")}
-          className={`flex flex-col items-center justify-center space-y-1 ${
-            isActive("/products") ? "text-primary" : "text-foreground/60"
-          }`}
-        >
-          <ShoppingBag className="h-5 w-5" />
-          <span className="text-xs">Produtos</span>
-        </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className="flex items-center p-2 rounded-xl transition-all duration-300 hover:scale-105"
+                style={{
+                  color: config?.bottom_nav_icon_color || "#ffffff",
+                  background: config?.bottom_nav_secondary_color || "rgba(255, 255, 255, 0.1)",
+                  opacity: session ? 1 : 0.5,
+                }}
+              >
+                <Plus 
+                  className="h-6 w-6" 
+                  strokeWidth={2.5}
+                />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              side="top"
+              align="center"
+              className="mb-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 shadow-lg"
+            >
+              <DropdownMenuItem
+                className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                onClick={(e) => handleNavigation("/products/new", e)}
+              >
+                Adicionar Produto
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+                onClick={(e) => handleNavigation("/posts/new", e)}
+              >
+                Criar Post
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
-        <button
-          onClick={() => navigate("/lugares")}
-          className={`flex flex-col items-center justify-center space-y-1 ${
-            isActive("/lugares") ? "text-primary" : "text-foreground/60"
-          }`}
-        >
-          <Map className="h-5 w-5" />
-          <span className="text-xs">Lugares</span>
-        </button>
+          <button
+            onClick={(e) => handleNavigation("/notify", e)}
+            className="flex items-center p-2 rounded-xl transition-all duration-300 hover:scale-105 relative"
+            style={getItemStyle(location.pathname === "/notify")}
+          >
+            <Bell className="h-6 w-6" strokeWidth={2} />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center animate-pulse">
+                {unreadCount}
+              </span>
+            )}
+          </button>
 
-        <button
-          onClick={() => navigate("/chat")}
-          className={`flex flex-col items-center justify-center space-y-1 ${
-            isActive("/chat") ? "text-primary" : "text-foreground/60"
-          }`}
-        >
-          <MessageSquare className="h-5 w-5" />
-          <span className="text-xs">Chat</span>
-        </button>
-
-        <button
-          onClick={() => navigate("/perfil")}
-          className={`flex flex-col items-center justify-center space-y-1 ${
-            isActive("/perfil") ? "text-primary" : "text-foreground/60"
-          }`}
-        >
-          <User className="h-5 w-5" />
-          <span className="text-xs">Perfil</span>
-        </button>
+          <Link
+            to={session ? "/perfil" : "/login"}
+            className="flex items-center p-2 rounded-xl transition-all duration-300 hover:scale-105"
+            style={getItemStyle(location.pathname === "/perfil" || location.pathname === "/login")}
+          >
+            <User className="h-6 w-6" strokeWidth={2} />
+          </Link>
+        </div>
       </div>
-    </div>
+    </nav>
   );
-}
+};
+
+export default BottomNav;
