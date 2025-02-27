@@ -66,11 +66,13 @@ const App: React.FC = () => {
                   <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/update-password" element={<UpdatePassword />} />
                   <Route path="/admin" element={<Admin />}>    
-                    <Route path="lugares" element={<AdminPlaces />} />
-                    <Route path="eventos" element={<AdminEvents />} />
-                    <Route path="noticias" element={<AdminNews />} />
-                    <Route path="categorias" element={<AdminCategories />} />
-                    <Route path="sistema" element={<AdminSistema />} />
+                  <Route path="lugares" element={<AdminPlaces />} />
+                  <Route path="eventos" element={<AdminEvents />} />
+                  <Route path="noticias" element={<AdminNews />} />
+                  <Route path="categorias" element={<AdminCategories />} />
+                  <Route path="sistema" element={<AdminSistema />} />
+                  <Route path="/chat-home" element={<ChatHome />} />
+                  <Route path="/chat" element={<Chat />} />
                   </Route> 
                   <Route path="/user-products" element={<UserProducts />} />
                   <Route path="/noticias/:id" element={<NewsDetails />} />
