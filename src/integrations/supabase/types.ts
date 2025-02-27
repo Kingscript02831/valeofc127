@@ -110,16 +110,22 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
+          initiator_id: string | null
+          status: string
           updated_at: string | null
         }
         Insert: {
           created_at?: string | null
           id?: string
+          initiator_id?: string | null
+          status?: string
           updated_at?: string | null
         }
         Update: {
           created_at?: string | null
           id?: string
+          initiator_id?: string | null
+          status?: string
           updated_at?: string | null
         }
         Relationships: []
@@ -473,6 +479,7 @@ export type Database = {
           created_at: string | null
           id: string
           message: string
+          metadata: Json | null
           publication_category: string | null
           publication_date: string | null
           publication_description: string | null
@@ -487,6 +494,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           message: string
+          metadata?: Json | null
           publication_category?: string | null
           publication_date?: string | null
           publication_description?: string | null
@@ -501,6 +509,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           message?: string
+          metadata?: Json | null
           publication_category?: string | null
           publication_date?: string | null
           publication_description?: string | null

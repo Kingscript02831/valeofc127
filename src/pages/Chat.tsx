@@ -6,15 +6,7 @@ import { ChatInput } from "@/components/chat/ChatInput";
 import { Message, MessageType } from "@/components/chat/Message";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { createOrGetChat } from "@/utils/supabase";
-
-function uuidv4() {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    const r = Math.random() * 16 | 0;
-    const v = c === 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16);
-  });
-}
+import { createOrGetChat, markMessagesAsRead, sendMessage, getUserProfile } from "@/utils/supabase";
 
 const Chat = () => {
   const { chatId } = useParams();
@@ -37,7 +29,7 @@ const Chat = () => {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
           console.log("Usuário não autenticado");
-          toast.error("Usuário não autenticado");
+          toast.error("Você precisa estar logado para acessar o chat");
           navigate("/login");
           return;
         }
@@ -53,36 +45,31 @@ const Chat = () => {
         }
 
         setRecipientId(chatId);
-        const { data: recipientProfile, error: recipientError } = await supabase
-          .from('profiles')
-          .select('username, avatar_url')
-          .eq('id', chatId)
-          .single();
-
-        if (recipientError || !recipientProfile) {
-          console.error("Erro ao buscar perfil do destinatário:", recipientError);
-          toast.error("Destinatário não encontrado");
-          navigate("/chat");
-          return;
-        }
-
-        setRecipient(recipientProfile.username || "Usuário");
-        setRecipientAvatar(recipientProfile.avatar_url || undefined);
         
-        // Simular status online
+        // Obter perfil do destinatário
+        try {
+          const profile = await getUserProfile(chatId);
+          setRecipient(profile.username || profile.full_name || "Usuário");
+          setRecipientAvatar(profile.avatar_url || undefined);
+        } catch (error) {
+          console.error("Erro ao buscar perfil do destinatário:", error);
+          toast.error("Não foi possível carregar informações do destinatário");
+        }
+        
+        // Verificar status online (simulado)
         const isOnline = Math.random() > 0.5;
         setOnlineStatus(isOnline ? "online" : "offline");
 
         try {
-          // Usar a função utilitária para criar ou obter chat
+          // Criar ou obter o chat
           const roomId = await createOrGetChat(session.user.id, chatId);
           console.log("ID da sala de chat:", roomId);
           setChatRoomId(roomId);
           
           // Buscar mensagens
-          const { data: messages, error: messagesError } = await supabase
+          const { data: messagesData, error: messagesError } = await supabase
             .from('messages')
-            .select('id, content, sender_id, created_at, read')
+            .select('id, content, sender_id, created_at, read, deleted')
             .eq('chat_id', roomId)
             .order('created_at', { ascending: true });
           
@@ -91,30 +78,18 @@ const Chat = () => {
             throw messagesError;
           }
           
-          if (messages && messages.length > 0) {
-            console.log("Mensagens encontradas:", messages.length);
-            setMessages(messages.map(msg => ({
+          if (messagesData && messagesData.length > 0) {
+            console.log("Mensagens encontradas:", messagesData.length);
+            setMessages(messagesData.map(msg => ({
               id: msg.id,
               text: msg.content,
               sender: msg.sender_id,
               timestamp: new Date(msg.created_at),
+              deleted: msg.deleted
             })));
             
             // Marcar mensagens como lidas
-            const unreadMessages = messages
-              .filter(msg => msg.sender_id !== session.user.id && !msg.read)
-              .map(msg => msg.id);
-            
-            if (unreadMessages.length > 0) {
-              const { error: updateError } = await supabase
-                .from('messages')
-                .update({ read: true })
-                .in('id', unreadMessages);
-              
-              if (updateError) {
-                console.error("Erro ao marcar mensagens como lidas:", updateError);
-              }
-            }
+            await markMessagesAsRead(roomId, session.user.id);
           } else {
             console.log("Nenhuma mensagem encontrada");
           }
@@ -141,28 +116,52 @@ const Chat = () => {
     const channel = supabase
       .channel(`chat-${chatRoomId}`)
       .on('postgres_changes', {
-        event: 'INSERT',
+        event: '*', // Ouvir todos os eventos (INSERT, UPDATE, DELETE)
         schema: 'public',
         table: 'messages',
         filter: `chat_id=eq.${chatRoomId}`
       }, payload => {
-        console.log("Nova mensagem recebida via realtime:", payload);
-        const newMessage = payload.new;
-        if (newMessage) {
-          const messageType: MessageType = {
-            id: newMessage.id,
-            text: newMessage.content,
-            sender: newMessage.sender_id,
-            timestamp: new Date(newMessage.created_at),
-          };
-          
-          setMessages(prev => {
-            // Evitar duplicatas
-            if (prev.some(msg => msg.id === messageType.id)) {
-              return prev;
+        console.log("Evento recebido via realtime:", payload);
+        
+        if (payload.eventType === 'INSERT') {
+          // Nova mensagem
+          const newMessage = payload.new;
+          if (newMessage) {
+            const messageType: MessageType = {
+              id: newMessage.id,
+              text: newMessage.content,
+              sender: newMessage.sender_id,
+              timestamp: new Date(newMessage.created_at),
+              deleted: newMessage.deleted
+            };
+            
+            setMessages(prev => {
+              // Evitar duplicatas
+              if (prev.some(msg => msg.id === messageType.id)) {
+                return prev;
+              }
+              return [...prev, messageType];
+            });
+            
+            // Se a mensagem for de outra pessoa e não do usuário atual, marcar como lida
+            if (currentUserId && newMessage.sender_id !== currentUserId) {
+              markMessagesAsRead(chatRoomId, currentUserId);
             }
-            return [...prev, messageType];
-          });
+          }
+        } else if (payload.eventType === 'UPDATE') {
+          // Mensagem atualizada (ex: marcada como excluída)
+          const updatedMessage = payload.new;
+          if (updatedMessage) {
+            setMessages(prev => prev.map(msg => 
+              msg.id === updatedMessage.id 
+                ? {
+                    ...msg,
+                    text: updatedMessage.content,
+                    deleted: updatedMessage.deleted
+                  } 
+                : msg
+            ));
+          }
         }
       })
       .subscribe(status => {
@@ -173,13 +172,16 @@ const Chat = () => {
       console.log("Removendo canal realtime");
       supabase.removeChannel(channel);
     };
-  }, [chatRoomId]);
+  }, [chatRoomId, currentUserId]);
 
+  // Rolar para o final quando mensagens mudam
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const handleSendMessage = async (text: string) => {
+    if (!text.trim()) return;
+    
     if (!currentUserId || !recipientId || !chatRoomId) {
       console.error("Dados necessários não disponíveis:", { currentUserId, recipientId, chatRoomId });
       toast.error("Não foi possível enviar a mensagem");
@@ -190,43 +192,26 @@ const Chat = () => {
     console.log("Enviando mensagem para", chatRoomId);
     
     try {
-      const messageId = uuidv4();
-      const timestamp = new Date().toISOString();
-      
       // Inserir a mensagem
-      const { error: messageError } = await supabase
-        .from('messages')
-        .insert({
-          id: messageId,
-          chat_id: chatRoomId,
-          sender_id: currentUserId,
-          content: text,
-          created_at: timestamp,
-          read: false
-        });
+      await sendMessage(chatRoomId, currentUserId, text);
       
-      if (messageError) {
-        console.error("Erro ao enviar mensagem:", messageError);
-        throw new Error("Erro ao enviar mensagem: " + messageError.message);
-      }
-      
+      // Não é necessário adicionar a mensagem localmente, pois 
+      // o canal Realtime cuidará disso automaticamente
       console.log("Mensagem enviada com sucesso!");
-      
-      // Adicionar a mensagem localmente para UI imediata
-      const newMessage: MessageType = {
-        id: messageId,
-        text,
-        sender: currentUserId,
-        timestamp: new Date(timestamp),
-      };
-      
-      setMessages(prev => [...prev, newMessage]);
     } catch (error) {
       console.error("Erro ao enviar mensagem:", error);
       toast.error("Erro ao enviar mensagem");
     } finally {
       setSending(false);
     }
+  };
+
+  const handleDeleteMessage = (messageId: string) => {
+    setMessages(prev => prev.map(msg => 
+      msg.id === messageId 
+        ? { ...msg, deleted: true, text: '[Mensagem removida]' } 
+        : msg
+    ));
   };
 
   if (loading) {
@@ -253,6 +238,7 @@ const Chat = () => {
               key={message.id}
               message={message}
               isCurrentUser={message.sender === currentUserId}
+              onDelete={handleDeleteMessage}
             />
           ))
         ) : (

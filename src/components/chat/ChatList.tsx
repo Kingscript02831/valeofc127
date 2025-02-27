@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 
 interface ChatPreview {
   id: string;
@@ -76,7 +77,7 @@ export const ChatList = () => {
             // Obter detalhes do outro usuário
             const { data: userData, error: userError } = await supabase
               .from('profiles')
-              .select('username, avatar_url')
+              .select('username, full_name, avatar_url')
               .eq('id', otherParticipant.user_id)
               .single();
 
@@ -88,7 +89,7 @@ export const ChatList = () => {
             // Obter última mensagem
             const { data: lastMessage, error: msgError } = await supabase
               .from('messages')
-              .select('content, created_at, read')
+              .select('content, created_at, read, deleted')
               .eq('chat_id', chatId)
               .order('created_at', { ascending: false })
               .limit(1)
@@ -110,11 +111,18 @@ export const ChatList = () => {
               console.error("Erro ao contar mensagens não lidas:", unreadError);
             }
 
+            const displayName = userData.username || userData.full_name || 'Usuário';
+            let lastMessageText = lastMessage?.content || '';
+            
+            if (lastMessage?.deleted) {
+              lastMessageText = 'Mensagem removida';
+            }
+
             const preview: ChatPreview = {
               id: otherParticipant.user_id,
-              username: userData.username || 'Usuário',
+              username: displayName,
               avatar_url: userData.avatar_url,
-              last_message: lastMessage?.content || '',
+              last_message: lastMessageText,
               last_time: lastMessage ? new Date(lastMessage.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
               unread: unreadCount || 0
             };
@@ -143,12 +151,29 @@ export const ChatList = () => {
     };
 
     fetchChats();
+    
+    // Configurar um canal de realtime para atualizar a lista de chats quando novas mensagens chegarem
+    const channel = supabase
+      .channel('chat_list_changes')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'messages'
+      }, () => {
+        // Recarregar a lista de chats quando uma nova mensagem for inserida
+        fetchChats();
+      })
+      .subscribe();
+      
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#075E54]"></div>
+        <Loader2 className="animate-spin h-8 w-8 text-[#075E54]" />
       </div>
     );
   }
@@ -199,7 +224,9 @@ export const ChatList = () => {
               )}
             </div>
             {chat.last_message && (
-              <p className="text-sm text-gray-600 dark:text-gray-400 truncate">{chat.last_message}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                {chat.last_message}
+              </p>
             )}
           </div>
         </Link>

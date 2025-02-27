@@ -39,7 +39,7 @@ export const Message = ({ message, isCurrentUser, onDelete }: MessageProps) => {
       
       const { error } = await supabase
         .from('messages')
-        .delete()
+        .update({ deleted: true, content: '[Mensagem removida]' })
         .eq('id', message.id)
         .eq('sender_id', message.sender); // Garantir que só o remetente possa excluir
       

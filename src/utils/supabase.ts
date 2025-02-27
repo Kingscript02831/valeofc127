@@ -1,170 +1,148 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 /**
- * Cria um novo chat ou retorna o ID do chat existente entre dois usuários
+ * Cria ou obtém um chat entre dois usuários
+ * @param currentUserId ID do usuário atual
+ * @param recipientId ID do destinatário
+ * @returns ID da sala de chat
  */
-export const createOrGetChat = async (
-  userId1: string, 
-  userId2: string, 
-  autoAccept: boolean = false
-): Promise<{chatId: string; status: 'pending' | 'active' | 'existing'}> => {
+export const createOrGetChat = async (currentUserId: string, recipientId: string): Promise<string> => {
   try {
-    // Criar o ID da sala de chat ordenando os IDs dos usuários
-    const chatId = [userId1, userId2].sort().join('_');
+    // Verificar se já existe um chat entre esses usuários
+    const chatId = [currentUserId, recipientId].sort().join('_');
     
-    // Verificar se o chat já existe
+    // Verificar se o chat existe
     const { data: existingChat, error: checkError } = await supabase
       .from('chats')
-      .select('id, status')
+      .select('*')
       .eq('id', chatId)
       .single();
       
-    if (checkError && checkError.code !== 'PGSQL_NO_ROWS_RETURNED') {
+    if (checkError && checkError.code !== 'PGRST116') {
       console.error("Erro ao verificar chat existente:", checkError);
-      throw new Error("Erro ao verificar chat existente");
+      throw new Error("Não foi possível verificar se o chat já existe");
     }
-      
-    // Se o chat já existe e está ativo, retornar
-    if (existingChat && existingChat.status === 'active') {
-      return { chatId, status: 'existing' };
-    }
-
-    // Se não existir, criar um novo
+    
+    // Se o chat não existir, criar um novo
     if (!existingChat) {
-      // Criar o chat com status pendente
-      const { error: createChatError } = await supabase
+      console.log("Criando novo chat:", chatId);
+      
+      // Inserir o chat
+      const { error: createError } = await supabase
         .from('chats')
         .insert({ 
           id: chatId,
-          status: autoAccept ? 'active' : 'pending',
-          initiator_id: userId1
+          status: 'active',
+          initiator_id: currentUserId
         });
         
-      if (createChatError) {
-        console.error("Erro ao criar chat:", createChatError);
-        throw new Error("Erro ao criar chat");
+      if (createError) {
+        console.error("Erro ao criar chat:", createError);
+        throw new Error("Não foi possível criar o chat");
       }
       
       // Adicionar participantes
       const { error: participantsError } = await supabase
         .from('chat_participants')
         .insert([
-          { chat_id: chatId, user_id: userId1 },
-          { chat_id: chatId, user_id: userId2 }
+          { chat_id: chatId, user_id: currentUserId },
+          { chat_id: chatId, user_id: recipientId }
         ]);
         
       if (participantsError) {
         console.error("Erro ao adicionar participantes:", participantsError);
-        throw new Error("Erro ao adicionar participantes");
+        throw new Error("Não foi possível adicionar os participantes ao chat");
       }
-
-      // Enviar notificação para o usuário destinatário
-      const { data: senderProfile } = await supabase
-        .from('profiles')
-        .select('username, avatar_url')
-        .eq('id', userId1)
-        .single();
-
-      if (senderProfile && !autoAccept) {
-        const { error: notificationError } = await supabase
-          .from('notifications')
-          .insert({
-            user_id: userId2,
-            title: 'Nova solicitação de chat',
-            message: `${senderProfile.username} quer iniciar uma conversa com você`,
-            type: 'chat_request',
-            reference_id: chatId,
-            publication_title: 'Aceitar conversa?',
-            publication_description: 'Clique para aceitar ou recusar',
-            metadata: {
-              sender_id: userId1,
-              sender_name: senderProfile.username,
-              sender_avatar: senderProfile.avatar_url,
-              chat_id: chatId
-            }
-          });
-
-        if (notificationError) {
-          console.error("Erro ao criar notificação:", notificationError);
-        }
-      }
-
-      return { 
-        chatId, 
-        status: autoAccept ? 'active' : 'pending'
-      };
+      
+      console.log("Chat criado com sucesso");
+    } else {
+      console.log("Chat já existe:", existingChat);
     }
-
-    return { 
-      chatId, 
-      status: existingChat.status as 'pending' | 'active' 
-    };
     
+    return chatId;
   } catch (error) {
-    console.error("Erro ao criar/obter chat:", error);
+    console.error("Erro em createOrGetChat:", error);
     throw error;
   }
 };
 
-export const acceptChatRequest = async (chatId: string, userId: string): Promise<boolean> => {
+/**
+ * Envia uma mensagem para um chat
+ * @param chatId ID do chat
+ * @param senderId ID do remetente
+ * @param content Conteúdo da mensagem
+ * @returns ID da mensagem
+ */
+export const sendMessage = async (chatId: string, senderId: string, content: string): Promise<string> => {
   try {
-    // Atualizar o status do chat para ativo
-    const { error: updateError } = await supabase
-      .from('chats')
-      .update({ status: 'active' })
-      .eq('id', chatId);
-
-    if (updateError) {
-      console.error("Erro ao aceitar chat:", updateError);
-      return false;
+    const messageId = crypto.randomUUID();
+    
+    const { error } = await supabase
+      .from('messages')
+      .insert({
+        id: messageId,
+        chat_id: chatId,
+        sender_id: senderId,
+        content: content,
+        created_at: new Date().toISOString()
+      });
+      
+    if (error) {
+      console.error("Erro ao enviar mensagem:", error);
+      throw new Error("Não foi possível enviar a mensagem");
     }
-
-    // Marcar a notificação como lida
-    const { error: notificationError } = await supabase
-      .from('notifications')
-      .update({ read: true })
-      .eq('reference_id', chatId)
-      .eq('user_id', userId);
-
-    if (notificationError) {
-      console.error("Erro ao atualizar notificação:", notificationError);
-    }
-
-    return true;
+    
+    return messageId;
   } catch (error) {
-    console.error("Erro ao aceitar chat:", error);
-    return false;
+    console.error("Erro em sendMessage:", error);
+    throw error;
   }
 };
 
-export const rejectChatRequest = async (chatId: string, userId: string): Promise<boolean> => {
+/**
+ * Marca todas as mensagens não lidas como lidas
+ * @param chatId ID do chat
+ * @param userId ID do usuário
+ */
+export const markMessagesAsRead = async (chatId: string, userId: string): Promise<void> => {
   try {
-    // Deletar o chat e seus participantes (as foreign keys cuidarão dos participantes)
-    const { error: deleteError } = await supabase
-      .from('chats')
-      .delete()
-      .eq('id', chatId);
-
-    if (deleteError) {
-      console.error("Erro ao rejeitar chat:", deleteError);
-      return false;
-    }
-
-    // Marcar a notificação como lida
-    const { error: notificationError } = await supabase
-      .from('notifications')
+    const { error } = await supabase
+      .from('messages')
       .update({ read: true })
-      .eq('reference_id', chatId)
-      .eq('user_id', userId);
-
-    if (notificationError) {
-      console.error("Erro ao atualizar notificação:", notificationError);
+      .eq('chat_id', chatId)
+      .neq('sender_id', userId)
+      .eq('read', false);
+      
+    if (error) {
+      console.error("Erro ao marcar mensagens como lidas:", error);
     }
-
-    return true;
   } catch (error) {
-    console.error("Erro ao rejeitar chat:", error);
-    return false;
+    console.error("Erro em markMessagesAsRead:", error);
+  }
+};
+
+/**
+ * Obtém o perfil de um usuário
+ * @param userId ID do usuário
+ */
+export const getUserProfile = async (userId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('username, full_name, avatar_url')
+      .eq('id', userId)
+      .single();
+      
+    if (error) {
+      console.error("Erro ao obter perfil do usuário:", error);
+      throw error;
+    }
+    
+    return data;
+  } catch (error) {
+    console.error("Erro em getUserProfile:", error);
+    throw error;
   }
 };

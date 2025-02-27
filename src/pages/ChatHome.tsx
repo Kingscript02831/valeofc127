@@ -1,19 +1,35 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChatList } from "@/components/chat/ChatList";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { Search } from "lucide-react";
+import { Search, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { createOrGetChat } from "@/utils/supabase";
 
 const ChatHome = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any>(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Você precisa estar logado para acessar o chat");
+        navigate("/login");
+        return;
+      }
+      setCurrentUser(session.user);
+    };
+
+    checkAuth();
+  }, [navigate]);
 
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
@@ -26,18 +42,21 @@ const ChatHome = () => {
     setIsSearching(true);
     
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast.error("Você precisa estar logado para buscar usuários");
-        navigate("/login");
-        return;
+      if (!currentUser) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          toast.error("Você precisa estar logado para buscar usuários");
+          navigate("/login");
+          return;
+        }
+        setCurrentUser(session.user);
       }
       
       const { data, error } = await supabase
         .from("profiles")
         .select("id, username, avatar_url, full_name")
         .or(`username.ilike.%${query}%, full_name.ilike.%${query}%`)
-        .neq('id', session.user.id)
+        .neq('id', currentUser.id)
         .limit(5);
 
       if (error) {
@@ -58,58 +77,20 @@ const ChatHome = () => {
 
   const startNewChat = async (userId: string) => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast.error("Você precisa estar logado para iniciar um chat");
-        navigate("/login");
-        return;
+      if (!currentUser) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          toast.error("Você precisa estar logado para iniciar um chat");
+          navigate("/login");
+          return;
+        }
+        setCurrentUser(session.user);
       }
       
       console.log("Iniciando chat com usuário:", userId);
       
-      // Criamos o ID da sala de chat ordenando os IDs dos usuários
-      const chatId = [session.user.id, userId].sort().join('_');
-      
-      // Verificar se o chat existe, se não, criá-lo
-      const { data: existingChat, error: checkError } = await supabase
-        .from('chats')
-        .select('id')
-        .eq('id', chatId)
-        .maybeSingle();
-        
-      if (checkError) {
-        console.error("Erro ao verificar chat existente:", checkError);
-        toast.error("Erro ao iniciar chat");
-        return;
-      }
-        
-      if (!existingChat) {
-        console.log("Chat não encontrado, criando novo chat");
-        // Criar o chat
-        const { error: createChatError } = await supabase
-          .from('chats')
-          .insert({ id: chatId });
-          
-        if (createChatError) {
-          console.error("Erro ao criar chat:", createChatError);
-          toast.error("Erro ao criar chat");
-          return;
-        }
-        
-        // Adicionar participantes
-        const { error: participantsError } = await supabase
-          .from('chat_participants')
-          .insert([
-            { chat_id: chatId, user_id: session.user.id },
-            { chat_id: chatId, user_id: userId }
-          ]);
-          
-        if (participantsError) {
-          console.error("Erro ao adicionar participantes:", participantsError);
-          toast.error("Erro ao adicionar participantes");
-          return;
-        }
-      }
+      // Usar a função utilitária para criar ou obter o chat
+      await createOrGetChat(currentUser.id, userId);
       
       // Navegar para a página de chat
       navigate(`/chat/${userId}`);
@@ -135,7 +116,7 @@ const ChatHome = () => {
           />
           {isSearching && (
             <div className="absolute right-3 top-1/2 -translate-y-1/2">
-              <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+              <Loader2 className="animate-spin h-4 w-4 text-white" />
             </div>
           )}
         </div>
@@ -153,12 +134,12 @@ const ChatHome = () => {
                 <Avatar className="h-10 w-10 mr-3">
                   <AvatarImage src={user.avatar_url} />
                   <AvatarFallback>
-                    {user.username?.[0]?.toUpperCase() || "U"}
+                    {user.username?.[0]?.toUpperCase() || user.full_name?.[0]?.toUpperCase() || "U"}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="font-medium text-gray-900 dark:text-gray-100">{user.username}</p>
-                  {user.full_name && (
+                  <p className="font-medium text-gray-900 dark:text-gray-100">{user.username || user.full_name}</p>
+                  {user.full_name && user.username && user.full_name !== user.username && (
                     <p className="text-sm text-gray-500">{user.full_name}</p>
                   )}
                 </div>
