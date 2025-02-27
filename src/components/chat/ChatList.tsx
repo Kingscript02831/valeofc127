@@ -24,7 +24,8 @@ export const ChatList = () => {
         // Obter usuário atual
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
-          toast.error("Você precisa estar logado para ver suas conversas");
+          setChats([]);
+          setLoading(false);
           return;
         }
 
@@ -119,70 +120,63 @@ export const ChatList = () => {
 
   if (loading) {
     return (
-      <div className="flex flex-col h-screen items-center justify-center bg-gray-100 dark:bg-gray-900">
-        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#075E54]"></div>
-        <p className="text-gray-500 mt-4">Carregando conversas...</p>
+      <div className="flex items-center justify-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#075E54]"></div>
+      </div>
+    );
+  }
+
+  if (chats.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full p-6">
+        <div className="bg-white dark:bg-gray-700 rounded-full p-6 mb-4 shadow-md">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-[#075E54]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+          </svg>
+        </div>
+        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">Nenhuma conversa ainda</h3>
+        <p className="text-gray-600 dark:text-gray-400 text-center mb-4">
+          Use a busca acima para encontrar usuários e iniciar conversas.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gray-100 dark:bg-gray-900">
-      <div className="bg-[#075E54] text-white p-4 shadow-md">
-        <h1 className="text-xl font-semibold">Mensagens</h1>
-      </div>
-      
-      <div className="flex-1 overflow-auto">
-        {chats.length > 0 ? (
-          <div className="divide-y divide-gray-200">
-            {chats.map((chat) => (
-              <Link
-                key={chat.id}
-                to={`/chat/${chat.id}`}
-                className="flex items-center p-4 hover:bg-gray-200 dark:hover:bg-gray-800 transition"
-              >
-                <div className="relative">
-                  <div className="h-12 w-12 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-bold mr-4 overflow-hidden">
-                    {chat.avatar_url ? (
-                      <img src={chat.avatar_url} alt={chat.username} className="w-full h-full object-cover" />
-                    ) : (
-                      chat.username.charAt(0).toUpperCase()
-                    )}
-                  </div>
-                  {chat.unread > 0 && (
-                    <div className="absolute -top-1 -right-1 bg-[#25D366] text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                      {chat.unread}
-                    </div>
-                  )}
-                </div>
-                <div className="flex-1">
-                  <div className="flex justify-between">
-                    <h2 className="font-medium text-gray-900 dark:text-gray-100">{chat.username}</h2>
-                    {chat.last_time && (
-                      <span className="text-xs text-gray-500">{chat.last_time}</span>
-                    )}
-                  </div>
-                  {chat.last_message && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400 truncate">{chat.last_message}</p>
-                  )}
-                </div>
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center h-full p-6">
-            <div className="bg-white dark:bg-gray-700 rounded-full p-6 mb-4 shadow-md">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-[#075E54]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-              </svg>
+    <div className="divide-y divide-gray-200 dark:divide-gray-700">
+      {chats.map((chat) => (
+        <Link
+          key={chat.id}
+          to={`/chat/${chat.id}`}
+          className="flex items-center p-4 hover:bg-gray-200 dark:hover:bg-gray-800 transition"
+        >
+          <div className="relative">
+            <div className="h-12 w-12 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-bold mr-4 overflow-hidden">
+              {chat.avatar_url ? (
+                <img src={chat.avatar_url} alt={chat.username} className="w-full h-full object-cover" />
+              ) : (
+                chat.username.charAt(0).toUpperCase()
+              )}
             </div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">Nenhuma conversa ainda</h3>
-            <p className="text-gray-600 dark:text-gray-400 text-center mb-4">
-              Inicie uma conversa com outro usuário para começar a trocar mensagens.
-            </p>
+            {chat.unread > 0 && (
+              <div className="absolute -top-1 -right-1 bg-[#25D366] text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                {chat.unread}
+              </div>
+            )}
           </div>
-        )}
-      </div>
+          <div className="flex-1">
+            <div className="flex justify-between">
+              <h2 className="font-medium text-gray-900 dark:text-gray-100">{chat.username}</h2>
+              {chat.last_time && (
+                <span className="text-xs text-gray-500">{chat.last_time}</span>
+              )}
+            </div>
+            {chat.last_message && (
+              <p className="text-sm text-gray-600 dark:text-gray-400 truncate">{chat.last_message}</p>
+            )}
+          </div>
+        </Link>
+      ))}
     </div>
   );
 };
