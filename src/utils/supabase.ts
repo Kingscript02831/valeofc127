@@ -18,11 +18,17 @@ export async function createOrGetChat(userId: string, recipientId: string) {
     const chatId = [userId, recipientId].sort().join('_');
     
     // Verificar se o chat já existe
-    const { data: existingChat } = await supabase
+    const { data: existingChat, error: checkError } = await supabase
       .from('chats')
       .select('id')
       .eq('id', chatId)
       .single();
+    
+    if (checkError && checkError.code !== 'PGRST116') {
+      // PGRST116 significa que não encontrou nenhum resultado (o que é esperado se o chat não existir)
+      console.error("Erro ao verificar chat existente:", checkError);
+      throw checkError;
+    }
     
     if (!existingChat) {
       // Criar novo chat

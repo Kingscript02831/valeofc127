@@ -6,6 +6,7 @@ import { ChatInput } from "@/components/chat/ChatInput";
 import { Message, MessageType } from "@/components/chat/Message";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { createOrGetChat } from "@/utils/supabase";
 
 function uuidv4() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -72,82 +73,54 @@ const Chat = () => {
         const isOnline = Math.random() > 0.5;
         setOnlineStatus(isOnline ? "online" : "offline");
 
-        // Criar o ID da sala de chat ordenando os IDs dos usuários
-        const roomId = [session.user.id, chatId].sort().join('_');
-        console.log("ID da sala de chat:", roomId);
-        setChatRoomId(roomId);
-
-        // Verificar se o chat existe, se não, criá-lo
-        const { data: existingChat } = await supabase
-          .from('chats')
-          .select('id')
-          .eq('id', roomId)
-          .maybeSingle();
+        try {
+          // Usar a função utilitária para criar ou obter chat
+          const roomId = await createOrGetChat(session.user.id, chatId);
+          console.log("ID da sala de chat:", roomId);
+          setChatRoomId(roomId);
           
-        if (!existingChat) {
-          console.log("Chat não encontrado, criando novo chat");
-          // Criar o chat
-          const { error: createChatError } = await supabase
-            .from('chats')
-            .insert({ id: roomId });
-            
-          if (createChatError) {
-            console.error("Erro ao criar chat:", createChatError);
-            throw createChatError;
+          // Buscar mensagens
+          const { data: messages, error: messagesError } = await supabase
+            .from('messages')
+            .select('id, content, sender_id, created_at, read')
+            .eq('chat_id', roomId)
+            .order('created_at', { ascending: true });
+          
+          if (messagesError) {
+            console.error("Erro ao buscar mensagens:", messagesError);
+            throw messagesError;
           }
           
-          // Adicionar participantes
-          const { error: participantsError } = await supabase
-            .from('chat_participants')
-            .insert([
-              { chat_id: roomId, user_id: session.user.id },
-              { chat_id: roomId, user_id: chatId }
-            ]);
+          if (messages && messages.length > 0) {
+            console.log("Mensagens encontradas:", messages.length);
+            setMessages(messages.map(msg => ({
+              id: msg.id,
+              text: msg.content,
+              sender: msg.sender_id,
+              timestamp: new Date(msg.created_at),
+            })));
             
-          if (participantsError) {
-            console.error("Erro ao adicionar participantes:", participantsError);
-            throw participantsError;
-          }
-        }
-
-        // Buscar mensagens
-        const { data: messages, error: messagesError } = await supabase
-          .from('messages')
-          .select('id, content, sender_id, created_at, read')
-          .eq('chat_id', roomId)
-          .order('created_at', { ascending: true });
-        
-        if (messagesError) {
-          console.error("Erro ao buscar mensagens:", messagesError);
-          throw messagesError;
-        }
-        
-        if (messages && messages.length > 0) {
-          console.log("Mensagens encontradas:", messages.length);
-          setMessages(messages.map(msg => ({
-            id: msg.id,
-            text: msg.content,
-            sender: msg.sender_id,
-            timestamp: new Date(msg.created_at),
-          })));
-          
-          // Marcar mensagens como lidas
-          const unreadMessages = messages
-            .filter(msg => msg.sender_id !== session.user.id && !msg.read)
-            .map(msg => msg.id);
-          
-          if (unreadMessages.length > 0) {
-            const { error: updateError } = await supabase
-              .from('messages')
-              .update({ read: true })
-              .in('id', unreadMessages);
+            // Marcar mensagens como lidas
+            const unreadMessages = messages
+              .filter(msg => msg.sender_id !== session.user.id && !msg.read)
+              .map(msg => msg.id);
             
-            if (updateError) {
-              console.error("Erro ao marcar mensagens como lidas:", updateError);
+            if (unreadMessages.length > 0) {
+              const { error: updateError } = await supabase
+                .from('messages')
+                .update({ read: true })
+                .in('id', unreadMessages);
+              
+              if (updateError) {
+                console.error("Erro ao marcar mensagens como lidas:", updateError);
+              }
             }
+          } else {
+            console.log("Nenhuma mensagem encontrada");
           }
-        } else {
-          console.log("Nenhuma mensagem encontrada");
+        } catch (error) {
+          console.error("Erro ao criar/obter chat:", error);
+          toast.error("Erro ao iniciar conversa");
         }
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
