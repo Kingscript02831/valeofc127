@@ -1,126 +1,123 @@
 
 import { useState, useEffect, useRef } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
-import { Chat as ChatComponent } from "@/components/chat/Chat";
+import { useSearchParams } from "react-router-dom";
 import { ChatHeader } from "@/components/chat/ChatHeader";
 import { ChatInput } from "@/components/chat/ChatInput";
-import { Message } from "@/components/chat/Message";
-import { Message as MessageType } from "@/types/chat";
-import { chatService } from "@/services/chatService";
-import { supabase } from "@/integrations/supabase/client";
+import { Message, MessageType } from "@/components/chat/Message";
+import { v4 as uuidv4 } from "uuid";
+
+type User = {
+  id: string;
+  name: string;
+};
+
+const users: User[] = [
+  { id: "1", name: "vinix" },
+  { id: "2", name: "marcos" },
+];
+
+// Algumas mensagens iniciais para demonstração
+const initialMessages: MessageType[] = [
+  {
+    id: "1",
+    text: "Oi, tudo bem?",
+    sender: "marcos",
+    timestamp: new Date(Date.now() - 60000 * 30),
+  },
+  {
+    id: "2",
+    text: "Tudo ótimo! E com você?",
+    sender: "vinix",
+    timestamp: new Date(Date.now() - 60000 * 28),
+  },
+  {
+    id: "3",
+    text: "Estou bem também! O que você está fazendo?",
+    sender: "marcos",
+    timestamp: new Date(Date.now() - 60000 * 25),
+  },
+  {
+    id: "4",
+    text: "Estou trabalhando em um projeto novo, é muito interessante!",
+    sender: "vinix",
+    timestamp: new Date(Date.now() - 60000 * 20),
+  },
+];
 
 const Chat = () => {
   const [searchParams] = useSearchParams();
-  const chatId = searchParams.get("id");
-  const [messages, setMessages] = useState<MessageType[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [otherUser, setOtherUser] = useState<{
-    username: string;
-    full_name: string;
-    avatar_url: string | null;
-  } | null>(null);
-  
+  const [messages, setMessages] = useState<MessageType[]>(initialMessages);
+  const [currentUser, setCurrentUser] = useState<User>(users[0]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const navigate = useNavigate();
 
+  // Obter o usuário da query parameter ou usar o padrão
   useEffect(() => {
-    if (!chatId) {
-      navigate("/chat-home");
-      return;
-    }
-
-    const loadMessages = async () => {
-      try {
-        const messagesData = await chatService.getChatMessages(chatId);
-        setMessages(messagesData);
-
-        // Get current user id
-        const { data: userData } = await supabase.auth.getUser();
-        const currentUserId = userData.user?.id;
-
-        // Get chat details to determine the other user
-        const { data: chats } = await supabase
-          .from('chats')
-          .select(`
-            chat_participants(
-              user_id,
-              user:profiles(username, full_name, avatar_url)
-            )
-          `)
-          .eq('id', chatId)
-          .single();
-
-        if (chats && chats.chat_participants) {
-          const otherParticipant = chats.chat_participants.find(
-            (p: any) => p.user_id !== currentUserId
-          );
-          
-          if (otherParticipant?.user) {
-            setOtherUser(otherParticipant.user);
-          }
-        }
-      } catch (error) {
-        console.error("Failed to load messages:", error);
-      } finally {
-        setLoading(false);
+    const userName = searchParams.get("user");
+    if (userName) {
+      const user = users.find(u => u.name.toLowerCase() === userName.toLowerCase());
+      if (user) {
+        setCurrentUser(user);
       }
-    };
+    }
+  }, [searchParams]);
 
-    loadMessages();
-
-    // Subscribe to new messages
-    const subscription = chatService.subscribeToMessages(chatId, (newMessage) => {
-      setMessages((prevMessages) => [...prevMessages, newMessage]);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [chatId, navigate]);
-
+  // Role para o final quando as mensagens mudarem
   useEffect(() => {
-    scrollToBottom();
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  const handleSendMessage = (text: string) => {
+    const newMessage: MessageType = {
+      id: uuidv4(),
+      text,
+      sender: currentUser.name,
+      timestamp: new Date(),
+    };
+    
+    setMessages((prev) => [...prev, newMessage]);
+    
+    // Simular uma resposta do outro usuário
+    setTimeout(() => {
+      const otherUser = users.find(u => u.name !== currentUser.name);
+      if (otherUser) {
+        const responseMessage: MessageType = {
+          id: uuidv4(),
+          text: `Resposta automática de ${otherUser.name}: Recebi sua mensagem`,
+          sender: otherUser.name,
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, responseMessage]);
+      }
+    }, 1000);
   };
 
-  const handleSendMessage = async (content: string) => {
-    if (!chatId || !content.trim()) return;
-
-    try {
-      await chatService.sendMessage({
-        chat_id: chatId,
-        content: content.trim(),
-      });
-    } catch (error) {
-      console.error("Failed to send message:", error);
-    }
-  };
-
-  if (!chatId) {
-    return <div>Chat não encontrado</div>;
-  }
-
-  if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-t-2 border-primary"></div>
-      </div>
-    );
-  }
+  const otherUser = users.find(u => u.name !== currentUser.name);
 
   return (
-    <div className="flex h-screen flex-col">
-      {otherUser && <ChatHeader user={otherUser} />}
+    <div className="flex flex-col h-screen bg-[#E5DDD5]">
+      <ChatHeader recipient={otherUser?.name || ""} />
+      
       <div className="flex-1 overflow-y-auto p-4">
         {messages.map((message) => (
-          <Message key={message.id} message={message} />
+          <Message
+            key={message.id}
+            message={message}
+            isCurrentUser={message.sender === currentUser.name}
+          />
         ))}
         <div ref={messagesEndRef} />
       </div>
-      <ChatInput onSendMessage={handleSendMessage} />
+      
+      <ChatInput onSend={handleSendMessage} />
+      
+      <div className="fixed bottom-20 right-6">
+        <button
+          onClick={() => setCurrentUser(currentUser.id === "1" ? users[1] : users[0])}
+          className="bg-[#075E54] text-white p-3 rounded-full shadow-lg"
+        >
+          Trocar para {currentUser.id === "1" ? "marcos" : "vinix"}
+        </button>
+      </div>
     </div>
   );
 };

@@ -1,63 +1,42 @@
 
-import { useEffect, useState } from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Message as MessageType } from "@/types/chat";
-import { supabase } from "@/integrations/supabase/client";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
+
+export type MessageType = {
+  id: string;
+  text: string;
+  sender: string;
+  timestamp: Date;
+};
 
 interface MessageProps {
   message: MessageType;
+  isCurrentUser: boolean;
 }
 
-export function Message({ message }: MessageProps) {
-  const [isCurrentUser, setIsCurrentUser] = useState(false);
-
-  useEffect(() => {
-    async function checkCurrentUser() {
-      const { data } = await supabase.auth.getUser();
-      if (data?.user) {
-        setIsCurrentUser(data.user.id === message.user_id);
-      }
-    }
-
-    checkCurrentUser();
-  }, [message.user_id]);
-
-  const formattedTime = format(new Date(message.created_at), "HH:mm", {
-    locale: ptBR,
-  });
-
+export const Message = ({ message, isCurrentUser }: MessageProps) => {
   return (
     <div
-      className={`mb-4 flex ${
+      className={cn(
+        "flex mb-3",
         isCurrentUser ? "justify-end" : "justify-start"
-      }`}
-    >
-      {!isCurrentUser && (
-        <Avatar className="mr-2 h-8 w-8">
-          <AvatarImage src={message.user?.avatar_url || ""} />
-          <AvatarFallback>
-            {message.user?.full_name?.charAt(0) || "?"}
-          </AvatarFallback>
-        </Avatar>
       )}
+    >
       <div
-        className={`max-w-[70%] rounded-lg px-4 py-2 ${
+        className={cn(
+          "max-w-[70%] rounded-lg px-3 py-2 shadow-sm",
           isCurrentUser
-            ? "bg-primary text-primary-foreground"
-            : "bg-muted text-foreground"
-        }`}
+            ? "bg-[#dcf8c6] text-dark rounded-tr-none"
+            : "bg-white text-dark rounded-tl-none"
+        )}
       >
-        <div className="break-words">{message.content}</div>
-        <div
-          className={`mt-1 text-right text-xs ${
-            isCurrentUser ? "text-primary-foreground/70" : "text-foreground/70"
-          }`}
-        >
-          {formattedTime}
-        </div>
+        <p className="text-sm break-words">{message.text}</p>
+        <p className="text-right text-xs text-gray-500 mt-1">
+          {message.timestamp.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
+        </p>
       </div>
     </div>
   );
-}
+};
