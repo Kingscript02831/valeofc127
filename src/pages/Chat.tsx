@@ -65,7 +65,7 @@ const Chat = () => {
         setRecipientId(chatId);
         const { data: recipientProfile, error: recipientError } = await supabase
           .from('profiles')
-          .select('username, avatar_url, online_status')
+          .select('username, avatar_url')
           .eq('id', chatId)
           .single();
 
@@ -77,7 +77,10 @@ const Chat = () => {
 
         setRecipient(recipientProfile.username || "Usuário");
         setRecipientAvatar(recipientProfile.avatar_url || undefined);
-        setOnlineStatus(recipientProfile.online_status ? "online" : "offline");
+        
+        // Verificar status online (simulado por enquanto)
+        const isOnline = Math.random() > 0.5; // Simulação de status online
+        setOnlineStatus(isOnline ? "online" : "offline");
 
         // Buscar mensagens existentes
         await fetchMessages(session.user.id, chatId);
@@ -119,10 +122,36 @@ const Chat = () => {
 
   const fetchMessages = async (userId: string, recipientId: string) => {
     try {
-      // Em um app real, você teria uma tabela 'chats' e 'messages'
-      // Esta é uma implementação simplificada
+      // Criar ou obter chat_id
+      const chatRoomId = [userId, recipientId].sort().join('_');
       
-      // Simular mensagens de demonstração por enquanto
+      // Buscar mensagens do chat
+      const { data: chatMessages, error: messagesError } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('chat_id', chatRoomId)
+        .order('created_at', { ascending: true });
+      
+      if (messagesError) throw messagesError;
+      
+      if (chatMessages && chatMessages.length > 0) {
+        // Converter para o formato de mensagem da UI
+        const formattedMessages: MessageType[] = chatMessages.map(msg => ({
+          id: msg.id,
+          text: msg.content,
+          sender: msg.sender_id,
+          timestamp: new Date(msg.created_at),
+        }));
+        
+        setMessages(formattedMessages);
+      } else {
+        // Sem mensagens, apenas inicializar com um array vazio
+        setMessages([]);
+      }
+    } catch (error) {
+      console.error("Erro ao buscar mensagens:", error);
+      
+      // Fallback para mensagens de exemplo se houver erro
       const mockMessages: MessageType[] = [
         {
           id: "1",
@@ -136,24 +165,10 @@ const Chat = () => {
           sender: userId,
           timestamp: new Date(Date.now() - 60000 * 28),
         },
-        {
-          id: "3",
-          text: "Estou bem também! O que você está fazendo?",
-          sender: recipientId,
-          timestamp: new Date(Date.now() - 60000 * 25),
-        },
-        {
-          id: "4",
-          text: "Estou trabalhando em um projeto novo, é muito interessante!",
-          sender: userId,
-          timestamp: new Date(Date.now() - 60000 * 20),
-        },
       ];
       
       setMessages(mockMessages);
-    } catch (error) {
-      console.error("Erro ao buscar mensagens:", error);
-      toast.error("Erro ao carregar mensagens");
+      toast.error("Erro ao carregar mensagens. Usando dados de exemplo.");
     }
   };
 
@@ -183,11 +198,28 @@ const Chat = () => {
     setSending(true);
     
     try {
-      // Em um app real, você salvaria a mensagem no banco
-      // Esta é uma implementação simplificada
+      // Criar chat_id ordenando os IDs dos usuários
+      const chatRoomId = [currentUserId, recipientId].sort().join('_');
       
+      // Inserir a mensagem no banco de dados
+      const { data: newMessageData, error: messageError } = await supabase
+        .from('messages')
+        .insert({
+          chat_id: chatRoomId,
+          sender_id: currentUserId,
+          recipient_id: recipientId,
+          content: text,
+          created_at: new Date().toISOString(),
+          read: false
+        })
+        .select()
+        .single();
+      
+      if (messageError) throw messageError;
+      
+      // Adicionar mensagem à UI
       const newMessage: MessageType = {
-        id: uuidv4(),
+        id: newMessageData?.id || uuidv4(),
         text,
         sender: currentUserId,
         timestamp: new Date(),
@@ -195,21 +227,20 @@ const Chat = () => {
       
       setMessages((prev) => [...prev, newMessage]);
       
-      // Simular envio para o Supabase
-      toast.success("Mensagem enviada");
-      
-      // Simular uma resposta do outro usuário
-      setTimeout(() => {
-        if (recipientId) {
-          const responseMessage: MessageType = {
-            id: uuidv4(),
-            text: `Resposta automática do usuário ${recipient}: Recebi sua mensagem`,
-            sender: recipientId,
-            timestamp: new Date(),
-          };
-          setMessages((prev) => [...prev, responseMessage]);
-        }
-      }, 1000);
+      // Simular uma resposta do outro usuário (apenas para demonstração)
+      if (Math.random() > 0.5) {
+        setTimeout(() => {
+          if (recipientId) {
+            const responseMessage: MessageType = {
+              id: uuidv4(),
+              text: `Resposta automática: Recebi sua mensagem "${text}"`,
+              sender: recipientId,
+              timestamp: new Date(),
+            };
+            setMessages((prev) => [...prev, responseMessage]);
+          }
+        }, 1000 + Math.random() * 2000);
+      }
     } catch (error) {
       console.error("Erro ao enviar mensagem:", error);
       toast.error("Erro ao enviar mensagem");
@@ -221,7 +252,8 @@ const Chat = () => {
   if (loading) {
     return (
       <div className="flex flex-col h-screen bg-gray-100 dark:bg-gray-900 items-center justify-center">
-        <p className="text-gray-500">Carregando conversa...</p>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#075E54]"></div>
+        <p className="text-gray-500 mt-4">Carregando conversa...</p>
       </div>
     );
   }
@@ -231,9 +263,10 @@ const Chat = () => {
       <ChatHeader 
         recipient={recipient} 
         status={onlineStatus}
+        recipientAvatar={recipientAvatar}
       />
       
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex-1 overflow-y-auto p-4 bg-[#ECE5DD] dark:bg-gray-800">
         {messages.length > 0 ? (
           messages.map((message) => (
             <Message
@@ -244,7 +277,13 @@ const Chat = () => {
           ))
         ) : (
           <div className="flex flex-col items-center justify-center h-full">
-            <p className="text-gray-500">Nenhuma mensagem ainda. Diga olá!</p>
+            <div className="bg-white dark:bg-gray-700 rounded-full p-6 mb-4 shadow-md">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-[#075E54]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+            </div>
+            <p className="text-gray-600 dark:text-gray-300 text-lg font-medium">Nenhuma mensagem ainda</p>
+            <p className="text-gray-500 text-sm mt-2">Diga olá para {recipient}!</p>
           </div>
         )}
         <div ref={messagesEndRef} />

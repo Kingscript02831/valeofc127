@@ -61,9 +61,7 @@ export const ChatList = () => {
 
   const fetchChats = async (currentUserId: string) => {
     try {
-      // Implementação simplificada para demonstração
-      // Em um app real, você faria queries mais complexas com joins
-      
+      // Buscar perfis de usuários para mostrar como conversas
       const { data: initialChats, error } = await supabase
         .from('profiles')
         .select('id, username, avatar_url')
@@ -146,16 +144,17 @@ export const ChatList = () => {
   };
   
   return (
-    <div className="h-screen flex flex-col">
-      <div className="bg-[#075E54] text-white p-3">
-        <h1 className="text-xl font-bold">WhatsApp</h1>
+    <div className="h-screen flex flex-col bg-gray-100 dark:bg-gray-900">
+      <div className="bg-[#075E54] text-white p-4 shadow-md">
+        <h1 className="text-xl font-bold">Mensagens</h1>
+        <p className="text-xs opacity-75">Converse com seus amigos</p>
       </div>
       
-      <div className="flex items-center p-2 bg-[#F6F6F6] relative">
+      <div className="flex items-center p-3 bg-white dark:bg-gray-800 shadow-sm relative">
         <input
           type="text"
-          placeholder="Search or start new chat"
-          className="w-full bg-white rounded-full px-4 py-2 text-sm focus:outline-none"
+          placeholder="Digite @ para buscar usuários"
+          className="w-full bg-gray-100 dark:bg-gray-700 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#075E54]"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           onFocus={handleSearchFocus}
@@ -171,7 +170,17 @@ export const ChatList = () => {
       
       {loading ? (
         <div className="flex-1 flex items-center justify-center">
-          <p className="text-gray-500">Carregando conversas...</p>
+          <div className="animate-pulse flex flex-col space-y-4 w-full px-4">
+            {[1, 2, 3, 4, 5].map((item) => (
+              <div key={item} className="flex items-center space-x-3">
+                <div className="rounded-full bg-gray-300 h-12 w-12"></div>
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 bg-gray-300 rounded w-1/3"></div>
+                  <div className="h-3 bg-gray-300 rounded w-1/2"></div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       ) : (
         <div className="flex-1 overflow-y-auto">
@@ -180,7 +189,7 @@ export const ChatList = () => {
               <Link 
                 to={`/chat/${chat.id}`} 
                 key={chat.id}
-                className="flex items-center p-3 border-b hover:bg-gray-100"
+                className="flex items-center p-4 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               >
                 <div className="h-12 w-12 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-bold overflow-hidden">
                   {chat.avatar_url ? (
@@ -190,9 +199,9 @@ export const ChatList = () => {
                   )}
                 </div>
                 
-                <div className="ml-3 flex-1">
+                <div className="ml-4 flex-1">
                   <div className="flex justify-between">
-                    <span className="font-medium">{chat.name}</span>
+                    <span className="font-medium text-gray-900 dark:text-gray-100">{chat.name}</span>
                     <span className="text-xs text-gray-500">
                       {chat.timestamp.toLocaleTimeString([], {
                         hour: "2-digit",
@@ -215,12 +224,32 @@ export const ChatList = () => {
               </Link>
             ))
           ) : (
-            <div className="flex-1 flex items-center justify-center">
-              <p className="text-gray-500">Nenhuma conversa encontrada. Use @ para buscar usuários.</p>
+            <div className="flex-1 flex items-center justify-center p-6">
+              <div className="text-center">
+                <div className="mb-4 text-gray-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                </div>
+                <p className="text-gray-500 mb-2">Nenhuma conversa encontrada</p>
+                <p className="text-sm text-gray-400">Digite @ para buscar usuários e iniciar uma conversa</p>
+              </div>
             </div>
           )}
         </div>
       )}
+      
+      {/* Botão flutuante para iniciar nova conversa */}
+      <div className="fixed bottom-20 right-6">
+        <button
+          onClick={() => setSearchOpen(true)}
+          className="bg-[#25D366] text-white p-4 rounded-full shadow-lg hover:bg-[#128C7E] transition-colors"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+        </button>
+      </div>
     </div>
   );
 };
