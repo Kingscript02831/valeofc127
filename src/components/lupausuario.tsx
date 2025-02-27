@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Input } from "./ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { supabase } from "../../integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 
 interface LupaUsuarioProps {
   onClose: () => void;

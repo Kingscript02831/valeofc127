@@ -1,13 +1,13 @@
 
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
-import { Card, CardContent } from "../components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Card, CardContent } from "@/components/ui/card";
 import { format, isToday, isYesterday } from "date-fns";
-import Navbar from "../components/Navbar";
-import BottomNav from "../components/BottomNav";
+import Navbar from "@/components/Navbar";
+import BottomNav from "@/components/BottomNav";
 import { MessageCircle } from "lucide-react";
 
 const Chats: React.FC = () => {
