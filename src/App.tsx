@@ -24,7 +24,7 @@ import AdminCategories from "./pages/AdminCategories";
 import AdminSistema from "./pages/AdminSistema";
 import Profile from "./pages/Profile";
 import UserProfile from "./pages/UserProfile";
-import NotFound from "./pages/NotFound"; 
+import NotFound from "./pages/NotFound";
 import ResetPassword from "./pages/ResetPassword";
 import UpdatePassword from "./pages/UpdatePassword";
 import UserProducts from "./pages/UserProducts";
@@ -65,23 +65,22 @@ const App: React.FC = () => {
                   <Route path="/config" element={<Config />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/update-password" element={<UpdatePassword />} />
-                  <Route path="/admin" element={<Admin />}>    
+                  <Route path="/admin" element={<Admin />}>
                     <Route path="lugares" element={<AdminPlaces />} />
                     <Route path="eventos" element={<AdminEvents />} />
                     <Route path="noticias" element={<AdminNews />} />
                     <Route path="categorias" element={<AdminCategories />} />
                     <Route path="sistema" element={<AdminSistema />} />
-                    
-                  </Route> 
+                  </Route>
+                  <Route path="/chathome" element={<Chathome />} />
+                  <Route path="/chat/:roomId" element={<Chat />} />
                   <Route path="/user-products" element={<UserProducts />} />
                   <Route path="/noticias/:id" element={<NewsDetails />} />
                   <Route path="/posts/:id" element={<PostDetails />} />
                   <Route path="/posts/new" element={<PostForm />} />
                   <Route path="/menu" element={<Menu />} />
                   <Route path="/search" element={<Search />} />
-                   <Route path="/chathome" element={<Chathome />} />
-                   <Route path="/chat/:roomId" element={<Chat />} />
-                   <Route path="*" element={<NotFound />} />
+                  <Route path="*" element={<NotFound />} />
                 </Routes>
               </AuthWrapper>
             </BrowserRouter>
