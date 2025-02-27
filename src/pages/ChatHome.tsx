@@ -8,7 +8,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
 import { toast } from "sonner";
-import BottomNav from "@/components/BottomNav";
 
 const ChatHome = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -30,7 +29,8 @@ const ChatHome = () => {
       const { data, error } = await supabase
         .from("profiles")
         .select("id, username, avatar_url, full_name")
-        .ilike("username", `%${query}%`)
+        .or(`username.ilike.%${query}%, full_name.ilike.%${query}%`)
+        .neq('id', (await supabase.auth.getSession()).data.session?.user.id)
         .limit(5);
 
       if (error) {
@@ -131,8 +131,6 @@ const ChatHome = () => {
       <div className="flex-1 overflow-auto">
         <ChatList />
       </div>
-      
-      <BottomNav />
     </div>
   );
 };
