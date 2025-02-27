@@ -35,6 +35,7 @@ import PostDetails from "./pages/PostDetails";
 import Menu from "./pages/Menu";
 import Search from "./pages/Search";
 
+
 const queryClient = new QueryClient();
 
 const App: React.FC = () => {
@@ -76,6 +77,8 @@ const App: React.FC = () => {
                   <Route path="/posts/new" element={<PostForm />} />
                   <Route path="/menu" element={<Menu />} />
                   <Route path="/search" element={<Search />} />
+                  <Route path="/chat-home" element={<ChatHome />} />
+                  <Route path="/chat" element={<Chat />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </AuthWrapper>
