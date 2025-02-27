@@ -1,15 +1,15 @@
-
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "../integrations/supabase/client";
 import { Button } from "../components/ui/button";
 import { useTheme } from "../components/ThemeProvider";
 import ProfileTabs from "../components/ProfileTabs";
-import { ArrowLeft, MapPin, Heart, Calendar, Globe, Instagram } from "lucide-react";
+import { ArrowLeft, MapPin, Heart, Calendar, Globe, Instagram, MessageCircle } from "lucide-react";
 import BottomNav from "../components/BottomNav";
 import type { Profile } from "../types/profile";
 import { format } from "date-fns";
+import { useToast } from "../hooks/use-toast";
 
 const defaultAvatarImage = "/placeholder.svg";
 const defaultCoverImage = "/placeholder.svg";
@@ -18,6 +18,7 @@ export default function UserProfile() {
   const { username } = useParams();
   const navigate = useNavigate();
   const { theme } = useTheme();
+  const { toast } = useToast();
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ["userProfile", username],
@@ -36,6 +37,32 @@ export default function UserProfile() {
       return data as Profile;
     },
   });
+
+  const createChatMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const { data, error } = await supabase.rpc('create_private_chat', {
+        other_user_id: userId
+      });
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (chatId) => {
+      navigate(`/chat/${chatId}`);
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro",
+        description: "Não foi possível iniciar a conversa. Tente novamente.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleStartChat = async () => {
+    if (!profile?.id) return;
+    createChatMutation.mutate(profile.id);
+  };
 
   const { data: followStats } = useQuery({
     queryKey: ["followStats", profile?.id],
@@ -129,7 +156,7 @@ export default function UserProfile() {
   }
 
   if (!profile) {
-    return null; // Será redirecionado para 404
+    return null;
   }
 
   return (
@@ -210,6 +237,15 @@ export default function UserProfile() {
                     </p>
                   )}
                 </div>
+                <Button 
+                  onClick={handleStartChat}
+                  variant="outline" 
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  Conversar
+                </Button>
               </div>
 
               {profile.city && (
