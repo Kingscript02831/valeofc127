@@ -71,11 +71,17 @@ const ChatHome = () => {
       const chatId = [session.user.id, userId].sort().join('_');
       
       // Verificar se o chat existe, se não, criá-lo
-      const { data: existingChat } = await supabase
+      const { data: existingChat, error: checkError } = await supabase
         .from('chats')
         .select('id')
         .eq('id', chatId)
         .maybeSingle();
+        
+      if (checkError) {
+        console.error("Erro ao verificar chat existente:", checkError);
+        toast.error("Erro ao iniciar chat");
+        return;
+      }
         
       if (!existingChat) {
         console.log("Chat não encontrado, criando novo chat");
@@ -86,7 +92,8 @@ const ChatHome = () => {
           
         if (createChatError) {
           console.error("Erro ao criar chat:", createChatError);
-          throw createChatError;
+          toast.error("Erro ao criar chat");
+          return;
         }
         
         // Adicionar participantes
@@ -99,7 +106,8 @@ const ChatHome = () => {
           
         if (participantsError) {
           console.error("Erro ao adicionar participantes:", participantsError);
-          throw participantsError;
+          toast.error("Erro ao adicionar participantes");
+          return;
         }
       }
       
