@@ -23,7 +23,8 @@ CREATE TABLE IF NOT EXISTS messages (
     sender_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
     content TEXT NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
-    read BOOLEAN DEFAULT false
+    read BOOLEAN DEFAULT false,
+    deleted BOOLEAN DEFAULT false
 );
 
 -- Adicionar políticas de segurança RLS
@@ -79,6 +80,16 @@ CREATE POLICY "Usuários podem enviar mensagens em seus chats" ON messages
         ) AND sender_id = auth.uid()
     );
 
+-- Política para permitir que usuários excluam suas próprias mensagens
+CREATE POLICY "Usuários podem excluir suas próprias mensagens" ON messages
+    FOR DELETE
+    USING (sender_id = auth.uid());
+
+-- Política para permitir que usuários atualizem suas próprias mensagens (para marcar como excluídas)
+CREATE POLICY "Usuários podem atualizar suas próprias mensagens" ON messages
+    FOR UPDATE
+    USING (sender_id = auth.uid());
+
 -- Criar índices para melhor performance
 CREATE INDEX IF NOT EXISTS idx_chat_participants_user_id ON chat_participants(user_id);
 CREATE INDEX IF NOT EXISTS idx_chat_participants_chat_id ON chat_participants(chat_id);
@@ -101,3 +112,23 @@ CREATE TRIGGER update_chat_timestamp_on_message
     AFTER INSERT ON messages
     FOR EACH ROW
     EXECUTE FUNCTION update_chat_timestamp();
+
+-- Função alternativa para exclusão lógica (soft delete) de mensagens
+CREATE OR REPLACE FUNCTION soft_delete_message()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Em vez de excluir a mensagem fisicamente, marque-a como excluída
+    UPDATE messages
+    SET deleted = true, content = '[Mensagem removida]'
+    WHERE id = OLD.id;
+    
+    RETURN NULL; -- Cancele a exclusão real
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger para implementar soft delete
+-- Descomente para usar soft delete em vez de exclusão física
+-- CREATE TRIGGER messages_soft_delete
+--    BEFORE DELETE ON messages
+--    FOR EACH ROW
+--    EXECUTE FUNCTION soft_delete_message();

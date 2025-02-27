@@ -1,21 +1,12 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
-export async function getCurrentUser() {
+/**
+ * Cria um novo chat ou retorna o ID do chat existente entre dois usuários
+ */
+export const createOrGetChat = async (userId1: string, userId2: string): Promise<string> => {
   try {
-    const { data: { session }, error } = await supabase.auth.getSession();
-    if (error) throw error;
-    if (!session) return null;
-    return session.user;
-  } catch (error) {
-    console.error("Erro ao obter usuário atual:", error);
-    return null;
-  }
-}
-
-export async function createOrGetChat(userId: string, recipientId: string) {
-  try {
-    const chatId = [userId, recipientId].sort().join('_');
+    // Criar o ID da sala de chat ordenando os IDs dos usuários
+    const chatId = [userId1, userId2].sort().join('_');
     
     // Verificar se o chat já existe
     const { data: existingChat, error: checkError } = await supabase
@@ -23,32 +14,38 @@ export async function createOrGetChat(userId: string, recipientId: string) {
       .select('id')
       .eq('id', chatId)
       .single();
-    
-    if (checkError && checkError.code !== 'PGRST116') {
-      // PGRST116 significa que não encontrou nenhum resultado (o que é esperado se o chat não existir)
-      console.error("Erro ao verificar chat existente:", checkError);
-      throw checkError;
-    }
-    
-    if (!existingChat) {
-      // Criar novo chat
-      const { data: newChat, error: createError } = await supabase
-        .from('chats')
-        .insert([{ id: chatId }])
-        .select()
-        .single();
       
-      if (createError) throw createError;
+    if (checkError && checkError.code !== 'PGSQL_NO_ROWS_RETURNED') {
+      console.error("Erro ao verificar chat existente:", checkError);
+      throw new Error("Erro ao verificar chat existente");
+    }
+      
+    // Se o chat não existir, criar um novo
+    if (!existingChat) {
+      console.log("Chat não encontrado, criando novo chat");
+      
+      // Criar o chat
+      const { error: createChatError } = await supabase
+        .from('chats')
+        .insert({ id: chatId });
+        
+      if (createChatError) {
+        console.error("Erro ao criar chat:", createChatError);
+        throw new Error("Erro ao criar chat");
+      }
       
       // Adicionar participantes
       const { error: participantsError } = await supabase
         .from('chat_participants')
         .insert([
-          { chat_id: chatId, user_id: userId },
-          { chat_id: chatId, user_id: recipientId }
+          { chat_id: chatId, user_id: userId1 },
+          { chat_id: chatId, user_id: userId2 }
         ]);
-      
-      if (participantsError) throw participantsError;
+        
+      if (participantsError) {
+        console.error("Erro ao adicionar participantes:", participantsError);
+        throw new Error("Erro ao adicionar participantes");
+      }
     }
     
     return chatId;
@@ -56,4 +53,4 @@ export async function createOrGetChat(userId: string, recipientId: string) {
     console.error("Erro ao criar/obter chat:", error);
     throw error;
   }
-}
+};
