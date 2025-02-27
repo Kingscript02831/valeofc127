@@ -1,3 +1,4 @@
+
 import { Home, Bell, User, Plus, Search } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSiteConfig } from "@/hooks/useSiteConfig";

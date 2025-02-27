@@ -6,15 +6,12 @@ export interface Message {
   content: string;
   created_at: string;
   read: boolean;
-  deleted?: boolean;
 }
 
 export interface Chat {
   id: string;
   created_at: string;
   updated_at: string;
-  status?: string;
-  initiator_id?: string;
   participants: ChatParticipant[];
   messages: Message[];
 }
