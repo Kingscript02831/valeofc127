@@ -1,7 +1,5 @@
 
-import { useState, useRef, KeyboardEvent } from "react";
-import { Paperclip, Send, Smile } from "lucide-react";
-import { Textarea } from "@/components/ui/textarea";
+import { useState } from "react";
 
 interface ChatInputProps {
   onSend: (message: string) => void;
@@ -9,68 +7,44 @@ interface ChatInputProps {
 
 export const ChatInput = ({ onSend }: ChatInputProps) => {
   const [message, setMessage] = useState("");
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleSend = () => {
-    const trimmedMessage = message.trim();
-    if (trimmedMessage) {
-      onSend(trimmedMessage);
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (message.trim()) {
+      onSend(message);
       setMessage("");
-      if (textareaRef.current) {
-        textareaRef.current.style.height = "auto";
-      }
-    }
-  };
-
-  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setMessage(e.target.value);
-    
-    // Auto-adjust height
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 150)}px`;
     }
   };
 
   return (
-    <div className="p-3 bg-background border-t flex items-end gap-2">
-      <button className="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
-        <Paperclip className="h-5 w-5" />
-      </button>
-      
-      <div className="flex-1 relative">
-        <Textarea
-          ref={textareaRef}
-          value={message}
-          onChange={handleChange}
-          onKeyDown={handleKeyDown}
-          placeholder="Digite uma mensagem"
-          className="resize-none py-2 min-h-[40px] max-h-[150px] pr-10"
-          rows={1}
-        />
-        <button className="absolute right-2 bottom-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
-          <Smile className="h-5 w-5" />
-        </button>
-      </div>
-      
+    <form 
+      onSubmit={handleSubmit}
+      className="bg-gray-100 p-3 flex items-center sticky bottom-0"
+    >
       <button 
-        onClick={handleSend}
-        disabled={!message.trim()}
-        className={`p-3 rounded-full flex items-center justify-center ${
-          message.trim() 
-            ? "bg-primary text-white" 
-            : "bg-gray-200 text-gray-500 dark:bg-gray-700"
-        }`}
+        type="button"
+        className="text-gray-500 p-2 rounded-full hover:bg-gray-200 mr-2"
       >
-        <Send className="h-5 w-5" />
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
       </button>
-    </div>
+      <input
+        type="text"
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        placeholder="Type a message"
+        className="flex-1 bg-white rounded-full px-4 py-2 focus:outline-none"
+      />
+      <button 
+        type="submit"
+        className="ml-2 bg-[#075E54] text-white p-2 rounded-full"
+        disabled={!message.trim()}
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+        </svg>
+      </button>
+    </form>
   );
 };
