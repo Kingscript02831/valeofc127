@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bell, CheckCircle, Clock, ChevronRight, Calendar, Newspaper, Trash2 } from "lucide-react";
@@ -19,7 +18,7 @@ interface Notification {
   message: string;
   created_at: string;
   read: boolean;
-  type: 'news' | 'event';
+  type: 'news' | 'event' | 'chat_request';
   reference_id?: string;
   publication_title?: string;
   publication_description?: string;
@@ -33,7 +32,6 @@ const Notify = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
-  // Carregar estado das notificações
   useEffect(() => {
     const loadNotificationPreference = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -52,7 +50,6 @@ const Notify = () => {
     loadNotificationPreference();
   }, []);
 
-  // Toggle notificações
   const toggleNotifications = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -85,7 +82,6 @@ const Notify = () => {
     }
   };
 
-  // Check for authentication status
   useEffect(() => {
     const checkSession = async () => {
       try {
@@ -103,7 +99,6 @@ const Notify = () => {
     checkSession();
   }, [navigate]);
 
-  // Fetch notifications
   const { data: notifications = [], refetch } = useQuery({
     queryKey: ["notifications"],
     queryFn: async () => {
@@ -130,12 +125,10 @@ const Notify = () => {
         throw error;
       }
 
-      // Update local cache
       queryClient.setQueryData<Notification[]>(["notifications"], (old) =>
         old?.filter((n) => n.id !== id)
       );
 
-      // Also invalidate the unreadNotifications query
       queryClient.invalidateQueries({ queryKey: ["unreadNotifications"] });
 
       toast.success("Notificação excluída com sucesso", {
@@ -160,15 +153,12 @@ const Notify = () => {
 
       if (error) throw error;
 
-      // Update local cache
       queryClient.setQueryData<Notification[]>(["notifications"], (old) =>
         old?.map((n) => (n.id === id ? { ...n, read: true } : n))
       );
 
-      // Also invalidate the unreadNotifications query
       queryClient.invalidateQueries({ queryKey: ["unreadNotifications"] });
 
-      // Navigate if there's a reference_id
       const notification = notifications.find(n => n.id === id);
       if (notification?.reference_id) {
         if (notification.type === 'event') {
@@ -194,12 +184,10 @@ const Notify = () => {
 
       if (error) throw error;
 
-      // Update local cache
       queryClient.setQueryData<Notification[]>(["notifications"], (old) =>
         old?.map((n) => ({ ...n, read: true }))
       );
 
-      // Also invalidate the unreadNotifications query
       queryClient.invalidateQueries({ queryKey: ["unreadNotifications"] });
 
       toast.success("Todas as notificações foram marcadas como lidas", {
@@ -220,8 +208,42 @@ const Notify = () => {
         return <Calendar className="h-4 w-4" />;
       case "news":
         return <Newspaper className="h-4 w-4" />;
+      case "chat_request":
+        return <Bell className="h-4 w-4" />;
       default:
         return <Bell className="h-4 w-4" />;
+    }
+  };
+
+  const handleChatAction = async (notificationId: string, action: 'accept' | 'reject') => {
+    try {
+      const notification = notifications.find(n => n.id === notificationId);
+      if (!notification || notification.type !== 'chat_request') return;
+
+      const metadata = notification.metadata as { chat_id: string };
+      if (!metadata?.chat_id) return;
+
+      if (action === 'accept') {
+        const success = await acceptChatRequest(metadata.chat_id, session?.user?.id || '');
+        if (success) {
+          toast.success('Conversa aceita com sucesso');
+          navigate(`/chat/${notification.metadata.sender_id}`);
+        } else {
+          toast.error('Erro ao aceitar conversa');
+        }
+      } else {
+        const success = await rejectChatRequest(metadata.chat_id, session?.user?.id || '');
+        if (success) {
+          toast.success('Conversa rejeitada');
+        } else {
+          toast.error('Erro ao rejeitar conversa');
+        }
+      }
+
+      refetch();
+    } catch (error) {
+      console.error('Erro ao processar ação do chat:', error);
+      toast.error('Erro ao processar sua solicitação');
     }
   };
 
@@ -370,6 +392,27 @@ const Notify = () => {
                         </Button>
                       </div>
                     </div>
+
+                    {notification.type === 'chat_request' && (
+                      <div className="flex items-center gap-2 mt-2">
+                        <Button
+                          variant="default"
+                          size="sm"
+                          onClick={() => handleChatAction(notification.id, 'accept')}
+                          className="bg-green-500 hover:bg-green-600"
+                        >
+                          Aceitar
+                        </Button>
+                        <Button
+                          variant="default"
+                          size="sm"
+                          onClick={() => handleChatAction(notification.id, 'reject')}
+                          className="bg-red-500 hover:bg-red-600"
+                        >
+                          Recusar
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
