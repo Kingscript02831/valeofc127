@@ -75,6 +75,36 @@ export default function UserProfile() {
     enabled: !!profile?.id,
   });
 
+  const { data: userPosts, isLoading: isLoadingPosts } = useQuery({
+    queryKey: ["userPosts", profile?.id],
+    queryFn: async () => {
+      if (!profile?.id) return [];
+
+      const { data } = await supabase
+        .from("posts")
+        .select(`
+          *,
+          user:user_id (
+            username,
+            full_name,
+            avatar_url
+          ),
+          post_likes (
+            reaction_type,
+            user_id
+          ),
+          post_comments (
+            id
+          )
+        `)
+        .eq("user_id", profile.id)
+        .order("created_at", { ascending: false });
+
+      return data || [];
+    },
+    enabled: !!profile?.id,
+  });
+
   const formatRelationshipStatus = (status: string | null | undefined) => {
     if (!status) return null;
     const statusMap: Record<string, string> = {
@@ -229,7 +259,11 @@ export default function UserProfile() {
               </div>
 
               <div className="mt-6">
-                <ProfileTabs userProducts={userProducts} />
+                <ProfileTabs 
+                  userProducts={userProducts} 
+                  userPosts={userPosts}
+                  isLoading={isLoadingPosts}
+                />
               </div>
             </div>
           </div>
