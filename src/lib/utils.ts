@@ -1,31 +1,37 @@
 
-import { type ClassValue, clsx } from "clsx"
-import { twMerge } from "tailwind-merge"
- 
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+import { format, formatDistanceToNow, isToday, isYesterday } from "date-fns";
+import { ptBR } from "date-fns/locale";
+
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
 
-export function formatDate(date: string | number | Date): string {
-  const now = new Date();
-  const postDate = new Date(date);
-  const diffInMinutes = Math.floor((now.getTime() - postDate.getTime()) / (1000 * 60));
-  const diffInHours = Math.floor(diffInMinutes / 60);
-  const diffInDays = Math.floor(diffInHours / 24);
+export function formatCurrency(value: number): string {
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(value);
+}
 
-  if (diffInMinutes < 1) {
-    return 'Agora mesmo';
-  } else if (diffInMinutes < 60) {
-    return `${diffInMinutes} min`;
-  } else if (diffInHours < 24) {
-    return `${diffInHours}h`;
-  } else if (diffInDays < 7) {
-    return `${diffInDays}d`;
+export function formatDate(date: Date | string): string {
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  
+  if (isToday(dateObj)) {
+    return format(dateObj, "HH:mm");
+  } else if (isYesterday(dateObj)) {
+    return "Ontem " + format(dateObj, "HH:mm");
+  } else if (dateObj.getFullYear() === new Date().getFullYear()) {
+    return format(dateObj, "dd/MM HH:mm");
   } else {
-    return postDate.toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
-    });
+    return format(dateObj, "dd/MM/yyyy HH:mm");
   }
+}
+
+export function getRelativeTime(date: string | Date): string {
+  return formatDistanceToNow(new Date(date), {
+    addSuffix: true,
+    locale: ptBR,
+  });
 }

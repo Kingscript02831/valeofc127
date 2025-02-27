@@ -4,26 +4,17 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { supabase } from "@/integrations/supabase/client";
 import { Chat } from "@/types/chat";
 
 export const ChatList = () => {
   const navigate = useNavigate();
   const [chats, setChats] = useState<Chat[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [userId, setUserId] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>("1"); // ID fixo para demonstração
 
   useEffect(() => {
-    const getCurrentUser = async () => {
-      const { data } = await supabase.auth.getUser();
-      if (data?.user) {
-        setUserId(data.user.id);
-        fetchChats(data.user.id);
-      }
-    };
-
-    getCurrentUser();
-  }, []);
+    fetchChats(userId || "1");
+  }, [userId]);
 
   const fetchChats = async (currentUserId: string) => {
     // Implementação futura: buscar chats do Supabase
