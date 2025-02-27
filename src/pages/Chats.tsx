@@ -1,13 +1,13 @@
 
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "../integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card, CardContent } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
+import { Card, CardContent } from "../components/ui/card";
 import { format, isToday, isYesterday } from "date-fns";
-import Navbar from "@/components/Navbar";
-import BottomNav from "@/components/BottomNav";
+import Navbar from "../components/Navbar";
+import BottomNav from "../components/BottomNav";
 import { MessageCircle } from "lucide-react";
 
 const Chats: React.FC = () => {
@@ -17,7 +17,6 @@ const Chats: React.FC = () => {
   useEffect(() => {
     const checkSession = async () => {
       const { data } = await supabase.auth.getSession();
-      console.log("Current session user:", data.session?.user.id);
       setUserId(data.session?.user.id || null);
     };
     
@@ -28,8 +27,6 @@ const Chats: React.FC = () => {
     queryKey: ["chats", userId],
     queryFn: async () => {
       if (!userId) return [];
-      
-      console.log("Fetching chats for user:", userId);
       
       const { data, error } = await supabase
         .from('chats')
@@ -63,8 +60,6 @@ const Chats: React.FC = () => {
         throw error;
       }
 
-      console.log("Chats fetched:", data?.length || 0, "chats");
-      
       return data.map((chat: any) => ({
         ...chat,
         participants: chat.chat_participants,
@@ -93,7 +88,6 @@ const Chats: React.FC = () => {
   };
 
   const handleChatClick = (chatId: string) => {
-    console.log("Navigating to chat:", chatId);
     navigate(`/chat/${chatId}`);
   };
 

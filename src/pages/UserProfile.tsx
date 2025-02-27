@@ -74,105 +74,41 @@ export default function UserProfile() {
 
   const createChatMutation = useMutation({
     mutationFn: async () => {
-      try {
-        if (!profile?.id || !currentUser?.id) {
-          throw new Error("No profile ID or user ID");
-        }
-        setIsLoadingChat(true);
-        console.log("Creating chat between", currentUser.id, "and", profile.id);
+      if (!profile?.id || !currentUser?.id) throw new Error("No profile ID or user ID");
+      setIsLoadingChat(true);
 
-        // Verificar se já existe um chat entre os usuários
-        const { data: existingChats, error: checkError } = await supabase
-          .from('chat_participants')
-          .select(`
-            chat_id
-          `)
-          .eq('user_id', currentUser.id)
-          .in('chat_id', (
-            supabase
-              .from('chat_participants')
-              .select('chat_id')
-              .eq('user_id', profile.id)
-          ));
+      // Criar novo chat
+      const { data: newChat, error: chatError } = await supabase
+        .from('chats')
+        .insert({})
+        .select()
+        .single();
 
-        console.log("Existing chats check:", existingChats, checkError);
-
-        if (existingChats && existingChats.length > 0) {
-          console.log("Found existing chat:", existingChats[0].chat_id);
-          return existingChats[0].chat_id;
-        }
-
-        // Criar novo chat
-        const { data: newChat, error: chatError } = await supabase
-          .from('chats')
-          .insert({})
-          .select()
-          .single();
-
-        console.log("New chat created:", newChat, chatError);
-
-        if (chatError || !newChat) {
-          console.error("Error creating chat:", chatError);
-          throw new Error("Erro ao criar chat");
-        }
-
-        const timestamp = new Date().toISOString();
-
-        // Adicionar participantes
-        const { error: participantsError } = await supabase
-          .from('chat_participants')
-          .insert([
-            { 
-              user_id: currentUser.id,
-              chat_id: newChat.id,
-              last_read_at: timestamp
-            },
-            { 
-              user_id: profile.id,
-              chat_id: newChat.id, 
-              last_read_at: timestamp
-            }
-          ]);
-
-        console.log("Participants added, error:", participantsError);
-
-        if (participantsError) {
-          // Limpar chat em caso de erro
-          await supabase
-            .from('chats')
-            .delete()
-            .eq('id', newChat.id);
-            
-          console.error("Error adding participants:", participantsError);
-          throw new Error("Erro ao adicionar participantes");
-        }
-
-        // Adicionar mensagem inicial vazia para criar o chat
-        const { error: messageError } = await supabase
-          .from('messages')
-          .insert({
-            chat_id: newChat.id,
-            sender_id: currentUser.id,
-            content: "Olá, tudo bem?",
-            read: false
-          });
-
-        console.log("Initial message added, error:", messageError);
-
-        if (messageError) {
-          console.error("Error adding initial message:", messageError);
-          // Não lançamos erro aqui, apenas logamos
-        }
-
-        return newChat.id;
-      } catch (error) {
-        console.error("Error in create chat mutation:", error);
-        throw error;
+      if (chatError) {
+        console.error("Error creating chat:", chatError);
+        throw chatError;
       }
+
+      // Define a current timestamp for last_read_at
+      const currentTimestamp = new Date().toISOString();
+
+      // Adicionar participantes
+      const { error: participantsError } = await supabase
+        .from('chat_participants')
+        .insert([
+          { chat_id: newChat.id, user_id: currentUser.id, last_read_at: currentTimestamp },
+          { chat_id: newChat.id, user_id: profile.id, last_read_at: currentTimestamp }
+        ]);
+
+      if (participantsError) {
+        console.error("Error adding participants:", participantsError);
+        throw participantsError;
+      }
+
+      return newChat.id;
     },
     onSuccess: (chatId) => {
       setIsLoadingChat(false);
-      console.log("Chat created successfully, navigating to:", chatId);
       navigate(`/chat/${chatId}`);
     },
     onError: (error) => {
@@ -186,7 +122,7 @@ export default function UserProfile() {
     },
   });
 
-  const handleStartChat = () => {
+  const handleStartChat = async () => {
     if (!currentUser) {
       toast({
         title: "Atenção",
