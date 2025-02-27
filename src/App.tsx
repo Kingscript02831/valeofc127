@@ -1,11 +1,10 @@
-
 import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { ThemeProvider } from "@/components/ThemeProvider";
+import { ThemeProvider } from "./components/ThemeProvider";
 import AuthWrapper from "./components/AuthWrapper";
 import Index from "./pages/Index";
 import Events from "./pages/Events";
@@ -35,8 +34,6 @@ import PostForm from "./pages/PostForm";
 import PostDetails from "./pages/PostDetails";
 import Menu from "./pages/Menu";
 import Search from "./pages/Search";
-import Chats from "./pages/Chats";
-import ChatDetail from "./pages/ChatDetail";
 
 const queryClient = new QueryClient();
 
@@ -79,8 +76,6 @@ const App: React.FC = () => {
                   <Route path="/posts/new" element={<PostForm />} />
                   <Route path="/menu" element={<Menu />} />
                   <Route path="/search" element={<Search />} />
-                  <Route path="/chats" element={<Chats />} />
-                  <Route path="/chat/:id" element={<ChatDetail />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </AuthWrapper>

@@ -1,16 +1,15 @@
 
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../integrations/supabase/client";
 import { Button } from "../components/ui/button";
 import { useTheme } from "../components/ThemeProvider";
 import ProfileTabs from "../components/ProfileTabs";
-import { ArrowLeft, MapPin, Heart, Calendar, Globe, Instagram, MessageCircle } from "lucide-react";
+import { ArrowLeft, MapPin, Heart, Calendar, Globe, Instagram } from "lucide-react";
 import BottomNav from "../components/BottomNav";
 import type { Profile } from "../types/profile";
 import { format } from "date-fns";
-import { useToast } from "../hooks/use-toast";
 
 const defaultAvatarImage = "/placeholder.svg";
 const defaultCoverImage = "/placeholder.svg";
@@ -19,16 +18,6 @@ export default function UserProfile() {
   const { username } = useParams();
   const navigate = useNavigate();
   const { theme } = useTheme();
-  const { toast } = useToast();
-  const [isLoadingChat, setIsLoadingChat] = useState(false);
-
-  const { data: currentUser } = useQuery({
-    queryKey: ["currentUser"],
-    queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      return user;
-    },
-  });
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ["userProfile", username],
@@ -47,106 +36,6 @@ export default function UserProfile() {
       return data as Profile;
     },
   });
-
-  const { data: existingChat } = useQuery({
-    queryKey: ["existingChat", currentUser?.id, profile?.id],
-    queryFn: async () => {
-      if (!currentUser?.id || !profile?.id) return null;
-
-      const { data } = await supabase
-        .from('chat_participants')
-        .select(`
-          chat_id,
-          chats!inner(id)
-        `)
-        .eq('user_id', currentUser.id)
-        .in('chat_id', (
-          supabase
-            .from('chat_participants')
-            .select('chat_id')
-            .eq('user_id', profile.id)
-        ));
-
-      return data?.[0]?.chat_id || null;
-    },
-    enabled: !!currentUser?.id && !!profile?.id,
-  });
-
-  const createChatMutation = useMutation({
-    mutationFn: async () => {
-      if (!profile?.id || !currentUser?.id) throw new Error("No profile ID or user ID");
-      setIsLoadingChat(true);
-
-      // Criar novo chat
-      const { data: newChat, error: chatError } = await supabase
-        .from('chats')
-        .insert({})
-        .select()
-        .single();
-
-      if (chatError) {
-        console.error("Error creating chat:", chatError);
-        throw chatError;
-      }
-
-      // Define a current timestamp for last_read_at
-      const currentTimestamp = new Date().toISOString();
-
-      // Adicionar participantes
-      const { error: participantsError } = await supabase
-        .from('chat_participants')
-        .insert([
-          { chat_id: newChat.id, user_id: currentUser.id, last_read_at: currentTimestamp },
-          { chat_id: newChat.id, user_id: profile.id, last_read_at: currentTimestamp }
-        ]);
-
-      if (participantsError) {
-        console.error("Error adding participants:", participantsError);
-        throw participantsError;
-      }
-
-      return newChat.id;
-    },
-    onSuccess: (chatId) => {
-      setIsLoadingChat(false);
-      navigate(`/chat/${chatId}`);
-    },
-    onError: (error) => {
-      setIsLoadingChat(false);
-      console.error("Error creating chat:", error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível iniciar a conversa. Tente novamente.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleStartChat = async () => {
-    if (!currentUser) {
-      toast({
-        title: "Atenção",
-        description: "Você precisa estar logado para iniciar uma conversa.",
-        variant: "destructive",
-      });
-      return navigate("/login");
-    }
-
-    if (currentUser.id === profile?.id) {
-      toast({
-        title: "Atenção",
-        description: "Você não pode iniciar uma conversa com você mesmo.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (existingChat) {
-      navigate(`/chat/${existingChat}`);
-    } else {
-      createChatMutation.mutate();
-    }
-  };
 
   const { data: followStats } = useQuery({
     queryKey: ["followStats", profile?.id],
@@ -240,7 +129,7 @@ export default function UserProfile() {
   }
 
   if (!profile) {
-    return null;
+    return null; // Será redirecionado para 404
   }
 
   return (
@@ -273,17 +162,16 @@ export default function UserProfile() {
                 <p className="text-gray-500">Sem Capa de Perfil</p>
               </div>
             )}
-          </div>
-
-          <div className="flex justify-end px-4 py-2 border-b border-gray-200 dark:border-gray-800">
-            <div className="flex gap-4 text-center">
-              <div>
-                <p className="font-semibold">{followStats?.followers || 0}</p>
-                <p className="text-sm text-gray-500">Seguidores</p>
+            
+            {/* Stats relocated here */}
+            <div className="absolute bottom-0 right-4 flex gap-4 bg-black/30 backdrop-blur-sm px-3 py-1 rounded-t-lg">
+              <div className="text-center">
+                <p className="font-semibold text-white">{followStats?.followers || 0}</p>
+                <p className="text-xs text-white/80">Seguidores</p>
               </div>
-              <div>
-                <p className="font-semibold">{followStats?.following || 0}</p>
-                <p className="text-sm text-gray-500">Seguindo</p>
+              <div className="text-center">
+                <p className="font-semibold text-white">{followStats?.following || 0}</p>
+                <p className="text-xs text-white/80">Seguindo</p>
               </div>
             </div>
           </div>
@@ -321,16 +209,6 @@ export default function UserProfile() {
                     </p>
                   )}
                 </div>
-                <Button 
-                  onClick={handleStartChat}
-                  variant="outline" 
-                  size="sm"
-                  className="flex items-center gap-2"
-                  disabled={isLoadingChat || currentUser?.id === profile.id}
-                >
-                  <MessageCircle className="h-4 w-4" />
-                  {isLoadingChat ? 'Carregando...' : 'Conversar'}
-                </Button>
               </div>
 
               {profile.city && (

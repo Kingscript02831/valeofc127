@@ -376,7 +376,6 @@ export type Database = {
           chat_id: string | null
           content: string
           created_at: string | null
-          deleted: boolean | null
           id: string
           read: boolean | null
           sender_id: string | null
@@ -385,7 +384,6 @@ export type Database = {
           chat_id?: string | null
           content: string
           created_at?: string | null
-          deleted?: boolean | null
           id?: string
           read?: boolean | null
           sender_id?: string | null
@@ -394,7 +392,6 @@ export type Database = {
           chat_id?: string | null
           content?: string
           created_at?: string | null
-          deleted?: boolean | null
           id?: string
           read?: boolean | null
           sender_id?: string | null
@@ -476,7 +473,6 @@ export type Database = {
           created_at: string | null
           id: string
           message: string
-          metadata: Json | null
           publication_category: string | null
           publication_date: string | null
           publication_description: string | null
@@ -491,7 +487,6 @@ export type Database = {
           created_at?: string | null
           id?: string
           message: string
-          metadata?: Json | null
           publication_category?: string | null
           publication_date?: string | null
           publication_description?: string | null
@@ -506,7 +501,6 @@ export type Database = {
           created_at?: string | null
           id?: string
           message?: string
-          metadata?: Json | null
           publication_category?: string | null
           publication_date?: string | null
           publication_description?: string | null

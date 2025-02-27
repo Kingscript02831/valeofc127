@@ -5,7 +5,7 @@ export interface Message {
   sender_id: string;
   content: string;
   created_at: string;
-  read?: boolean; // Tornando o campo opcional
+  read: boolean;
 }
 
 export interface Chat {
@@ -18,14 +18,15 @@ export interface Chat {
 
 export interface ChatParticipant {
   id: string;
-  chat_id?: string;
+  chat_id: string;
   user_id: string;
-  created_at?: string;
+  created_at: string;
   last_read_at: string;
-  profiles: {
-    id?: string;
+  profile?: {
     username?: string;
     avatar_url?: string;
-    full_name?: string;
+    name?: string;
+    online_status?: boolean;
+    last_seen?: string;
   };
 }
