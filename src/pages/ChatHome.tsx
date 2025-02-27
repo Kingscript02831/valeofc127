@@ -26,11 +26,13 @@ const ChatHome = () => {
     setIsSearching(true);
     
     try {
+      const { data: session } = await supabase.auth.getSession();
+      
       const { data, error } = await supabase
         .from("profiles")
         .select("id, username, avatar_url, full_name")
         .or(`username.ilike.%${query}%, full_name.ilike.%${query}%`)
-        .neq('id', (await supabase.auth.getSession()).data.session?.user.id)
+        .neq('id', session.session?.user.id)
         .limit(5);
 
       if (error) {
