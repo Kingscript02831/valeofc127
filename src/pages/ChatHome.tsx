@@ -4,10 +4,10 @@ import { ChatList } from "@/components/chat/ChatList";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
 import { toast } from "sonner";
-import { getCurrentUser, createOrGetChat } from "@/utils/supabase";
 
 const ChatHome = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -26,8 +26,8 @@ const ChatHome = () => {
     setIsSearching(true);
     
     try {
-      const currentUser = await getCurrentUser();
-      if (!currentUser) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
         toast.error("Você precisa estar logado para buscar usuários");
         navigate("/login");
         return;
@@ -37,11 +37,16 @@ const ChatHome = () => {
         .from("profiles")
         .select("id, username, avatar_url, full_name")
         .or(`username.ilike.%${query}%, full_name.ilike.%${query}%`)
-        .neq('id', currentUser.id)
+        .neq('id', session.user.id)
         .limit(5);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Erro na busca:", error);
+        toast.error("Erro ao buscar usuários");
+        return;
+      }
 
+      console.log("Resultados da busca:", data?.length || 0);
       setSearchResults(data || []);
     } catch (error) {
       console.error("Erro ao buscar usuários:", error);
@@ -51,17 +56,55 @@ const ChatHome = () => {
     }
   };
 
-  const startNewChat = async (recipientId: string) => {
+  const startNewChat = async (userId: string) => {
     try {
-      const currentUser = await getCurrentUser();
-      if (!currentUser) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
         toast.error("Você precisa estar logado para iniciar um chat");
         navigate("/login");
         return;
       }
       
-      await createOrGetChat(currentUser.id, recipientId);
-      navigate(`/chat/${recipientId}`);
+      console.log("Iniciando chat com usuário:", userId);
+      
+      // Criamos o ID da sala de chat ordenando os IDs dos usuários
+      const chatId = [session.user.id, userId].sort().join('_');
+      
+      // Verificar se o chat existe, se não, criá-lo
+      const { data: existingChat } = await supabase
+        .from('chats')
+        .select('id')
+        .eq('id', chatId)
+        .maybeSingle();
+        
+      if (!existingChat) {
+        console.log("Chat não encontrado, criando novo chat");
+        // Criar o chat
+        const { error: createChatError } = await supabase
+          .from('chats')
+          .insert({ id: chatId });
+          
+        if (createChatError) {
+          console.error("Erro ao criar chat:", createChatError);
+          throw createChatError;
+        }
+        
+        // Adicionar participantes
+        const { error: participantsError } = await supabase
+          .from('chat_participants')
+          .insert([
+            { chat_id: chatId, user_id: session.user.id },
+            { chat_id: chatId, user_id: userId }
+          ]);
+          
+        if (participantsError) {
+          console.error("Erro ao adicionar participantes:", participantsError);
+          throw participantsError;
+        }
+      }
+      
+      // Navegar para a página de chat
+      navigate(`/chat/${userId}`);
       
     } catch (error) {
       console.error("Erro ao iniciar chat:", error);
