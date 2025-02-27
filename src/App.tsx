@@ -24,7 +24,7 @@ import AdminCategories from "./pages/AdminCategories";
 import AdminSistema from "./pages/AdminSistema";
 import Profile from "./pages/Profile";
 import UserProfile from "./pages/UserProfile";
-import NotFound from "./pages/NotFound";
+import NotFound from "./pages/NotFound"; 
 import ResetPassword from "./pages/ResetPassword";
 import UpdatePassword from "./pages/UpdatePassword";
 import UserProducts from "./pages/UserProducts";
@@ -34,8 +34,6 @@ import PostForm from "./pages/PostForm";
 import PostDetails from "./pages/PostDetails";
 import Menu from "./pages/Menu";
 import Search from "./pages/Search";
-import Chathome from './pages/Chathome';
-import Chat from './pages/Chat';
 
 const queryClient = new QueryClient();
 
@@ -65,15 +63,13 @@ const App: React.FC = () => {
                   <Route path="/config" element={<Config />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/update-password" element={<UpdatePassword />} />
-                  <Route path="/admin" element={<Admin />}>
+                  <Route path="/admin" element={<Admin />}>    
                     <Route path="lugares" element={<AdminPlaces />} />
                     <Route path="eventos" element={<AdminEvents />} />
                     <Route path="noticias" element={<AdminNews />} />
                     <Route path="categorias" element={<AdminCategories />} />
                     <Route path="sistema" element={<AdminSistema />} />
-                  </Route>
-                  <Route path="/chathome" element={<Chathome />} />
-                  <Route path="/chat/:roomId" element={<Chat />} />
+                  </Route> 
                   <Route path="/user-products" element={<UserProducts />} />
                   <Route path="/noticias/:id" element={<NewsDetails />} />
                   <Route path="/posts/:id" element={<PostDetails />} />
