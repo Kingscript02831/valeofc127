@@ -19,6 +19,15 @@ export default function UserProfile() {
   const navigate = useNavigate();
   const { theme } = useTheme();
   const { toast } = useToast();
+  const [isLoadingChat, setIsLoadingChat] = useState(false);
+
+  const { data: currentUser } = useQuery({
+    queryKey: ["currentUser"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      return user;
+    },
+  });
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ["userProfile", username],
@@ -38,30 +47,95 @@ export default function UserProfile() {
     },
   });
 
-  const createChatMutation = useMutation({
-    mutationFn: async (userId: string) => {
-      const { data, error } = await supabase.rpc('create_private_chat', {
-        other_user_id: userId
-      });
+  const { data: existingChat } = useQuery({
+    queryKey: ["existingChat", currentUser?.id, profile?.id],
+    queryFn: async () => {
+      if (!currentUser?.id || !profile?.id) return null;
 
-      if (error) throw error;
-      return data;
+      const { data } = await supabase
+        .from('chat_participants')
+        .select(`
+          chat_id,
+          chats!inner(id)
+        `)
+        .eq('user_id', currentUser.id)
+        .in('chat_id', (
+          supabase
+            .from('chat_participants')
+            .select('chat_id')
+            .eq('user_id', profile.id)
+        ));
+
+      return data?.[0]?.chat_id || null;
+    },
+    enabled: !!currentUser?.id && !!profile?.id,
+  });
+
+  const createChatMutation = useMutation({
+    mutationFn: async () => {
+      if (!profile?.id) throw new Error("No profile ID");
+      setIsLoadingChat(true);
+
+      // Criar novo chat
+      const { data: newChat, error: chatError } = await supabase
+        .from('chats')
+        .insert({})
+        .select()
+        .single();
+
+      if (chatError) throw chatError;
+
+      // Adicionar participantes
+      const { error: participantsError } = await supabase
+        .from('chat_participants')
+        .insert([
+          { chat_id: newChat.id, user_id: currentUser?.id },
+          { chat_id: newChat.id, user_id: profile.id }
+        ]);
+
+      if (participantsError) throw participantsError;
+
+      return newChat.id;
     },
     onSuccess: (chatId) => {
+      setIsLoadingChat(false);
       navigate(`/chat/${chatId}`);
     },
     onError: (error) => {
+      setIsLoadingChat(false);
       toast({
         title: "Erro",
         description: "Não foi possível iniciar a conversa. Tente novamente.",
         variant: "destructive",
       });
+      console.error("Error creating chat:", error);
     },
   });
 
   const handleStartChat = async () => {
-    if (!profile?.id) return;
-    createChatMutation.mutate(profile.id);
+    if (!currentUser) {
+      toast({
+        title: "Atenção",
+        description: "Você precisa estar logado para iniciar uma conversa.",
+        variant: "destructive",
+      });
+      return navigate("/login");
+    }
+
+    if (currentUser.id === profile?.id) {
+      toast({
+        title: "Atenção",
+        description: "Você não pode iniciar uma conversa com você mesmo.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (existingChat) {
+      navigate(`/chat/${existingChat}`);
+    } else {
+      createChatMutation.mutate();
+    }
   };
 
   const { data: followStats } = useQuery({
@@ -242,9 +316,10 @@ export default function UserProfile() {
                   variant="outline" 
                   size="sm"
                   className="flex items-center gap-2"
+                  disabled={isLoadingChat || currentUser?.id === profile.id}
                 >
                   <MessageCircle className="h-4 w-4" />
-                  Conversar
+                  {isLoadingChat ? 'Carregando...' : 'Conversar'}
                 </Button>
               </div>
 
