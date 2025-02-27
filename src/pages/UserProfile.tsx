@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -73,7 +74,7 @@ export default function UserProfile() {
 
   const createChatMutation = useMutation({
     mutationFn: async () => {
-      if (!profile?.id) throw new Error("No profile ID");
+      if (!profile?.id || !currentUser?.id) throw new Error("No profile ID or user ID");
       setIsLoadingChat(true);
 
       // Criar novo chat
@@ -89,7 +90,7 @@ export default function UserProfile() {
       const { error: participantsError } = await supabase
         .from('chat_participants')
         .insert([
-          { chat_id: newChat.id, user_id: currentUser?.id },
+          { chat_id: newChat.id, user_id: currentUser.id },
           { chat_id: newChat.id, user_id: profile.id }
         ]);
 
@@ -103,12 +104,12 @@ export default function UserProfile() {
     },
     onError: (error) => {
       setIsLoadingChat(false);
+      console.error("Error creating chat:", error);
       toast({
         title: "Erro",
         description: "Não foi possível iniciar a conversa. Tente novamente.",
         variant: "destructive",
       });
-      console.error("Error creating chat:", error);
     },
   });
 
