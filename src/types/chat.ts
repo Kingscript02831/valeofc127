@@ -1,19 +1,15 @@
 
-export interface Message {
-  id: string;
-  chat_id: string;
-  sender_id: string;
-  content: string;
-  created_at: string;
-  read: boolean;
-}
-
 export interface Chat {
   id: string;
   created_at: string;
-  updated_at: string;
-  participants: ChatParticipant[];
-  messages: Message[];
+  last_message?: string;
+  last_message_time?: string;
+  participants?: ChatParticipant[];
+  other_user?: {
+    username: string;
+    full_name: string;
+    avatar_url: string | null;
+  };
 }
 
 export interface ChatParticipant {
@@ -21,12 +17,28 @@ export interface ChatParticipant {
   chat_id: string;
   user_id: string;
   created_at: string;
-  last_read_at: string;
-  profile?: {
-    username?: string;
-    avatar_url?: string;
-    name?: string;
-    online_status?: boolean;
-    last_seen?: string;
+  user?: {
+    id: string;
+    username: string;
+    full_name: string;
+    avatar_url: string | null;
   };
+}
+
+export interface Message {
+  id: string;
+  chat_id: string;
+  user_id: string;
+  content: string;
+  created_at: string;
+  user?: {
+    username: string;
+    full_name: string;
+    avatar_url: string | null;
+  };
+}
+
+export interface SendMessageParams {
+  chat_id: string;
+  content: string;
 }
