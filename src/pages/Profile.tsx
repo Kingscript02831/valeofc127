@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -22,7 +23,9 @@ import {
   Calendar,
   Heart,
   Globe,
-  Instagram
+  Instagram,
+  MessageCircle,
+  ThumbsUp,
 } from "lucide-react";
 import BottomNav from "../components/BottomNav";
 import { useTheme } from "../components/ThemeProvider";
@@ -30,11 +33,34 @@ import ProfileTabs from "../components/ProfileTabs";
 import EditProfileDialog from "../components/EditProfileDialog";
 import EditPhotosButton from "../components/EditPhotosButton";
 import PhotoUrlDialog from "../components/PhotoUrlDialog";
+import { MediaCarousel } from "../components/MediaCarousel";
 import type { Profile } from "../types/profile";
 import { format } from "date-fns";
+import { Card, CardContent } from "../components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import { Link } from "react-router-dom";
+import { ptBR } from "date-fns/locale";
 
 const defaultAvatarImage = "/placeholder.svg";
 const defaultCoverImage = "/placeholder.svg";
+
+interface Post {
+  id: string;
+  user_id: string;
+  content: string;
+  images: string[];
+  video_urls: string[];
+  likes: number;
+  created_at: string;
+  user: {
+    username: string;
+    full_name: string;
+    avatar_url: string;
+  };
+  post_likes: { reaction_type: string; user_id: string; }[];
+  post_comments: { id: string; }[];
+}
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -87,6 +113,42 @@ export default function Profile() {
         following: followingCount || 0
       };
     },
+  });
+
+  const { data: userPosts, isLoading: isPostsLoading } = useQuery({
+    queryKey: ["userPosts", profile?.id],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return [];
+
+      const { data, error } = await supabase
+        .from("posts")
+        .select(`
+          *,
+          user:user_id (
+            username,
+            full_name,
+            avatar_url
+          ),
+          post_likes (
+            reaction_type,
+            user_id
+          ),
+          post_comments (
+            id
+          )
+        `)
+        .eq("user_id", session.user.id)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Erro ao buscar posts:", error);
+        return [];
+      }
+
+      return data || [];
+    },
+    enabled: !!profile?.id,
   });
 
   const handlePhotoUpdate = useMutation({
@@ -230,6 +292,22 @@ export default function Profile() {
   const formatBirthDate = (date: string | null | undefined) => {
     if (!date) return null;
     return format(new Date(date), "dd/MM/yyyy");
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return format(date, "d 'de' MMMM 'às' HH:mm", { locale: ptBR });
+  };
+
+  const renderContent = (content: string) => {
+    return content.split(' ').map((word, index) => {
+      if (word.startsWith('#')) {
+        return <span key={index} className="text-blue-500">{word} </span>;
+      } else if (word.startsWith('@')) {
+        return <span key={index} className="text-blue-500">{word} </span>;
+      }
+      return word + ' ';
+    });
   };
 
   useEffect(() => {
@@ -427,20 +505,152 @@ export default function Profile() {
             </div>
 
             <div className="mt-6">
-              <ProfileTabs userProducts={userProducts} />
+              <Tabs defaultValue="posts" className="w-full">
+                <TabsList className="w-full justify-start border-b border-gray-800 bg-transparent">
+                  <TabsTrigger
+                    value="posts"
+                    className={`flex-1 text-sm py-4 border-0 data-[state=active]:border-b-2 ${
+                      theme === 'light' 
+                        ? 'data-[state=active]:text-black data-[state=active]:border-black' 
+                        : 'data-[state=active]:text-white data-[state=active]:border-white'
+                    }`}
+                  >
+                    Posts
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="products"
+                    className={`flex-1 text-sm py-4 border-0 data-[state=active]:border-b-2 ${
+                      theme === 'light' 
+                        ? 'data-[state=active]:text-black data-[state=active]:border-black' 
+                        : 'data-[state=active]:text-white data-[state=active]:border-white'
+                    }`}
+                  >
+                    Produtos
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="reels"
+                    className={`flex-1 text-sm py-4 border-0 data-[state=active]:border-b-2 ${
+                      theme === 'light' 
+                        ? 'data-[state=active]:text-black data-[state=active]:border-black' 
+                        : 'data-[state=active]:text-white data-[state=active]:border-white'
+                    }`}
+                  >
+                    Reels
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="posts" className="min-h-[200px]">
+                  {isPostsLoading ? (
+                    <div className="flex items-center justify-center h-[200px]">
+                      <p className="text-gray-500">Carregando posts...</p>
+                    </div>
+                  ) : userPosts && userPosts.length > 0 ? (
+                    <div className="space-y-4 p-4">
+                      {userPosts.map((post: Post) => (
+                        <Link to={`/posts/${post.id}`} key={post.id}>
+                          <Card className={`${theme === 'light' ? 'bg-white' : 'bg-black'} overflow-hidden`}>
+                            <CardContent className="p-4">
+                              <div className="space-y-4">
+                                <div className="flex items-center space-x-4">
+                                  <Avatar>
+                                    <AvatarImage src={post.user?.avatar_url} />
+                                    <AvatarFallback>
+                                      {post.user?.full_name?.charAt(0).toUpperCase()}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div>
+                                    <p className="font-semibold">{post.user?.full_name}</p>
+                                    <p className="text-sm text-gray-500">
+                                      {formatDate(post.created_at)}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                {post.content && (
+                                  <p className="text-sm">
+                                    {renderContent(post.content)}
+                                  </p>
+                                )}
+
+                                {(post.images?.length > 0 || post.video_urls?.length > 0) && (
+                                  <div className="w-full">
+                                    <MediaCarousel
+                                      images={post.images || []}
+                                      videoUrls={post.video_urls || []}
+                                      title={post.content || ""}
+                                      autoplay={false}
+                                      showControls={true}
+                                      cropMode="contain"
+                                    />
+                                  </div>
+                                )}
+
+                                <div className="flex items-center space-x-4 text-sm text-gray-500">
+                                  <div className="flex items-center space-x-1">
+                                    <ThumbsUp className="h-4 w-4" />
+                                    <span>{post.post_likes?.length || 0}</span>
+                                  </div>
+                                  <div className="flex items-center space-x-1">
+                                    <MessageCircle className="h-4 w-4" />
+                                    <span>{post.post_comments?.length || 0}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center h-[200px]">
+                      <p className="text-gray-500">Ainda não há Posts</p>
+                    </div>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="products" className="min-h-[200px]">
+                  {userProducts && userProducts.length > 0 ? (
+                    <div className="grid grid-cols-2 gap-4 p-4">
+                      {userProducts.map((product) => (
+                        <Link to={`/product/${product.id}`} key={product.id}>
+                          <Card className={`${theme === 'light' ? 'bg-white' : 'bg-black'} shadow-none border-0 transition-all duration-300 hover:scale-105`}>
+                            <CardContent className="p-3">
+                              {product.images?.[0] && (
+                                <img
+                                  src={product.images[0]}
+                                  alt={product.title}
+                                  className="w-full aspect-square object-cover rounded-lg mb-2"
+                                />
+                              )}
+                              <h3 className={`font-medium ${theme === 'light' ? 'text-black' : 'text-white'}`}>{product.title}</h3>
+                              <p className="text-green-500">
+                                {new Intl.NumberFormat('pt-BR', {
+                                  style: 'currency',
+                                  currency: 'BRL'
+                                }).format(Number(product.price))}
+                              </p>
+                            </CardContent>
+                          </Card>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center h-[200px]">
+                      <p className="text-gray-500">Ainda não há Produtos</p>
+                    </div>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="reels" className="min-h-[200px]">
+                  <div className="flex items-center justify-center h-[200px]">
+                    <p className="text-gray-500">Ainda não há Reels</p>
+                  </div>
+                </TabsContent>
+              </Tabs>
             </div>
           </div>
         </div>
       </div>
-
-      <EditPhotosButton 
-        onAvatarClick={handleAvatarClick}
-        onCoverClick={handleCoverClick}
-        onDeleteAvatar={handleDeleteAvatar}
-        onDeleteCover={handleDeleteCover}
-        avatarCount={avatarCount}
-        coverCount={coverCount}
-      />
 
       <PhotoUrlDialog
         isOpen={isAvatarDialogOpen}
