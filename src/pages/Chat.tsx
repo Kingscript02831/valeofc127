@@ -1,10 +1,11 @@
 
 import { useState, useEffect, useRef } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { ChatHeader } from "@/components/chat/ChatHeader";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { Message, MessageType } from "@/components/chat/Message";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 // Função para gerar IDs únicos
 function uuidv4() {
@@ -15,125 +16,241 @@ function uuidv4() {
   });
 }
 
-// Algumas mensagens iniciais para demonstração
-const initialMessages: MessageType[] = [
-  {
-    id: "1",
-    text: "Oi, tudo bem?",
-    sender: "marcos",
-    timestamp: new Date(Date.now() - 60000 * 30),
-  },
-  {
-    id: "2",
-    text: "Tudo ótimo! E com você?",
-    sender: "vinix",
-    timestamp: new Date(Date.now() - 60000 * 28),
-  },
-  {
-    id: "3",
-    text: "Estou bem também! O que você está fazendo?",
-    sender: "marcos",
-    timestamp: new Date(Date.now() - 60000 * 25),
-  },
-  {
-    id: "4",
-    text: "Estou trabalhando em um projeto novo, é muito interessante!",
-    sender: "vinix",
-    timestamp: new Date(Date.now() - 60000 * 20),
-  },
-];
-
-type User = {
-  id: string;
-  name: string;
-};
-
-const users: User[] = [
-  { id: "1", name: "vinix" },
-  { id: "2", name: "marcos" },
-];
-
 const Chat = () => {
   const { chatId } = useParams();
-  const [messages, setMessages] = useState<MessageType[]>(initialMessages);
-  const [currentUser, setCurrentUser] = useState<User>(users[0]);
+  const navigate = useNavigate();
+  const [messages, setMessages] = useState<MessageType[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentUsername, setCurrentUsername] = useState<string>("");
   const [recipient, setRecipient] = useState("Carregando...");
+  const [recipientId, setRecipientId] = useState<string | null>(null);
   const [recipientAvatar, setRecipientAvatar] = useState<string | undefined>(undefined);
-  const [isOnline, setIsOnline] = useState(false);
+  const [onlineStatus, setOnlineStatus] = useState("offline");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Simular obtenção de dados do chat
   useEffect(() => {
-    // Em uma implementação real, buscaríamos o chat e mensagens do Supabase
-    // com base no chatId
-    
-    // Simulando a obtenção do recipiente
-    const otherUser = users.find(u => u.name !== currentUser.name);
-    if (otherUser) {
-      setRecipient(otherUser.name);
-      setIsOnline(true);
+    const fetchUserAndMessages = async () => {
+      try {
+        // Obter o usuário atual
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          toast.error("Usuário não autenticado");
+          navigate("/login");
+          return;
+        }
+
+        setCurrentUserId(session.user.id);
+
+        // Obter o nome de usuário atual
+        const { data: currentUserProfile } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('id', session.user.id)
+          .single();
+
+        if (currentUserProfile) {
+          setCurrentUsername(currentUserProfile.username || "");
+        }
+
+        // Verificar se chatId é válido
+        if (!chatId) {
+          toast.error("ID de conversa inválido");
+          navigate("/chat");
+          return;
+        }
+
+        // Obter informações do destinatário
+        setRecipientId(chatId);
+        const { data: recipientProfile, error: recipientError } = await supabase
+          .from('profiles')
+          .select('username, avatar_url, online_status')
+          .eq('id', chatId)
+          .single();
+
+        if (recipientError || !recipientProfile) {
+          toast.error("Destinatário não encontrado");
+          navigate("/chat");
+          return;
+        }
+
+        setRecipient(recipientProfile.username || "Usuário");
+        setRecipientAvatar(recipientProfile.avatar_url || undefined);
+        setOnlineStatus(recipientProfile.online_status ? "online" : "offline");
+
+        // Buscar mensagens existentes
+        await fetchMessages(session.user.id, chatId);
+      } catch (error) {
+        console.error("Erro ao carregar dados:", error);
+        toast.error("Erro ao carregar conversa");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserAndMessages();
+
+    // Configurar subscription para atualizações em tempo real
+    let channel: any;
+    if (chatId) {
+      channel = supabase
+        .channel(`chat-${chatId}`)
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `chat_id=eq.${chatId}`
+        }, payload => {
+          const newMessage = payload.new;
+          if (newMessage) {
+            appendNewMessage(newMessage);
+          }
+        })
+        .subscribe();
     }
-  }, [chatId, currentUser]);
+
+    return () => {
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
+    };
+  }, [chatId, navigate]);
+
+  const fetchMessages = async (userId: string, recipientId: string) => {
+    try {
+      // Em um app real, você teria uma tabela 'chats' e 'messages'
+      // Esta é uma implementação simplificada
+      
+      // Simular mensagens de demonstração por enquanto
+      const mockMessages: MessageType[] = [
+        {
+          id: "1",
+          text: "Oi, tudo bem?",
+          sender: recipientId,
+          timestamp: new Date(Date.now() - 60000 * 30),
+        },
+        {
+          id: "2",
+          text: "Tudo ótimo! E com você?",
+          sender: userId,
+          timestamp: new Date(Date.now() - 60000 * 28),
+        },
+        {
+          id: "3",
+          text: "Estou bem também! O que você está fazendo?",
+          sender: recipientId,
+          timestamp: new Date(Date.now() - 60000 * 25),
+        },
+        {
+          id: "4",
+          text: "Estou trabalhando em um projeto novo, é muito interessante!",
+          sender: userId,
+          timestamp: new Date(Date.now() - 60000 * 20),
+        },
+      ];
+      
+      setMessages(mockMessages);
+    } catch (error) {
+      console.error("Erro ao buscar mensagens:", error);
+      toast.error("Erro ao carregar mensagens");
+    }
+  };
+
+  const appendNewMessage = (messageData: any) => {
+    // Converter dados do banco para o formato MessageType
+    const newMessage: MessageType = {
+      id: messageData.id,
+      text: messageData.content,
+      sender: messageData.sender_id,
+      timestamp: new Date(messageData.created_at),
+    };
+    
+    setMessages(prev => [...prev, newMessage]);
+  };
 
   // Rolar para o final quando as mensagens mudarem
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSendMessage = (text: string) => {
-    const newMessage: MessageType = {
-      id: uuidv4(),
-      text,
-      sender: currentUser.name,
-      timestamp: new Date(),
-    };
+  const handleSendMessage = async (text: string) => {
+    if (!currentUserId || !recipientId) {
+      toast.error("Não foi possível enviar a mensagem");
+      return;
+    }
     
-    setMessages((prev) => [...prev, newMessage]);
+    setSending(true);
     
-    // Simular uma resposta do outro usuário
-    setTimeout(() => {
-      const otherUser = users.find(u => u.name !== currentUser.name);
-      if (otherUser) {
-        const responseMessage: MessageType = {
-          id: uuidv4(),
-          text: `Resposta automática de ${otherUser.name}: Recebi sua mensagem`,
-          sender: otherUser.name,
-          timestamp: new Date(),
-        };
-        setMessages((prev) => [...prev, responseMessage]);
-      }
-    }, 1000);
+    try {
+      // Em um app real, você salvaria a mensagem no banco
+      // Esta é uma implementação simplificada
+      
+      const newMessage: MessageType = {
+        id: uuidv4(),
+        text,
+        sender: currentUserId,
+        timestamp: new Date(),
+      };
+      
+      setMessages((prev) => [...prev, newMessage]);
+      
+      // Simular envio para o Supabase
+      toast.success("Mensagem enviada");
+      
+      // Simular uma resposta do outro usuário
+      setTimeout(() => {
+        if (recipientId) {
+          const responseMessage: MessageType = {
+            id: uuidv4(),
+            text: `Resposta automática do usuário ${recipient}: Recebi sua mensagem`,
+            sender: recipientId,
+            timestamp: new Date(),
+          };
+          setMessages((prev) => [...prev, responseMessage]);
+        }
+      }, 1000);
+    } catch (error) {
+      console.error("Erro ao enviar mensagem:", error);
+      toast.error("Erro ao enviar mensagem");
+    } finally {
+      setSending(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col h-screen bg-gray-100 dark:bg-gray-900 items-center justify-center">
+        <p className="text-gray-500">Carregando conversa...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-screen bg-gray-100 dark:bg-gray-900">
       <ChatHeader 
         recipient={recipient} 
-        avatar={recipientAvatar} 
-        isOnline={isOnline} 
+        status={onlineStatus}
       />
       
       <div className="flex-1 overflow-y-auto p-4">
-        {messages.map((message) => (
-          <Message
-            key={message.id}
-            message={message}
-            isCurrentUser={message.sender === currentUser.name}
-          />
-        ))}
+        {messages.length > 0 ? (
+          messages.map((message) => (
+            <Message
+              key={message.id}
+              message={message}
+              isCurrentUser={message.sender === currentUserId}
+            />
+          ))
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full">
+            <p className="text-gray-500">Nenhuma mensagem ainda. Diga olá!</p>
+          </div>
+        )}
         <div ref={messagesEndRef} />
       </div>
       
       <ChatInput onSend={handleSendMessage} />
-      
-      <div className="fixed bottom-20 right-6">
-        <button
-          onClick={() => setCurrentUser(currentUser.id === "1" ? users[1] : users[0])}
-          className="bg-primary text-white p-3 rounded-full shadow-lg"
-        >
-          Trocar para {currentUser.id === "1" ? "marcos" : "vinix"}
-        </button>
-      </div>
     </div>
   );
 };
