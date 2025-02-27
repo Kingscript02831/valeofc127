@@ -317,6 +317,18 @@ export default function Profile() {
                 <p className="text-gray-500">Sem Capa de Perfil</p>
               </div>
             )}
+            
+            {/* Stats relocated here */}
+            <div className="absolute bottom-0 right-4 flex gap-4 bg-black/30 backdrop-blur-sm px-3 py-1 rounded-t-lg">
+              <div className="text-center">
+                <p className="font-semibold text-white">{followStats?.followers || 0}</p>
+                <p className="text-xs text-white/80">Seguidores</p>
+              </div>
+              <div className="text-center">
+                <p className="font-semibold text-white">{followStats?.following || 0}</p>
+                <p className="text-xs text-white/80">Seguindo</p>
+              </div>
+            </div>
           </div>
 
           <div className="relative -mt-16 px-4">
@@ -351,16 +363,6 @@ export default function Profile() {
                       {profile.status}
                     </p>
                   )}
-                </div>
-                <div className="flex gap-4 text-center">
-                  <div>
-                    <p className="font-semibold">{followStats?.followers || 0}</p>
-                    <p className="text-sm text-gray-500">Seguidores</p>
-                  </div>
-                  <div>
-                    <p className="font-semibold">{followStats?.following || 0}</p>
-                    <p className="text-sm text-gray-500">Seguindo</p>
-                  </div>
                 </div>
               </div>
 
