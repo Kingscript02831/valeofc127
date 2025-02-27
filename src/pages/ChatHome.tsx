@@ -1,5 +1,5 @@
 
-import { ChatList } from "@/components/chat/ChatList";
+import { ChatList } from "../components/chat/ChatList";
 
 const ChatHome = () => {
   return <ChatList />;
