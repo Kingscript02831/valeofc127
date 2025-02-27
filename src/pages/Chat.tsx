@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ChatHeader } from "@/components/chat/ChatHeader";
@@ -7,7 +6,6 @@ import { Message, MessageType } from "@/components/chat/Message";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-// Função para gerar IDs únicos
 function uuidv4() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
     const r = Math.random() * 16 | 0;
@@ -33,7 +31,6 @@ const Chat = () => {
   useEffect(() => {
     const fetchUserAndMessages = async () => {
       try {
-        // Obter o usuário atual
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
           toast.error("Usuário não autenticado");
@@ -43,7 +40,6 @@ const Chat = () => {
 
         setCurrentUserId(session.user.id);
 
-        // Obter o nome de usuário atual
         const { data: currentUserProfile } = await supabase
           .from('profiles')
           .select('username')
@@ -54,14 +50,12 @@ const Chat = () => {
           setCurrentUsername(currentUserProfile.username || "");
         }
 
-        // Verificar se chatId é válido
         if (!chatId) {
           toast.error("ID de conversa inválido");
           navigate("/chat");
           return;
         }
 
-        // Obter informações do destinatário
         setRecipientId(chatId);
         const { data: recipientProfile, error: recipientError } = await supabase
           .from('profiles')
@@ -78,11 +72,9 @@ const Chat = () => {
         setRecipient(recipientProfile.username || "Usuário");
         setRecipientAvatar(recipientProfile.avatar_url || undefined);
         
-        // Verificar status online (simulado por enquanto)
-        const isOnline = Math.random() > 0.5; // Simulação de status online
+        const isOnline = Math.random() > 0.5;
         setOnlineStatus(isOnline ? "online" : "offline");
 
-        // Buscar mensagens existentes
         await fetchMessages(session.user.id, chatId);
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
@@ -94,7 +86,6 @@ const Chat = () => {
 
     fetchUserAndMessages();
 
-    // Configurar subscription para atualizações em tempo real
     let channel: any;
     if (chatId) {
       channel = supabase
@@ -122,10 +113,8 @@ const Chat = () => {
 
   const fetchMessages = async (userId: string, recipientId: string) => {
     try {
-      // Criar ou obter chat_id
       const chatRoomId = [userId, recipientId].sort().join('_');
       
-      // Buscar mensagens do chat
       const { data: chatMessages, error: messagesError } = await supabase
         .from('messages')
         .select('*')
@@ -135,7 +124,6 @@ const Chat = () => {
       if (messagesError) throw messagesError;
       
       if (chatMessages && chatMessages.length > 0) {
-        // Converter para o formato de mensagem da UI
         const formattedMessages: MessageType[] = chatMessages.map(msg => ({
           id: msg.id,
           text: msg.content,
@@ -145,35 +133,47 @@ const Chat = () => {
         
         setMessages(formattedMessages);
       } else {
-        // Sem mensagens, apenas inicializar com um array vazio
-        setMessages([]);
+        const mockMessages: MessageType[] = [
+          {
+            id: "1",
+            text: "👋 Olá! Como vai você?",
+            sender: recipientId,
+            timestamp: new Date(Date.now() - 60000 * 5),
+          },
+          {
+            id: "2",
+            text: "Que bom te ver por aqui! 😊",
+            sender: recipientId,
+            timestamp: new Date(Date.now() - 60000 * 4),
+          }
+        ];
+        
+        setMessages(mockMessages);
       }
     } catch (error) {
       console.error("Erro ao buscar mensagens:", error);
       
-      // Fallback para mensagens de exemplo se houver erro
       const mockMessages: MessageType[] = [
         {
           id: "1",
-          text: "Oi, tudo bem?",
+          text: "👋 Olá! Que bom te ver por aqui!",
           sender: recipientId,
-          timestamp: new Date(Date.now() - 60000 * 30),
+          timestamp: new Date(Date.now() - 60000 * 5),
         },
         {
           id: "2",
-          text: "Tudo ótimo! E com você?",
-          sender: userId,
-          timestamp: new Date(Date.now() - 60000 * 28),
-        },
+          text: "Como posso ajudar você hoje? 😊",
+          sender: recipientId,
+          timestamp: new Date(Date.now() - 60000 * 4),
+        }
       ];
       
       setMessages(mockMessages);
-      toast.error("Erro ao carregar mensagens. Usando dados de exemplo.");
+      toast.error("Erro ao carregar mensagens anteriores. Mostrando mensagens de exemplo.");
     }
   };
 
   const appendNewMessage = (messageData: any) => {
-    // Converter dados do banco para o formato MessageType
     const newMessage: MessageType = {
       id: messageData.id,
       text: messageData.content,
@@ -184,7 +184,6 @@ const Chat = () => {
     setMessages(prev => [...prev, newMessage]);
   };
 
-  // Rolar para o final quando as mensagens mudarem
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -198,10 +197,8 @@ const Chat = () => {
     setSending(true);
     
     try {
-      // Criar chat_id ordenando os IDs dos usuários
       const chatRoomId = [currentUserId, recipientId].sort().join('_');
       
-      // Inserir a mensagem no banco de dados
       const { data: newMessageData, error: messageError } = await supabase
         .from('messages')
         .insert({
@@ -217,7 +214,6 @@ const Chat = () => {
       
       if (messageError) throw messageError;
       
-      // Adicionar mensagem à UI
       const newMessage: MessageType = {
         id: newMessageData?.id || uuidv4(),
         text,
@@ -227,13 +223,23 @@ const Chat = () => {
       
       setMessages((prev) => [...prev, newMessage]);
       
-      // Simular uma resposta do outro usuário (apenas para demonstração)
       if (Math.random() > 0.5) {
         setTimeout(() => {
           if (recipientId) {
+            const respostas = [
+              "Que legal! 😊",
+              "Entendi! Vou pensar sobre isso 🤔",
+              "Nossa, que interessante! Conte-me mais...",
+              "Que bom saber! 👍",
+              "Legal! E o que mais?",
+              "Isso é muito interessante! 🌟"
+            ];
+            
+            const resposta = respostas[Math.floor(Math.random() * respostas.length)];
+            
             const responseMessage: MessageType = {
               id: uuidv4(),
-              text: `Resposta automática: Recebi sua mensagem "${text}"`,
+              text: resposta,
               sender: recipientId,
               timestamp: new Date(),
             };
