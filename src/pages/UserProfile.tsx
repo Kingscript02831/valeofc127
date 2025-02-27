@@ -84,17 +84,26 @@ export default function UserProfile() {
         .select()
         .single();
 
-      if (chatError) throw chatError;
+      if (chatError) {
+        console.error("Error creating chat:", chatError);
+        throw chatError;
+      }
+
+      // Define a current timestamp for last_read_at
+      const currentTimestamp = new Date().toISOString();
 
       // Adicionar participantes
       const { error: participantsError } = await supabase
         .from('chat_participants')
         .insert([
-          { chat_id: newChat.id, user_id: currentUser.id },
-          { chat_id: newChat.id, user_id: profile.id }
+          { chat_id: newChat.id, user_id: currentUser.id, last_read_at: currentTimestamp },
+          { chat_id: newChat.id, user_id: profile.id, last_read_at: currentTimestamp }
         ]);
 
-      if (participantsError) throw participantsError;
+      if (participantsError) {
+        console.error("Error adding participants:", participantsError);
+        throw participantsError;
+      }
 
       return newChat.id;
     },
