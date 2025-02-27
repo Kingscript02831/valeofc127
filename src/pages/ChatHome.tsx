@@ -26,13 +26,18 @@ const ChatHome = () => {
     setIsSearching(true);
     
     try {
-      const { data: session } = await supabase.auth.getSession();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Você precisa estar logado para buscar usuários");
+        navigate("/login");
+        return;
+      }
       
       const { data, error } = await supabase
         .from("profiles")
         .select("id, username, avatar_url, full_name")
         .or(`username.ilike.%${query}%, full_name.ilike.%${query}%`)
-        .neq('id', session.session?.user.id)
+        .neq('id', session.user.id)
         .limit(5);
 
       if (error) {
@@ -41,6 +46,7 @@ const ChatHome = () => {
         return;
       }
 
+      console.log("Resultados da busca:", data?.length || 0);
       setSearchResults(data || []);
     } catch (error) {
       console.error("Erro ao buscar usuários:", error);
@@ -52,23 +58,16 @@ const ChatHome = () => {
 
   const startNewChat = async (userId: string) => {
     try {
-      const { data: session } = await supabase.auth.getSession();
-      if (!session.session) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
         toast.error("Você precisa estar logado para iniciar um chat");
         navigate("/login");
         return;
       }
       
-      // Criar/obter chat com o usuário selecionado
-      const { data, error } = await supabase.rpc('create_private_chat', {
-        other_user_id: userId
-      });
+      console.log("Iniciando chat com usuário:", userId);
       
-      if (error) {
-        throw error;
-      }
-      
-      // Navegar para o chat
+      // Apenas navegamos para a página de chat com o usuário selecionado
       navigate(`/chat/${userId}`);
       
     } catch (error) {
@@ -90,6 +89,11 @@ const ChatHome = () => {
             onChange={(e) => handleSearch(e.target.value)}
             className="pl-10 bg-[#128C7E] text-white placeholder:text-gray-200 border-none rounded-lg"
           />
+          {isSearching && (
+            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+              <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+            </div>
+          )}
         </div>
       </div>
       

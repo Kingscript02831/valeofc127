@@ -24,11 +24,13 @@ export const ChatList = () => {
         // Obter usuário atual
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
+          console.log("Sem sessão de usuário");
           setChats([]);
           setLoading(false);
           return;
         }
 
+        console.log("Usuário logado:", session.user.id);
         setCurrentUser(session.user);
 
         // Buscar chats que o usuário participa
@@ -37,7 +39,12 @@ export const ChatList = () => {
           .select('chat_id')
           .eq('user_id', session.user.id);
 
-        if (participationsError) throw participationsError;
+        if (participationsError) {
+          console.error("Erro ao buscar participações:", participationsError);
+          throw participationsError;
+        }
+
+        console.log("Participações encontradas:", participations?.length || 0);
 
         if (!participations || participations.length === 0) {
           setChats([]);
@@ -46,66 +53,86 @@ export const ChatList = () => {
         }
 
         const chatIds = participations.map(p => p.chat_id);
+        console.log("IDs de chat:", chatIds);
 
         // Para cada chat, encontrar o outro usuário
         const chatPreviews: ChatPreview[] = [];
 
         for (const chatId of chatIds) {
-          // Encontrar o outro participante
-          const { data: otherParticipant, error: otherError } = await supabase
-            .from('chat_participants')
-            .select('user_id')
-            .eq('chat_id', chatId)
-            .neq('user_id', session.user.id)
-            .single();
+          try {
+            // Encontrar o outro participante
+            const { data: otherParticipant, error: otherError } = await supabase
+              .from('chat_participants')
+              .select('user_id')
+              .eq('chat_id', chatId)
+              .neq('user_id', session.user.id)
+              .single();
 
-          if (otherError) continue;
+            if (otherError) {
+              console.error("Erro ao buscar outro participante:", otherError);
+              continue;
+            }
 
-          // Obter detalhes do outro usuário
-          const { data: userData, error: userError } = await supabase
-            .from('profiles')
-            .select('username, avatar_url')
-            .eq('id', otherParticipant.user_id)
-            .single();
+            // Obter detalhes do outro usuário
+            const { data: userData, error: userError } = await supabase
+              .from('profiles')
+              .select('username, avatar_url')
+              .eq('id', otherParticipant.user_id)
+              .single();
 
-          if (userError) continue;
+            if (userError) {
+              console.error("Erro ao buscar perfil do usuário:", userError);
+              continue;
+            }
 
-          // Obter última mensagem
-          const { data: lastMessage, error: msgError } = await supabase
-            .from('messages')
-            .select('content, created_at, read')
-            .eq('chat_id', chatId)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .single();
+            // Obter última mensagem
+            const { data: lastMessage, error: msgError } = await supabase
+              .from('messages')
+              .select('content, created_at, read')
+              .eq('chat_id', chatId)
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .single();
 
-          // Contar mensagens não lidas
-          const { count: unreadCount, error: unreadError } = await supabase
-            .from('messages')
-            .select('*', { count: 'exact', head: true })
-            .eq('chat_id', chatId)
-            .eq('read', false)
-            .neq('sender_id', session.user.id);
+            if (msgError && msgError.code !== 'PGRST116') {
+              console.error("Erro ao buscar última mensagem:", msgError);
+            }
 
-          const preview: ChatPreview = {
-            id: otherParticipant.user_id,
-            username: userData.username || 'Usuário',
-            avatar_url: userData.avatar_url,
-            last_message: lastMessage?.content || '',
-            last_time: lastMessage ? new Date(lastMessage.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
-            unread: unreadCount || 0
-          };
+            // Contar mensagens não lidas
+            const { count: unreadCount, error: unreadError } = await supabase
+              .from('messages')
+              .select('*', { count: 'exact', head: true })
+              .eq('chat_id', chatId)
+              .eq('read', false)
+              .neq('sender_id', session.user.id);
 
-          chatPreviews.push(preview);
+            if (unreadError) {
+              console.error("Erro ao contar mensagens não lidas:", unreadError);
+            }
+
+            const preview: ChatPreview = {
+              id: otherParticipant.user_id,
+              username: userData.username || 'Usuário',
+              avatar_url: userData.avatar_url,
+              last_message: lastMessage?.content || '',
+              last_time: lastMessage ? new Date(lastMessage.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
+              unread: unreadCount || 0
+            };
+
+            chatPreviews.push(preview);
+          } catch (error) {
+            console.error(`Erro ao processar chat ${chatId}:`, error);
+          }
         }
 
         // Ordenar chats por última mensagem (mais recente primeiro)
         chatPreviews.sort((a, b) => {
           if (!a.last_time) return 1;
           if (!b.last_time) return -1;
-          return new Date(b.last_time).getTime() - new Date(a.last_time).getTime();
+          return b.last_time.localeCompare(a.last_time);
         });
 
+        console.log("Previews de chat processados:", chatPreviews.length);
         setChats(chatPreviews);
       } catch (error) {
         console.error("Erro ao carregar conversas:", error);
