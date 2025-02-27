@@ -4,10 +4,10 @@ import { ChatList } from "@/components/chat/ChatList";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
 import { toast } from "sonner";
+import { getCurrentUser, createOrGetChat } from "@/utils/supabase";
 
 const ChatHome = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -26,8 +26,8 @@ const ChatHome = () => {
     setIsSearching(true);
     
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
         toast.error("Você precisa estar logado para buscar usuários");
         navigate("/login");
         return;
@@ -37,16 +37,11 @@ const ChatHome = () => {
         .from("profiles")
         .select("id, username, avatar_url, full_name")
         .or(`username.ilike.%${query}%, full_name.ilike.%${query}%`)
-        .neq('id', session.user.id)
+        .neq('id', currentUser.id)
         .limit(5);
 
-      if (error) {
-        console.error("Erro na busca:", error);
-        toast.error("Erro ao buscar usuários");
-        return;
-      }
+      if (error) throw error;
 
-      console.log("Resultados da busca:", data?.length || 0);
       setSearchResults(data || []);
     } catch (error) {
       console.error("Erro ao buscar usuários:", error);
@@ -56,19 +51,17 @@ const ChatHome = () => {
     }
   };
 
-  const startNewChat = async (userId: string) => {
+  const startNewChat = async (recipientId: string) => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
         toast.error("Você precisa estar logado para iniciar um chat");
         navigate("/login");
         return;
       }
       
-      console.log("Iniciando chat com usuário:", userId);
-      
-      // Apenas navegamos para a página de chat com o usuário selecionado
-      navigate(`/chat/${userId}`);
+      await createOrGetChat(currentUser.id, recipientId);
+      navigate(`/chat/${recipientId}`);
       
     } catch (error) {
       console.error("Erro ao iniciar chat:", error);
