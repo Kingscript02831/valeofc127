@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -35,9 +34,6 @@ import PostForm from "./pages/PostForm";
 import PostDetails from "./pages/PostDetails";
 import Menu from "./pages/Menu";
 import Search from "./pages/Search";
-import ChatHome from "./pages/ChatHome";
-import Chat from "./pages/Chat";
-
 
 const queryClient = new QueryClient();
 
@@ -80,8 +76,6 @@ const App: React.FC = () => {
                   <Route path="/posts/new" element={<PostForm />} />
                   <Route path="/menu" element={<Menu />} />
                   <Route path="/search" element={<Search />} />
-                  <Route path="/chat-home" element={<ChatHome />} />
-                  <Route path="/chat" element={<Chat />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </AuthWrapper>
