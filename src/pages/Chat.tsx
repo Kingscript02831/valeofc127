@@ -1,8 +1,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
-import { ChatHeader } from "../components/chat/ChatHeader";
-import { ChatInput } from "../components/chat/ChatInput";
+import { ChatHeader } from "@/components/chat/ChatHeader";
+import { ChatInput } from "@/components/chat/ChatInput";
 import { Message, MessageType } from "../components/chat/Message";
 import { v4 as uuidv4 } from "uuid";
 
