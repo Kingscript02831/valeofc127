@@ -24,7 +24,6 @@ import AdminCategories from "./pages/AdminCategories";
 import AdminSistema from "./pages/AdminSistema";
 import Profile from "./pages/Profile";
 import UserProfile from "./pages/UserProfile";
-import NotFound from "./pages/NotFound"; 
 import ResetPassword from "./pages/ResetPassword";
 import UpdatePassword from "./pages/UpdatePassword";
 import UserProducts from "./pages/UserProducts";
@@ -34,6 +33,9 @@ import PostForm from "./pages/PostForm";
 import PostDetails from "./pages/PostDetails";
 import Menu from "./pages/Menu";
 import Search from "./pages/Search";
+import ChatHome from "./pages/ChatHome";
+import Chat from "./pages/Chat";
+import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
