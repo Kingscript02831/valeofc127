@@ -123,7 +123,7 @@ const Chat = () => {
       
       if (messagesError) throw messagesError;
       
-      if (chatMessages && chatMessages.length > 0) {
+      if (chatMessages) {
         const formattedMessages: MessageType[] = chatMessages.map(msg => ({
           id: msg.id,
           text: msg.content,
@@ -133,43 +133,12 @@ const Chat = () => {
         
         setMessages(formattedMessages);
       } else {
-        const mockMessages: MessageType[] = [
-          {
-            id: "1",
-            text: "👋 Olá! Como vai você?",
-            sender: recipientId,
-            timestamp: new Date(Date.now() - 60000 * 5),
-          },
-          {
-            id: "2",
-            text: "Que bom te ver por aqui! 😊",
-            sender: recipientId,
-            timestamp: new Date(Date.now() - 60000 * 4),
-          }
-        ];
-        
-        setMessages(mockMessages);
+        setMessages([]);
       }
     } catch (error) {
       console.error("Erro ao buscar mensagens:", error);
-      
-      const mockMessages: MessageType[] = [
-        {
-          id: "1",
-          text: "👋 Olá! Que bom te ver por aqui!",
-          sender: recipientId,
-          timestamp: new Date(Date.now() - 60000 * 5),
-        },
-        {
-          id: "2",
-          text: "Como posso ajudar você hoje? 😊",
-          sender: recipientId,
-          timestamp: new Date(Date.now() - 60000 * 4),
-        }
-      ];
-      
-      setMessages(mockMessages);
-      toast.error("Erro ao carregar mensagens anteriores. Mostrando mensagens de exemplo.");
+      setMessages([]);
+      toast.error("Erro ao carregar mensagens anteriores.");
     }
   };
 
