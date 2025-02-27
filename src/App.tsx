@@ -71,8 +71,7 @@ const App: React.FC = () => {
                     <Route path="noticias" element={<AdminNews />} />
                     <Route path="categorias" element={<AdminCategories />} />
                     <Route path="sistema" element={<AdminSistema />} />
-                    <Route path="/chathome" element={<chathome />} />
-                    <Route path="/chat/:roomId" element={<chat />} />
+                    
                   </Route> 
                   <Route path="/user-products" element={<UserProducts />} />
                   <Route path="/noticias/:id" element={<NewsDetails />} />
@@ -80,7 +79,9 @@ const App: React.FC = () => {
                   <Route path="/posts/new" element={<PostForm />} />
                   <Route path="/menu" element={<Menu />} />
                   <Route path="/search" element={<Search />} />
-                  <Route path="*" element={<NotFound />} />
+                   <Route path="/chathome" element={<Chathome />} />
+                   <Route path="/chat/:roomId" element={<Chat />} />
+                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </AuthWrapper>
             </BrowserRouter>
