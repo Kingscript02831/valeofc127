@@ -15,7 +15,7 @@ import { ptBR } from "date-fns/locale";
 import { getReactionIcon } from "@/utils/emojisPosts";
 import Tags from "@/components/Tags";
 import { Button } from "@/components/ui/button";
-import { UserPlus, UserCheck } from "lucide-react";
+import { UserPlus, UserCheck, MoreVertical } from "lucide-react";
 import { toast } from "sonner";
 
 interface Post {
@@ -338,47 +338,45 @@ const Posts: React.FC = () => {
                   <div className="p-3 space-y-2">
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-3">
-                        <Avatar 
-                          className="h-10 w-10 border-2 border-primary/10 cursor-pointer hover:opacity-80 transition-opacity"
-                          onClick={() => navigate(`/perfil/${post.user.username}`)}
-                        >
-                          <AvatarImage src={post.user.avatar_url || "/placeholder.svg"} />
-                          <AvatarFallback>
-                            {post.user.full_name?.charAt(0).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
+                        <div className="relative rounded-full p-[3px] bg-gradient-to-tr from-pink-500 via-purple-500 to-yellow-500">
+                          <Avatar 
+                            className="h-12 w-12 border-2 border-white dark:border-gray-800 cursor-pointer hover:opacity-80 transition-opacity"
+                            onClick={() => navigate(`/perfil/${post.user.username}`)}
+                          >
+                            <AvatarImage src={post.user.avatar_url || "/placeholder.svg"} />
+                            <AvatarFallback>
+                              {post.user.full_name?.charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                        </div>
                         <div>
-                          <div className="flex items-center gap-2">
-                            <h2 className="font-semibold">{post.user.full_name}</h2>
-                            <p className="text-sm text-muted-foreground">@{post.user.username}</p>
-                          </div>
-                          <p className="text-sm text-muted-foreground">
-                            {formatDate(post.created_at)}
+                          <h2 className="font-bold text-lg">{post.user.username}</h2>
+                          <p className="text-sm text-muted-foreground font-medium uppercase">
+                            GRÃO Mogol-MG
                           </p>
                         </div>
                       </div>
                       
-                      {currentUser && currentUser.id !== post.user.id && (
-                        <Button 
-                          onClick={() => handleFollowAction(post.user.id)}
-                          variant="secondary"
-                          size="sm"
-                          className="h-8 px-3"
-                          disabled={followMutation.isPending || unfollowMutation.isPending}
-                        >
-                          {isFollowing(post.user.id) ? (
-                            <>
-                              <UserCheck size={16} className="mr-1" />
-                              <span className="text-xs">Seguindo</span>
-                            </>
-                          ) : (
-                            <>
-                              <UserPlus size={16} className="mr-1" />
-                              <span className="text-xs">Seguir</span>
-                            </>
-                          )}
+                      <div className="flex items-center gap-2">
+                        {currentUser && currentUser.id !== post.user.id && (
+                          <Button 
+                            onClick={() => handleFollowAction(post.user.id)}
+                            variant="outline"
+                            size="sm"
+                            className={`h-10 px-5 rounded-full text-base font-semibold ${
+                              isFollowing(post.user.id) 
+                                ? "bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-black dark:text-white" 
+                                : "bg-black dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-200 text-white dark:text-black"
+                            }`}
+                            disabled={followMutation.isPending || unfollowMutation.isPending}
+                          >
+                            {isFollowing(post.user.id) ? "Seguindo" : "Seguir"}
+                          </Button>
+                        )}
+                        <Button variant="ghost" size="icon" className="text-gray-600 dark:text-gray-300">
+                          <MoreVertical size={20} />
                         </Button>
-                      )}
+                      </div>
                     </div>
 
                     {post.content && (
