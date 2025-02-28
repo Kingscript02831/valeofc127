@@ -199,6 +199,21 @@ const Posts: React.FC = () => {
       return;
     }
 
+    const lastActionTime = localStorage.getItem(`followAction_${userId}`);
+    const now = Date.now();
+    const cooldownPeriod = 30000; // 30 seconds in milliseconds
+
+    if (lastActionTime) {
+      const timeSinceLastAction = now - parseInt(lastActionTime);
+      if (timeSinceLastAction < cooldownPeriod) {
+        const remainingSeconds = Math.ceil((cooldownPeriod - timeSinceLastAction) / 1000);
+        toast.error(`Aguarde ${remainingSeconds} segundos antes de alterar o status de seguir novamente.`);
+        return;
+      }
+    }
+
+    localStorage.setItem(`followAction_${userId}`, now.toString());
+
     if (isFollowing(userId)) {
       unfollowMutation.mutate(userId);
     } else {
