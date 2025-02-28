@@ -1,12 +1,12 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { MediaCarousel } from "@/components/MediaCarousel";
 import Navbar from "@/components/Navbar";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import ReactionMenu from "@/components/ReactionMenu";
 import BottomNav from "@/components/BottomNav";
 import { useNavigate } from "react-router-dom";
@@ -14,9 +14,6 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { getReactionIcon } from "@/utils/emojisPosts";
 import Tags from "@/components/Tags";
-import { Button } from "@/components/ui/button";
-import { UserCheck, UserPlus } from "lucide-react";
-import { toast } from "sonner";
 
 interface Post {
   id: string;
@@ -33,28 +30,14 @@ interface Post {
     username: string;
     full_name: string;
     avatar_url: string;
-    id: string;
   };
 }
 
 const Posts: React.FC = () => {
-  const { toast: hookToast } = useToast();
+  const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [activeReactionMenu, setActiveReactionMenu] = useState<string | null>(null);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [followStatuses, setFollowStatuses] = useState<Record<string, boolean>>({});
-
-  // Get current user
-  useEffect(() => {
-    const fetchCurrentUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        setCurrentUserId(session.user.id);
-      }
-    };
-    fetchCurrentUser();
-  }, []);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -106,158 +89,12 @@ const Posts: React.FC = () => {
     },
   });
 
-  // Check follow status for post authors
-  useEffect(() => {
-    if (!currentUserId || !posts || posts.length === 0) return;
-
-    const checkFollowStatuses = async () => {
-      try {
-        // Get unique user IDs from posts
-        const userIds = [...new Set(posts.map(post => post.user.id))];
-        
-        // Filter out current user (can't follow yourself)
-        const filteredUserIds = userIds.filter(id => id !== currentUserId);
-        
-        if (filteredUserIds.length === 0) return;
-
-        // Check follow status for each user
-        const { data, error } = await supabase
-          .from('follows')
-          .select('following_id')
-          .eq('follower_id', currentUserId)
-          .in('following_id', filteredUserIds);
-
-        if (error) throw error;
-
-        // Build a map of follow statuses
-        const followMap: Record<string, boolean> = {};
-        filteredUserIds.forEach(id => {
-          followMap[id] = false;
-        });
-
-        // Update with actual follow statuses
-        data.forEach(follow => {
-          followMap[follow.following_id] = true;
-        });
-
-        setFollowStatuses(followMap);
-      } catch (error) {
-        console.error('Error checking follow statuses:', error);
-      }
-    };
-
-    checkFollowStatuses();
-  }, [currentUserId, posts]);
-
-  // Follow user mutation
-  const followMutation = useMutation({
-    mutationFn: async (userId: string) => {
-      if (!currentUserId) {
-        throw new Error("Not authenticated");
-      }
-      
-      const { data, error } = await supabase
-        .from('follows')
-        .insert([
-          { follower_id: currentUserId, following_id: userId }
-        ]);
-        
-      if (error) throw error;
-      
-      // Add notification to the other user about being followed
-      await supabase
-        .from('notifications')
-        .insert([
-          {
-            user_id: userId,
-            title: 'Novo seguidor',
-            message: 'começou a seguir você.',
-            type: 'system',
-            reference_id: currentUserId
-          }
-        ]);
-        
-      return data;
-    },
-    onSuccess: (_, userId) => {
-      setFollowStatuses(prev => ({
-        ...prev,
-        [userId]: true
-      }));
-      toast.success("Seguindo com sucesso!", {
-        position: "top-center",
-        style: { marginTop: "64px" }
-      });
-      queryClient.invalidateQueries({ queryKey: ["followStats"] });
-    },
-    onError: (error) => {
-      console.error("Error following user:", error);
-      toast.error("Erro ao seguir usuário", {
-        position: "top-center",
-        style: { marginTop: "64px" }
-      });
-    }
-  });
-
-  // Unfollow user mutation
-  const unfollowMutation = useMutation({
-    mutationFn: async (userId: string) => {
-      if (!currentUserId) {
-        throw new Error("Not authenticated");
-      }
-      
-      const { data, error } = await supabase
-        .from('follows')
-        .delete()
-        .eq('follower_id', currentUserId)
-        .eq('following_id', userId);
-        
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: (_, userId) => {
-      setFollowStatuses(prev => ({
-        ...prev,
-        [userId]: false
-      }));
-      toast.success("Deixou de seguir com sucesso!", {
-        position: "top-center",
-        style: { marginTop: "64px" }
-      });
-      queryClient.invalidateQueries({ queryKey: ["followStats"] });
-    },
-    onError: (error) => {
-      console.error("Error unfollowing user:", error);
-      toast.error("Erro ao deixar de seguir usuário", {
-        position: "top-center",
-        style: { marginTop: "64px" }
-      });
-    }
-  });
-
-  const handleFollowAction = (userId: string) => {
-    if (!currentUserId) {
-      navigate("/login");
-      return;
-    }
-    
-    if (userId === currentUserId) {
-      return; // Can't follow yourself
-    }
-    
-    if (followStatuses[userId]) {
-      unfollowMutation.mutate(userId);
-    } else {
-      followMutation.mutate(userId);
-    }
-  };
-
   const handleReaction = async (postId: string, reactionType: string) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
-        hookToast({
+        toast({
           title: "Erro",
           description: "Você precisa estar logado para reagir a posts",
           variant: "destructive",
@@ -307,7 +144,7 @@ const Posts: React.FC = () => {
       
     } catch (error) {
       console.error('Error in reaction handler:', error);
-      hookToast({
+      toast({
         title: "Erro",
         description: "Não foi possível processar sua reação",
         variant: "destructive",
@@ -323,7 +160,7 @@ const Posts: React.FC = () => {
     } catch (error) {
       console.error('Error sharing:', error);
       navigator.clipboard.writeText(`${window.location.origin}/posts/${postId}`);
-      hookToast({
+      toast({
         title: "Link copiado",
         description: "O link foi copiado para sua área de transferência",
       });
@@ -388,41 +225,10 @@ const Posts: React.FC = () => {
                           {post.user.full_name?.charAt(0).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <h2 className="font-semibold">{post.user.full_name}</h2>
-                            <p className="text-sm text-muted-foreground">@{post.user.username}</p>
-                          </div>
-                          
-                          {post.user.id !== currentUserId && (
-                            <Button
-                              variant={followStatuses[post.user.id] ? "outline" : "default"}
-                              size="sm"
-                              className={`h-8 rounded-full border-2 ${
-                                followStatuses[post.user.id] 
-                                  ? 'bg-transparent border-white text-white hover:bg-background/10' 
-                                  : 'bg-primary text-white'
-                              }`}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleFollowAction(post.user.id);
-                              }}
-                              disabled={followMutation.isPending || unfollowMutation.isPending}
-                            >
-                              {followStatuses[post.user.id] ? (
-                                <>
-                                  <UserCheck className="h-3.5 w-3.5 mr-1" />
-                                  Seguindo
-                                </>
-                              ) : (
-                                <>
-                                  <UserPlus className="h-3.5 w-3.5 mr-1" />
-                                  Seguir
-                                </>
-                              )}
-                            </Button>
-                          )}
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h2 className="font-semibold">{post.user.full_name}</h2>
+                          <p className="text-sm text-muted-foreground">@{post.user.username}</p>
                         </div>
                         <p className="text-sm text-muted-foreground">
                           {formatDate(post.created_at)}

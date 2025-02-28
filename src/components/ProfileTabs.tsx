@@ -1,20 +1,14 @@
 
-import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTheme } from "./ThemeProvider";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { MediaCarousel } from "./MediaCarousel";
 import Tags from "./Tags";
 import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
-import { UserCheck, UserPlus } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useQueryClient, useMutation } from "@tanstack/react-query";
-import { toast } from "sonner";
 
 interface ProductWithDistance {
   id: string;
@@ -36,7 +30,6 @@ interface Post {
     username: string;
     full_name: string;
     avatar_url: string;
-    id: string;
   };
   post_likes: { reaction_type: string; user_id: string; }[];
   post_comments: { id: string; }[];
@@ -46,135 +39,11 @@ interface ProfileTabsProps {
   userProducts: ProductWithDistance[] | undefined;
   userPosts: Post[] | undefined;
   isLoading?: boolean;
-  profileUserId?: string;
-  isOwnProfile?: boolean;
 }
 
-const ProfileTabs = ({ userProducts, userPosts, isLoading, profileUserId, isOwnProfile = false }: ProfileTabsProps) => {
+const ProfileTabs = ({ userProducts, userPosts, isLoading }: ProfileTabsProps) => {
   const { theme } = useTheme();
-  const { toast: hookToast } = useToast();
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [isFollowing, setIsFollowing] = useState<boolean>(false);
-
-  // Get current user and check follow status
-  useEffect(() => {
-    const fetchCurrentUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        setCurrentUserId(session.user.id);
-
-        if (profileUserId && profileUserId !== session.user.id) {
-          // Check if current user is following the profile user
-          const { data, error } = await supabase
-            .from('follows')
-            .select('*')
-            .eq('follower_id', session.user.id)
-            .eq('following_id', profileUserId)
-            .single();
-          
-          if (!error && data) {
-            setIsFollowing(true);
-          }
-        }
-      }
-    };
-    fetchCurrentUser();
-  }, [profileUserId]);
-
-  // Follow user mutation
-  const followMutation = useMutation({
-    mutationFn: async () => {
-      if (!currentUserId || !profileUserId) {
-        throw new Error("Missing user information");
-      }
-      
-      const { data, error } = await supabase
-        .from('follows')
-        .insert([
-          { follower_id: currentUserId, following_id: profileUserId }
-        ]);
-        
-      if (error) throw error;
-      
-      // Add notification to the other user about being followed
-      await supabase
-        .from('notifications')
-        .insert([
-          {
-            user_id: profileUserId,
-            title: 'Novo seguidor',
-            message: 'começou a seguir você.',
-            type: 'system',
-            reference_id: currentUserId
-          }
-        ]);
-        
-      return data;
-    },
-    onSuccess: () => {
-      setIsFollowing(true);
-      toast.success("Seguindo com sucesso!", {
-        position: "top-center",
-        style: { marginTop: "64px" }
-      });
-      queryClient.invalidateQueries({ queryKey: ["followStats"] });
-    },
-    onError: (error) => {
-      console.error("Error following user:", error);
-      toast.error("Erro ao seguir usuário", {
-        position: "top-center",
-        style: { marginTop: "64px" }
-      });
-    }
-  });
-
-  // Unfollow user mutation
-  const unfollowMutation = useMutation({
-    mutationFn: async () => {
-      if (!currentUserId || !profileUserId) {
-        throw new Error("Missing user information");
-      }
-      
-      const { data, error } = await supabase
-        .from('follows')
-        .delete()
-        .eq('follower_id', currentUserId)
-        .eq('following_id', profileUserId);
-        
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      setIsFollowing(false);
-      toast.success("Deixou de seguir com sucesso!", {
-        position: "top-center",
-        style: { marginTop: "64px" }
-      });
-      queryClient.invalidateQueries({ queryKey: ["followStats"] });
-    },
-    onError: (error) => {
-      console.error("Error unfollowing user:", error);
-      toast.error("Erro ao deixar de seguir usuário", {
-        position: "top-center",
-        style: { marginTop: "64px" }
-      });
-    }
-  });
-
-  const handleFollowAction = () => {
-    if (!currentUserId) {
-      navigate("/login");
-      return;
-    }
-    
-    if (isFollowing) {
-      unfollowMutation.mutate();
-    } else {
-      followMutation.mutate();
-    }
-  };
+  const { toast } = useToast();
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -199,7 +68,7 @@ const ProfileTabs = ({ userProducts, userPosts, isLoading, profileUserId, isOwnP
     } catch (error) {
       console.error('Error sharing:', error);
       navigator.clipboard.writeText(`${window.location.origin}/posts/${postId}`);
-      hookToast({
+      toast({
         title: "Link copiado",
         description: "O link foi copiado para sua área de transferência",
       });
@@ -267,35 +136,6 @@ const ProfileTabs = ({ userProducts, userPosts, isLoading, profileUserId, isOwnP
           </div>
         ) : userPosts && userPosts.length > 0 ? (
           <div className="space-y-4 p-4">
-            {/* Show follow button at the top if not own profile */}
-            {!isOwnProfile && profileUserId && profileUserId !== currentUserId && (
-              <div className="flex justify-end mb-4">
-                <Button
-                  variant={isFollowing ? "outline" : "default"}
-                  size="sm"
-                  className={`h-8 rounded-full border-2 ${
-                    isFollowing 
-                      ? 'bg-transparent border-white text-white hover:bg-background/10' 
-                      : 'bg-primary text-white'
-                  }`}
-                  onClick={handleFollowAction}
-                  disabled={followMutation.isPending || unfollowMutation.isPending}
-                >
-                  {isFollowing ? (
-                    <>
-                      <UserCheck className="h-3.5 w-3.5 mr-1" />
-                      Seguindo
-                    </>
-                  ) : (
-                    <>
-                      <UserPlus className="h-3.5 w-3.5 mr-1" />
-                      Seguir
-                    </>
-                  )}
-                </Button>
-              </div>
-            )}
-            
             {userPosts.map((post) => (
               <Card key={post.id} className="overflow-hidden bg-white dark:bg-card border-none shadow-sm">
                 <CardContent className="p-0">
