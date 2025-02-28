@@ -141,3 +141,27 @@
 .action-button {
   @apply py-1.5 px-3 text-sm;
 }
+
+/* Estilização para o botão de seguir */
+.follow-button {
+  @apply py-1 px-4 text-xs font-medium rounded-full h-8;
+}
+
+/* Estilos para WhatsApp com fundo consistente */
+.whatsapp-button {
+  @apply bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700;
+}
+
+/* Estilização para textos de localização */
+.location-text {
+  @apply text-xs text-muted-foreground;
+}
+
+/* Reduzir o texto de localização */
+.location-display {
+  @apply text-xs font-medium flex items-center gap-1;
+}
+
+.location-icon {
+  @apply h-3 w-3;
+}
