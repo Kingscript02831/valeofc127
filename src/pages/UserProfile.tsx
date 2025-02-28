@@ -370,6 +370,7 @@ export default function UserProfile() {
                       onClick={handleFollowAction}
                       className={`bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-lg flex items-center gap-2`}
                       disabled={followMutation.isPending || unfollowMutation.isPending}
+                      variant="secondary"
                     >
                       {isFollowing ? (
                         <>

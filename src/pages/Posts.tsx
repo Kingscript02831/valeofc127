@@ -361,7 +361,7 @@ const Posts: React.FC = () => {
                       {currentUser && currentUser.id !== post.user.id && (
                         <Button 
                           onClick={() => handleFollowAction(post.user.id)}
-                          variant={isFollowing(post.user.id) ? "secondary" : "default"}
+                          variant="secondary"
                           size="sm"
                           className="h-8 px-3"
                           disabled={followMutation.isPending || unfollowMutation.isPending}
