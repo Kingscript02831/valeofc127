@@ -1,174 +1,228 @@
 
-import React, { useState, useEffect, createContext, useContext } from 'react';
-import { supabase } from '../integrations/supabase/client';
-import { User } from '@supabase/supabase-js';
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
-interface LocationContextType {
-  userCity: string | null;
-  userLocation: { lat: number; lng: number } | null;
-  loading: boolean;
-  error: string | null;
-  updateUserLocation: () => Promise<void>;
+export interface UserLocation {
+  latitude: number | null;
+  longitude: number | null;
+  city: string | null;
 }
 
-const LocationContext = createContext<LocationContextType>({
-  userCity: null,
-  userLocation: null,
-  loading: true,
-  error: null,
-  updateUserLocation: async () => {}
-});
-
-export const useUserLocation = () => useContext(LocationContext);
-
-interface LocationManagerProps {
-  children: React.ReactNode;
-}
-
-export const LocationManager: React.FC<LocationManagerProps> = ({ children }) => {
-  const [userCity, setUserCity] = useState<string | null>(null);
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [loading, setLoading] = useState(true);
+export const useUserLocation = () => {
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [user, setUser] = useState<User | null>(null);
+  const { toast: toastHook } = useToast();
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        setUser(session.user);
-      }
-      setLoading(false);
-    };
-
-    fetchUser();
-
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setUser(session?.user || null);
-      }
-    );
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (user) {
-      fetchUserProfile();
-    } else {
-      setUserCity(null);
-      setUserLocation(null);
-    }
-  }, [user]);
-
-  const fetchUserProfile = async () => {
-    if (!user) return;
-
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('city, location')
-        .eq('id', user.id)
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
-      if (data) {
-        setUserCity(data.city || null);
+  // Obter a localização atual do usuário logado
+  const { data: currentUserLocation, refetch: refetchUserLocation } = useQuery({
+    queryKey: ['userLocation'],
+    queryFn: async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
         
-        // Handle location data from profile
-        if (data.location) {
-          try {
-            // If it's a geography type converted to string, we need to parse it
-            if (typeof data.location === 'string') {
-              const match = data.location.match(/POINT\(([^ ]+) ([^)]+)\)/);
-              if (match) {
-                setUserLocation({
-                  lng: parseFloat(match[1]),
-                  lat: parseFloat(match[2])
-                });
-              }
-            } 
-            // If it's already a parsed object/point
-            else if (data.location.lat && data.location.lng) {
-              setUserLocation({
-                lat: data.location.lat,
-                lng: data.location.lng
-              });
-            }
-          } catch (err) {
-            console.error('Failed to parse location data:', err);
-            setUserLocation(null);
-          }
-        } else {
-          setUserLocation(null);
+        if (!user) return null;
+
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('location, city')
+          .eq('id', user.id)
+          .single();
+
+        if (error) throw error;
+
+        // Se o perfil não tiver localização definida
+        if (!profile?.location) {
+          return null;
         }
+
+        // Extrair coordenadas do tipo geometry/geography do Supabase
+        let latitude = null;
+        let longitude = null;
+        let city = profile.city;
+
+        // Se for um objeto PostGIS/geografia
+        if (profile.location && typeof profile.location === 'object') {
+          // Em objetos PostGIS, as coordenadas podem estar em diferentes formatos
+          // Esta é uma simplificação, pode precisar ser adaptada conforme a estrutura exata
+          if ('coordinates' in profile.location) {
+            longitude = profile.location.coordinates[0];
+            latitude = profile.location.coordinates[1];
+          } else if ('x' in profile.location && 'y' in profile.location) {
+            longitude = profile.location.x;
+            latitude = profile.location.y;
+          }
+        }
+
+        return { latitude, longitude, city } as UserLocation;
+      } catch (error) {
+        console.error("Erro ao buscar localização do usuário:", error);
+        return null;
       }
-    } catch (err) {
-      console.error('Error fetching user profile:', err);
-      setError('Failed to fetch user location');
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    enabled: true,
+  });
 
+  // Função para atualizar a localização do usuário
   const updateUserLocation = async () => {
-    if (!user) {
-      setError('User not authenticated');
-      return;
-    }
-
     try {
-      setLoading(true);
-      await fetchUserProfile();
-    } catch (err) {
-      console.error('Error updating location:', err);
-      setError('Failed to update location');
+      setIsLoading(true);
+      setError(null);
+
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        setError("Usuário não autenticado");
+        toast.error("Você precisa estar logado para atualizar sua localização");
+        return null;
+      }
+
+      // Solicitar permissão de geolocalização do navegador
+      if (!navigator.geolocation) {
+        setError("Geolocalização não suportada pelo navegador");
+        toast.error("Seu navegador não suporta geolocalização");
+        return null;
+      }
+
+      // Promisificar a API de geolocalização
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 5000,
+          maximumAge: 0
+        });
+      });
+
+      const { latitude, longitude } = position.coords;
+      
+      // Criar o objeto de localização no formato do PostGIS
+      const locationObject = {
+        type: 'Point',
+        coordinates: [longitude, latitude]
+      };
+
+      // Atualizar o perfil do usuário com as novas coordenadas
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ 
+          location: locationObject,
+          location_updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
+
+      if (updateError) throw updateError;
+
+      toast.success("Localização atualizada com sucesso");
+      refetchUserLocation();
+      return { latitude, longitude, city: currentUserLocation?.city } as UserLocation;
+    } catch (error) {
+      console.error("Erro ao atualizar localização:", error);
+      const errorMessage = (error instanceof Error) ? error.message : "Erro desconhecido";
+      setError(errorMessage);
+      toast.error(`Erro ao atualizar localização: ${errorMessage}`);
+      return null;
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
+
+  // Obter localização atual a partir do navegador sem atualizar o perfil
+  const getCurrentBrowserLocation = () => {
+    return new Promise<UserLocation | null>((resolve, reject) => {
+      if (!navigator.geolocation) {
+        toast.error("Seu navegador não suporta geolocalização");
+        reject(new Error("Geolocalização não suportada"));
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          resolve({ 
+            latitude, 
+            longitude, 
+            city: currentUserLocation?.city 
+          });
+        },
+        (error) => {
+          console.error("Erro ao obter localização do navegador:", error);
+          toast.error("Não foi possível obter sua localização");
+          reject(error);
+        },
+        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+      );
+    });
+  };
+
+  return {
+    userLocation: currentUserLocation,
+    isLoading,
+    error,
+    updateUserLocation,
+    getCurrentBrowserLocation,
+    refetchUserLocation
+  };
+};
+
+// Componente para gerenciar e exibir a localização atual
+export const LocationManager = () => {
+  const { userLocation, isLoading, error, updateUserLocation } = useUserLocation();
 
   return (
-    <LocationContext.Provider
-      value={{
-        userCity,
-        userLocation,
-        loading,
-        error,
-        updateUserLocation
-      }}
-    >
-      {children}
-    </LocationContext.Provider>
+    <div className="p-4 bg-white dark:bg-card shadow rounded-md">
+      <h3 className="text-lg font-semibold mb-2">Sua Localização</h3>
+      
+      {isLoading ? (
+        <p className="text-muted-foreground">Atualizando localização...</p>
+      ) : userLocation ? (
+        <div>
+          <p className="text-sm">
+            {userLocation.city ? (
+              <>Cidade: {userLocation.city}</>
+            ) : (
+              <>
+                Latitude: {userLocation.latitude?.toFixed(6)}<br />
+                Longitude: {userLocation.longitude?.toFixed(6)}
+              </>
+            )}
+          </p>
+        </div>
+      ) : (
+        <p className="text-sm text-muted-foreground">Localização não disponível</p>
+      )}
+
+      {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+
+      <button 
+        onClick={updateUserLocation}
+        disabled={isLoading}
+        className="mt-2 px-3 py-1 bg-primary text-white text-sm rounded hover:bg-primary/90 transition"
+      >
+        {isLoading ? "Atualizando..." : "Atualizar Localização"}
+      </button>
+    </div>
   );
 };
 
-// Function to calculate distance between two points
+// Função para calcular a distância entre dois pontos em km
 export const calculateDistance = (
-  lat1: number,
-  lng1: number,
-  lat2: number,
-  lng2: number
+  lat1: number, 
+  lon1: number, 
+  lat2: number, 
+  lon2: number
 ): number => {
-  if (!lat1 || !lng1 || !lat2 || !lng2) return -1;
-
-  const R = 6371; // Earth's radius in km
-  const dLat = (lat2 - lat1) * (Math.PI / 180);
-  const dLng = (lng2 - lng1) * (Math.PI / 180);
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * (Math.PI / 180)) *
-      Math.cos(lat2 * (Math.PI / 180)) *
-      Math.sin(dLng / 2) *
-      Math.sin(dLng / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  const distance = R * c;
-
-  return Math.round(distance * 10) / 10; // Round to 1 decimal place
+  const R = 6371; // Raio da Terra em km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  const distance = R * c; // Distância em km
+  return distance;
 };
+
+export default useUserLocation;

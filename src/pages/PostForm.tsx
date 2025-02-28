@@ -1,371 +1,392 @@
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { supabase } from "../integrations/supabase/client";
-import { toast } from "sonner";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
-import { Textarea } from "../components/ui/textarea";
-import { useTheme } from "../components/ThemeProvider";
-import { Button } from "../components/ui/button";
-import Navbar from "../components/Navbar";
-import BottomNav from "../components/BottomNav";
-import { Tag, X, Upload, Image as ImageIcon, Camera } from "lucide-react";
-import { useUserLocation } from "../components/locpost";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/components/ui/use-toast";
+import { Plus, Trash2 } from "lucide-react";
+import { MediaCarousel } from "@/components/MediaCarousel";
+import Navbar from "@/components/Navbar";
+import BottomNav from "@/components/BottomNav";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 
-export default function PostForm() {
+interface UserPost {
+  id: string;
+  content: string;
+  images: string[];
+  video_urls: string[];
+  created_at: string;
+}
+
+const PostForm = () => {
+  const [newPostContent, setNewPostContent] = useState("");
+  const [selectedImages, setSelectedImages] = useState<string[]>([]);
+  const [selectedVideos, setSelectedVideos] = useState<string[]>([]);
+  const [userPosts, setUserPosts] = useState<UserPost[]>([]);
+  const [editingPost, setEditingPost] = useState<string | null>(null);
+  const { toast } = useToast();
   const navigate = useNavigate();
-  const { theme } = useTheme();
-  const { userLocation, userCity, loading: locationLoading } = useUserLocation();
-  
-  const [content, setContent] = useState("");
-  const [images, setImages] = useState<File[]>([]);
-  const [videos, setVideos] = useState<File[]>([]);
-  const [previews, setPreviews] = useState<string[]>([]);
-  const [tagInput, setTagInput] = useState("");
-  const [tags, setTags] = useState<string[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [newImageUrl, setNewImageUrl] = useState("");
+  const [newVideoUrl, setNewVideoUrl] = useState("");
 
   useEffect(() => {
-    document.title = "Nova Publicação";
+    fetchUserPosts();
   }, []);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const selectedFiles = Array.from(e.target.files);
-      const totalFiles = selectedFiles.length + images.length + videos.length;
-      
-      if (totalFiles > 10) {
-        toast.error("Você pode adicionar no máximo 10 arquivos");
+  const fetchUserPosts = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: posts, error } = await supabase
+        .from("posts")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setUserPosts(posts || []);
+    } catch (error) {
+      console.error("Error fetching user posts:", error);
+    }
+  };
+
+  const handleCreatePost = async () => {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        toast({
+          title: "Erro",
+          description: "Você precisa estar logado para criar um post",
+          variant: "destructive",
+        });
+        navigate("/login");
         return;
       }
 
-      const newImages: File[] = [];
-      const newVideos: File[] = [];
-      
-      selectedFiles.forEach(file => {
-        if (file.type.startsWith('image/')) {
-          newImages.push(file);
-        } else if (file.type.startsWith('video/')) {
-          newVideos.push(file);
-        }
+      if (editingPost) {
+        const { error } = await supabase
+          .from("posts")
+          .update({
+            content: newPostContent,
+            images: selectedImages,
+            video_urls: selectedVideos,
+          })
+          .eq("id", editingPost);
+
+        if (error) throw error;
+
+        toast({
+          title: "Sucesso",
+          description: "Post atualizado com sucesso!",
+        });
+      } else {
+        const { error } = await supabase.from("posts").insert({
+          content: newPostContent,
+          images: selectedImages,
+          video_urls: selectedVideos,
+          user_id: user.id,
+        });
+
+        if (error) throw error;
+
+        toast({
+          title: "Sucesso",
+          description: "Post criado com sucesso!",
+        });
+      }
+
+      setNewPostContent("");
+      setSelectedImages([]);
+      setSelectedVideos([]);
+      setEditingPost(null);
+      fetchUserPosts();
+    } catch (error) {
+      console.error("Error with post:", error);
+      toast({
+        title: "Erro",
+        description: "Erro ao processar o post",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEdit = (post: UserPost) => {
+    setEditingPost(post.id);
+    setNewPostContent(post.content);
+    setSelectedImages(post.images || []);
+    setSelectedVideos(post.video_urls || []);
+  };
+
+  const handleDelete = async (postId: string) => {
+    try {
+      const { error } = await supabase
+        .from("posts")
+        .delete()
+        .eq("id", postId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: "Post excluído com sucesso!",
       });
 
-      setImages([...images, ...newImages]);
-      setVideos([...videos, ...newVideos]);
-
-      // Generate previews
-      const newPreviews = selectedFiles.map(file => URL.createObjectURL(file));
-      setPreviews([...previews, ...newPreviews]);
+      fetchUserPosts();
+    } catch (error) {
+      console.error("Error deleting post:", error);
+      toast({
+        title: "Erro",
+        description: "Erro ao excluir o post",
+        variant: "destructive",
+      });
     }
   };
 
-  const handleTagAdd = () => {
-    if (!tagInput.trim()) return;
-    
-    const newTag = tagInput.trim().toLowerCase();
-    if (!tags.includes(newTag)) {
-      setTags([...tags, newTag]);
-    }
-    setTagInput("");
-  };
-
-  const handleTagRemove = (tagToRemove: string) => {
-    setTags(tags.filter(tag => tag !== tagToRemove));
-  };
-
-  const createPostMutation = useMutation({
-    mutationFn: async (formData: FormData) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        throw new Error("Usuário não autenticado");
-      }
-
-      // Upload images if any
-      const imageUrls: string[] = [];
-      const videoUrls: string[] = [];
-      
-      // Upload images first
-      for (const image of images) {
-        const fileExt = image.name.split('.').pop();
-        const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
-        const filePath = `posts/${user.id}/${fileName}`;
-        
-        const { error: uploadError, data } = await supabase.storage
-          .from('media')
-          .upload(filePath, image);
-          
-        if (uploadError) {
-          throw uploadError;
-        }
-        
-        const { data: { publicUrl } } = supabase.storage
-          .from('media')
-          .getPublicUrl(filePath);
-          
-        imageUrls.push(publicUrl);
-      }
-      
-      // Upload videos next
-      for (const video of videos) {
-        const fileExt = video.name.split('.').pop();
-        const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
-        const filePath = `videos/${user.id}/${fileName}`;
-        
-        const { error: uploadError, data } = await supabase.storage
-          .from('media')
-          .upload(filePath, video);
-          
-        if (uploadError) {
-          throw uploadError;
-        }
-        
-        const { data: { publicUrl } } = supabase.storage
-          .from('media')
-          .getPublicUrl(filePath);
-          
-        videoUrls.push(publicUrl);
-      }
-      
-      // Create post
-      const { data: post, error: postError } = await supabase
-        .from('posts')
-        .insert({
-          content,
-          user_id: user.id,
-          images: imageUrls.length > 0 ? imageUrls : null,
-          videos: videoUrls.length > 0 ? videoUrls : null,
-          tags: tags.length > 0 ? tags : null,
-          city: userCity,
-          location: userLocation
-        })
-        .select()
-        .single();
-        
-      if (postError) {
-        throw postError;
-      }
-      
-      return post;
-    },
-    onSuccess: () => {
-      toast.success("Publicação criada com sucesso!");
-      navigate('/posts');
-    },
-    onError: (error) => {
-      console.error("Erro ao criar publicação:", error);
-      setError("Erro ao criar publicação. Por favor, tente novamente.");
-      toast.error("Erro ao criar publicação. Por favor, tente novamente.");
-    }
-  });
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!content.trim()) {
-      setError("O conteúdo da publicação não pode estar vazio");
+  const handleAddImage = () => {
+    if (!newImageUrl) {
+      toast({
+        title: "Erro",
+        description: "Por favor, insira uma URL de imagem válida",
+        variant: "destructive"
+      });
       return;
     }
-    
-    setIsSubmitting(true);
-    setError(null);
-    
-    // Create form data for upload
-    const formData = new FormData();
-    formData.append("content", content);
-    
-    images.forEach(image => {
-      formData.append("images", image);
-    });
-    
-    videos.forEach(video => {
-      formData.append("videos", video);
-    });
-    
-    if (tags.length > 0) {
-      formData.append("tags", JSON.stringify(tags));
+
+    if (!newImageUrl.includes('dropbox.com')) {
+      toast({
+        title: "Erro",
+        description: "Por favor, insira uma URL válida do Dropbox",
+        variant: "destructive"
+      });
+      return;
     }
-    
-    try {
-      await createPostMutation.mutateAsync(formData);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsSubmitting(false);
+
+    let directImageUrl = newImageUrl;
+    if (newImageUrl.includes('www.dropbox.com')) {
+      directImageUrl = newImageUrl.replace('www.dropbox.com', 'dl.dropboxusercontent.com');
+    }
+
+    if (!selectedImages.includes(directImageUrl)) {
+      setSelectedImages([...selectedImages, directImageUrl]);
+      setNewImageUrl("");
+      toast({
+        title: "Sucesso",
+        description: "Imagem adicionada com sucesso!"
+      });
+    } else {
+      toast({
+        title: "Erro",
+        description: "Esta imagem já foi adicionada",
+        variant: "destructive"
+      });
     }
   };
 
-  const removeFile = (index: number) => {
-    URL.revokeObjectURL(previews[index]);
-    
-    const newPreviews = [...previews];
-    newPreviews.splice(index, 1);
-    setPreviews(newPreviews);
-    
-    if (index < images.length) {
-      const newImages = [...images];
-      newImages.splice(index, 1);
-      setImages(newImages);
-    } else {
-      const videoIndex = index - images.length;
-      const newVideos = [...videos];
-      newVideos.splice(videoIndex, 1);
-      setVideos(newVideos);
+  const handleAddVideo = () => {
+    if (!newVideoUrl) {
+      toast({
+        title: "Erro",
+        description: "Por favor, insira uma URL de vídeo válida",
+        variant: "destructive"
+      });
+      return;
     }
+
+    const isDropboxUrl = newVideoUrl.includes('dropbox.com');
+    const isYoutubeUrl = newVideoUrl.includes('youtube.com') || newVideoUrl.includes('youtu.be');
+
+    if (!isDropboxUrl && !isYoutubeUrl) {
+      toast({
+        title: "Erro",
+        description: "Por favor, insira uma URL válida do Dropbox ou YouTube",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    let directVideoUrl = newVideoUrl;
+    if (isDropboxUrl && newVideoUrl.includes('www.dropbox.com')) {
+      directVideoUrl = newVideoUrl.replace('www.dropbox.com', 'dl.dropboxusercontent.com');
+    }
+
+    if (!selectedVideos.includes(directVideoUrl)) {
+      setSelectedVideos([...selectedVideos, directVideoUrl]);
+      setNewVideoUrl("");
+      toast({
+        title: "Sucesso",
+        description: "Vídeo adicionado com sucesso!"
+      });
+    } else {
+      toast({
+        title: "Erro",
+        description: "Este vídeo já foi adicionado",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleRemoveImage = (index: number) => {
+    setSelectedImages(selectedImages.filter((_, i) => i !== index));
+  };
+
+  const handleRemoveVideo = (index: number) => {
+    setSelectedVideos(selectedVideos.filter((_, i) => i !== index));
   };
 
   return (
-    <div className={`min-h-screen ${theme === "dark" ? "bg-black text-white" : "bg-white text-black"}`}>
+    <div className="min-h-screen bg-background">
       <Navbar />
-      
-      <div className="container mx-auto px-4 py-8 pb-32 max-w-2xl">
-        <h1 className="text-2xl font-bold mb-6">Nova Publicação</h1>
-        
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            {error}
-          </div>
-        )}
-        
-        <form onSubmit={handleSubmit}>
-          <div className="mb-6">
-            <Label htmlFor="content" className="block mb-2">Conteúdo</Label>
-            <Textarea
-              id="content"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="O que você está pensando?"
-              className="min-h-[150px]"
-              required
-            />
-          </div>
-          
-          {/* Tags input */}
-          <div className="mb-6">
-            <Label htmlFor="tags" className="block mb-2">Tags</Label>
-            <div className="flex">
-              <Input
-                id="tags"
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                placeholder="Adicione tags para sua publicação"
-                className="mr-2"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleTagAdd();
-                  }
-                }}
+      <div className="container mx-auto p-4 pt-20 pb-24">
+        <div className="max-w-3xl mx-auto">
+          <Card className="mb-6">
+            <CardContent className="pt-6">
+              <h2 className="text-2xl font-semibold mb-4">
+                {editingPost ? "Editar post" : "Criar novo post"}
+              </h2>
+              <Textarea
+                placeholder="O que você está pensando?"
+                value={newPostContent}
+                onChange={(e) => setNewPostContent(e.target.value)}
+                className="mb-4"
+                rows={6}
               />
-              <Button 
-                type="button" 
-                onClick={handleTagAdd}
-                variant="outline"
-              >
-                <Tag size={18} />
-              </Button>
-            </div>
-          </div>
-          
-          {/* Display tags */}
-          {tags.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-6">
-              {tags.map(tag => (
-                <div 
-                  key={tag} 
-                  className="bg-gray-100 rounded-full px-3 py-1 text-sm flex items-center dark:bg-gray-800"
-                >
-                  #{tag}
-                  <button 
-                    type="button" 
-                    onClick={() => handleTagRemove(tag)}
-                    className="ml-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-                  >
-                    <X size={14} />
-                  </button>
+              {(selectedImages.length > 0 || selectedVideos.length > 0) && (
+                <div className="mb-4">
+                  <MediaCarousel
+                    images={selectedImages}
+                    videoUrls={selectedVideos}
+                    title="Preview"
+                  />
                 </div>
-              ))}
-            </div>
-          )}
-          
-          {/* Display city from profile */}
-          {userCity && (
-            <div className="mb-6">
-              <Label className="block mb-2">Localização</Label>
-              <div className="flex items-center text-gray-600 dark:text-gray-300">
-                <span>{userCity}</span>
+              )}
+              <div className="space-y-4 mt-4">
+                <div>
+                  <Label>Imagens do Dropbox</Label>
+                  <div className="flex gap-2 mt-2">
+                    <Input
+                      value={newImageUrl}
+                      onChange={(e) => setNewImageUrl(e.target.value)}
+                      placeholder="Cole a URL compartilhada do Dropbox"
+                    />
+                    <Button type="button" onClick={handleAddImage}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Adicionar
+                    </Button>
+                  </div>
+                  {selectedImages.map((url, index) => (
+                    <div key={index} className="flex items-center gap-2 mt-2">
+                      <Input value={url} readOnly />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        onClick={() => handleRemoveImage(index)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+                
+                <div>
+                  <Label>Vídeos (Dropbox ou YouTube)</Label>
+                  <div className="flex gap-2 mt-2">
+                    <Input
+                      value={newVideoUrl}
+                      onChange={(e) => setNewVideoUrl(e.target.value)}
+                      placeholder="Cole a URL do Dropbox ou YouTube"
+                    />
+                    <Button type="button" onClick={handleAddVideo}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Adicionar
+                    </Button>
+                  </div>
+                  {selectedVideos.map((url, index) => (
+                    <div key={index} className="flex items-center gap-2 mt-2">
+                      <Input value={url} readOnly />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        onClick={() => handleRemoveVideo(index)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
-          
-          {/* Media upload */}
-          <div className="mb-6">
-            <Label className="block mb-2">Mídia (máximo 10 arquivos)</Label>
-            <div className="flex items-center">
-              <label className="cursor-pointer">
-                <div className="flex items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-gray-400 transition-colors">
-                  <Upload size={24} className="mr-2" />
-                  <span>Upload de imagens/vídeos</span>
-                </div>
-                <input 
-                  type="file" 
-                  multiple 
-                  onChange={handleImageChange} 
-                  accept="image/*,video/*" 
-                  className="hidden"
-                />
-              </label>
-            </div>
-          </div>
-          
-          {/* Media previews */}
-          {previews.length > 0 && (
-            <div className="grid grid-cols-3 md:grid-cols-4 gap-4 mb-6">
-              {previews.map((preview, index) => (
-                <div key={index} className="relative h-24 bg-gray-100 rounded overflow-hidden">
-                  {index < images.length ? (
-                    <img src={preview} alt={`Preview ${index}`} className="h-full w-full object-cover" />
-                  ) : (
-                    <div className="h-full w-full flex items-center justify-center bg-gray-800">
-                      <Camera size={24} className="text-white" />
+              <Button
+                className="w-full mt-4"
+                onClick={handleCreatePost}
+                disabled={!newPostContent.trim() && !selectedImages.length && !selectedVideos.length}
+              >
+                {editingPost ? "Salvar alterações" : "Publicar"}
+              </Button>
+              {editingPost && (
+                <Button
+                  variant="ghost"
+                  className="w-full mt-2"
+                  onClick={() => {
+                    setEditingPost(null);
+                    setNewPostContent("");
+                    setSelectedImages([]);
+                    setSelectedVideos([]);
+                  }}
+                >
+                  Cancelar
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+
+          <div className="space-y-4">
+            <h3 className="text-xl font-semibold">Seus posts</h3>
+            {userPosts.map((post) => (
+              <Card key={post.id} className="shadow-sm">
+                <CardContent className="pt-6">
+                  <p className="mb-4 whitespace-pre-wrap">{post.content}</p>
+                  {(post.images?.length > 0 || post.video_urls?.length > 0) && (
+                    <div className="mb-4">
+                      <MediaCarousel
+                        images={post.images || []}
+                        videoUrls={post.video_urls || []}
+                        title={post.content}
+                      />
                     </div>
                   )}
-                  <button 
-                    type="button"
-                    onClick={() => removeFile(index)}
-                    className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
-                  >
-                    <X size={14} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-          
-          <div className="flex justify-end gap-3">
-            <Button
-              type="button"
-              onClick={() => navigate('/posts')}
-              variant="outline"
-              className="px-4"
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="px-4"
-            >
-              {isSubmitting ? 'Publicando...' : 'Publicar'}
-            </Button>
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEdit(post)}
+                    >
+                      Editar
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleDelete(post.id)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
-        </form>
+        </div>
       </div>
-      
       <BottomNav />
     </div>
   );
-}
+};
+
+export default PostForm;
