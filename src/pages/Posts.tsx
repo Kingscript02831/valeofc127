@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { MediaCarousel } from "@/components/MediaCarousel";
 import Navbar from "@/components/Navbar";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import ReactionMenu from "@/components/ReactionMenu";
 import BottomNav from "@/components/BottomNav";
 import { useNavigate } from "react-router-dom";
@@ -14,6 +14,9 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { getReactionIcon } from "@/utils/emojisPosts";
 import Tags from "@/components/Tags";
+import { Button } from "@/components/ui/button";
+import { UserPlus, UserCheck } from "lucide-react";
+import { toast } from "sonner";
 
 interface Post {
   id: string;
@@ -30,14 +33,16 @@ interface Post {
     username: string;
     full_name: string;
     avatar_url: string;
+    id: string;
   };
 }
 
 const Posts: React.FC = () => {
-  const { toast } = useToast();
+  const { toast: toastHook } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [activeReactionMenu, setActiveReactionMenu] = useState<string | null>(null);
+  const [followingUsers, setFollowingUsers] = useState<Record<string, boolean>>({});
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -46,6 +51,34 @@ const Posts: React.FC = () => {
       return user;
     },
   });
+
+  // Fetch user's following status
+  useQuery({
+    queryKey: ['userFollowings', currentUser?.id],
+    queryFn: async () => {
+      if (!currentUser?.id) return {};
+
+      const { data } = await supabase
+        .from('follows')
+        .select('following_id')
+        .eq('follower_id', currentUser.id);
+      
+      const followingMap: Record<string, boolean> = {};
+      if (data) {
+        data.forEach(item => {
+          followingMap[item.following_id] = true;
+        });
+      }
+      
+      setFollowingUsers(followingMap);
+      return followingMap;
+    },
+    enabled: !!currentUser?.id,
+  });
+
+  const isFollowing = (userId: string) => {
+    return !!followingUsers[userId];
+  };
 
   const { data: posts, isLoading } = useQuery({
     queryKey: ['posts'],
@@ -89,12 +122,100 @@ const Posts: React.FC = () => {
     },
   });
 
+  // Follow user mutation
+  const followMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      if (!currentUser?.id) {
+        throw new Error("Você precisa estar logado para seguir usuários");
+      }
+
+      const { data, error } = await supabase
+        .from('follows')
+        .insert([
+          { follower_id: currentUser.id, following_id: userId }
+        ]);
+
+      if (error) throw error;
+
+      // Insert a notification about the follow
+      await supabase
+        .from('notifications')
+        .insert([
+          {
+            user_id: userId,
+            title: 'Novo seguidor',
+            message: `@${currentUser.id} começou a seguir você.`,
+            type: 'system',
+          }
+        ]);
+
+      return data;
+    },
+    onSuccess: (_, userId) => {
+      setFollowingUsers(prev => ({...prev, [userId]: true}));
+      toast.success("Seguindo com sucesso!");
+      queryClient.invalidateQueries({ queryKey: ['userFollowings', currentUser?.id] });
+    },
+    onError: (error) => {
+      console.error("Error following user:", error);
+      toast.error("Erro ao seguir usuário");
+    }
+  });
+
+  // Unfollow mutation
+  const unfollowMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      if (!currentUser?.id) {
+        throw new Error("Você precisa estar logado para deixar de seguir usuários");
+      }
+
+      const { data, error } = await supabase
+        .from('follows')
+        .delete()
+        .eq('follower_id', currentUser.id)
+        .eq('following_id', userId);
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_, userId) => {
+      setFollowingUsers(prev => {
+        const newState = {...prev};
+        delete newState[userId];
+        return newState;
+      });
+      toast.success("Deixou de seguir com sucesso!");
+      queryClient.invalidateQueries({ queryKey: ['userFollowings', currentUser?.id] });
+    },
+    onError: (error) => {
+      console.error("Error unfollowing user:", error);
+      toast.error("Erro ao deixar de seguir usuário");
+    }
+  });
+
+  const handleFollowAction = (userId: string) => {
+    if (!currentUser) {
+      navigate("/login");
+      return;
+    }
+
+    if (currentUser.id === userId) {
+      return; // Não pode seguir a si mesmo
+    }
+
+    if (isFollowing(userId)) {
+      unfollowMutation.mutate(userId);
+    } else {
+      followMutation.mutate(userId);
+    }
+  };
+
   const handleReaction = async (postId: string, reactionType: string) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
-        toast({
+        toastHook({
           title: "Erro",
           description: "Você precisa estar logado para reagir a posts",
           variant: "destructive",
@@ -144,7 +265,7 @@ const Posts: React.FC = () => {
       
     } catch (error) {
       console.error('Error in reaction handler:', error);
-      toast({
+      toastHook({
         title: "Erro",
         description: "Não foi possível processar sua reação",
         variant: "destructive",
@@ -160,7 +281,7 @@ const Posts: React.FC = () => {
     } catch (error) {
       console.error('Error sharing:', error);
       navigator.clipboard.writeText(`${window.location.origin}/posts/${postId}`);
-      toast({
+      toastHook({
         title: "Link copiado",
         description: "O link foi copiado para sua área de transferência",
       });
@@ -215,25 +336,49 @@ const Posts: React.FC = () => {
               <Card key={post.id} className="overflow-hidden bg-white dark:bg-card border-none shadow-sm">
                 <CardContent className="p-0">
                   <div className="p-3 space-y-2">
-                    <div className="flex items-center gap-3">
-                      <Avatar 
-                        className="h-10 w-10 border-2 border-primary/10 cursor-pointer hover:opacity-80 transition-opacity"
-                        onClick={() => navigate(`/perfil/${post.user.username}`)}
-                      >
-                        <AvatarImage src={post.user.avatar_url || "/placeholder.svg"} />
-                        <AvatarFallback>
-                          {post.user.full_name?.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h2 className="font-semibold">{post.user.full_name}</h2>
-                          <p className="text-sm text-muted-foreground">@{post.user.username}</p>
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <Avatar 
+                          className="h-10 w-10 border-2 border-primary/10 cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => navigate(`/perfil/${post.user.username}`)}
+                        >
+                          <AvatarImage src={post.user.avatar_url || "/placeholder.svg"} />
+                          <AvatarFallback>
+                            {post.user.full_name?.charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h2 className="font-semibold">{post.user.full_name}</h2>
+                            <p className="text-sm text-muted-foreground">@{post.user.username}</p>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {formatDate(post.created_at)}
+                          </p>
                         </div>
-                        <p className="text-sm text-muted-foreground">
-                          {formatDate(post.created_at)}
-                        </p>
                       </div>
+                      
+                      {currentUser && currentUser.id !== post.user.id && (
+                        <Button 
+                          onClick={() => handleFollowAction(post.user.id)}
+                          variant={isFollowing(post.user.id) ? "secondary" : "default"}
+                          size="sm"
+                          className="h-8 px-3"
+                          disabled={followMutation.isPending || unfollowMutation.isPending}
+                        >
+                          {isFollowing(post.user.id) ? (
+                            <>
+                              <UserCheck size={16} className="mr-1" />
+                              <span className="text-xs">Seguindo</span>
+                            </>
+                          ) : (
+                            <>
+                              <UserPlus size={16} className="mr-1" />
+                              <span className="text-xs">Seguir</span>
+                            </>
+                          )}
+                        </Button>
+                      )}
                     </div>
 
                     {post.content && (
