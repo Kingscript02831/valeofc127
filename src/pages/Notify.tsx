@@ -2,18 +2,18 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bell, CheckCircle, Clock, ChevronRight, Calendar, Newspaper, Trash2, UserCheck, UserPlus } from "lucide-react";
-import { Badge } from "../components/ui/badge";
-import { Button } from "../components/ui/button";
-import { Switch } from "../components/ui/switch";
-import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
-import { cn } from "../lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { supabase } from "../integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-import BottomNav from "../components/BottomNav";
-import type { Notification } from "../types/notifications";
+import BottomNav from "@/components/BottomNav";
+import type { Notification } from "@/types/notifications";
 
 const Notify = () => {
   const navigate = useNavigate();
@@ -137,7 +137,7 @@ const Notify = () => {
             
             if (senderData) {
               // Verificar status de seguidor
-              checkFollowStatus(senderData.id);
+              await checkFollowStatus(senderData.id);
               return { ...notification, sender: senderData };
             }
           }
@@ -152,7 +152,7 @@ const Notify = () => {
 
   // Check if we're following a specific user
   const checkFollowStatus = async (userId: string) => {
-    if (!currentUserId) return;
+    if (!currentUserId) return false;
     
     try {
       const { data, error } = await supabase
@@ -167,14 +167,17 @@ const Notify = () => {
           ...prev,
           [userId]: true
         }));
+        return true;
       } else {
         setFollowStatuses(prev => ({
           ...prev,
           [userId]: false
         }));
+        return false;
       }
     } catch (error) {
       console.error("Error checking follow status:", error);
+      return false;
     }
   };
 
@@ -285,6 +288,12 @@ const Notify = () => {
     }
   };
 
+  const navigateToUserProfile = (username: string | undefined) => {
+    if (username) {
+      navigate(`/perfil/${username}`);
+    }
+  };
+
   const markAsRead = async (id: string) => {
     try {
       const { error } = await supabase
@@ -310,7 +319,7 @@ const Notify = () => {
         } else if (notification.type === 'news') {
           navigate(`/`);
         } else if (notification.sender) {
-          navigate(`/perfil/${notification.sender.username}`);
+          navigateToUserProfile(notification.sender.username);
         }
       }
     } catch (error: any) {
@@ -440,21 +449,26 @@ const Notify = () => {
                       ? "bg-muted/50 border-transparent"
                       : "bg-background border-primary/10"
                   )}
+                  onClick={() => isFollowNotification && notification.sender 
+                    ? navigateToUserProfile(notification.sender.username)
+                    : markAsRead(notification.id)}
                 >
                   {isFollowNotification && notification.sender ? (
                     // Layout específico para notificações de seguidor (conforme a imagem)
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between cursor-pointer">
                       <div className="flex items-center gap-3">
                         <div className="relative">
                           <Avatar className="h-12 w-12 rounded-full overflow-hidden border-2 border-primary/10">
-                            <AvatarImage 
-                              src={notification.sender.avatar_url} 
-                              alt={notification.sender.username || 'User'} 
-                              className="object-cover"
-                            />
-                            <AvatarFallback className="bg-gradient-to-br from-pink-500 via-red-500 to-yellow-500">
-                              {notification.sender.full_name?.charAt(0).toUpperCase() || 'U'}
-                            </AvatarFallback>
+                            {notification.sender.avatar_url ? (
+                              <AvatarImage 
+                                src={notification.sender.avatar_url} 
+                                alt={notification.sender.username || 'User'} 
+                              />
+                            ) : (
+                              <AvatarFallback className="bg-gradient-to-br from-pink-500 via-red-500 to-yellow-500">
+                                {notification.sender.full_name?.charAt(0).toUpperCase() || 'U'}
+                              </AvatarFallback>
+                            )}
                           </Avatar>
                           <div className="absolute -bottom-1 -right-1 bg-primary rounded-full p-0.5">
                             <UserPlus className="h-3 w-3 text-white" />
@@ -462,7 +476,7 @@ const Notify = () => {
                         </div>
                         <div>
                           <p className="text-base">
-                            <span className="font-semibold">{notification.sender.username}</span>
+                            <span className="font-semibold">@{notification.sender.username}</span>
                             {' '}começou a seguir você.
                             {' '}
                             <span className="text-sm text-muted-foreground">
@@ -490,7 +504,7 @@ const Notify = () => {
                     </div>
                   ) : (
                     // Layout padrão para outros tipos de notificação
-                    <div className="flex items-start gap-3 cursor-pointer" onClick={() => markAsRead(notification.id)}>
+                    <div className="flex items-start gap-3 cursor-pointer">
                       {notification.sender?.avatar_url ? (
                         <Avatar className="h-10 w-10 border-2 border-primary/10">
                           <AvatarImage src={notification.sender.avatar_url} alt={notification.sender.username || 'User'} />
