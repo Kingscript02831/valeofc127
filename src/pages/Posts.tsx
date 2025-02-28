@@ -15,7 +15,7 @@ import { ptBR } from "date-fns/locale";
 import { getReactionIcon } from "@/utils/emojisPosts";
 import Tags from "@/components/Tags";
 import { Button } from "@/components/ui/button";
-import { UserPlus, UserCheck } from "lucide-react";
+import { UserPlus, UserCheck, MapPin } from "lucide-react";
 import { toast } from "sonner";
 
 interface Post {
@@ -29,6 +29,8 @@ interface Post {
   created_at: string;
   user_has_liked?: boolean;
   comment_count: number;
+  location_id?: string;
+  location_name?: string;
   user: {
     username: string;
     full_name: string;
@@ -352,9 +354,15 @@ const Posts: React.FC = () => {
                             <h2 className="font-semibold">{post.user.full_name}</h2>
                             <p className="text-sm text-muted-foreground">@{post.user.username}</p>
                           </div>
-                          <p className="text-sm text-muted-foreground">
-                            {formatDate(post.created_at)}
-                          </p>
+                          <div className="flex items-center text-sm text-muted-foreground gap-2">
+                            <span>{formatDate(post.created_at)}</span>
+                            {post.location_name && (
+                              <div className="flex items-center gap-1 text-primary/80">
+                                <MapPin size={12} />
+                                <span>{post.location_name}</span>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                       

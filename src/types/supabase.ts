@@ -18,6 +18,7 @@ export interface Database {
           birth_date: string;
           relationship_status: string;
           instagram_url: string;
+          location_id: string | null;
         };
         Insert: {
           id: string;
@@ -33,6 +34,7 @@ export interface Database {
           birth_date?: string;
           relationship_status?: string;
           instagram_url?: string;
+          location_id?: string | null;
         };
         Update: {
           id?: string;
@@ -48,6 +50,62 @@ export interface Database {
           birth_date?: string;
           relationship_status?: string;
           instagram_url?: string;
+          location_id?: string | null;
+        };
+      };
+      posts: {
+        Row: {
+          id: string;
+          user_id: string;
+          content: string | null;
+          images: string[] | null;
+          video_urls: string[] | null;
+          likes: number | null;
+          created_at: string;
+          location_id: string | null;
+          location_name: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          content?: string | null;
+          images?: string[] | null;
+          video_urls?: string[] | null;
+          likes?: number | null;
+          created_at?: string;
+          location_id?: string | null;
+          location_name?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          content?: string | null;
+          images?: string[] | null;
+          video_urls?: string[] | null;
+          likes?: number | null;
+          created_at?: string;
+          location_id?: string | null;
+          location_name?: string | null;
+        };
+      };
+      locations: {
+        Row: {
+          id: string;
+          name: string;
+          state: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          state: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          state?: string;
+          created_at?: string;
         };
       };
       // Adicione outras tabelas conforme necessário

@@ -6,12 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, MapPin } from "lucide-react";
 import { MediaCarousel } from "@/components/MediaCarousel";
 import Navbar from "@/components/Navbar";
 import BottomNav from "@/components/BottomNav";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { useQuery } from "@tanstack/react-query";
+import type { Location } from "@/types/locations";
+import { toast } from "sonner";
 
 interface UserPost {
   id: string;
@@ -19,6 +22,8 @@ interface UserPost {
   images: string[];
   video_urls: string[];
   created_at: string;
+  location_id?: string;
+  location_name?: string;
 }
 
 const PostForm = () => {
@@ -27,14 +32,51 @@ const PostForm = () => {
   const [selectedVideos, setSelectedVideos] = useState<string[]>([]);
   const [userPosts, setUserPosts] = useState<UserPost[]>([]);
   const [editingPost, setEditingPost] = useState<string | null>(null);
-  const { toast } = useToast();
+  const { toast: toastHook } = useToast();
   const navigate = useNavigate();
   const [newImageUrl, setNewImageUrl] = useState("");
   const [newVideoUrl, setNewVideoUrl] = useState("");
+  const [userLocationId, setUserLocationId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchUserPosts();
+    fetchUserLocation();
   }, []);
+
+  const fetchUserLocation = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('location_id')
+          .eq('id', user.id)
+          .single();
+        
+        if (profile?.location_id) {
+          setUserLocationId(profile.location_id);
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao buscar localização do usuário:", error);
+    }
+  };
+
+  const { data: location_details } = useQuery({
+    queryKey: ['location', userLocationId],
+    queryFn: async () => {
+      if (!userLocationId) return null;
+      const { data, error } = await supabase
+        .from('locations')
+        .select('*')
+        .eq('id', userLocationId)
+        .single();
+      
+      if (error) throw error;
+      return data as Location;
+    },
+    enabled: !!userLocationId
+  });
 
   const fetchUserPosts = async () => {
     try {
@@ -61,7 +103,7 @@ const PostForm = () => {
       } = await supabase.auth.getUser();
 
       if (!user) {
-        toast({
+        toastHook({
           title: "Erro",
           description: "Você precisa estar logado para criar um post",
           variant: "destructive",
@@ -70,36 +112,30 @@ const PostForm = () => {
         return;
       }
 
+      const postData = {
+        content: newPostContent,
+        images: selectedImages,
+        video_urls: selectedVideos,
+        user_id: user.id,
+        location_id: userLocationId,
+        location_name: location_details?.name
+      };
+
       if (editingPost) {
         const { error } = await supabase
           .from("posts")
-          .update({
-            content: newPostContent,
-            images: selectedImages,
-            video_urls: selectedVideos,
-          })
+          .update(postData)
           .eq("id", editingPost);
 
         if (error) throw error;
 
-        toast({
-          title: "Sucesso",
-          description: "Post atualizado com sucesso!",
-        });
+        toast.success("Post atualizado com sucesso!");
       } else {
-        const { error } = await supabase.from("posts").insert({
-          content: newPostContent,
-          images: selectedImages,
-          video_urls: selectedVideos,
-          user_id: user.id,
-        });
+        const { error } = await supabase.from("posts").insert(postData);
 
         if (error) throw error;
 
-        toast({
-          title: "Sucesso",
-          description: "Post criado com sucesso!",
-        });
+        toast.success("Post criado com sucesso!");
       }
 
       setNewPostContent("");
@@ -109,7 +145,7 @@ const PostForm = () => {
       fetchUserPosts();
     } catch (error) {
       console.error("Error with post:", error);
-      toast({
+      toastHook({
         title: "Erro",
         description: "Erro ao processar o post",
         variant: "destructive",
@@ -122,6 +158,9 @@ const PostForm = () => {
     setNewPostContent(post.content);
     setSelectedImages(post.images || []);
     setSelectedVideos(post.video_urls || []);
+    if (post.location_id) {
+      setUserLocationId(post.location_id);
+    }
   };
 
   const handleDelete = async (postId: string) => {
@@ -133,15 +172,11 @@ const PostForm = () => {
 
       if (error) throw error;
 
-      toast({
-        title: "Sucesso",
-        description: "Post excluído com sucesso!",
-      });
-
+      toast.success("Post excluído com sucesso!");
       fetchUserPosts();
     } catch (error) {
       console.error("Error deleting post:", error);
-      toast({
+      toastHook({
         title: "Erro",
         description: "Erro ao excluir o post",
         variant: "destructive",
@@ -151,20 +186,12 @@ const PostForm = () => {
 
   const handleAddImage = () => {
     if (!newImageUrl) {
-      toast({
-        title: "Erro",
-        description: "Por favor, insira uma URL de imagem válida",
-        variant: "destructive"
-      });
+      toast.error("Por favor, insira uma URL de imagem válida");
       return;
     }
 
     if (!newImageUrl.includes('dropbox.com')) {
-      toast({
-        title: "Erro",
-        description: "Por favor, insira uma URL válida do Dropbox",
-        variant: "destructive"
-      });
+      toast.error("Por favor, insira uma URL válida do Dropbox");
       return;
     }
 
@@ -176,26 +203,15 @@ const PostForm = () => {
     if (!selectedImages.includes(directImageUrl)) {
       setSelectedImages([...selectedImages, directImageUrl]);
       setNewImageUrl("");
-      toast({
-        title: "Sucesso",
-        description: "Imagem adicionada com sucesso!"
-      });
+      toast.success("Imagem adicionada com sucesso!");
     } else {
-      toast({
-        title: "Erro",
-        description: "Esta imagem já foi adicionada",
-        variant: "destructive"
-      });
+      toast.error("Esta imagem já foi adicionada");
     }
   };
 
   const handleAddVideo = () => {
     if (!newVideoUrl) {
-      toast({
-        title: "Erro",
-        description: "Por favor, insira uma URL de vídeo válida",
-        variant: "destructive"
-      });
+      toast.error("Por favor, insira uma URL de vídeo válida");
       return;
     }
 
@@ -203,11 +219,7 @@ const PostForm = () => {
     const isYoutubeUrl = newVideoUrl.includes('youtube.com') || newVideoUrl.includes('youtu.be');
 
     if (!isDropboxUrl && !isYoutubeUrl) {
-      toast({
-        title: "Erro",
-        description: "Por favor, insira uma URL válida do Dropbox ou YouTube",
-        variant: "destructive"
-      });
+      toast.error("Por favor, insira uma URL válida do Dropbox ou YouTube");
       return;
     }
 
@@ -219,16 +231,9 @@ const PostForm = () => {
     if (!selectedVideos.includes(directVideoUrl)) {
       setSelectedVideos([...selectedVideos, directVideoUrl]);
       setNewVideoUrl("");
-      toast({
-        title: "Sucesso",
-        description: "Vídeo adicionado com sucesso!"
-      });
+      toast.success("Vídeo adicionado com sucesso!");
     } else {
-      toast({
-        title: "Erro",
-        description: "Este vídeo já foi adicionado",
-        variant: "destructive"
-      });
+      toast.error("Este vídeo já foi adicionado");
     }
   };
 
@@ -250,6 +255,19 @@ const PostForm = () => {
               <h2 className="text-2xl font-semibold mb-4">
                 {editingPost ? "Editar post" : "Criar novo post"}
               </h2>
+              
+              {location_details && (
+                <div className="p-4 bg-primary/10 rounded-lg mb-4">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-5 w-5 text-primary" />
+                    <div>
+                      <Label className="text-primary font-medium">Localização do post</Label>
+                      <p className="text-sm">{location_details.name} - {location_details.state}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
               <Textarea
                 placeholder="O que você está pensando?"
                 value={newPostContent}
@@ -353,6 +371,12 @@ const PostForm = () => {
               <Card key={post.id} className="shadow-sm">
                 <CardContent className="pt-6">
                   <p className="mb-4 whitespace-pre-wrap">{post.content}</p>
+                  {post.location_name && (
+                    <div className="flex items-center gap-2 mb-3 text-sm text-muted-foreground">
+                      <MapPin size={14} />
+                      <span>{post.location_name}</span>
+                    </div>
+                  )}
                   {(post.images?.length > 0 || post.video_urls?.length > 0) && (
                     <div className="mb-4">
                       <MediaCarousel
