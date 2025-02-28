@@ -17,6 +17,7 @@ import Tags from "@/components/Tags";
 import { Button } from "@/components/ui/button";
 import { UserPlus, UserCheck, MoreVertical } from "lucide-react";
 import { toast } from "sonner";
+import LocationDisplay from "@/components/locpost";
 
 interface Post {
   id: string;
@@ -351,9 +352,8 @@ const Posts: React.FC = () => {
                         </div>
                         <div>
                           <h2 className="font-bold text-lg">{post.user.username}</h2>
-                          <p className="text-sm text-muted-foreground font-medium uppercase">
-                            GRÃO Mogol-MG
-                          </p>
+                          {/* Substituímos a localização fixa pelo componente LocationDisplay */}
+                          <LocationDisplay userId={post.user_id} defaultCity="GRÃO MOGOL" />
                         </div>
                       </div>
                       
