@@ -349,6 +349,35 @@ export default function UserProfile() {
                 )}
               </div>
             </div>
+            
+            {/* Moved follow button up here */}
+            {currentUserId && currentUserId !== profile.id && (
+              <div className="absolute top-20 right-4">
+                <Button 
+                  onClick={handleFollowAction}
+                  className={`bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-lg flex items-center gap-2`}
+                  disabled={followMutation.isPending || unfollowMutation.isPending}
+                  variant="secondary"
+                >
+                  {isFollowing ? (
+                    <>
+                      <UserCheck size={18} />
+                      <span>Seguindo</span>
+                    </>
+                  ) : isBeingFollowed ? (
+                    <>
+                      <UserPlus size={18} />
+                      <span>Seguir de volta</span>
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus size={18} />
+                      <span>Seguir</span>
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
           </div>
 
           <div className="px-4 mt-4">
@@ -364,33 +393,7 @@ export default function UserProfile() {
                   )}
                 </div>
                 
-                {currentUserId && currentUserId !== profile.id && (
-                  <div>
-                    <Button 
-                      onClick={handleFollowAction}
-                      className={`bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-lg flex items-center gap-2`}
-                      disabled={followMutation.isPending || unfollowMutation.isPending}
-                      variant="secondary"
-                    >
-                      {isFollowing ? (
-                        <>
-                          <UserCheck size={18} />
-                          <span>Seguindo</span>
-                        </>
-                      ) : isBeingFollowed ? (
-                        <>
-                          <UserPlus size={18} />
-                          <span>Seguir de volta</span>
-                        </>
-                      ) : (
-                        <>
-                          <UserPlus size={18} />
-                          <span>Seguir</span>
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                )}
+                {/* Removed follow button from here since we moved it above */}
               </div>
 
               {profile.city && (
