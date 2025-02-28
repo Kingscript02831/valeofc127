@@ -1,227 +1,252 @@
 
-import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Search, Bell, Menu } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import Navbar from "@/components/Navbar";
-import BottomNav from "@/components/BottomNav";
-import EventCard from "@/components/EventCard";
-import NewsCard from "@/components/NewsCard";
-import PlaceCard from "@/components/PlaceCard";
+import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useTheme } from "@/components/ThemeProvider";
-import StoryCircles from "@/components/StoryCircles";
+import type { Database } from "@/types/supabase";
+import NewsCard from "@/components/NewsCard";
+import Navbar from "@/components/Navbar";
+import SubNav from "@/components/SubNav";
+import Footer from "@/components/Footer";
+import BottomNav from "@/components/BottomNav";
+import PWAInstallPrompt from "@/components/PWAInstallPrompt";
+import { useNavigate } from "react-router-dom";
 
-type Event = {
-  id: string;
-  title: string;
-  description: string;
-  event_date: string;
-  event_time: string;
-  end_time: string;
-  location: string;
-  maps_url: string;
-  image: string;
-  images: string[];
-  entrance_fee: string;
-  button_color: string;
-  button_secondary_color: string;
-  category_id: string;
+type News = Database['public']['Tables']['news']['Row'] & {
+  categories: Database['public']['Tables']['categories']['Row'] | null;
 };
+type Category = Database['public']['Tables']['categories']['Row'];
 
-type News = {
-  id: string;
-  title: string;
-  content: string;
-  image: string;
-  date: string;
-  category: string;
-};
-
-type Place = {
-  id: string;
-  name: string;
-  description: string;
-  image: string;
-  address: string;
-  city: string;
-  state: string;
-  phone: string;
-  whatsapp: string;
-  instagram: string;
-  website: string;
-  maps_url: string;
-  latitude: number;
-  longitude: number;
-  category_id: string;
-};
-
-export default function Index() {
-  const [events, setEvents] = useState<Event[]>([]);
-  const [news, setNews] = useState<News[]>([]);
-  const [places, setPlaces] = useState<Place[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const { theme } = useTheme();
+const Index = () => {
   const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  const { data: categories = [] } = useQuery<Category[]>({
+    queryKey: ['categories', 'news'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('page_type', 'news')
+        .order('name');
+      if (error) {
+        console.error('Error fetching categories:', error);
+        toast.error('Erro ao carregar categorias');
+        return [];
+      }
+      return data || [];
+    },
+    retry: false
+  });
 
-  async function fetchData() {
-    setIsLoading(true);
+  const { data: news = [], isLoading, error } = useQuery<News[]>({
+    queryKey: ['news', searchTerm, selectedCategory],
+    queryFn: async () => {
+      try {
+        let query = supabase
+          .from('news')
+          .select('*, categories(*)')
+          .order('date', { ascending: false });
 
-    // Fetch events
-    const { data: eventsData } = await supabase
-      .from("events")
-      .select("*")
-      .order("event_date", { ascending: true })
-      .limit(5);
+        if (searchTerm) {
+          query = query.ilike('title', `%${searchTerm}%`);
+        }
 
-    if (eventsData) {
-      setEvents(eventsData);
+        if (selectedCategory) {
+          query = query.eq('category_id', selectedCategory);
+        }
+
+        const { data, error } = await query;
+        
+        if (error) {
+          console.error('Supabase query error:', error);
+          return [];
+        }
+        
+        console.log('Fetched news:', data); // Debug log
+        return data as News[];
+      } catch (err) {
+        console.error('Error fetching news:', err);
+        return [];
+      }
+    },
+    retry: false
+  });
+
+  const handleNotificationClick = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast.error('Faça login para ativar as notificações');
+        return;
+      }
+
+      // Verifica se já existe uma configuração de notificação
+      const { data: existing } = await supabase
+        .from('notifications')
+        .select('enabled')
+        .eq('user_id', user.id)
+        .eq('type', 'news')
+        .single();
+
+      const newStatus = !existing?.enabled;
+
+      // Atualiza ou cria a configuração de notificação
+      const { error } = await supabase
+        .from('notifications')
+        .upsert({
+          user_id: user.id,
+          type: 'news',
+          enabled: newStatus,
+          title: 'Notificações de Notícias',
+          message: newStatus ? 'Você receberá notificações de novas notícias' : 'Notificações de notícias desativadas',
+          read: false
+        });
+
+      if (error) {
+        console.error('Error updating notification settings:', error);
+        toast.error('Erro ao atualizar notificações');
+        return;
+      }
+
+      toast.success(newStatus 
+        ? 'Notificações de notícias ativadas!' 
+        : 'Notificações de notícias desativadas');
+
+      // Redireciona para mostrar a notificação
+      navigate('/notify');
+    } catch (error) {
+      console.error('Error handling notifications:', error);
+      toast.error('Erro ao configurar notificações');
     }
-
-    // Fetch news
-    const { data: newsData } = await supabase
-      .from("news")
-      .select("*")
-      .order("date", { ascending: false })
-      .limit(5);
-
-    if (newsData) {
-      setNews(newsData);
-    }
-
-    // Fetch places
-    const { data: placesData } = await supabase
-      .from("places")
-      .select("*")
-      .limit(5);
-
-    if (placesData) {
-      setPlaces(placesData);
-    }
-
-    setIsLoading(false);
-  }
+  };
 
   return (
-    <div className={`min-h-screen ${theme === "light" ? "bg-white" : "bg-black"}`}>
+    <div className="min-h-screen flex flex-col pb-[72px] md:pb-0">
       <Navbar />
-
-      <main className="container mx-auto px-4 pt-16 pb-20">
-        {/* Stories section */}
-        <StoryCircles />
-        
-        <div className="border-t my-4 opacity-10" />
-        
-        {/* Events section */}
-        <section className="my-8">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold">Eventos</h2>
-            <Link
-              to="/eventos"
-              className="text-sm text-blue-500 hover:underline"
-            >
-              Ver todos
-            </Link>
+      <SubNav />
+      <main className="flex-1 container mx-auto py-8 px-4">
+        <div className="flex flex-col gap-4">
+          <div className="sticky top-16 z-10 bg-background/80 backdrop-blur-sm pb-4">
+            <div className="flex gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleNotificationClick}
+                className="hover:scale-105 transition-transform text-foreground"
+              >
+                <Bell className="h-5 w-5" />
+              </Button>
+              <div className="relative flex-1">
+                <Input
+                  placeholder="Buscar notícias..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pr-10 rounded-full bg-card/50 backdrop-blur-sm border-none shadow-lg"
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <Search className="h-5 w-5 text-foreground" />
+                </div>
+              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="hover:scale-105 transition-transform text-foreground rounded-full shadow-lg"
+                  >
+                    <Menu className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem
+                    onClick={() => setSelectedCategory(null)}
+                    className={`${!selectedCategory ? "bg-accent" : ""}`}
+                  >
+                    Todas as categorias
+                  </DropdownMenuItem>
+                  {categories?.map((category) => (
+                    <DropdownMenuItem
+                      key={category.id}
+                      onClick={() => setSelectedCategory(category.id)}
+                      className={`${selectedCategory === category.id ? "bg-accent" : ""}`}
+                    >
+                      {category.name}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
 
           {isLoading ? (
-            <div className="flex overflow-x-auto gap-4 pb-4 no-scrollbar">
-              {[1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="min-w-[250px] h-[180px] bg-gray-200 dark:bg-gray-800 rounded-lg animate-pulse"
-                />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1,2,3].map((i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="h-48 bg-gray-200 rounded-lg mb-4"></div>
+                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                </div>
               ))}
             </div>
-          ) : events.length > 0 ? (
-            <div className="flex overflow-x-auto gap-4 pb-4 no-scrollbar">
-              {events.map((event) => (
-                <EventCard key={event.id} event={event} />
-              ))}
-            </div>
+          ) : error ? (
+            <p className="text-center py-8 text-red-500">
+              Erro ao carregar notícias. Por favor, tente novamente.
+            </p>
           ) : (
-            <div className="text-center py-8 bg-gray-100 dark:bg-gray-900 rounded-lg">
-              <p className="text-gray-500 dark:text-gray-400">
-                Nenhum evento encontrado
-              </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {news.map((item) => {
+                const instagramMedia = item.instagram_media 
+                  ? (typeof item.instagram_media === 'string' 
+                      ? JSON.parse(item.instagram_media) 
+                      : item.instagram_media)
+                  : [];
+
+                return (
+                  <NewsCard
+                    key={item.id}
+                    id={item.id}
+                    title={item.title}
+                    content={item.content}
+                    date={item.date}
+                    createdAt={item.created_at}
+                    images={item.images || []}
+                    video_urls={item.video_urls || []}
+                    instagramMedia={instagramMedia}
+                    category={item.categories ? {
+                      name: item.categories.name,
+                      slug: item.categories.slug,
+                      background_color: item.categories.background_color
+                    } : null}
+                    buttonColor={item.button_color || undefined}
+                  />
+                );
+              })}
+              {!isLoading && news.length === 0 && (
+                <p className="text-gray-500 col-span-full text-center py-8">
+                  Nenhuma notícia encontrada.
+                </p>
+              )}
             </div>
           )}
-        </section>
-
-        {/* News section */}
-        <section className="my-8">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold">Notícias</h2>
-            <Button variant="link" onClick={() => navigate("/noticias")}>
-              Ver todas
-            </Button>
-          </div>
-
-          {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {[1, 2].map((i) => (
-                <div
-                  key={i}
-                  className="h-[120px] bg-gray-200 dark:bg-gray-800 rounded-lg animate-pulse"
-                />
-              ))}
-            </div>
-          ) : news.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {news.map((item) => (
-                <NewsCard key={item.id} news={item} />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 bg-gray-100 dark:bg-gray-900 rounded-lg">
-              <p className="text-gray-500 dark:text-gray-400">
-                Nenhuma notícia encontrada
-              </p>
-            </div>
-          )}
-        </section>
-
-        {/* Places section */}
-        <section className="my-8">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold">Locais</h2>
-            <Link
-              to="/locais"
-              className="text-sm text-blue-500 hover:underline"
-            >
-              Ver todos
-            </Link>
-          </div>
-
-          {isLoading ? (
-            <div className="flex overflow-x-auto gap-4 pb-4 no-scrollbar">
-              {[1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="min-w-[200px] h-[150px] bg-gray-200 dark:bg-gray-800 rounded-lg animate-pulse"
-                />
-              ))}
-            </div>
-          ) : places.length > 0 ? (
-            <div className="flex overflow-x-auto gap-4 pb-4 no-scrollbar">
-              {places.map((place) => (
-                <PlaceCard key={place.id} place={place} />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 bg-gray-100 dark:bg-gray-900 rounded-lg">
-              <p className="text-gray-500 dark:text-gray-400">
-                Nenhum local encontrado
-              </p>
-            </div>
-          )}
-        </section>
+        </div>
       </main>
-
+      <Footer />
       <BottomNav />
+      <PWAInstallPrompt />
     </div>
   );
-}
+};
+
+export default Index;
