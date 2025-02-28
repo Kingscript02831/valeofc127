@@ -13,7 +13,8 @@ BEGIN
     email,
     phone,
     birth_date,
-    location_id
+    location_id,
+    city
   )
   VALUES (
     new.id,
@@ -22,7 +23,8 @@ BEGIN
     new.email,
     new.raw_user_meta_data->>'phone',
     (new.raw_user_meta_data->>'birth_date')::date,
-    (new.raw_user_meta_data->>'location_id')::uuid
+    (new.raw_user_meta_data->>'location_id')::uuid,
+    new.raw_user_meta_data->>'city'
   );
   RETURN new;
 END;
