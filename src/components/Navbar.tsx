@@ -2,10 +2,37 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { Menu } from "lucide-react";
+import { useEffect, useState } from "react";
 
 const Navbar = () => {
   const { data: config, isLoading, isError } = useSiteConfig();
   const navigate = useNavigate();
+  const [visible, setVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      
+      // Determina a direção do scroll
+      if (currentScrollY > lastScrollY) {
+        // Rolando para baixo
+        setVisible(false);
+      } else {
+        // Rolando para cima
+        setVisible(true);
+      }
+      
+      // Atualiza a posição do último scroll
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, [lastScrollY]);
 
   if (isLoading) {
     return (
@@ -27,7 +54,7 @@ const Navbar = () => {
 
   return (
     <nav 
-      className="w-full fixed top-0 z-50 shadow-md"
+      className={`w-full fixed top-0 z-50 shadow-md transition-transform duration-300 ${!visible ? '-translate-y-full' : 'translate-y-0'}`}
       style={{ 
         background: `linear-gradient(to right, ${config.navbar_color}, ${config.primary_color})`,
         borderColor: `${config.primary_color}20`
