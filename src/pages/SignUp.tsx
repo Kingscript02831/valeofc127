@@ -27,7 +27,6 @@ const SignUp = () => {
   const [phone, setPhone] = useState("");
   const [birthDate, setBirthDate] = useState("");
   const [locationId, setLocationId] = useState("");
-  const [cityName, setCityName] = useState("");
   const [loading, setLoading] = useState(false);
   const { data: config, isLoading: configLoading } = useSiteConfig();
 
@@ -43,14 +42,6 @@ const SignUp = () => {
       return data;
     },
   });
-
-  const handleLocationChange = (id: string) => {
-    setLocationId(id);
-    const selectedLocation = locations?.find(loc => loc.id === id);
-    if (selectedLocation) {
-      setCityName(selectedLocation.name);
-    }
-  };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -103,7 +94,6 @@ const SignUp = () => {
             phone: phone,
             birth_date: birthDate,
             location_id: locationId,
-            city: cityName // Save the city name directly
           },
         },
       });
@@ -211,7 +201,7 @@ const SignUp = () => {
             >
               Localização
             </label>
-            <Select onValueChange={handleLocationChange} value={locationId}>
+            <Select onValueChange={setLocationId} value={locationId}>
               <SelectTrigger className="bg-white/50 border-gray-200">
                 <SelectValue placeholder="Selecione sua localização" />
               </SelectTrigger>

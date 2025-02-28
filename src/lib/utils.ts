@@ -29,23 +29,3 @@ export function formatDate(date: string | number | Date): string {
     });
   }
 }
-
-/**
- * Gets the user's location from their profile
- * @param profile The user profile object
- * @returns The location name (city or location_id reference)
- */
-export function getUserLocation(profile: any): string | null {
-  // First try to get the city directly from profile
-  if (profile?.city) {
-    return profile.city;
-  }
-  
-  // If location_id is set but city isn't, return the id reference
-  if (profile?.location_id) {
-    return profile.location_id;
-  }
-  
-  // No location information available
-  return null;
-}

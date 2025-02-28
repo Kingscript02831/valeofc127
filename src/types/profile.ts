@@ -46,8 +46,3 @@ export interface ProfileUpdateData {
   relationship_status?: "single" | "dating" | "widowed" | null;
   instagram_url?: string | null;
 }
-
-export interface UserLocation {
-  location_id?: string | null;
-  city?: string | null;
-}
