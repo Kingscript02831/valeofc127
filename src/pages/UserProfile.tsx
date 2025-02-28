@@ -1,15 +1,14 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../integrations/supabase/client";
 import { Button } from "../components/ui/button";
 import { useTheme } from "../components/ThemeProvider";
 import ProfileTabs from "../components/ProfileTabs";
-import { ArrowLeft, MapPin, Heart, Calendar, Globe, Instagram, UserPlus, UserCheck } from "lucide-react";
+import { ArrowLeft, MapPin, Heart, Calendar, Globe, Instagram } from "lucide-react";
 import BottomNav from "../components/BottomNav";
 import type { Profile } from "../types/profile";
-import { toast } from "sonner";
 import { format } from "date-fns";
 
 const defaultAvatarImage = "/placeholder.svg";
@@ -19,21 +18,6 @@ export default function UserProfile() {
   const { username } = useParams();
   const navigate = useNavigate();
   const { theme } = useTheme();
-  const queryClient = useQueryClient();
-  const [isFollowing, setIsFollowing] = useState(false);
-  const [isBeingFollowed, setIsBeingFollowed] = useState(false);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-
-  // Get current user info
-  useEffect(() => {
-    const fetchCurrentUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        setCurrentUserId(session.user.id);
-      }
-    };
-    fetchCurrentUser();
-  }, []);
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ["userProfile", username],
@@ -74,60 +58,6 @@ export default function UserProfile() {
       };
     },
     enabled: !!profile?.id,
-  });
-
-  // Check if current user is following the profile
-  useQuery({
-    queryKey: ["isFollowing", currentUserId, profile?.id],
-    queryFn: async () => {
-      if (!currentUserId || !profile?.id || currentUserId === profile.id) return false;
-
-      const { data, error } = await supabase
-        .from('follows')
-        .select('*')
-        .eq('follower_id', currentUserId)
-        .eq('following_id', profile.id)
-        .single();
-
-      if (error) {
-        if (error.code !== 'PGRST116') { // PGRST116 is "no rows returned" error
-          console.error('Error checking follow status:', error);
-        }
-        setIsFollowing(false);
-        return false;
-      }
-
-      setIsFollowing(!!data);
-      return !!data;
-    },
-    enabled: !!currentUserId && !!profile?.id && currentUserId !== profile.id,
-  });
-
-  // Check if profile is following current user
-  useQuery({
-    queryKey: ["isBeingFollowed", currentUserId, profile?.id],
-    queryFn: async () => {
-      if (!currentUserId || !profile?.id || currentUserId === profile.id) return false;
-
-      const { data, error } = await supabase
-        .from('follows')
-        .select('*')
-        .eq('follower_id', profile.id)
-        .eq('following_id', currentUserId)
-        .single();
-
-      if (error) {
-        if (error.code !== 'PGRST116') {
-          console.error('Error checking if being followed:', error);
-        }
-        setIsBeingFollowed(false);
-        return false;
-      }
-
-      setIsBeingFollowed(!!data);
-      return !!data;
-    },
-    enabled: !!currentUserId && !!profile?.id && currentUserId !== profile.id,
   });
 
   const { data: userProducts } = useQuery({
@@ -174,89 +104,6 @@ export default function UserProfile() {
     },
     enabled: !!profile?.id,
   });
-
-  // Follow mutation
-  const followMutation = useMutation({
-    mutationFn: async () => {
-      if (!currentUserId || !profile?.id) {
-        throw new Error("User not authenticated or profile not found");
-      }
-
-      const { data, error } = await supabase
-        .from('follows')
-        .insert([
-          { follower_id: currentUserId, following_id: profile.id }
-        ]);
-
-      if (error) throw error;
-
-      // Insert a notification about the follow
-      await supabase
-        .from('notifications')
-        .insert([
-          {
-            user_id: profile.id,
-            title: 'Novo seguidor',
-            message: `@${currentUserId} começou a seguir você.`,
-            type: 'system',
-          }
-        ]);
-
-      return data;
-    },
-    onSuccess: () => {
-      setIsFollowing(true);
-      // Invalidate follow stats to refresh the counts
-      queryClient.invalidateQueries({ queryKey: ["followStats", profile?.id] });
-      toast.success("Seguindo com sucesso!");
-    },
-    onError: (error) => {
-      console.error("Error following user:", error);
-      toast.error("Erro ao seguir usuário");
-    }
-  });
-
-  // Unfollow mutation
-  const unfollowMutation = useMutation({
-    mutationFn: async () => {
-      if (!currentUserId || !profile?.id) {
-        throw new Error("User not authenticated or profile not found");
-      }
-
-      const { data, error } = await supabase
-        .from('follows')
-        .delete()
-        .eq('follower_id', currentUserId)
-        .eq('following_id', profile.id);
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      setIsFollowing(false);
-      // Invalidate follow stats to refresh the counts
-      queryClient.invalidateQueries({ queryKey: ["followStats", profile?.id] });
-      toast.success("Deixou de seguir com sucesso!");
-    },
-    onError: (error) => {
-      console.error("Error unfollowing user:", error);
-      toast.error("Erro ao deixar de seguir usuário");
-    }
-  });
-
-  const handleFollowAction = () => {
-    if (!currentUserId) {
-      // Redirect to login if not authenticated
-      navigate("/login");
-      return;
-    }
-
-    if (isFollowing) {
-      unfollowMutation.mutate();
-    } else {
-      followMutation.mutate();
-    }
-  };
 
   const formatRelationshipStatus = (status: string | null | undefined) => {
     if (!status) return null;
@@ -363,39 +210,6 @@ export default function UserProfile() {
                     </p>
                   )}
                 </div>
-                
-                {currentUserId && currentUserId !== profile.id && (
-                  <div>
-                    <Button 
-                      onClick={handleFollowAction}
-                      className={`${
-                        isFollowing 
-                          ? 'bg-gray-800 hover:bg-gray-700' 
-                          : isBeingFollowed 
-                            ? 'bg-blue-600 hover:bg-blue-500'
-                            : 'bg-primary hover:bg-primary/90'
-                      } text-white px-4 py-2 rounded-lg flex items-center gap-2`}
-                      disabled={followMutation.isPending || unfollowMutation.isPending}
-                    >
-                      {isFollowing ? (
-                        <>
-                          <UserCheck size={18} />
-                          <span>Seguindo</span>
-                        </>
-                      ) : isBeingFollowed ? (
-                        <>
-                          <UserPlus size={18} />
-                          <span>Seguir de volta</span>
-                        </>
-                      ) : (
-                        <>
-                          <UserPlus size={18} />
-                          <span>Seguir</span>
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                )}
               </div>
 
               {profile.city && (
