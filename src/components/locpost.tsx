@@ -67,8 +67,8 @@ const LocationDisplay = ({ userId, defaultCity }: LocationDisplayProps) => {
     : cityToDisplay.toUpperCase();
 
   return (
-    <p className="text-xs text-muted-foreground font-medium uppercase flex items-center gap-1">
-      <MapPin className="h-3 w-3" /> 
+    <p className="text-sm text-muted-foreground font-medium uppercase flex items-center gap-1">
+      <MapPin className="h-4 w-4" /> 
       {locationText}
     </p>
   );

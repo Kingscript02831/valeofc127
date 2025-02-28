@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -94,35 +93,6 @@
   .dark .menu-icon {
     @apply bg-primary/20;
   }
-  
-  /* Fix for icon visibility in light mode */
-  .light img[src*="curtidas.png"],
-  .light img[src*="comentario.png"],
-  .light img[src*="compartilharlink.png"],
-  .light img[src*="whatsapp.png"],
-  :root:not(.dark) img[src*="curtidas.png"],
-  :root:not(.dark) img[src*="comentario.png"],
-  :root:not(.dark) img[src*="compartilharlink.png"],
-  :root:not(.dark) img[src*="whatsapp.png"] {
-    filter: invert(0.5) brightness(0.7);
-  }
-  
-  /* More compact UI */
-  .compact-ui button {
-    @apply text-sm py-1.5 px-3;
-  }
-  
-  .compact-ui h2 {
-    @apply text-base;
-  }
-  
-  .compact-ui p {
-    @apply text-sm;
-  }
-  
-  .compact-ui .avatar {
-    @apply w-9 h-9;
-  }
 }
 
 .glass {
@@ -172,35 +142,4 @@
 
 .bounce {
   animation: bounce 2s infinite ease-in-out;
-}
-
-/* Compact post card styles */
-.post-card {
-  @apply mb-3;
-}
-
-.post-card .avatar {
-  @apply w-9 h-9;
-}
-
-.post-card button {
-  @apply py-1.5 px-3 text-sm;
-}
-
-.post-card h2 {
-  @apply text-base;
-}
-
-.post-card p {
-  @apply text-sm;
-}
-
-/* Post action buttons */
-.post-action {
-  @apply flex items-center justify-center gap-1 py-1.5 px-3 rounded-xl transition-colors text-sm;
-}
-
-/* Post profile section */
-.post-profile {
-  @apply flex items-center gap-2;
 }
