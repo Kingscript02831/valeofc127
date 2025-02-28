@@ -112,35 +112,40 @@ const Notify = () => {
     queryFn: async () => {
       if (!currentUserId) return [];
 
+      // Alteração aqui - sem o erro de uso inadequado do join pela foreign key
       const { data, error } = await supabase
         .from("notifications")
-        .select(`
-          *,
-          sender:reference_id (
-            id,
-            username,
-            full_name,
-            avatar_url
-          )
-        `)
+        .select("*")
         .eq("user_id", currentUserId)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
-      
-      // For each user who might have sent a follow notification, check if we're following them
-      if (data) {
-        for (const notification of data) {
-          if (notification.message?.includes('começou a seguir você') && notification.sender) {
-            const senderId = notification.sender.id;
-            if (senderId) {
-              checkFollowStatus(senderId);
-            }
-          }
-        }
+      if (error) {
+        console.error("Error fetching notifications:", error);
+        throw error;
       }
       
-      return data as Notification[];
+      // Para cada notificação, buscar dados do sender se necessário
+      const notificationsWithSenders = await Promise.all(
+        data.map(async (notification) => {
+          if (notification.reference_id && notification.message?.includes('começou a seguir você')) {
+            // Buscar dados do usuário que seguiu
+            const { data: senderData } = await supabase
+              .from('profiles')
+              .select('id, username, full_name, avatar_url')
+              .eq('id', notification.reference_id)
+              .single();
+            
+            if (senderData) {
+              // Verificar status de seguidor
+              checkFollowStatus(senderData.id);
+              return { ...notification, sender: senderData };
+            }
+          }
+          return notification;
+        })
+      );
+      
+      return notificationsWithSenders as Notification[];
     },
     enabled: !isLoading && !!currentUserId,
   });
