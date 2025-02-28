@@ -456,7 +456,7 @@ const PostDetails = () => {
                   onClick={() => setActiveReactionMenu(activeReactionMenu === post?.id ? null : post?.id)}
                 >
                   {post?.reaction_type ? getReactionIcon(post.reaction_type) : (
-                    <img src="/icone de curtida.png" alt="Curtir" className="w-5 h-5" />
+                    <img src="/curtidas.png" alt="Curtir" className="w-5 h-5" />
                   )}
                   <span className={post?.reaction_type ? 'text-blue-500' : 'text-muted-foreground'}>
                     {post?.likes || 0}
@@ -490,7 +490,7 @@ const PostDetails = () => {
                 className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                 onClick={handleShare}
               >
-                <img src="/compartilhar.png" alt="Compartilhar" className="w-5 h-5" />
+                <img src="/compartilharlink.png" alt="Compartilhar" className="w-5 h-5" />
               </button>
             </div>
           </Card>
