@@ -12,4 +12,10 @@ export interface Notification {
   publication_category?: string;
   publication_date?: string;
   user_id: string;
+  sender?: {
+    id: string;
+    username: string;
+    full_name: string;
+    avatar_url: string;
+  };
 }
