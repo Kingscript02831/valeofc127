@@ -119,6 +119,50 @@ export type Database = {
           background_color?: string;
         }
       }
+      posts: {
+        Row: {
+          id: string;
+          user_id: string;
+          content?: string;
+          images?: string[];
+          video_urls?: string[];
+          likes: number;
+          location_id?: string;
+          location_name?: string;
+          latitude?: number;
+          longitude?: number;
+          view_count?: number;
+          created_at: string;
+        }
+        Insert: {
+          id?: string;
+          user_id: string;
+          content?: string;
+          images?: string[];
+          video_urls?: string[];
+          likes?: number;
+          location_id?: string;
+          location_name?: string;
+          latitude?: number;
+          longitude?: number;
+          view_count?: number;
+          created_at?: string;
+        }
+        Update: {
+          id?: string;
+          user_id?: string;
+          content?: string;
+          images?: string[];
+          video_urls?: string[];
+          likes?: number;
+          location_id?: string;
+          location_name?: string;
+          latitude?: number;
+          longitude?: number;
+          view_count?: number;
+          created_at?: string;
+        }
+      }
     }
   }
 }
