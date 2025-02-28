@@ -183,36 +183,36 @@ const ProfileTabs = ({ userProducts, userPosts, isLoading }: ProfileTabsProps) =
                   <div className="flex items-center justify-between p-2 mt-2 border-t border-border/40">
                     <Link
                       to={`/posts/${post.id}`}
-                      className="flex items-center justify-center gap-1 py-1.5 px-3 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-xs"
+                      className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                     >
-                      <img src="/curtidas.png" alt="Curtir" className="w-4 h-4" />
-                      <span className="text-muted-foreground">
+                      <img src="/curtidas.png" alt="Curtir" className="w-5 h-5" />
+                      <span className="text-sm text-muted-foreground">
                         {post.post_likes?.length || 0}
                       </span>
                     </Link>
 
                     <Link
                       to={`/posts/${post.id}`}
-                      className="flex items-center justify-center gap-1 py-1.5 px-3 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-xs"
+                      className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                     >
-                      <img src="/comentario.png" alt="Comentários" className="w-4 h-4" />
-                      <span className="text-muted-foreground">
+                      <img src="/comentario.png" alt="Comentários" className="w-5 h-5" />
+                      <span className="text-sm text-muted-foreground">
                         {post.post_comments?.length || 0}
                       </span>
                     </Link>
 
                     <button
-                      className="flex items-center justify-center gap-1 py-1.5 px-3 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-xs"
+                      className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-[#25D366]/10 hover:bg-[#25D366]/20 transition-colors"
                       onClick={() => handleWhatsAppShare(post.id)}
                     >
-                      <img src="/whatsapp.png" alt="WhatsApp" className="w-4 h-4" />
+                      <img src="/whatsapp.png" alt="WhatsApp" className="w-5 h-5" />
                     </button>
 
                     <button
-                      className="flex items-center justify-center gap-1 py-1.5 px-3 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-xs"
+                      className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                       onClick={() => handleShare(post.id)}
                     >
-                      <img src="/compartilharlink.png" alt="Compartilhar" className="w-4 h-4" />
+                      <img src="/compartilharlink.png" alt="Compartilhar" className="w-5 h-5" />
                     </button>
                   </div>
                 </CardContent>
@@ -240,8 +240,8 @@ const ProfileTabs = ({ userProducts, userPosts, isLoading }: ProfileTabsProps) =
                         className="w-full aspect-square object-cover rounded-lg mb-2"
                       />
                     )}
-                    <h3 className={`font-medium text-sm ${theme === 'light' ? 'text-black' : 'text-white'}`}>{product.title}</h3>
-                    <p className="text-green-500 text-sm">
+                    <h3 className={`font-medium ${theme === 'light' ? 'text-black' : 'text-white'}`}>{product.title}</h3>
+                    <p className="text-green-500">
                       {new Intl.NumberFormat('pt-BR', {
                         style: 'currency',
                         currency: 'BRL'

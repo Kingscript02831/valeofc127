@@ -103,16 +103,3 @@
 .card-gradient {
   @apply bg-gradient-to-br from-card to-secondary/80 backdrop-blur-sm;
 }
-
-/* Custom utility classes for post components */
-.city-name {
-  @apply text-xs font-medium truncate max-w-[100px];
-}
-
-.follow-button {
-  @apply text-xs py-1 px-2 rounded-full;
-}
-
-.post-action-button {
-  @apply flex items-center justify-center gap-1 py-1 px-2 rounded-lg text-xs bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors;
-}
