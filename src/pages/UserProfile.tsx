@@ -246,10 +246,24 @@ export default function UserProfile() {
 
   const handleFollowAction = () => {
     if (!currentUserId) {
-      // Redirect to login if not authenticated
       navigate("/login");
       return;
     }
+
+    const lastActionTime = localStorage.getItem(`followAction_${profile?.id}`);
+    const now = Date.now();
+    const cooldownPeriod = 30000; // 30 segundos em milissegundos
+
+    if (lastActionTime) {
+      const timeSinceLastAction = now - parseInt(lastActionTime);
+      if (timeSinceLastAction < cooldownPeriod) {
+        const remainingSeconds = Math.ceil((cooldownPeriod - timeSinceLastAction) / 1000);
+        toast.error(`Aguarde ${remainingSeconds} segundos antes de alterar o status de seguir novamente.`);
+        return;
+      }
+    }
+
+    localStorage.setItem(`followAction_${profile?.id}`, now.toString());
 
     if (isFollowing) {
       unfollowMutation.mutate();
