@@ -368,13 +368,7 @@ export default function UserProfile() {
                   <div>
                     <Button 
                       onClick={handleFollowAction}
-                      className={`${
-                        isFollowing 
-                          ? 'bg-gray-800 hover:bg-gray-700' 
-                          : isBeingFollowed 
-                            ? 'bg-blue-600 hover:bg-blue-500'
-                            : 'bg-primary hover:bg-primary/90'
-                      } text-white px-4 py-2 rounded-lg flex items-center gap-2`}
+                      className={`bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-lg flex items-center gap-2`}
                       disabled={followMutation.isPending || unfollowMutation.isPending}
                     >
                       {isFollowing ? (
