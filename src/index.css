@@ -1,145 +1,102 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
+ 
 @layer base {
   :root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
+
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
+ 
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
+ 
     --primary: 222.2 47.4% 11.2%;
     --primary-foreground: 210 40% 98%;
+ 
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
+ 
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
+ 
     --accent: 210 40% 96.1%;
     --accent-foreground: 222.2 47.4% 11.2%;
+ 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
+
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
+ 
     --radius: 0.5rem;
   }
-
+ 
   .dark {
-    --background: 0 0% 0%;
+    --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
-    --card: 0 0% 0%;
+ 
+    --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
+ 
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
+ 
+    --primary: 210 40% 98%;
     --primary-foreground: 222.2 47.4% 11.2%;
+ 
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
+ 
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
+ 
     --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
+ 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
+ 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
+    --ring: 212.7 26.8% 83.9%;
   }
 }
-
+ 
 @layer base {
   * {
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Hide scrollbar but allow scrolling */
+@layer utilities {
+  .no-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
   }
   
-  /* Força o modo claro nas páginas admin */
-  [data-route^="/admin"] {
-    @apply !bg-white !text-black;
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari and Opera */
   }
 
-  /* Corrige as descrições em modo escuro */
-  .dark textarea,
-  .dark input[type="text"],
-  .dark input[type="search"],
-  .dark .description {
-    @apply bg-background text-foreground border-border;
+  .loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 1s ease-in-out infinite;
   }
 
-  /* Ajusta os cartões em modo escuro */
-  .dark .card-content {
-    @apply bg-background text-foreground border-border;
+  @keyframes spin {
+    to { transform: rotate(360deg); }
   }
-
-  /* Ajusta os botões em modo escuro */
-  .dark .button-default {
-    @apply bg-accent text-accent-foreground hover:bg-accent/90;
-  }
-
-  /* Ajusta a página de produtos em modo escuro */
-  .dark [data-route="/products"] {
-    @apply bg-black;
-  }
-
-  /* Ajustes do menu em modo escuro */
-  .dark .menu-item {
-    @apply hover:bg-accent/20;
-  }
-
-  .dark .menu-icon {
-    @apply bg-primary/20;
-  }
-}
-
-.glass {
-  @apply bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl dark:bg-black/30;
-}
-
-.card-gradient {
-  @apply bg-gradient-to-br from-card to-secondary/80 backdrop-blur-sm;
-}
-
-.fade-in {
-  opacity: 0;
-  animation: fadeIn 0.5s ease-out forwards;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.slide-in {
-  transform: translateX(-100%);
-  animation: slideIn 0.5s ease-out forwards;
-}
-
-@keyframes slideIn {
-  from {
-    transform: translateX(-100%);
-  }
-  to {
-    transform: translateX(0);
-  }
-}
-
-@keyframes bounce {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-20px);
-  }
-}
-
-.bounce {
-  animation: bounce 2s infinite ease-in-out;
 }
