@@ -46,7 +46,7 @@ const Notify = () => {
           .single();
 
         if (profile) {
-          setNotificationsEnabled(profile.notifications_enabled);
+          setNotificationsEnabled(profile.notifications_enabled !== false); // Default to true if not set
         }
       }
     };
