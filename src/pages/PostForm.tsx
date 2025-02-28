@@ -1,387 +1,353 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
-import { Plus, Trash2 } from "lucide-react";
-import { MediaCarousel } from "@/components/MediaCarousel";
-import Navbar from "@/components/Navbar";
-import BottomNav from "@/components/BottomNav";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-
-interface UserPost {
-  id: string;
-  content: string;
-  images: string[];
-  video_urls: string[];
-  created_at: string;
-}
+import { supabase } from "../integrations/supabase/client";
+import { Button } from "../components/ui/button";
+import { useToast } from "../hooks/use-toast";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTheme } from "../components/ThemeProvider";
+import { useUserLocation } from "../components/locpost";
+import Navbar from "../components/Navbar";
+import BottomNav from "../components/BottomNav";
 
 const PostForm = () => {
-  const [newPostContent, setNewPostContent] = useState("");
-  const [selectedImages, setSelectedImages] = useState<string[]>([]);
-  const [selectedVideos, setSelectedVideos] = useState<string[]>([]);
-  const [userPosts, setUserPosts] = useState<UserPost[]>([]);
-  const [editingPost, setEditingPost] = useState<string | null>(null);
-  const { toast } = useToast();
   const navigate = useNavigate();
-  const [newImageUrl, setNewImageUrl] = useState("");
-  const [newVideoUrl, setNewVideoUrl] = useState("");
-
-  useEffect(() => {
-    fetchUserPosts();
-  }, []);
-
-  const fetchUserPosts = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: posts, error } = await supabase
-        .from("posts")
+  const { toast } = useToast();
+  const { theme } = useTheme();
+  const queryClient = useQueryClient();
+  const [images, setImages] = useState<File[]>([]);
+  const [videos, setVideos] = useState<File[]>([]);
+  const [content, setContent] = useState("");
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [videoUrls, setVideoUrls] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const { userLocation } = useUserLocation();
+  
+  // Busca o usuário atual
+  const { data: profile } = useQuery({
+    queryKey: ["profile"],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate("/login");
+        return null;
+      }
+      
+      const { data, error } = await supabase
+        .from("profiles")
         .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
-
+        .eq("id", session.user.id)
+        .single();
+        
       if (error) throw error;
-      setUserPosts(posts || []);
-    } catch (error) {
-      console.error("Error fetching user posts:", error);
+      return data;
+    },
+  });
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const newImages = Array.from(e.target.files);
+      setImages((prev) => [...prev, ...newImages]);
+      
+      // Cria URLs de visualização para as novas imagens
+      const newImageUrls = newImages.map((file) => URL.createObjectURL(file));
+      setImageUrls((prev) => [...prev, ...newImageUrls]);
     }
   };
+  
+  const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const newVideos = Array.from(e.target.files);
+      setVideos((prev) => [...prev, ...newVideos]);
+      
+      // Cria URLs de visualização para os novos vídeos
+      const newVideoUrls = newVideos.map((file) => URL.createObjectURL(file));
+      setVideoUrls((prev) => [...prev, ...newVideoUrls]);
+    }
+  };
+  
+  const handleRemoveImage = (index: number) => {
+    setImages((prev) => prev.filter((_, i) => i !== index));
+    setImageUrls((prev) => {
+      // Libera a URL do objeto
+      URL.revokeObjectURL(prev[index]);
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+  
+  const handleRemoveVideo = (index: number) => {
+    setVideos((prev) => prev.filter((_, i) => i !== index));
+    setVideoUrls((prev) => {
+      // Libera a URL do objeto
+      URL.revokeObjectURL(prev[index]);
+      return prev.filter((_, i) => i !== index);
+    });
+  };
 
-  const handleCreatePost = async () => {
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
+  const uploadPostMedia = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      toast({
+        title: "Erro",
+        description: "Você precisa estar logado para criar uma publicação",
+        variant: "destructive",
+      });
+      return { imageURLs: [], videoURLs: [] };
+    }
+    
+    const imageURLs: string[] = [];
+    const videoURLs: string[] = [];
+    
+    // Upload de imagens
+    for (const image of images) {
+      const fileExt = image.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+      const filePath = `${session.user.id}/${fileName}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from("post-images")
+        .upload(filePath, image);
+        
+      if (uploadError) {
         toast({
           title: "Erro",
-          description: "Você precisa estar logado para criar um post",
+          description: `Erro ao fazer upload da imagem: ${uploadError.message}`,
           variant: "destructive",
         });
-        navigate("/login");
-        return;
+      } else {
+        const { data } = supabase.storage
+          .from("post-images")
+          .getPublicUrl(filePath);
+          
+        imageURLs.push(data.publicUrl);
       }
-
-      if (editingPost) {
-        const { error } = await supabase
-          .from("posts")
-          .update({
-            content: newPostContent,
-            images: selectedImages,
-            video_urls: selectedVideos,
-          })
-          .eq("id", editingPost);
-
-        if (error) throw error;
-
+    }
+    
+    // Upload de vídeos
+    for (const video of videos) {
+      const fileExt = video.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+      const filePath = `${session.user.id}/${fileName}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from("post-videos")
+        .upload(filePath, video);
+        
+      if (uploadError) {
         toast({
-          title: "Sucesso",
-          description: "Post atualizado com sucesso!",
+          title: "Erro",
+          description: `Erro ao fazer upload do vídeo: ${uploadError.message}`,
+          variant: "destructive",
         });
       } else {
-        const { error } = await supabase.from("posts").insert({
-          content: newPostContent,
-          images: selectedImages,
-          video_urls: selectedVideos,
-          user_id: user.id,
-        });
-
-        if (error) throw error;
-
-        toast({
-          title: "Sucesso",
-          description: "Post criado com sucesso!",
-        });
+        const { data } = supabase.storage
+          .from("post-videos")
+          .getPublicUrl(filePath);
+          
+        videoURLs.push(data.publicUrl);
       }
+    }
+    
+    return { imageURLs, videoURLs };
+  };
 
-      setNewPostContent("");
-      setSelectedImages([]);
-      setSelectedVideos([]);
-      setEditingPost(null);
-      fetchUserPosts();
-    } catch (error) {
-      console.error("Error with post:", error);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!content.trim() && images.length === 0 && videos.length === 0) {
       toast({
         title: "Erro",
-        description: "Erro ao processar o post",
+        description: "Adicione conteúdo, imagens ou vídeos à sua publicação",
         variant: "destructive",
       });
+      return;
     }
-  };
-
-  const handleEdit = (post: UserPost) => {
-    setEditingPost(post.id);
-    setNewPostContent(post.content);
-    setSelectedImages(post.images || []);
-    setSelectedVideos(post.video_urls || []);
-  };
-
-  const handleDelete = async (postId: string) => {
+    
+    setUploading(true);
+    
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: "Erro",
+          description: "Você precisa estar logado para criar uma publicação",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Upload de mídia
+      const { imageURLs, videoURLs } = await uploadPostMedia();
+      
+      // Prepare location data
+      const locationData = profile?.location || null;
+      const city = profile?.city || null;
+      
+      // Criar post com informações de localização
       const { error } = await supabase
         .from("posts")
-        .delete()
-        .eq("id", postId);
-
-      if (error) throw error;
-
+        .insert({
+          user_id: session.user.id,
+          content,
+          images: imageURLs,
+          video_urls: videoURLs,
+          location: locationData,
+          city: city
+        });
+        
+      if (error) {
+        throw error;
+      }
+      
+      // Limpar o formulário
+      setContent("");
+      setImages([]);
+      setVideos([]);
+      setImageUrls([]);
+      setVideoUrls([]);
+      
+      // Invalidar cache
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+      
       toast({
         title: "Sucesso",
-        description: "Post excluído com sucesso!",
+        description: "Publicação criada com sucesso",
       });
-
-      fetchUserPosts();
+      
+      // Redirecionar para a página de posts
+      navigate("/posts");
     } catch (error) {
-      console.error("Error deleting post:", error);
+      console.error("Erro ao criar publicação:", error);
       toast({
         title: "Erro",
-        description: "Erro ao excluir o post",
+        description: "Ocorreu um erro ao criar sua publicação. Tente novamente.",
         variant: "destructive",
       });
+    } finally {
+      setUploading(false);
     }
-  };
-
-  const handleAddImage = () => {
-    if (!newImageUrl) {
-      toast({
-        title: "Erro",
-        description: "Por favor, insira uma URL de imagem válida",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!newImageUrl.includes('dropbox.com')) {
-      toast({
-        title: "Erro",
-        description: "Por favor, insira uma URL válida do Dropbox",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    let directImageUrl = newImageUrl;
-    if (newImageUrl.includes('www.dropbox.com')) {
-      directImageUrl = newImageUrl.replace('www.dropbox.com', 'dl.dropboxusercontent.com');
-    }
-
-    if (!selectedImages.includes(directImageUrl)) {
-      setSelectedImages([...selectedImages, directImageUrl]);
-      setNewImageUrl("");
-      toast({
-        title: "Sucesso",
-        description: "Imagem adicionada com sucesso!"
-      });
-    } else {
-      toast({
-        title: "Erro",
-        description: "Esta imagem já foi adicionada",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleAddVideo = () => {
-    if (!newVideoUrl) {
-      toast({
-        title: "Erro",
-        description: "Por favor, insira uma URL de vídeo válida",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const isDropboxUrl = newVideoUrl.includes('dropbox.com');
-    const isYoutubeUrl = newVideoUrl.includes('youtube.com') || newVideoUrl.includes('youtu.be');
-
-    if (!isDropboxUrl && !isYoutubeUrl) {
-      toast({
-        title: "Erro",
-        description: "Por favor, insira uma URL válida do Dropbox ou YouTube",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    let directVideoUrl = newVideoUrl;
-    if (isDropboxUrl && newVideoUrl.includes('www.dropbox.com')) {
-      directVideoUrl = newVideoUrl.replace('www.dropbox.com', 'dl.dropboxusercontent.com');
-    }
-
-    if (!selectedVideos.includes(directVideoUrl)) {
-      setSelectedVideos([...selectedVideos, directVideoUrl]);
-      setNewVideoUrl("");
-      toast({
-        title: "Sucesso",
-        description: "Vídeo adicionado com sucesso!"
-      });
-    } else {
-      toast({
-        title: "Erro",
-        description: "Este vídeo já foi adicionado",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleRemoveImage = (index: number) => {
-    setSelectedImages(selectedImages.filter((_, i) => i !== index));
-  };
-
-  const handleRemoveVideo = (index: number) => {
-    setSelectedVideos(selectedVideos.filter((_, i) => i !== index));
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className={`min-h-screen ${theme === 'light' ? 'bg-white' : 'bg-black'}`}>
       <Navbar />
-      <div className="container mx-auto p-4 pt-20 pb-24">
-        <div className="max-w-3xl mx-auto">
-          <Card className="mb-6">
-            <CardContent className="pt-6">
-              <h2 className="text-2xl font-semibold mb-4">
-                {editingPost ? "Editar post" : "Criar novo post"}
-              </h2>
-              <Textarea
-                placeholder="O que você está pensando?"
-                value={newPostContent}
-                onChange={(e) => setNewPostContent(e.target.value)}
-                className="mb-4"
-                rows={6}
-              />
-              {(selectedImages.length > 0 || selectedVideos.length > 0) && (
-                <div className="mb-4">
-                  <MediaCarousel
-                    images={selectedImages}
-                    videoUrls={selectedVideos}
-                    title="Preview"
-                  />
-                </div>
-              )}
-              <div className="space-y-4 mt-4">
-                <div>
-                  <Label>Imagens do Dropbox</Label>
-                  <div className="flex gap-2 mt-2">
-                    <Input
-                      value={newImageUrl}
-                      onChange={(e) => setNewImageUrl(e.target.value)}
-                      placeholder="Cole a URL compartilhada do Dropbox"
-                    />
-                    <Button type="button" onClick={handleAddImage}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Adicionar
-                    </Button>
-                  </div>
-                  {selectedImages.map((url, index) => (
-                    <div key={index} className="flex items-center gap-2 mt-2">
-                      <Input value={url} readOnly />
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="icon"
-                        onClick={() => handleRemoveImage(index)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-                
-                <div>
-                  <Label>Vídeos (Dropbox ou YouTube)</Label>
-                  <div className="flex gap-2 mt-2">
-                    <Input
-                      value={newVideoUrl}
-                      onChange={(e) => setNewVideoUrl(e.target.value)}
-                      placeholder="Cole a URL do Dropbox ou YouTube"
-                    />
-                    <Button type="button" onClick={handleAddVideo}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Adicionar
-                    </Button>
-                  </div>
-                  {selectedVideos.map((url, index) => (
-                    <div key={index} className="flex items-center gap-2 mt-2">
-                      <Input value={url} readOnly />
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="icon"
-                        onClick={() => handleRemoveVideo(index)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <Button
-                className="w-full mt-4"
-                onClick={handleCreatePost}
-                disabled={!newPostContent.trim() && !selectedImages.length && !selectedVideos.length}
-              >
-                {editingPost ? "Salvar alterações" : "Publicar"}
-              </Button>
-              {editingPost && (
-                <Button
-                  variant="ghost"
-                  className="w-full mt-2"
-                  onClick={() => {
-                    setEditingPost(null);
-                    setNewPostContent("");
-                    setSelectedImages([]);
-                    setSelectedVideos([]);
-                  }}
-                >
-                  Cancelar
-                </Button>
-              )}
-            </CardContent>
-          </Card>
+      <div className="container mx-auto pt-20 pb-24 px-4">
+        <div className="max-w-xl mx-auto">
+          <h1 className={`text-2xl font-bold mb-6 ${theme === 'light' ? 'text-gray-800' : 'text-gray-100'}`}>
+            Criar Publicação
+          </h1>
 
-          <div className="space-y-4">
-            <h3 className="text-xl font-semibold">Seus posts</h3>
-            {userPosts.map((post) => (
-              <Card key={post.id} className="shadow-sm">
-                <CardContent className="pt-6">
-                  <p className="mb-4 whitespace-pre-wrap">{post.content}</p>
-                  {(post.images?.length > 0 || post.video_urls?.length > 0) && (
-                    <div className="mb-4">
-                      <MediaCarousel
-                        images={post.images || []}
-                        videoUrls={post.video_urls || []}
-                        title={post.content}
-                      />
-                    </div>
-                  )}
-                  <div className="flex justify-end gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEdit(post)}
+          <form onSubmit={handleSubmit}>
+            <div className="mb-4">
+              <textarea
+                className={`w-full p-3 rounded-lg ${
+                  theme === 'light' 
+                    ? 'bg-gray-100 text-gray-800 border-gray-200' 
+                    : 'bg-gray-800 text-gray-100 border-gray-700'
+                } border`}
+                placeholder="O que está acontecendo?"
+                rows={4}
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+              />
+            </div>
+
+            {/* Visualização de imagens */}
+            {imageUrls.length > 0 && (
+              <div className="mb-4 grid grid-cols-3 gap-2">
+                {imageUrls.map((url, index) => (
+                  <div key={index} className="relative">
+                    <img 
+                      src={url} 
+                      alt={`Preview ${index}`} 
+                      className="w-full h-24 object-cover rounded"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveImage(index)}
+                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
                     >
-                      Editar
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleDelete(post.id)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                      ×
+                    </button>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                ))}
+              </div>
+            )}
+
+            {/* Visualização de vídeos */}
+            {videoUrls.length > 0 && (
+              <div className="mb-4 grid grid-cols-2 gap-2">
+                {videoUrls.map((url, index) => (
+                  <div key={index} className="relative">
+                    <video 
+                      src={url} 
+                      className="w-full h-32 object-cover rounded" 
+                      controls
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveVideo(index)}
+                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="flex space-x-2 mb-6">
+              <label className={`flex-1 flex items-center justify-center p-3 rounded-lg border ${
+                theme === 'light' 
+                  ? 'border-gray-200 bg-gray-50 text-gray-700' 
+                  : 'border-gray-700 bg-gray-800 text-gray-200'
+              } cursor-pointer hover:bg-opacity-80 transition-all`}>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={handleImageChange}
+                  disabled={uploading}
+                />
+                <span>Adicionar Imagens</span>
+              </label>
+
+              <label className={`flex-1 flex items-center justify-center p-3 rounded-lg border ${
+                theme === 'light' 
+                  ? 'border-gray-200 bg-gray-50 text-gray-700' 
+                  : 'border-gray-700 bg-gray-800 text-gray-200'
+              } cursor-pointer hover:bg-opacity-80 transition-all`}>
+                <input
+                  type="file"
+                  accept="video/*"
+                  multiple
+                  className="hidden"
+                  onChange={handleVideoChange}
+                  disabled={uploading}
+                />
+                <span>Adicionar Vídeos</span>
+              </label>
+            </div>
+
+            {userLocation?.city && (
+              <div className={`mb-4 p-2 rounded-lg ${
+                theme === 'light' ? 'bg-blue-50 text-blue-700' : 'bg-blue-900 text-blue-200'
+              }`}>
+                <p className="text-sm">
+                  Sua publicação será associada à sua localização: {userLocation.city}
+                </p>
+              </div>
+            )}
+
+            <Button 
+              type="submit"
+              className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+              disabled={uploading}
+            >
+              {uploading ? "Publicando..." : "Publicar"}
+            </Button>
+          </form>
         </div>
       </div>
       <BottomNav />

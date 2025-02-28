@@ -34,7 +34,7 @@ export const useUserLocation = () => {
         if (error) throw error;
 
         // Se o perfil não tiver localização definida
-        if (!profile?.location) {
+        if (!profile?.location && !profile?.city) {
           return null;
         }
 
