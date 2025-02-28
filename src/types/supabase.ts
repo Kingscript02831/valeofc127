@@ -50,50 +50,6 @@ export interface Database {
           instagram_url?: string;
         };
       };
-      notifications: {
-        Row: {
-          id: string;
-          title: string;
-          message: string;
-          type: 'news' | 'event' | 'system';
-          reference_id?: string;
-          read: boolean;
-          created_at: string;
-          publication_title?: string;
-          publication_description?: string;
-          publication_category?: string;
-          publication_date?: string;
-          user_id: string;
-        };
-        Insert: {
-          id?: string;
-          title: string;
-          message: string;
-          type: 'news' | 'event' | 'system';
-          reference_id?: string;
-          read?: boolean;
-          created_at?: string;
-          publication_title?: string;
-          publication_description?: string;
-          publication_category?: string;
-          publication_date?: string;
-          user_id: string;
-        };
-        Update: {
-          id?: string;
-          title?: string;
-          message?: string;
-          type?: 'news' | 'event' | 'system';
-          reference_id?: string;
-          read?: boolean;
-          created_at?: string;
-          publication_title?: string;
-          publication_description?: string;
-          publication_category?: string;
-          publication_date?: string;
-          user_id?: string;
-        };
-      };
       // Adicione outras tabelas conforme necessário
     };
   };
