@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, CheckCircle, Clock, ChevronRight, Calendar, Newspaper, Trash2, UserCheck, UserPlus } from "lucide-react";
+import { CheckCircle, Clock, ChevronRight, Calendar, Newspaper, Trash2, UserCheck, UserPlus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -371,7 +371,7 @@ const Notify = () => {
       case "news":
         return <Newspaper className="h-4 w-4" />;
       default:
-        return <Bell className="h-4 w-4" />;
+        return null;
     }
   };
 
@@ -391,7 +391,6 @@ const Notify = () => {
       <div className="max-w-3xl mx-auto p-4 md:p-6 mb-20">
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
           <div className="flex items-center gap-3">
-            <Bell className="h-6 w-6 text-primary" />
             <h1 className="text-xl font-bold">Notificações</h1>
             <Badge variant="secondary" className="ml-2">
               {notifications.filter(n => !n.read).length} não lidas
@@ -419,7 +418,7 @@ const Notify = () => {
           </div>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-4">
           {notifications.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               Nenhuma notificação encontrada
@@ -434,72 +433,77 @@ const Notify = () => {
                 <div
                   key={notification.id}
                   className={cn(
-                    "group flex flex-col p-3 rounded-lg border transition-all",
-                    "hover:shadow-sm cursor-pointer",
+                    "group flex flex-col py-3 transition-all",
                     notification.read 
-                      ? "bg-muted/50 border-transparent"
-                      : "bg-background border-primary/10"
+                      ? "opacity-80"
+                      : ""
                   )}
                   onClick={() => markAsRead(notification.id)}
                 >
-                  <div className="flex items-start gap-3">
-                    {notification.sender?.avatar_url ? (
-                      <Avatar className="h-10 w-10 border-2 border-primary/10">
+                  <div className="flex items-center gap-3">
+                    {isFollowNotification && notification.sender?.avatar_url ? (
+                      <Avatar className="h-10 w-10">
                         <AvatarImage src={notification.sender.avatar_url} alt={notification.sender.username || 'User'} />
                         <AvatarFallback>
                           {notification.sender.full_name?.charAt(0).toUpperCase() || 'U'}
                         </AvatarFallback>
                       </Avatar>
                     ) : (
-                      <div className="mt-1">
+                      <div className="flex-shrink-0 mt-1">
                         {getNotificationIcon(notification.type)}
                       </div>
                     )}
+                    
                     <div className="flex-1 min-w-0">
-                      <div className="flex flex-wrap items-center gap-2 mb-1">
-                        <Badge
-                          variant={notification.read ? "outline" : "default"}
-                          className={cn(
-                            "text-xs font-medium",
-                            notification.type === 'event' && "bg-blue-500/10 text-blue-700",
-                            notification.type === 'news' && "bg-green-500/10 text-green-700",
-                            notification.type === 'system' && "bg-purple-500/10 text-purple-700"
-                          )}
-                        >
-                          {notification.type === 'event' ? 'Evento' : 
-                           notification.type === 'news' ? 'Notícia' : 
-                           isFollowNotification ? 'Seguidor' : 'Sistema'}
-                        </Badge>
-                        {notification.publication_category && (
-                          <Badge variant="outline" className="text-xs">
-                            {notification.publication_category}
+                      {!isFollowNotification && (
+                        <div className="flex flex-wrap items-center gap-2 mb-1">
+                          <Badge
+                            variant={notification.read ? "outline" : "default"}
+                            className={cn(
+                              "text-xs font-medium",
+                              notification.type === 'event' && "bg-blue-500/10 text-blue-700",
+                              notification.type === 'news' && "bg-green-500/10 text-green-700",
+                              notification.type === 'system' && "bg-purple-500/10 text-purple-700"
+                            )}
+                          >
+                            {notification.type === 'event' ? 'Evento' : 
+                            notification.type === 'news' ? 'Notícia' : 'Sistema'}
                           </Badge>
+                          {notification.publication_category && (
+                            <Badge variant="outline" className="text-xs">
+                              {notification.publication_category}
+                            </Badge>
+                          )}
+                        </div>
+                      )}
+
+                      <div className="flex items-center">
+                        {isFollowNotification ? (
+                          <p className="text-sm">
+                            <span className="font-semibold">@{notification.sender?.username}</span>
+                            {' começou a seguir você.'}
+                          </p>
+                        ) : (
+                          <h3 className={cn(
+                            "text-sm font-medium mb-0.5",
+                            !notification.read && "text-primary"
+                          )}>
+                            {notification.publication_title || notification.title}
+                          </h3>
                         )}
+                        
                         {!notification.read && (
-                          <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                          <span className="h-1.5 w-1.5 rounded-full bg-primary ml-2" />
                         )}
                       </div>
-
-                      <h3 className={cn(
-                        "text-sm font-medium mb-0.5",
-                        !notification.read && "text-primary"
-                      )}>
-                        {notification.sender?.username ? (
-                          <span className="font-semibold">@{notification.sender.username}</span>
-                        ) : ''}
-                        {' '}
-                        {isFollowNotification ? 
-                          'começou a seguir você.' : 
-                          notification.publication_title || notification.title}
-                      </h3>
                       
-                      {notification.publication_description && (
+                      {!isFollowNotification && notification.publication_description && (
                         <p className="text-xs text-muted-foreground mb-1 line-clamp-1">
                           {notification.publication_description}
                         </p>
                       )}
                       
-                      {!isFollowNotification && (
+                      {!isFollowNotification && notification.message && (
                         <p className="text-xs text-muted-foreground line-clamp-1">
                           {notification.message}
                         </p>
@@ -507,7 +511,7 @@ const Notify = () => {
 
                       <div className="flex items-center justify-between mt-2">
                         <div className="flex items-center gap-2">
-                          {notification.reference_id && (
+                          {notification.reference_id && !isFollowNotification && (
                             <Button
                               variant="link"
                               size="sm"
@@ -526,7 +530,7 @@ const Notify = () => {
                             <Button
                               variant={isFollowing ? "outline" : "default"}
                               size="sm"
-                              className={`h-8 ${isFollowing ? 'bg-gray-800 hover:bg-gray-700 text-white' : 'text-white'}`}
+                              className={`h-8 ${isFollowing ? 'bg-gray-800 hover:bg-gray-700 text-white' : 'bg-gray-800 hover:bg-gray-700 text-white'}`}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleFollowAction(userId);
