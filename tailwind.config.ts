@@ -13,7 +13,7 @@ export default {
   theme: {
     container: {
       center: true,
-      padding: "2rem",
+      padding: "1rem",
       screens: {
         "2xl": "1400px",
       },
@@ -53,6 +53,12 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // Add specific icon colors for light mode
+        icon: {
+          DEFAULT: "#555555",
+          light: "#555555",
+          dark: "#ffffff",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -72,6 +78,17 @@ export default {
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+      },
+      spacing: {
+        // Add more compact spacing options
+        "1.5": "0.375rem",
+        "2.5": "0.625rem",
+      },
+      fontSize: {
+        "xs": "0.75rem",
+        "sm": "0.875rem",
+        "base": "1rem",
+        "lg": "1.125rem",
       },
     },
   },

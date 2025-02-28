@@ -14,18 +14,23 @@ export function formatDate(date: string | number | Date): string {
   const diffInDays = Math.floor(diffInHours / 24);
 
   if (diffInMinutes < 1) {
-    return 'Agora mesmo';
+    return 'Agora';
   } else if (diffInMinutes < 60) {
-    return `${diffInMinutes} min`;
+    return `${diffInMinutes}m`;
   } else if (diffInHours < 24) {
     return `${diffInHours}h`;
   } else if (diffInDays < 7) {
     return `${diffInDays}d`;
   } else {
+    // Format more compactly
     return postDate.toLocaleDateString('pt-BR', {
       day: '2-digit',
       month: 'short',
-      year: 'numeric'
     });
   }
+}
+
+// Helper function to ensure consistent icon colors in both themes
+export function getIconColor(isLightMode: boolean, defaultColor: string = "#555555") {
+  return isLightMode ? defaultColor : "#ffffff";
 }
