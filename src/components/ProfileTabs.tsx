@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { MessageCircle, MessageSquareMore, Share2, ThumbsUp } from "lucide-react";
 import { MediaCarousel } from "./MediaCarousel";
 import Tags from "./Tags";
 import { useToast } from "@/hooks/use-toast";
