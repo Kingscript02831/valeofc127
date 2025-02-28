@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
@@ -15,8 +15,9 @@ import { ptBR } from "date-fns/locale";
 import { getReactionIcon } from "@/utils/emojisPosts";
 import Tags from "@/components/Tags";
 import { Button } from "@/components/ui/button";
-import { UserPlus, UserCheck, MoreVertical } from "lucide-react";
+import { UserPlus, UserCheck, MoreVertical, MapPin } from "lucide-react";
 import { toast } from "sonner";
+import { useUserLocation, calculateDistance, UserLocation } from "@/components/locpost";
 
 interface Post {
   id: string;
@@ -35,6 +36,11 @@ interface Post {
     avatar_url: string;
     id: string;
   };
+  location?: {
+    latitude: number;
+    longitude: number;
+  };
+  distance?: number;
 }
 
 const Posts: React.FC = () => {
@@ -43,6 +49,7 @@ const Posts: React.FC = () => {
   const queryClient = useQueryClient();
   const [activeReactionMenu, setActiveReactionMenu] = useState<string | null>(null);
   const [followingUsers, setFollowingUsers] = useState<Record<string, boolean>>({});
+  const { userLocation, isLoading: isLocationLoading } = useUserLocation();
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -81,7 +88,7 @@ const Posts: React.FC = () => {
   };
 
   const { data: posts, isLoading } = useQuery({
-    queryKey: ['posts'],
+    queryKey: ['posts', userLocation],
     queryFn: async () => {
       try {
         let query = supabase
@@ -107,12 +114,48 @@ const Posts: React.FC = () => {
         const { data: postsData, error } = await query;
         if (error) throw error;
 
-        const postsWithCounts = postsData?.map(post => ({
-          ...post,
-          reaction_type: post.post_likes?.find(like => like.user_id === currentUser?.id)?.reaction_type,
-          likes: post.post_likes?.length || 0,
-          comment_count: post.post_comments?.length || 0
-        }));
+        // Processar os posts e adicionar informações de localização/distância
+        const postsWithCounts = postsData?.map(post => {
+          const processed = {
+            ...post,
+            reaction_type: post.post_likes?.find(like => like.user_id === currentUser?.id)?.reaction_type,
+            likes: post.post_likes?.length || 0,
+            comment_count: post.post_comments?.length || 0
+          };
+
+          // Se tivermos a localização do usuário e do post, calcular a distância
+          if (userLocation?.latitude && userLocation?.longitude && post.location) {
+            try {
+              // Supondo que post.location é um objeto com latitude e longitude
+              const postLocation = typeof post.location === 'object' ? post.location : null;
+              
+              if (postLocation && 'coordinates' in postLocation) {
+                // Se for um objeto PostGIS/geografia
+                const longitude = postLocation.coordinates[0];
+                const latitude = postLocation.coordinates[1];
+                
+                processed.distance = calculateDistance(
+                  userLocation.latitude, 
+                  userLocation.longitude, 
+                  latitude, 
+                  longitude
+                );
+              } else if (postLocation && 'latitude' in postLocation && 'longitude' in postLocation) {
+                // Se for um objeto com lat/lng explícito
+                processed.distance = calculateDistance(
+                  userLocation.latitude, 
+                  userLocation.longitude, 
+                  postLocation.latitude, 
+                  postLocation.longitude
+                );
+              }
+            } catch (error) {
+              console.error("Erro ao calcular distância para o post:", error);
+            }
+          }
+
+          return processed;
+        });
 
         return postsWithCounts;
       } catch (error) {
@@ -120,6 +163,7 @@ const Posts: React.FC = () => {
         return [];
       }
     },
+    enabled: !isLocationLoading,
   });
 
   // Follow user mutation
@@ -351,8 +395,16 @@ const Posts: React.FC = () => {
                         </div>
                         <div>
                           <h2 className="font-bold text-lg">{post.user.username}</h2>
-                          <p className="text-sm text-muted-foreground font-medium uppercase">
+                          <p className="text-sm text-muted-foreground font-medium uppercase flex items-center">
+                            <MapPin className="h-3 w-3 mr-1" />
                             GRÃO Mogol-MG
+                            {post.distance && (
+                              <span className="ml-2 text-xs bg-gray-100 dark:bg-gray-700 px-1 py-0.5 rounded">
+                                {post.distance < 1 
+                                  ? `${Math.round(post.distance * 1000)}m` 
+                                  : `${post.distance.toFixed(1)}km`}
+                              </span>
+                            )}
                           </p>
                         </div>
                       </div>
