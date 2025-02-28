@@ -526,7 +526,7 @@ const Notify = () => {
                             <Button
                               variant={isFollowing ? "outline" : "default"}
                               size="sm"
-                              className={`h-8 ${isFollowing ? 'text-muted-foreground' : 'text-white'}`}
+                              className={`h-8 ${isFollowing ? 'bg-gray-800 hover:bg-gray-700 text-white' : 'text-white'}`}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleFollowAction(userId);
