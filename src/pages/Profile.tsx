@@ -351,6 +351,58 @@ export default function Profile() {
                 )}
               </div>
             </div>
+            
+            {/* Moved edit buttons up here */}
+            {!isPreviewMode ? (
+              <div className="absolute top-20 right-4 flex gap-2">
+                <EditPhotosButton 
+                  onAvatarClick={handleAvatarClick}
+                  onCoverClick={handleCoverClick}
+                  onDeleteAvatar={handleDeleteAvatar}
+                  onDeleteCover={handleDeleteCover}
+                  avatarCount={avatarCount}
+                  coverCount={coverCount}
+                />
+
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className={`${theme === 'light' ? 'text-black border-gray-300' : 'text-white border-gray-700'}`}>
+                      <Pencil className="h-4 w-4 mr-2" />
+                      Editar perfil
+                    </Button>
+                  </DialogTrigger>
+                  <EditProfileDialog profile={profile} onSubmit={handleSubmit} />
+                </Dialog>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="icon" className="border-gray-700">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="bg-gray-900 border-gray-800">
+                    <DropdownMenuItem onClick={copyProfileLink} className="text-white cursor-pointer">
+                      <Link2 className="h-4 w-4 mr-2" />
+                      Copiar link do perfil
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setIsPreviewMode(true)} className="text-white cursor-pointer">
+                      <Eye className="h-4 w-4 mr-2" />
+                      Ver como
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            ) : (
+              <div className="absolute top-20 right-4">
+                <Button 
+                  onClick={() => setIsPreviewMode(false)} 
+                  variant="outline" 
+                  className={`${theme === 'light' ? 'text-black border-gray-300' : 'text-white border-gray-700'}`}
+                >
+                  Sair do modo preview
+                </Button>
+              </div>
+            )}
           </div>
 
           <div className="px-4 mt-4">
@@ -365,6 +417,8 @@ export default function Profile() {
                     </p>
                   )}
                 </div>
+                
+                {/* Removed buttons from here since we moved them above */}
               </div>
 
               {profile?.city && (
@@ -416,62 +470,13 @@ export default function Profile() {
                 </div>
               </div>
 
-              {!isPreviewMode ? (
-                <div className="flex justify-end gap-2 mt-4">
-                  <EditPhotosButton 
-                    onAvatarClick={handleAvatarClick}
-                    onCoverClick={handleCoverClick}
-                    onDeleteAvatar={handleDeleteAvatar}
-                    onDeleteCover={handleDeleteCover}
-                    avatarCount={avatarCount}
-                    coverCount={coverCount}
-                  />
-
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" className={`${theme === 'light' ? 'text-black border-gray-300' : 'text-white border-gray-700'}`}>
-                        <Pencil className="h-4 w-4 mr-2" />
-                        Editar perfil
-                      </Button>
-                    </DialogTrigger>
-                    <EditProfileDialog profile={profile} onSubmit={handleSubmit} />
-                  </Dialog>
-
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="icon" className="border-gray-700">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="bg-gray-900 border-gray-800">
-                      <DropdownMenuItem onClick={copyProfileLink} className="text-white cursor-pointer">
-                        <Link2 className="h-4 w-4 mr-2" />
-                        Copiar link do perfil
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setIsPreviewMode(true)} className="text-white cursor-pointer">
-                        <Eye className="h-4 w-4 mr-2" />
-                        Ver como
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              ) : (
-                <Button 
-                  onClick={() => setIsPreviewMode(false)} 
-                  variant="outline" 
-                  className={`${theme === 'light' ? 'text-black border-gray-300' : 'text-white border-gray-700'}`}
-                >
-                  Sair do modo preview
-                </Button>
-              )}
-            </div>
-
-            <div className="mt-6">
-              <ProfileTabs 
-                userProducts={userProducts} 
-                userPosts={userPosts}
-                isLoading={isPostsLoading}
-              />
+              <div className="mt-6">
+                <ProfileTabs 
+                  userProducts={userProducts} 
+                  userPosts={userPosts}
+                  isLoading={isPostsLoading}
+                />
+              </div>
             </div>
           </div>
         </div>

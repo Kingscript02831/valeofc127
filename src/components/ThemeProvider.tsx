@@ -61,8 +61,14 @@ export function ThemeProvider({
         ? "dark"
         : "light"
       root.classList.add(systemTheme)
+      
+      // Add compact-ui class for better organization
+      root.classList.add("compact-ui")
     } else {
       root.classList.add(theme)
+      
+      // Add compact-ui class for better organization
+      root.classList.add("compact-ui")
     }
 
     // Atualizar as cores do fundo e texto com base no tema
