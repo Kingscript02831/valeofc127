@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { MapPin } from 'lucide-react';
 import { Profile } from '@/types/profile';
@@ -53,23 +52,33 @@ const LocationDisplay = ({ userId, defaultCity }: LocationDisplayProps) => {
     enabled: !!userProfile?.location_id,
   });
 
-  // Determinar qual cidade mostrar
+  // Determine which city to show
   const cityToDisplay = locationData?.name || userProfile?.city || defaultCity || '';
   const stateToDisplay = locationData?.state || '';
 
-  // Se não temos informações de localização, não mostramos nada
+  // If no location information, don't show anything
   if (!cityToDisplay) {
     return null;
   }
 
-  const locationText = stateToDisplay 
-    ? `${cityToDisplay.toUpperCase()}-${stateToDisplay.toUpperCase()}`
-    : cityToDisplay.toUpperCase();
+  // Format the location text with max length handling
+  const formatLocationText = (city: string, state: string) => {
+    const maxCityLength = 15; // Maximum characters for city name
+    let formattedCity = city.toUpperCase();
+    
+    if (formattedCity.length > maxCityLength) {
+      formattedCity = `${formattedCity.substring(0, maxCityLength)}...`;
+    }
+
+    return state ? `${formattedCity}-${state.toUpperCase()}` : formattedCity;
+  };
+
+  const locationText = formatLocationText(cityToDisplay, stateToDisplay);
 
   return (
-    <p className="text-xs text-muted-foreground font-medium uppercase flex items-center gap-1">
-      <MapPin className="h-3 w-3" /> 
-      {locationText}
+    <p className="text-xs text-muted-foreground font-medium flex items-center gap-1 truncate max-w-[200px]">
+      <MapPin className="h-3 w-3 flex-shrink-0" /> 
+      <span className="truncate">{locationText}</span>
     </p>
   );
 };

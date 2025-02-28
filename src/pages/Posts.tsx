@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -53,7 +52,6 @@ const Posts: React.FC = () => {
     },
   });
 
-  // Fetch user's following status
   useQuery({
     queryKey: ['userFollowings', currentUser?.id],
     queryFn: async () => {
@@ -123,7 +121,6 @@ const Posts: React.FC = () => {
     },
   });
 
-  // Follow user mutation
   const followMutation = useMutation({
     mutationFn: async (userId: string) => {
       if (!currentUser?.id) {
@@ -138,7 +135,6 @@ const Posts: React.FC = () => {
 
       if (error) throw error;
 
-      // Insert a notification about the follow
       await supabase
         .from('notifications')
         .insert([
@@ -163,7 +159,6 @@ const Posts: React.FC = () => {
     }
   });
 
-  // Unfollow mutation
   const unfollowMutation = useMutation({
     mutationFn: async (userId: string) => {
       if (!currentUser?.id) {
@@ -201,7 +196,7 @@ const Posts: React.FC = () => {
     }
 
     if (currentUser.id === userId) {
-      return; // Não pode seguir a si mesmo
+      return;
     }
 
     if (isFollowing(userId)) {
@@ -352,7 +347,6 @@ const Posts: React.FC = () => {
                         </div>
                         <div>
                           <h2 className="font-bold text-lg">{post.user.username}</h2>
-                          {/* Substituímos a localização fixa pelo componente LocationDisplay */}
                           <LocationDisplay userId={post.user_id} defaultCity="GRÃO MOGOL" />
                         </div>
                       </div>
@@ -436,7 +430,7 @@ const Posts: React.FC = () => {
                     </button>
 
                     <button
-                      className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-[#25D366]/10 hover:bg-[#25D366]/20 transition-colors"
+                      className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                       onClick={() => handleWhatsAppShare(post.id)}
                     >
                       <img src="/whatsapp.png" alt="WhatsApp" className="w-5 h-5" />
