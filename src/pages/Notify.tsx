@@ -1,10 +1,12 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { CheckCircle, Trash2, UserPlus, UserCheck } from "lucide-react";
+import { Bell, CheckCircle, Clock, ChevronRight, Calendar, Newspaper, Trash2, UserCheck, UserPlus } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
@@ -46,7 +48,7 @@ const Notify = () => {
           .single();
 
         if (profile) {
-          setNotificationsEnabled(profile.notifications_enabled !== false); // Default to true if not set
+          setNotificationsEnabled(profile.notifications_enabled);
         }
       }
     };
@@ -105,13 +107,12 @@ const Notify = () => {
   }, [navigate]);
 
   // Fetch notifications
-  const { data: notifications = [], isLoading: notificationsLoading, error: notificationsError } = useQuery({
+  const { data: notifications = [], refetch } = useQuery({
     queryKey: ["notifications"],
     queryFn: async () => {
       if (!currentUserId) return [];
-      
-      console.log("Fetching notifications for user:", currentUserId);
 
+      // Alteração aqui - sem o erro de uso inadequado do join pela foreign key
       const { data, error } = await supabase
         .from("notifications")
         .select("*")
@@ -123,27 +124,20 @@ const Notify = () => {
         throw error;
       }
       
-      console.log("Raw notifications data:", data);
-      
       // Para cada notificação, buscar dados do sender se necessário
       const notificationsWithSenders = await Promise.all(
         data.map(async (notification) => {
           if (notification.reference_id && notification.message?.includes('começou a seguir você')) {
             // Buscar dados do usuário que seguiu
-            const { data: senderData, error: senderError } = await supabase
+            const { data: senderData } = await supabase
               .from('profiles')
               .select('id, username, full_name, avatar_url')
               .eq('id', notification.reference_id)
               .single();
             
-            if (senderError) {
-              console.error("Error fetching sender data:", senderError);
-              return notification;
-            }
-            
             if (senderData) {
               // Verificar status de seguidor
-              await checkFollowStatus(senderData.id);
+              checkFollowStatus(senderData.id);
               return { ...notification, sender: senderData };
             }
           }
@@ -151,7 +145,6 @@ const Notify = () => {
         })
       );
       
-      console.log("Processed notifications:", notificationsWithSenders);
       return notificationsWithSenders as Notification[];
     },
     enabled: !isLoading && !!currentUserId,
@@ -371,161 +364,218 @@ const Notify = () => {
     }
   };
 
-  if (isLoading || notificationsLoading) {
+  const getNotificationIcon = (type: Notification["type"]) => {
+    switch (type) {
+      case "event":
+        return <Calendar className="h-4 w-4" />;
+      case "news":
+        return <Newspaper className="h-4 w-4" />;
+      default:
+        return <Bell className="h-4 w-4" />;
+    }
+  };
+
+  if (isLoading) {
     return (
       <>
-        <div className="flex items-center justify-center min-h-screen bg-black text-white">
+        <div className="flex items-center justify-center min-h-screen">
           <p>Carregando...</p>
         </div>
         <BottomNav />
       </>
     );
   }
-  
-  if (notificationsError) {
-    return (
-      <>
-        <div className="flex items-center justify-center min-h-screen bg-black text-white">
-          <p>Erro ao carregar notificações. Tente novamente mais tarde.</p>
-        </div>
-        <BottomNav />
-      </>
-    );
-  }
-
-  const unreadCount = notifications.filter(n => !n.read).length;
-  const followNotifications = notifications.filter(n => 
-    n.message?.includes('começou a seguir você') && n.sender
-  );
-  
-  console.log("Follow notifications:", followNotifications);
 
   return (
     <>
-      <div className="min-h-screen bg-black text-white pb-20">
-        <div className="max-w-3xl mx-auto p-4">
-          {/* Header */}
-          <div className="flex flex-col space-y-6 mb-8 pt-4">
-            <div className="flex items-center justify-between">
-              <h1 className="text-3xl font-bold">Notificações</h1>
-              <div className="bg-gray-800 rounded-full px-4 py-1 text-sm">
-                {unreadCount} não lidas
-              </div>
-            </div>
-            
-            {/* Notifications Toggle */}
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-xl font-semibold">Notificações ativadas</p>
-              </div>
+      <div className="max-w-3xl mx-auto p-4 md:p-6 mb-20">
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+          <div className="flex items-center gap-3">
+            <Bell className="h-6 w-6 text-primary" />
+            <h1 className="text-xl font-bold">Notificações</h1>
+            <Badge variant="secondary" className="ml-2">
+              {notifications.filter(n => !n.read).length} não lidas
+            </Badge>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center space-x-2">
               <Switch
                 checked={notificationsEnabled}
                 onCheckedChange={toggleNotifications}
-                className="data-[state=checked]:bg-blue-500"
+                aria-label="Toggle notifications"
               />
+              <span className="text-sm text-muted-foreground">
+                {notificationsEnabled ? "Notificações ativadas" : "Notificações desativadas"}
+              </span>
             </div>
-            
-            {/* Mark All Read Button */}
             <Button 
-              onClick={markAllAsRead}
-              className="w-full bg-transparent border border-gray-700 hover:bg-gray-800 text-white rounded-lg py-3 px-4 h-12"
+              onClick={markAllAsRead} 
+              variant="outline" 
+              size="sm"
+              className="whitespace-nowrap"
             >
               Marcar todas como lidas
             </Button>
           </div>
-          
-          {/* Notifications List */}
-          <div className="space-y-4">
-            {followNotifications.length === 0 ? (
-              <div className="text-center py-12 text-gray-400">
-                Nenhuma notificação de seguidor encontrada
-              </div>
-            ) : (
-              followNotifications.map((notification) => {
-                const userId = notification.sender?.id;
-                const isFollowing = userId ? followStatuses[userId] : false;
-                
-                return (
-                  <div
-                    key={notification.id}
-                    className="flex items-center space-x-3 py-5 border-b border-gray-800"
-                    onClick={() => markAsRead(notification.id)}
-                  >
-                    {/* Avatar */}
-                    <Avatar className="h-12 w-12 rounded-full overflow-hidden">
-                      <AvatarImage 
-                        src={notification.sender?.avatar_url || "/placeholder.svg"} 
-                        alt={notification.sender?.username || 'User'} 
-                      />
-                      <AvatarFallback className="bg-gray-800">
-                        {notification.sender?.username?.charAt(0).toUpperCase() || 'U'}
-                      </AvatarFallback>
-                    </Avatar>
-                    
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex flex-col">
-                        <span className="font-bold">
-                          @{notification.sender?.username}
-                        </span>
-                        <span className="text-gray-300">
-                          Começou a seguir Você.
-                        </span>
+        </div>
+
+        <div className="space-y-2">
+          {notifications.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              Nenhuma notificação encontrada
+            </div>
+          ) : (
+            notifications.map((notification) => {
+              const isFollowNotification = notification.message?.includes('começou a seguir você');
+              const userId = notification.sender?.id;
+              const isFollowing = userId ? followStatuses[userId] : false;
+              
+              return (
+                <div
+                  key={notification.id}
+                  className={cn(
+                    "group flex flex-col p-3 rounded-lg border transition-all",
+                    "hover:shadow-sm cursor-pointer",
+                    notification.read 
+                      ? "bg-muted/50 border-transparent"
+                      : "bg-background border-primary/10"
+                  )}
+                  onClick={() => markAsRead(notification.id)}
+                >
+                  <div className="flex items-start gap-3">
+                    {notification.sender?.avatar_url ? (
+                      <Avatar className="h-10 w-10 border-2 border-primary/10">
+                        <AvatarImage src={notification.sender.avatar_url} alt={notification.sender.username || 'User'} />
+                        <AvatarFallback>
+                          {notification.sender.full_name?.charAt(0).toUpperCase() || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                    ) : (
+                      <div className="mt-1">
+                        {getNotificationIcon(notification.type)}
                       </div>
-                    </div>
-                    
-                    {/* Right Side - Time & Actions */}
-                    <div className="flex flex-col items-end space-y-2">
-                      <div className="flex items-center space-x-2 text-gray-400 text-sm">
-                        {format(new Date(notification.created_at), "dd MMM HH:mm", { locale: ptBR })}
-                        {notification.read && (
-                          <CheckCircle className="h-4 w-4 text-green-500" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2 mb-1">
+                        <Badge
+                          variant={notification.read ? "outline" : "default"}
+                          className={cn(
+                            "text-xs font-medium",
+                            notification.type === 'event' && "bg-blue-500/10 text-blue-700",
+                            notification.type === 'news' && "bg-green-500/10 text-green-700",
+                            notification.type === 'system' && "bg-purple-500/10 text-purple-700"
+                          )}
+                        >
+                          {notification.type === 'event' ? 'Evento' : 
+                           notification.type === 'news' ? 'Notícia' : 
+                           isFollowNotification ? 'Seguidor' : 'Sistema'}
+                        </Badge>
+                        {notification.publication_category && (
+                          <Badge variant="outline" className="text-xs">
+                            {notification.publication_category}
+                          </Badge>
+                        )}
+                        {!notification.read && (
+                          <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
                         )}
                       </div>
+
+                      <h3 className={cn(
+                        "text-sm font-medium mb-0.5",
+                        !notification.read && "text-primary"
+                      )}>
+                        {notification.sender?.username ? (
+                          <span className="font-semibold">@{notification.sender.username}</span>
+                        ) : ''}
+                        {' '}
+                        {isFollowNotification ? 
+                          'começou a seguir você.' : 
+                          notification.publication_title || notification.title}
+                      </h3>
                       
-                      <div className="flex items-center space-x-2">
-                        {userId && (
+                      {notification.publication_description && (
+                        <p className="text-xs text-muted-foreground mb-1 line-clamp-1">
+                          {notification.publication_description}
+                        </p>
+                      )}
+                      
+                      {!isFollowNotification && (
+                        <p className="text-xs text-muted-foreground line-clamp-1">
+                          {notification.message}
+                        </p>
+                      )}
+
+                      <div className="flex items-center justify-between mt-2">
+                        <div className="flex items-center gap-2">
+                          {notification.reference_id && (
+                            <Button
+                              variant="link"
+                              size="sm"
+                              className="h-auto p-0 text-xs"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                markAsRead(notification.id);
+                              }}
+                            >
+                              Ver detalhes
+                              <ChevronRight className="ml-1 h-3 w-3" />
+                            </Button>
+                          )}
+                          
+                          {isFollowNotification && userId && (
+                            <Button
+                              variant={isFollowing ? "outline" : "default"}
+                              size="sm"
+                              className={`h-8 ${isFollowing ? 'bg-gray-800 hover:bg-gray-700 text-white' : 'text-white'}`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleFollowAction(userId);
+                              }}
+                              disabled={followMutation.isPending || unfollowMutation.isPending}
+                            >
+                              {isFollowing ? (
+                                <>
+                                  <UserCheck className="h-3.5 w-3.5 mr-1" />
+                                  Seguindo
+                                </>
+                              ) : (
+                                <>
+                                  <UserPlus className="h-3.5 w-3.5 mr-1" />
+                                  Seguir de volta
+                                </>
+                              )}
+                            </Button>
+                          )}
+                        </div>
+                        
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <span>
+                            {format(new Date(notification.created_at), "dd MMM HH:mm", { locale: ptBR })}
+                          </span>
+                          {notification.read ? (
+                            <CheckCircle className="h-3 w-3 text-green-500" />
+                          ) : (
+                            <Clock className="h-3 w-3 text-yellow-500" />
+                          )}
                           <Button
-                            variant="secondary"
+                            variant="ghost"
                             size="sm"
-                            className="bg-gray-800 hover:bg-gray-700 text-white rounded-lg h-8 px-2"
+                            className="h-6 w-6 p-0 hover:bg-destructive/10 hover:text-destructive"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleFollowAction(userId);
+                              deleteNotification(notification.id);
                             }}
-                            disabled={followMutation.isPending || unfollowMutation.isPending}
                           >
-                            {isFollowing ? (
-                              <>
-                                <UserCheck className="h-4 w-4 mr-1" />
-                                Seguindo
-                              </>
-                            ) : (
-                              <>
-                                <UserPlus className="h-4 w-4 mr-1" />
-                                Seguir de volta
-                              </>
-                            )}
+                            <Trash2 className="h-3 w-3" />
                           </Button>
-                        )}
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 rounded-full hover:bg-gray-800 text-gray-400"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            deleteNotification(notification.id);
-                          }}
-                        >
-                          <Trash2 className="h-5 w-5" />
-                        </Button>
+                        </div>
                       </div>
                     </div>
                   </div>
-                );
-              })
-            )}
-          </div>
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
       <BottomNav />
