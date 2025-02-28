@@ -1,15 +1,14 @@
 
-import { useState } from "react";
-import { UserPlus, UserCheck } from "lucide-react";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { User, UserPlus, UserMinus, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { supabase } from "@/integrations/supabase/client";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import type { Notification } from "@/types/notifications";
 
 interface NotifySeguidoresProps {
@@ -24,10 +23,9 @@ interface NotifySeguidoresProps {
   onUnfollow: (userId: string) => void;
 }
 
-const NotifySeguidores = ({
+const NotifySeguidores = ({ 
   notification,
   onMarkAsRead,
-  onDelete,
   currentUserId,
   isFollowing,
   isFollowMutating,
@@ -35,18 +33,50 @@ const NotifySeguidores = ({
   onFollow,
   onUnfollow
 }: NotifySeguidoresProps) => {
-  const userId = notification.sender?.id;
+  const navigate = useNavigate();
+  const [followerData, setFollowerData] = useState<any>(null);
+  const senderId = notification.sender?.id || notification.reference_id;
 
-  const handleFollowAction = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!currentUserId || !userId) return;
+  useEffect(() => {
+    const fetchFollowerData = async () => {
+      if (!senderId) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("id, username, full_name, avatar_url")
+          .eq("id", senderId)
+          .single();
+        
+        if (error) throw error;
+        setFollowerData(data);
+      } catch (error) {
+        console.error("Error fetching follower data:", error);
+      }
+    };
     
-    if (isFollowing) {
-      onUnfollow(userId);
-    } else {
-      onFollow(userId);
+    if (senderId && !notification.sender) {
+      fetchFollowerData();
+    }
+  }, [senderId, notification.sender]);
+
+  const handleFollow = () => {
+    if (senderId) {
+      onFollow(senderId);
     }
   };
+
+  const handleUnfollow = () => {
+    if (senderId) {
+      onUnfollow(senderId);
+    }
+  };
+  
+  const user = notification.sender || followerData;
+  
+  if (!user) {
+    return null;
+  }
 
   return (
     <div
@@ -61,23 +91,27 @@ const NotifySeguidores = ({
       onClick={() => onMarkAsRead(notification.id)}
     >
       <div className="flex items-start gap-3">
-        {notification.sender?.avatar_url ? (
-          <Avatar className="h-10 w-10 border-2 border-primary/10">
-            <AvatarImage src={notification.sender.avatar_url} alt={notification.sender.username || 'User'} />
-            <AvatarFallback>
-              {notification.sender.full_name?.charAt(0).toUpperCase() || 'U'}
-            </AvatarFallback>
-          </Avatar>
-        ) : (
-          <Avatar className="h-10 w-10 border-2 border-primary/10">
-            <AvatarFallback>U</AvatarFallback>
-          </Avatar>
-        )}
+        <Avatar 
+          className="h-8 w-8 border cursor-pointer"
+          onClick={(e) => {
+            e.stopPropagation();
+            navigate(`/perfil/${user.username}`);
+          }}
+        >
+          <AvatarImage 
+            src={user.avatar_url || '/placeholder.svg'} 
+            alt={user.username} 
+          />
+          <AvatarFallback>
+            <User className="h-4 w-4" />
+          </AvatarFallback>
+        </Avatar>
+        
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2 mb-1">
             <Badge
               variant={notification.read ? "outline" : "default"}
-              className="bg-purple-500/10 text-purple-700"
+              className="bg-pink-500/10 text-pink-700"
             >
               Seguidor
             </Badge>
@@ -86,40 +120,65 @@ const NotifySeguidores = ({
             )}
           </div>
 
-          <h3 className={cn(
-            "text-sm font-medium mb-0.5",
-            !notification.read && "text-primary"
-          )}>
-            {notification.sender?.username ? (
-              <span className="font-semibold">@{notification.sender.username}</span>
-            ) : ''}
-            {' '}
-            começou a seguir você.
-          </h3>
+          <div className="flex items-center gap-1.5">
+            <span className="font-medium text-sm">
+              {user.full_name}
+            </span>
+            <span className="text-muted-foreground text-xs">
+              @{user.username}
+            </span>
+          </div>
+          
+          <p className="text-xs text-muted-foreground my-1">
+            {notification.message || "começou a seguir você"}
+          </p>
 
           <div className="flex items-center justify-between mt-2">
             <div className="flex items-center gap-2">
-              {userId && (
-                <Button
-                  variant={isFollowing ? "outline" : "default"}
-                  size="sm"
-                  className={`h-8 ${isFollowing ? 'text-muted-foreground' : 'text-white'}`}
-                  onClick={handleFollowAction}
-                  disabled={isFollowMutating || isUnfollowMutating}
-                >
-                  {isFollowing ? (
-                    <>
-                      <UserCheck className="h-3.5 w-3.5 mr-1" />
-                      Seguindo
-                    </>
-                  ) : (
-                    <>
-                      <UserPlus className="h-3.5 w-3.5 mr-1" />
-                      Seguir de volta
-                    </>
-                  )}
-                </Button>
+              {senderId !== currentUserId && (
+                isFollowing ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleUnfollow();
+                    }}
+                    disabled={isUnfollowMutating}
+                  >
+                    <UserMinus className="mr-1 h-3 w-3" />
+                    Deixar de seguir
+                  </Button>
+                ) : (
+                  <Button
+                    variant="default"
+                    size="sm"
+                    className="h-7 text-xs"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleFollow();
+                    }}
+                    disabled={isFollowMutating}
+                  >
+                    <UserPlus className="mr-1 h-3 w-3" />
+                    Seguir
+                  </Button>
+                )
               )}
+              
+              <Button
+                variant="link"
+                size="sm"
+                className="h-auto p-0 text-xs"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/perfil/${user.username}`);
+                }}
+              >
+                Ver perfil
+                <ChevronRight className="ml-1 h-3 w-3" />
+              </Button>
             </div>
             
             <div className="text-xs text-muted-foreground">

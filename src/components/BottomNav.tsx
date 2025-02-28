@@ -41,9 +41,14 @@ const BottomNav = () => {
       const { count, error } = await supabase
         .from("notifications")
         .select("*", { count: 'exact', head: true })
+        .eq("user_id", session.user.id)
         .eq("read", false);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching unread notifications:", error);
+        return 0;
+      }
+      
       return count || 0;
     },
     enabled: !!session,

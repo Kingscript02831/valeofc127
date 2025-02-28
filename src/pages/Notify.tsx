@@ -109,6 +109,8 @@ const Notify = () => {
     queryFn: async () => {
       if (!currentUserId) return [];
 
+      console.log("Fetching notifications for user:", currentUserId);
+
       const { data, error } = await supabase
         .from("notifications")
         .select(`
@@ -123,7 +125,12 @@ const Notify = () => {
         .eq("user_id", currentUserId)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching notifications:", error);
+        throw error;
+      }
+      
+      console.log("Fetched notifications:", data);
       
       // For each user who might have sent a follow notification, check if we're following them
       if (data) {
