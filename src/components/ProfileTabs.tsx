@@ -186,7 +186,7 @@ const ProfileTabs = ({ userProducts, userPosts, isLoading }: ProfileTabsProps) =
                       to={`/posts/${post.id}`}
                       className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                     >
-                      <ThumbsUp className="w-5 h-5 text-muted-foreground" />
+                      <img src="/curtidas.png" alt="Curtir" className="w-5 h-5" />
                       <span className="text-sm text-muted-foreground">
                         {post.post_likes?.length || 0}
                       </span>
@@ -196,7 +196,7 @@ const ProfileTabs = ({ userProducts, userPosts, isLoading }: ProfileTabsProps) =
                       to={`/posts/${post.id}`}
                       className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                     >
-                      <MessageCircle className="w-5 h-5 text-muted-foreground" />
+                      <img src="/comentario.png" alt="Comentários" className="w-5 h-5" />
                       <span className="text-sm text-muted-foreground">
                         {post.post_comments?.length || 0}
                       </span>
@@ -206,14 +206,14 @@ const ProfileTabs = ({ userProducts, userPosts, isLoading }: ProfileTabsProps) =
                       className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-[#25D366]/10 hover:bg-[#25D366]/20 transition-colors"
                       onClick={() => handleWhatsAppShare(post.id)}
                     >
-                      <MessageSquareMore className="w-5 h-5 text-[#25D366]" />
+                      <img src="/whatsapp.png" alt="WhatsApp" className="w-5 h-5" />
                     </button>
 
                     <button
                       className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                       onClick={() => handleShare(post.id)}
                     >
-                      <Share2 className="w-5 h-5 text-muted-foreground" />
+                      <img src="/compartilharlink.png" alt="Compartilhar" className="w-5 h-5" />
                     </button>
                   </div>
                 </CardContent>

@@ -3,7 +3,6 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { MessageCircle } from "lucide-react";
 import { MediaCarousel } from "@/components/MediaCarousel";
 import Navbar from "@/components/Navbar";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -268,7 +267,7 @@ const Posts: React.FC = () => {
                             {getReactionIcon(post.reaction_type)}
                           </span>
                         ) : (
-                          <img src="/icone de curtida.png" alt="Curtir" className="w-5 h-5" />
+                          <img src="/curtidas.png" alt="Curtir" className="w-5 h-5" />
                         )}
                         <span className={`text-sm ${post.reaction_type ? 'text-blue-500' : 'text-muted-foreground'}`}>
                           {post.likes || 0}
@@ -304,7 +303,7 @@ const Posts: React.FC = () => {
                       className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                       onClick={() => handleShare(post.id)}
                     >
-                      <img src="/compartilhar.png" alt="Compartilhar" className="w-5 h-5" />
+                      <img src="/compartilharlink.png" alt="Compartilhar" className="w-5 h-5" />
                     </button>
                   </div>
                 </CardContent>

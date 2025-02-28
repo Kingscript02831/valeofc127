@@ -179,13 +179,13 @@ const MenuConfig = ({ onClose }: MenuConfigProps) => {
             onClick={handleShare}
             className="w-full flex items-center p-4 hover:bg-accent/10 rounded-lg transition-colors duration-200"
           >
-            <img src="/compartilhar.png" alt="Compartilhar" className="w-7 h-7 mr-4" />
+            <img src="/compartilharlink.png" alt="Compartilhar" className="w-7 h-7 mr-4" />
             <span className="text-base text-foreground">Compartilhar</span>
           </button>
 
           <button
             onClick={handleLogout}
-            className="w-full flex items-center p-4 hover:bg-destructive/10 hover:text-destructive rounded-lg transition-colors duration-200"
+            className="w-full flex items-center justify-start p-4 hover:bg-destructive/10 hover:text-destructive rounded-lg transition-colors duration-200"
           >
             <img src="/sair.png" alt="Sair" className="w-7 h-7 mr-4" />
             <span className="text-base">Sair</span>
