@@ -7,11 +7,11 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { supabase } from "../integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-import BottomNav from "../components/BottomNav";
-import type { Notification } from "../types/notifications";
+import BottomNav from "@/components/BottomNav";
+import type { Notification } from "@/types/notifications";
 
 const Notify = () => {
   const navigate = useNavigate();
@@ -105,10 +105,12 @@ const Notify = () => {
   }, [navigate]);
 
   // Fetch notifications
-  const { data: notifications = [] } = useQuery({
+  const { data: notifications = [], isLoading: notificationsLoading, error: notificationsError } = useQuery({
     queryKey: ["notifications"],
     queryFn: async () => {
       if (!currentUserId) return [];
+      
+      console.log("Fetching notifications for user:", currentUserId);
 
       const { data, error } = await supabase
         .from("notifications")
@@ -121,16 +123,23 @@ const Notify = () => {
         throw error;
       }
       
+      console.log("Raw notifications data:", data);
+      
       // Para cada notificação, buscar dados do sender se necessário
       const notificationsWithSenders = await Promise.all(
         data.map(async (notification) => {
           if (notification.reference_id && notification.message?.includes('começou a seguir você')) {
             // Buscar dados do usuário que seguiu
-            const { data: senderData } = await supabase
+            const { data: senderData, error: senderError } = await supabase
               .from('profiles')
               .select('id, username, full_name, avatar_url')
               .eq('id', notification.reference_id)
               .single();
+            
+            if (senderError) {
+              console.error("Error fetching sender data:", senderError);
+              return notification;
+            }
             
             if (senderData) {
               // Verificar status de seguidor
@@ -142,6 +151,7 @@ const Notify = () => {
         })
       );
       
+      console.log("Processed notifications:", notificationsWithSenders);
       return notificationsWithSenders as Notification[];
     },
     enabled: !isLoading && !!currentUserId,
@@ -361,11 +371,22 @@ const Notify = () => {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || notificationsLoading) {
     return (
       <>
         <div className="flex items-center justify-center min-h-screen bg-black text-white">
           <p>Carregando...</p>
+        </div>
+        <BottomNav />
+      </>
+    );
+  }
+  
+  if (notificationsError) {
+    return (
+      <>
+        <div className="flex items-center justify-center min-h-screen bg-black text-white">
+          <p>Erro ao carregar notificações. Tente novamente mais tarde.</p>
         </div>
         <BottomNav />
       </>
@@ -376,6 +397,8 @@ const Notify = () => {
   const followNotifications = notifications.filter(n => 
     n.message?.includes('começou a seguir você') && n.sender
   );
+  
+  console.log("Follow notifications:", followNotifications);
 
   return (
     <>
@@ -426,6 +449,7 @@ const Notify = () => {
                   <div
                     key={notification.id}
                     className="flex items-center space-x-3 py-5 border-b border-gray-800"
+                    onClick={() => markAsRead(notification.id)}
                   >
                     {/* Avatar */}
                     <Avatar className="h-12 w-12 rounded-full overflow-hidden">
