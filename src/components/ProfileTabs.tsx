@@ -1,4 +1,3 @@
-
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTheme } from "./ThemeProvider";
@@ -202,7 +201,7 @@ const ProfileTabs = ({ userProducts, userPosts, isLoading }: ProfileTabsProps) =
                     </Link>
 
                     <button
-                      className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-[#25D366]/10 hover:bg-[#25D366]/20 transition-colors"
+                      className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                       onClick={() => handleWhatsAppShare(post.id)}
                     >
                       <img src="/whatsapp.png" alt="WhatsApp" className="w-5 h-5" />

@@ -1,29 +1,26 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { MediaCarousel } from "@/components/MediaCarousel";
-import { useToast } from "@/hooks/use-toast";
+import { supabase } from "../integrations/supabase/client";
+import { MediaCarousel } from "../components/MediaCarousel";
+import { useToast } from "../hooks/use-toast";
 import { 
   Heart, 
-  Smile, 
-  Frown, 
-  Angry,
   Reply,
   ChevronDown,
   Flame
 } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import Navbar from "@/components/Navbar";
-import BottomNav from "@/components/BottomNav";
-import ReactionMenu from "@/components/ReactionMenu";
+import { Card } from "../components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
+import { Button } from "../components/ui/button";
+import { Textarea } from "../components/ui/textarea";
+import Navbar from "../components/Navbar";
+import BottomNav from "../components/BottomNav";
+import ReactionMenu from "../components/ReactionMenu";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getReactionIcon } from "@/utils/emojisPosts";
+import { getReactionIcon } from "../utils/emojisPosts";
+import Tags from "../components/Tags";
 
 interface Post {
   id: string;
@@ -436,72 +433,74 @@ const PostDetails = () => {
                 </div>
               </div>
 
-              {post.content && (
-                <p className="text-foreground mb-4">{post.content}</p>
+              {post?.content && (
+                <p className="text-foreground mb-4">
+                  <Tags content={post.content} />
+                </p>
               )}
 
-              {(post.images?.length > 0 || post.video_urls?.length > 0) && (
+              {(post?.images?.length > 0 || post?.video_urls?.length > 0) && (
                 <MediaCarousel
-                  images={post.images || []}
-                  videoUrls={post.video_urls || []}
-                  title={post.content || ""}
+                  images={post?.images || []}
+                  videoUrls={post?.video_urls || []}
+                  title={post?.content || ""}
                 />
               )}
-            </div>
 
-            <div className="flex items-center justify-between p-2 mt-2 border-t border-border/40">
-              <div className="relative">
-                <button
+              <div className="flex items-center justify-between mt-4 pt-4 border-t border-border/40">
+                <div className="relative">
+                  <button
+                    className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                    onClick={() => setActiveReactionMenu(activeReactionMenu === post?.id ? null : post?.id)}
+                  >
+                    {post?.reaction_type ? getReactionIcon(post.reaction_type) : (
+                      <img src="/curtidas.png" alt="Curtir" className="w-5 h-5" />
+                    )}
+                    <span className={post?.reaction_type ? 'text-blue-500' : 'text-muted-foreground'}>
+                      {post?.likes || 0}
+                    </span>
+                  </button>
+
+                  <ReactionMenu
+                    isOpen={activeReactionMenu === post?.id}
+                    onSelect={handleReaction}
+                    currentReaction={post?.reaction_type}
+                  />
+                </div>
+
+                <button 
                   className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                  onClick={() => setActiveReactionMenu(activeReactionMenu === post?.id ? null : post?.id)}
                 >
-                  {post?.reaction_type ? getReactionIcon(post.reaction_type) : (
-                    <img src="/curtidas.png" alt="Curtir" className="w-5 h-5" />
-                  )}
-                  <span className={post?.reaction_type ? 'text-blue-500' : 'text-muted-foreground'}>
-                    {post?.likes || 0}
+                  <img src="/comentario.png" alt="Comentários" className="w-5 h-5" />
+                  <span className="text-sm text-muted-foreground">
+                    {comments?.length || 0}
                   </span>
                 </button>
 
-                <ReactionMenu
-                  isOpen={activeReactionMenu === post?.id}
-                  onSelect={handleReaction}
-                  currentReaction={post?.reaction_type}
-                />
+                <button
+                  className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                  onClick={handleWhatsAppShare}
+                >
+                  <img src="/whatsapp.png" alt="WhatsApp" className="w-5 h-5" />
+                </button>
+
+                <button
+                  className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                  onClick={handleShare}
+                >
+                  <img src="/compartilharlink.png" alt="Compartilhar" className="w-5 h-5" />
+                </button>
               </div>
-
-              <button 
-                className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-              >
-                <img src="/comentario.png" alt="Comentários" className="w-5 h-5" />
-                <span className="text-sm text-muted-foreground">
-                  {comments?.length || 0}
-                </span>
-              </button>
-
-              <button
-                className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-[#25D366]/10 hover:bg-[#25D366]/20 transition-colors"
-                onClick={handleWhatsAppShare}
-              >
-                <img src="/whatsapp.png" alt="WhatsApp" className="w-5 h-5" />
-              </button>
-
-              <button
-                className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                onClick={handleShare}
-              >
-                <img src="/compartilharlink.png" alt="Compartilhar" className="w-5 h-5" />
-              </button>
             </div>
           </Card>
 
-          <Card className="p-4">
+          <Card className="p-4 bg-white dark:bg-card border-none shadow-sm">
             <form onSubmit={handleSubmitComment} className="space-y-4">
               <Textarea
                 placeholder={replyTo ? "Escreva sua resposta..." : "Escreva um comentário..."}
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
-                className="min-h-[100px]"
+                className="min-h-[100px] bg-gray-100 dark:bg-gray-800 border-none"
               />
               <div className="flex justify-between items-center">
                 {replyTo && (
@@ -522,7 +521,7 @@ const PostDetails = () => {
 
           <div className="space-y-4">
             {comments?.map((comment) => (
-              <Card key={comment.id} className="p-4">
+              <Card key={comment.id} className="p-4 bg-white dark:bg-card border-none shadow-sm">
                 <div className="flex gap-3">
                   <Avatar 
                     className="w-8 h-8 cursor-pointer hover:opacity-80 transition-opacity"
@@ -534,15 +533,13 @@ const PostDetails = () => {
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="font-semibold">
-                          {comment.user.full_name}
-                        </span>
-                        <span className="text-sm text-muted-foreground ml-2">
-                          {formatDate(comment.created_at)}
-                        </span>
-                      </div>
+                    <div className="flex items-center">
+                      <span className="font-semibold">
+                        {comment.user.full_name}
+                      </span>
+                      <span className="text-sm text-muted-foreground ml-2">
+                        {formatDate(comment.created_at)}
+                      </span>
                     </div>
                     <p className="mt-1">{comment.content}</p>
                     <div className="flex items-center gap-4 mt-2">
@@ -555,9 +552,7 @@ const PostDetails = () => {
                             comment.user_has_liked ? "text-red-500" : ""
                           }`}
                         />
-                        <span>
-                          {comment.likes_count || 0}
-                        </span>
+                        <span>{comment.likes_count || 0}</span>
                       </button>
                       <button
                         onClick={() => setReplyTo(comment.id)}
@@ -566,20 +561,6 @@ const PostDetails = () => {
                         <Reply className="w-4 h-4" />
                         <span>Responder</span>
                       </button>
-                      {comment.replies_count > 0 && (
-                        <button
-                          onClick={() => setShowReplies(prev => ({
-                            ...prev,
-                            [comment.id]: !prev[comment.id]
-                          }))}
-                          className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors"
-                        >
-                          <ChevronDown className={`w-4 h-4 transform transition-transform ${showReplies[comment.id] ? 'rotate-180' : ''}`} />
-                          <span>
-                            {comment.replies_count} resposta{comment.replies_count > 1 ? 's' : ''}
-                          </span>
-                        </button>
-                      )}
                     </div>
 
                     {showReplies[comment.id] && replies && replies[comment.id] && (
@@ -612,9 +593,7 @@ const PostDetails = () => {
                                       reply.user_has_liked ? "text-red-500" : ""
                                     }`}
                                   />
-                                  <span>
-                                    {reply.likes_count || 0}
-                                  </span>
+                                  <span>{reply.likes_count || 0}</span>
                                 </button>
                                 <button
                                   onClick={() => setReplyTo(comment.id)}
