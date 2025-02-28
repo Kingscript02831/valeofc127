@@ -7,11 +7,11 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "../integrations/supabase/client";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-import BottomNav from "@/components/BottomNav";
-import type { Notification } from "@/types/notifications";
+import BottomNav from "../components/BottomNav";
+import type { Notification } from "../types/notifications";
 
 const Notify = () => {
   const navigate = useNavigate();
@@ -134,7 +134,7 @@ const Notify = () => {
             
             if (senderData) {
               // Verificar status de seguidor
-              checkFollowStatus(senderData.id);
+              await checkFollowStatus(senderData.id);
               return { ...notification, sender: senderData };
             }
           }
@@ -373,6 +373,9 @@ const Notify = () => {
   }
 
   const unreadCount = notifications.filter(n => !n.read).length;
+  const followNotifications = notifications.filter(n => 
+    n.message?.includes('começou a seguir você') && n.sender
+  );
 
   return (
     <>
@@ -410,17 +413,14 @@ const Notify = () => {
           
           {/* Notifications List */}
           <div className="space-y-4">
-            {notifications.length === 0 ? (
+            {followNotifications.length === 0 ? (
               <div className="text-center py-12 text-gray-400">
-                Nenhuma notificação encontrada
+                Nenhuma notificação de seguidor encontrada
               </div>
             ) : (
-              notifications.map((notification) => {
-                const isFollowNotification = notification.message?.includes('começou a seguir você');
+              followNotifications.map((notification) => {
                 const userId = notification.sender?.id;
                 const isFollowing = userId ? followStatuses[userId] : false;
-                
-                if (!isFollowNotification) return null;
                 
                 return (
                   <div
@@ -499,7 +499,7 @@ const Notify = () => {
                     </div>
                   </div>
                 );
-              }).filter(Boolean)
+              })
             )}
           </div>
         </div>
