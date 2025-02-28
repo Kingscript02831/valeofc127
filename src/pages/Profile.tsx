@@ -1,58 +1,72 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "../integrations/supabase/client";
-import { Button } from "../components/ui/button";
-import { useToast } from "../hooks/use-toast";
-import { Dialog, DialogTrigger } from "../components/ui/dialog";
+import { useNavigate, Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "../components/ui/dropdown-menu";
-import { 
-  LogOut, 
-  MapPin, 
-  Link2, 
-  Eye, 
-  ArrowLeft, 
-  Pencil, 
-  MoreHorizontal,
-  Calendar,
-  Heart,
-  Globe,
+  Camera,
+  LogOut,
+  Settings,
   Instagram,
+  MapPin,
+  Phone,
+  Store,
+  Edit
 } from "lucide-react";
-import BottomNav from "../components/BottomNav";
-import { useTheme } from "../components/ThemeProvider";
-import ProfileTabs from "../components/ProfileTabs";
-import EditProfileDialog from "../components/EditProfileDialog";
-import EditPhotosButton from "../components/EditPhotosButton";
-import PhotoUrlDialog from "../components/PhotoUrlDialog";
-import type { Profile } from "../types/profile";
-import { format } from "date-fns";
+import { toast } from "sonner";
+import Navbar from "@/components/Navbar";
+import BottomNav from "@/components/BottomNav";
+import ProfileTabs from "@/components/ProfileTabs";
+import EditProfileDialog from "@/components/EditProfileDialog";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { calculateDistance } from "@/utils/distance";
 
-const defaultAvatarImage = "/placeholder.svg";
-const defaultCoverImage = "/placeholder.svg";
-
-export default function Profile() {
+const Profile = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [isPreviewMode, setIsPreviewMode] = useState(false);
-  const { theme } = useTheme();
-  const [avatarCount, setAvatarCount] = useState(0);
-  const [coverCount, setCoverCount] = useState(0);
-  const [isAvatarDialogOpen, setIsAvatarDialogOpen] = useState(false);
-  const [isCoverDialogOpen, setIsCoverDialogOpen] = useState(false);
+  const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
+  const [currentUserLocation, setCurrentUserLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
 
-  const { data: profile, isLoading: isProfileLoading } = useQuery({
-    queryKey: ["profile"],
+  // Get user location for distance calculation
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setCurrentUserLocation({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          });
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+        }
+      );
+    }
+  }, []);
+
+  // Get current user
+  const { data: session, isLoading: isSessionLoading } = useQuery({
+    queryKey: ["session"],
     queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("Não autenticado");
+      const { data, error } = await supabase.auth.getSession();
+      if (error || !data.session) {
+        navigate("/login");
+        return null;
+      }
+      return data.session;
+    },
+  });
+
+  // Get user profile
+  const { data: profile, isLoading: isProfileLoading } = useQuery({
+    queryKey: ["profile", session?.user.id],
+    queryFn: async () => {
+      if (!session?.user.id) return null;
 
       const { data, error } = await supabase
         .from("profiles")
@@ -61,437 +75,264 @@ export default function Profile() {
         .single();
 
       if (error) throw error;
-      return data as Profile;
+      return data;
     },
+    enabled: !!session?.user.id,
   });
 
-  const { data: followStats } = useQuery({
-    queryKey: ["followStats", profile?.id],
+  // Get user products
+  const { data: userProducts, isLoading: isProductsLoading } = useQuery({
+    queryKey: ["userProducts", session?.user.id],
     queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("Não autenticado");
+      if (!session?.user.id) return [];
 
-      // Buscar contagem de seguidores
-      const { count: followersCount } = await supabase
-        .from('follows')
-        .select('*', { count: 'exact', head: true })
-        .eq('following_id', session.user.id);
+      try {
+        const { data, error } = await supabase
+          .from("products")
+          .select("*")
+          .eq("user_id", session.user.id)
+          .order("created_at", { ascending: false });
 
-      // Buscar contagem de pessoas que o usuário segue
-      const { count: followingCount } = await supabase
-        .from('follows')
-        .select('*', { count: 'exact', head: true })
-        .eq('follower_id', session.user.id);
+        if (error) throw error;
 
-      return {
-        followers: followersCount || 0,
-        following: followingCount || 0
-      };
-    },
-  });
+        if (currentUserLocation) {
+          return data.map((product) => {
+            if (product.location_lat && product.location_lng) {
+              const distance = calculateDistance(
+                currentUserLocation.latitude,
+                currentUserLocation.longitude,
+                parseFloat(product.location_lat),
+                parseFloat(product.location_lng)
+              );
+              return { ...product, distance };
+            }
+            return product;
+          });
+        }
 
-  const { data: userPosts, isLoading: isPostsLoading } = useQuery({
-    queryKey: ["userPosts", profile?.id],
-    queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return [];
-
-      const { data, error } = await supabase
-        .from("posts")
-        .select(`
-          *,
-          user:user_id (
-            username,
-            full_name,
-            avatar_url
-          ),
-          post_likes (
-            reaction_type,
-            user_id
-          ),
-          post_comments (
-            id
-          )
-        `)
-        .eq("user_id", session.user.id)
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        console.error("Erro ao buscar posts:", error);
+        return data;
+      } catch (error) {
+        console.error("Error fetching user products:", error);
         return [];
       }
-
-      return data || [];
     },
-    enabled: !!profile?.id,
+    enabled: !!session?.user.id,
   });
 
-  const handlePhotoUpdate = useMutation({
-    mutationFn: async ({ type, url }: { type: 'avatar' | 'cover', url: string | null }) => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("Não autenticado");
-
-      let finalUrl = url;
-      if (url && !url.includes('dl=')) {
-        finalUrl = url.includes('?') ? `${url}&dl=1` : `${url}?dl=1`;
-      }
-
-      const updates = type === 'avatar' 
-        ? { avatar_url: finalUrl }
-        : { cover_url: finalUrl };
-
-      const { error } = await supabase
-        .from("profiles")
-        .update(updates)
-        .eq("id", session.user.id);
-
-      if (error) throw error;
-
-      if (finalUrl) {
-        if (type === 'avatar') {
-          setAvatarCount(1);
-        } else {
-          setCoverCount(1);
-        }
-      } else {
-        if (type === 'avatar') {
-          setAvatarCount(0);
-        } else {
-          setCoverCount(0);
-        }
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["profile"] });
-      toast({
-        title: "Foto atualizada",
-        description: "Sua foto foi atualizada com sucesso",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Erro ao atualizar foto",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleAvatarClick = () => {
-    setIsAvatarDialogOpen(true);
-  };
-
-  const handleCoverClick = () => {
-    setIsCoverDialogOpen(true);
-  };
-
-  const handleDeleteAvatar = () => {
-    if (window.confirm('Tem certeza que deseja excluir sua foto de perfil?')) {
-      handlePhotoUpdate.mutate({ type: 'avatar', url: null });
-    }
-  };
-
-  const handleDeleteCover = () => {
-    if (window.confirm('Tem certeza que deseja excluir sua foto de capa?')) {
-      handlePhotoUpdate.mutate({ type: 'cover', url: null });
-    }
-  };
-
-  const { data: userProducts } = useQuery({
-    queryKey: ["userProducts"],
+  // Get user posts
+  const { data: userPosts, isLoading: isPostsLoading } = useQuery({
+    queryKey: ["userPosts", session?.user.id],
     queryFn: async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return [];
+      if (!session?.user.id) return [];
 
-      const { data } = await supabase
-        .from("products")
-        .select("*")
-        .eq("user_id", session.user.id);
+      try {
+        const { data, error } = await supabase
+          .from("posts")
+          .select(`
+            *,
+            user:user_id (
+              id,
+              username,
+              full_name,
+              avatar_url
+            ),
+            post_likes (
+              reaction_type,
+              user_id
+            ),
+            post_comments (
+              id
+            )
+          `)
+          .eq("user_id", session.user.id)
+          .order("created_at", { ascending: false });
 
-      return data || [];
+        if (error) throw error;
+        return data;
+      } catch (error) {
+        console.error("Error fetching user posts:", error);
+        return [];
+      }
     },
+    enabled: !!session?.user.id,
   });
 
-  const copyProfileLink = () => {
-    if (profile?.username) {
-      navigator.clipboard.writeText(`${window.location.origin}/perfil/${profile.username}`);
-      toast({
-        title: "Link copiado!",
-        description: "O link do seu perfil foi copiado para a área de transferência.",
-      });
-    }
-  };
-
-  const handleSubmit = async (values: Partial<Profile>) => {
+  const handleSignOut = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("Não autenticado");
-
-      const { error } = await supabase
-        .from("profiles")
-        .update(values)
-        .eq("id", session.user.id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Perfil atualizado",
-        description: "Suas informações foram atualizadas com sucesso",
-      });
-
-      queryClient.invalidateQueries({ queryKey: ["profile"] });
+      await supabase.auth.signOut();
+      queryClient.clear();
+      navigate("/login");
     } catch (error) {
-      toast({
-        title: "Erro ao atualizar perfil",
-        description: error instanceof Error ? error.message : "Ocorreu um erro ao atualizar o perfil",
-        variant: "destructive",
+      console.error("Error signing out:", error);
+      toast.error("Erro ao sair da conta", {
+        position: "top-center",
+        style: { marginTop: "64px" },
       });
     }
   };
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate("/login");
-  };
-
-  const formatRelationshipStatus = (status: string | null | undefined) => {
-    if (!status) return null;
-    const statusMap: Record<string, string> = {
-      single: "Solteiro(a)",
-      dating: "Namorando",
-      widowed: "Viúvo(a)"
-    };
-    return statusMap[status] || status;
-  };
-
-  const formatBirthDate = (date: string | null | undefined) => {
-    if (!date) return null;
-    return format(new Date(date), "dd/MM/yyyy");
-  };
-
-  useEffect(() => {
-    if (profile) {
-      setAvatarCount(profile.avatar_url ? 1 : 0);
-      setCoverCount(profile.cover_url ? 1 : 0);
+  const openInstagram = () => {
+    if (profile?.instagram) {
+      window.open(`https://instagram.com/${profile.instagram}`, "_blank");
     }
-  }, [profile]);
+  };
 
-  if (isProfileLoading) {
+  const openWhatsApp = () => {
+    if (profile?.whatsapp) {
+      const formattedPhone = profile.whatsapp.replace(/\D/g, "");
+      window.open(`https://wa.me/${formattedPhone}`, "_blank");
+    }
+  };
+
+  if (isSessionLoading || isProfileLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-black text-white">
-        <p>Carregando...</p>
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="container mx-auto pt-20 pb-24 px-4">
+          <div className="animate-pulse">
+            <div className="flex items-center justify-center h-32 mb-4">
+              <div className="w-32 h-32 rounded-full bg-gray-300"></div>
+            </div>
+            <div className="h-6 bg-gray-300 rounded w-1/2 mx-auto mb-2"></div>
+            <div className="h-4 bg-gray-300 rounded w-1/3 mx-auto mb-8"></div>
+            <div className="h-10 bg-gray-300 rounded mb-6"></div>
+            <div className="h-24 bg-gray-300 rounded mb-6"></div>
+            <div className="h-40 bg-gray-300 rounded"></div>
+          </div>
+        </div>
+        <BottomNav />
       </div>
     );
   }
 
-  return (
-    <div className={`min-h-screen ${theme === 'light' ? 'bg-white text-black' : 'bg-black text-white'}`}>
-      <div className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between p-4 ${theme === 'light' ? 'bg-white/90' : 'bg-black/90'} backdrop-blur`}>
-        <div className="flex items-center">
-          <button onClick={() => navigate(-1)} className="mr-2">
-            <ArrowLeft className="h-6 w-6" />
-          </button>
-          <div className="flex flex-col">
-            <h1 className="text-lg font-semibold">{profile?.full_name}</h1>
-          </div>
-        </div>
-        <button onClick={handleLogout} className="flex items-center">
-          <LogOut className="h-6 w-6" />
-        </button>
-      </div>
+  if (!profile || !session) return null;
 
-      <div className="pt-16 pb-20">
-        <div className="relative">
-          <div className="h-32 bg-gray-200 dark:bg-gray-800 relative">
-            {profile?.cover_url ? (
-              <img
-                src={profile.cover_url}
-                alt="Capa"
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.src = defaultCoverImage;
-                }}
-              />
-            ) : (
-              <div className={`w-full h-full flex items-center justify-center ${theme === 'light' ? 'bg-white' : 'bg-black'}`}>
-                <p className="text-gray-500">Sem Capa de Perfil</p>
-              </div>
+  return (
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      <div className="container mx-auto pt-20 pb-24 px-4">
+        <div className="flex flex-col items-center mb-6">
+          <div className="relative mb-4">
+            <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-primary/10">
+              {profile.avatar_url ? (
+                <img
+                  src={profile.avatar_url}
+                  alt={profile.full_name || "User"}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gray-300 flex items-center justify-center">
+                  <Camera className="w-8 h-8 text-gray-500" />
+                </div>
+              )}
+            </div>
+            <Button
+              size="icon"
+              variant="outline"
+              className="absolute bottom-0 right-0 rounded-full bg-background"
+              onClick={() => setIsProfileDialogOpen(true)}
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+          </div>
+
+          <h1 className="text-2xl font-bold mb-1">{profile.full_name}</h1>
+          <p className="text-muted-foreground mb-2">@{profile.username}</p>
+
+          <div className="flex gap-2 mb-4">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8"
+              onClick={() => navigate("/config")}
+            >
+              <Settings className="h-4 w-4 mr-1" />
+              Configurações
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 text-red-500 border-red-500 hover:bg-red-500/10"
+              onClick={handleSignOut}
+            >
+              <LogOut className="h-4 w-4 mr-1" />
+              Sair
+            </Button>
+          </div>
+
+          <div className="flex gap-2 mb-4">
+            <Link to="/products/new">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8"
+              >
+                <Store className="h-4 w-4 mr-1" />
+                Novo Produto
+              </Button>
+            </Link>
+            {profile.whatsapp && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-green-500 border-green-500 hover:bg-green-500/10"
+                onClick={openWhatsApp}
+              >
+                <Phone className="h-4 w-4 mr-1" />
+                WhatsApp
+              </Button>
+            )}
+            {profile.instagram && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-pink-500 border-pink-500 hover:bg-pink-500/10"
+                onClick={openInstagram}
+              >
+                <Instagram className="h-4 w-4 mr-1" />
+                Instagram
+              </Button>
             )}
           </div>
 
-          <div className="flex justify-end px-4 py-2 border-b border-gray-200 dark:border-gray-800">
-            <div className="flex gap-4 text-center">
-              <div>
-                <p className="font-semibold">{followStats?.followers || 0}</p>
-                <p className="text-sm text-gray-500">Seguidores</p>
-              </div>
-              <div>
-                <p className="font-semibold">{followStats?.following || 0}</p>
-                <p className="text-sm text-gray-500">Seguindo</p>
-              </div>
+          {profile.bio && (
+            <div className="text-center max-w-md mb-4">
+              <p className="text-sm">{profile.bio}</p>
             </div>
-          </div>
+          )}
 
-          <div className="relative -mt-16 px-4">
-            <div className="relative inline-block">
-              <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white dark:border-black">
-                {profile?.avatar_url ? (
-                  <img
-                    src={profile.avatar_url}
-                    alt="Avatar"
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.currentTarget.src = defaultAvatarImage;
-                    }}
-                  />
-                ) : (
-                  <div className={`w-full h-full flex items-center justify-center ${theme === 'light' ? 'bg-white' : 'bg-black'}`}>
-                    <p className="text-gray-500">Sem foto de perfil</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="px-4 mt-4">
-            <div className="space-y-2">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold">{profile?.full_name}</h2>
-                  <p className="text-gray-400">@{profile?.username}</p>
-                  {profile?.status && (
-                    <p className="text-yellow-500 text-sm mt-1">
-                      {profile.status}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {profile?.city && (
-                <p className="text-gray-400 text-sm mt-1 flex items-center gap-1">
-                  <MapPin className="h-4 w-4" />
-                  Mora em {profile.city}
-                </p>
-              )}
-
-              <div className="space-y-2 mt-3">
-                {profile?.relationship_status && (
-                  <p className="text-gray-400 text-sm flex items-center gap-1">
-                    <Heart className="h-4 w-4" />
-                    {formatRelationshipStatus(profile.relationship_status)}
-                  </p>
-                )}
-                
-                {profile?.birth_date && (
-                  <p className="text-gray-400 text-sm flex items-center gap-1">
-                    <Calendar className="h-4 w-4" />
-                    {formatBirthDate(profile.birth_date)}
-                  </p>
-                )}
-                
-                <div className="flex flex-col gap-2 mt-2">
-                  {profile?.instagram_url && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex items-center gap-1 w-fit"
-                      onClick={() => window.open(profile.instagram_url, '_blank')}
-                    >
-                      <Instagram className="h-4 w-4" />
-                      Instagram
-                    </Button>
-                  )}
-                  
-                  {profile?.website && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex items-center gap-1 w-fit"
-                      onClick={() => window.open(profile.website, '_blank')}
-                    >
-                      <Globe className="h-4 w-4" />
-                      Website
-                    </Button>
-                  )}
-                </div>
-              </div>
-
-              {!isPreviewMode ? (
-                <div className="flex justify-end gap-2 mt-4">
-                  <EditPhotosButton 
-                    onAvatarClick={handleAvatarClick}
-                    onCoverClick={handleCoverClick}
-                    onDeleteAvatar={handleDeleteAvatar}
-                    onDeleteCover={handleDeleteCover}
-                    avatarCount={avatarCount}
-                    coverCount={coverCount}
-                  />
-
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" className={`${theme === 'light' ? 'text-black border-gray-300' : 'text-white border-gray-700'}`}>
-                        <Pencil className="h-4 w-4 mr-2" />
-                        Editar perfil
-                      </Button>
-                    </DialogTrigger>
-                    <EditProfileDialog profile={profile} onSubmit={handleSubmit} />
-                  </Dialog>
-
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="icon" className="border-gray-700">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="bg-gray-900 border-gray-800">
-                      <DropdownMenuItem onClick={copyProfileLink} className="text-white cursor-pointer">
-                        <Link2 className="h-4 w-4 mr-2" />
-                        Copiar link do perfil
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setIsPreviewMode(true)} className="text-white cursor-pointer">
-                        <Eye className="h-4 w-4 mr-2" />
-                        Ver como
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              ) : (
-                <Button 
-                  onClick={() => setIsPreviewMode(false)} 
-                  variant="outline" 
-                  className={`${theme === 'light' ? 'text-black border-gray-300' : 'text-white border-gray-700'}`}
-                >
-                  Sair do modo preview
-                </Button>
-              )}
-            </div>
-
-            <div className="mt-6">
-              <ProfileTabs 
-                userProducts={userProducts} 
-                userPosts={userPosts}
-                isLoading={isPostsLoading}
-              />
-            </div>
+          <div className="flex flex-wrap gap-2 justify-center mb-4">
+            {profile.city && profile.state && (
+              <Badge variant="outline" className="flex items-center gap-1">
+                <MapPin className="h-3 w-3" />
+                {profile.city}, {profile.state}
+              </Badge>
+            )}
+            {profile.occupation && (
+              <Badge variant="outline">{profile.occupation}</Badge>
+            )}
+            {profile.relationship_status && (
+              <Badge variant="outline">{profile.relationship_status}</Badge>
+            )}
           </div>
         </div>
+
+        <ProfileTabs 
+          userProducts={userProducts} 
+          userPosts={userPosts}
+          isLoading={isProductsLoading || isPostsLoading}
+          profileUserId={session.user.id}
+          isOwnProfile={true}
+        />
       </div>
-
-      <PhotoUrlDialog
-        isOpen={isAvatarDialogOpen}
-        onClose={() => setIsAvatarDialogOpen(false)}
-        onConfirm={(url) => handlePhotoUpdate.mutate({ type: 'avatar', url })}
-        title="Alterar foto de perfil"
-      />
-
-      <PhotoUrlDialog
-        isOpen={isCoverDialogOpen}
-        onClose={() => setIsCoverDialogOpen(false)}
-        onConfirm={(url) => handlePhotoUpdate.mutate({ type: 'cover', url })}
-        title="Alterar foto de capa"
-      />
-
       <BottomNav />
+      <EditProfileDialog
+        open={isProfileDialogOpen}
+        onOpenChange={setIsProfileDialogOpen}
+        profile={profile}
+      />
     </div>
   );
-}
+};
+
+export default Profile;

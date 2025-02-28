@@ -1,465 +1,255 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "../integrations/supabase/client";
-import { Button } from "../components/ui/button";
-import { useTheme } from "../components/ThemeProvider";
-import ProfileTabs from "../components/ProfileTabs";
-import { ArrowLeft, MapPin, Heart, Calendar, Globe, Instagram, UserPlus, UserCheck } from "lucide-react";
-import BottomNav from "../components/BottomNav";
-import type { Profile } from "../types/profile";
-import { toast } from "sonner";
-import { format } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
+import Navbar from "@/components/Navbar";
+import BottomNav from "@/components/BottomNav";
+import ProfileTabs from "@/components/ProfileTabs";
+import { Camera, Instagram, MapPin, Phone } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { useQuery } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { calculateDistance } from "@/utils/distance";
 
-const defaultAvatarImage = "/placeholder.svg";
-const defaultCoverImage = "/placeholder.svg";
-
-export default function UserProfile() {
+const UserProfile = () => {
   const { username } = useParams();
   const navigate = useNavigate();
-  const { theme } = useTheme();
-  const queryClient = useQueryClient();
-  const [isFollowing, setIsFollowing] = useState(false);
-  const [isBeingFollowed, setIsBeingFollowed] = useState(false);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentUserLocation, setCurrentUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [profileUserId, setProfileUserId] = useState<string | null>(null);
 
-  // Get current user info
   useEffect(() => {
-    const fetchCurrentUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        setCurrentUserId(session.user.id);
-      }
-    };
-    fetchCurrentUser();
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setCurrentUserLocation({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          });
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+        }
+      );
+    }
   }, []);
 
-  const { data: profile, isLoading } = useQuery({
+  const { data: profileUser, isLoading: isProfileLoading } = useQuery({
     queryKey: ["userProfile", username],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("username", username)
-        .single();
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("username", username)
+          .single();
 
-      if (error || !data) {
+        if (error) throw error;
+        
+        // Save the profile user ID for later use
+        setProfileUserId(data.id);
+        
+        return data;
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
         navigate("/404");
         return null;
       }
-
-      return data as Profile;
     },
   });
 
-  const { data: followStats } = useQuery({
-    queryKey: ["followStats", profile?.id],
+  const { data: userProducts, isLoading: isProductsLoading } = useQuery({
+    queryKey: ["userProducts", profileUser?.id],
     queryFn: async () => {
-      if (!profile?.id) return { followers: 0, following: 0 };
+      if (!profileUser?.id) return [];
 
-      const { count: followersCount } = await supabase
-        .from('follows')
-        .select('*', { count: 'exact', head: true })
-        .eq('following_id', profile.id);
+      try {
+        const { data, error } = await supabase
+          .from("products")
+          .select("*")
+          .eq("user_id", profileUser.id)
+          .order("created_at", { ascending: false });
 
-      const { count: followingCount } = await supabase
-        .from('follows')
-        .select('*', { count: 'exact', head: true })
-        .eq('follower_id', profile.id);
+        if (error) throw error;
 
-      return {
-        followers: followersCount || 0,
-        following: followingCount || 0
-      };
-    },
-    enabled: !!profile?.id,
-  });
-
-  // Check if current user is following the profile
-  useQuery({
-    queryKey: ["isFollowing", currentUserId, profile?.id],
-    queryFn: async () => {
-      if (!currentUserId || !profile?.id || currentUserId === profile.id) return false;
-
-      const { data, error } = await supabase
-        .from('follows')
-        .select('*')
-        .eq('follower_id', currentUserId)
-        .eq('following_id', profile.id)
-        .single();
-
-      if (error) {
-        if (error.code !== 'PGRST116') { // PGRST116 is "no rows returned" error
-          console.error('Error checking follow status:', error);
+        if (currentUserLocation) {
+          return data.map((product) => {
+            if (product.location_lat && product.location_lng) {
+              const distance = calculateDistance(
+                currentUserLocation.latitude,
+                currentUserLocation.longitude,
+                parseFloat(product.location_lat),
+                parseFloat(product.location_lng)
+              );
+              return { ...product, distance };
+            }
+            return product;
+          });
         }
-        setIsFollowing(false);
-        return false;
-      }
 
-      setIsFollowing(!!data);
-      return !!data;
+        return data;
+      } catch (error) {
+        console.error("Error fetching user products:", error);
+        return [];
+      }
     },
-    enabled: !!currentUserId && !!profile?.id && currentUserId !== profile.id,
+    enabled: !!profileUser?.id,
   });
 
-  // Check if profile is following current user
-  useQuery({
-    queryKey: ["isBeingFollowed", currentUserId, profile?.id],
+  const { data: userPosts, isLoading: isPostsLoading } = useQuery({
+    queryKey: ["userPosts", profileUser?.id],
     queryFn: async () => {
-      if (!currentUserId || !profile?.id || currentUserId === profile.id) return false;
+      if (!profileUser?.id) return [];
 
-      const { data, error } = await supabase
-        .from('follows')
-        .select('*')
-        .eq('follower_id', profile.id)
-        .eq('following_id', currentUserId)
-        .single();
+      try {
+        const { data, error } = await supabase
+          .from("posts")
+          .select(`
+            *,
+            user:user_id (
+              id,
+              username,
+              full_name,
+              avatar_url
+            ),
+            post_likes (
+              reaction_type,
+              user_id
+            ),
+            post_comments (
+              id
+            )
+          `)
+          .eq("user_id", profileUser.id)
+          .order("created_at", { ascending: false });
 
-      if (error) {
-        if (error.code !== 'PGRST116') {
-          console.error('Error checking if being followed:', error);
-        }
-        setIsBeingFollowed(false);
-        return false;
+        if (error) throw error;
+        return data;
+      } catch (error) {
+        console.error("Error fetching user posts:", error);
+        return [];
       }
-
-      setIsBeingFollowed(!!data);
-      return !!data;
     },
-    enabled: !!currentUserId && !!profile?.id && currentUserId !== profile.id,
+    enabled: !!profileUser?.id,
   });
 
-  const { data: userProducts } = useQuery({
-    queryKey: ["userProducts", profile?.id],
-    queryFn: async () => {
-      if (!profile?.id) return [];
-
-      const { data } = await supabase
-        .from("products")
-        .select("*")
-        .eq("user_id", profile.id);
-
-      return data || [];
-    },
-    enabled: !!profile?.id,
-  });
-
-  const { data: userPosts, isLoading: isLoadingPosts } = useQuery({
-    queryKey: ["userPosts", profile?.id],
-    queryFn: async () => {
-      if (!profile?.id) return [];
-
-      const { data } = await supabase
-        .from("posts")
-        .select(`
-          *,
-          user:user_id (
-            username,
-            full_name,
-            avatar_url
-          ),
-          post_likes (
-            reaction_type,
-            user_id
-          ),
-          post_comments (
-            id
-          )
-        `)
-        .eq("user_id", profile.id)
-        .order("created_at", { ascending: false });
-
-      return data || [];
-    },
-    enabled: !!profile?.id,
-  });
-
-  // Follow mutation
-  const followMutation = useMutation({
-    mutationFn: async () => {
-      if (!currentUserId || !profile?.id) {
-        throw new Error("User not authenticated or profile not found");
-      }
-
-      const { data, error } = await supabase
-        .from('follows')
-        .insert([
-          { follower_id: currentUserId, following_id: profile.id }
-        ]);
-
-      if (error) throw error;
-
-      // Insert a notification about the follow
-      await supabase
-        .from('notifications')
-        .insert([
-          {
-            user_id: profile.id,
-            title: 'Novo seguidor',
-            message: `@${currentUserId} começou a seguir você.`,
-            type: 'system',
-          }
-        ]);
-
-      return data;
-    },
-    onSuccess: () => {
-      setIsFollowing(true);
-      // Invalidate follow stats to refresh the counts
-      queryClient.invalidateQueries({ queryKey: ["followStats", profile?.id] });
-      toast.success("Seguindo com sucesso!");
-    },
-    onError: (error) => {
-      console.error("Error following user:", error);
-      toast.error("Erro ao seguir usuário");
-    }
-  });
-
-  // Unfollow mutation
-  const unfollowMutation = useMutation({
-    mutationFn: async () => {
-      if (!currentUserId || !profile?.id) {
-        throw new Error("User not authenticated or profile not found");
-      }
-
-      const { data, error } = await supabase
-        .from('follows')
-        .delete()
-        .eq('follower_id', currentUserId)
-        .eq('following_id', profile.id);
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      setIsFollowing(false);
-      // Invalidate follow stats to refresh the counts
-      queryClient.invalidateQueries({ queryKey: ["followStats", profile?.id] });
-      toast.success("Deixou de seguir com sucesso!");
-    },
-    onError: (error) => {
-      console.error("Error unfollowing user:", error);
-      toast.error("Erro ao deixar de seguir usuário");
-    }
-  });
-
-  const handleFollowAction = () => {
-    if (!currentUserId) {
-      // Redirect to login if not authenticated
-      navigate("/login");
-      return;
-    }
-
-    if (isFollowing) {
-      unfollowMutation.mutate();
-    } else {
-      followMutation.mutate();
+  const openInstagram = () => {
+    if (profileUser?.instagram) {
+      window.open(`https://instagram.com/${profileUser.instagram}`, "_blank");
     }
   };
 
-  const formatRelationshipStatus = (status: string | null | undefined) => {
-    if (!status) return null;
-    const statusMap: Record<string, string> = {
-      single: "Solteiro(a)",
-      dating: "Namorando",
-      widowed: "Viúvo(a)"
-    };
-    return statusMap[status] || status;
+  const openWhatsApp = () => {
+    if (profileUser?.whatsapp) {
+      const formattedPhone = profileUser.whatsapp.replace(/\D/g, "");
+      window.open(`https://wa.me/${formattedPhone}`, "_blank");
+    }
   };
 
-  const formatBirthDate = (date: string | null | undefined) => {
-    if (!date) return null;
-    return format(new Date(date), "dd/MM/yyyy");
-  };
-
-  if (isLoading) {
+  if (isProfileLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-black text-white">
-        <p>Carregando...</p>
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="container mx-auto pt-20 pb-24 px-4">
+          <div className="animate-pulse">
+            <div className="flex items-center justify-center h-32 mb-4">
+              <div className="w-32 h-32 rounded-full bg-gray-300"></div>
+            </div>
+            <div className="h-6 bg-gray-300 rounded w-1/2 mx-auto mb-2"></div>
+            <div className="h-4 bg-gray-300 rounded w-1/3 mx-auto mb-8"></div>
+            <div className="h-10 bg-gray-300 rounded mb-6"></div>
+            <div className="h-24 bg-gray-300 rounded mb-6"></div>
+            <div className="h-40 bg-gray-300 rounded"></div>
+          </div>
+        </div>
+        <BottomNav />
       </div>
     );
   }
 
-  if (!profile) {
-    return null; // Será redirecionado para 404
-  }
+  if (!profileUser) return null;
 
   return (
-    <div className={`min-h-screen ${theme === 'light' ? 'bg-white text-black' : 'bg-black text-white'}`}>
-      <div className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-between p-4 ${theme === 'light' ? 'bg-white/90' : 'bg-black/90'} backdrop-blur`}>
-        <div className="flex items-center">
-          <button onClick={() => navigate(-1)} className="mr-2">
-            <ArrowLeft className="h-6 w-6" />
-          </button>
-          <div className="flex flex-col">
-            <h1 className="text-lg font-semibold">{profile.full_name}</h1>
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      <div className="container mx-auto pt-20 pb-24 px-4">
+        <div className="flex flex-col items-center mb-6">
+          <div className="relative mb-4">
+            <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-primary/10">
+              {profileUser.avatar_url ? (
+                <img
+                  src={profileUser.avatar_url}
+                  alt={profileUser.full_name || "User"}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gray-300 flex items-center justify-center">
+                  <Camera className="w-8 h-8 text-gray-500" />
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      </div>
 
-      <div className="pt-16 pb-20">
-        <div className="relative">
-          <div className="h-32 bg-gray-200 dark:bg-gray-800 relative">
-            {profile.cover_url ? (
-              <img
-                src={profile.cover_url}
-                alt="Capa"
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.src = defaultCoverImage;
-                }}
-              />
-            ) : (
-              <div className={`w-full h-full flex items-center justify-center ${theme === 'light' ? 'bg-white' : 'bg-black'}`}>
-                <p className="text-gray-500">Sem Capa de Perfil</p>
-              </div>
+          <h1 className="text-2xl font-bold mb-1">{profileUser.full_name}</h1>
+          <p className="text-muted-foreground mb-2">@{profileUser.username}</p>
+
+          <div className="flex gap-2 mb-4">
+            {profileUser.whatsapp && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-green-500 border-green-500 hover:bg-green-500/10"
+                onClick={openWhatsApp}
+              >
+                <Phone className="h-4 w-4 mr-1" />
+                WhatsApp
+              </Button>
+            )}
+            {profileUser.instagram && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-pink-500 border-pink-500 hover:bg-pink-500/10"
+                onClick={openInstagram}
+              >
+                <Instagram className="h-4 w-4 mr-1" />
+                Instagram
+              </Button>
             )}
           </div>
 
-          <div className="flex justify-end px-4 py-2 border-b border-gray-200 dark:border-gray-800">
-            <div className="flex gap-4 text-center">
-              <div>
-                <p className="font-semibold">{followStats?.followers || 0}</p>
-                <p className="text-sm text-gray-500">Seguidores</p>
-              </div>
-              <div>
-                <p className="font-semibold">{followStats?.following || 0}</p>
-                <p className="text-sm text-gray-500">Seguindo</p>
-              </div>
+          {profileUser.bio && (
+            <div className="text-center max-w-md mb-4">
+              <p className="text-sm">{profileUser.bio}</p>
             </div>
-          </div>
+          )}
 
-          <div className="relative -mt-16 px-4">
-            <div className="relative inline-block">
-              <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white dark:border-black">
-                {profile.avatar_url ? (
-                  <img
-                    src={profile.avatar_url}
-                    alt="Avatar"
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.currentTarget.src = defaultAvatarImage;
-                    }}
-                  />
-                ) : (
-                  <div className={`w-full h-full flex items-center justify-center ${theme === 'light' ? 'bg-white' : 'bg-black'}`}>
-                    <p className="text-gray-500">Sem foto de perfil</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="px-4 mt-4">
-            <div className="space-y-2">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold">{profile.full_name}</h2>
-                  <p className="text-gray-400">@{profile.username}</p>
-                  {profile.status && (
-                    <p className="text-yellow-500 text-sm mt-1">
-                      {profile.status}
-                    </p>
-                  )}
-                </div>
-                
-                {currentUserId && currentUserId !== profile.id && (
-                  <div>
-                    <Button 
-                      onClick={handleFollowAction}
-                      className={`${
-                        isFollowing 
-                          ? 'bg-gray-800 hover:bg-gray-700' 
-                          : isBeingFollowed 
-                            ? 'bg-blue-600 hover:bg-blue-500'
-                            : 'bg-primary hover:bg-primary/90'
-                      } text-white px-4 py-2 rounded-lg flex items-center gap-2`}
-                      disabled={followMutation.isPending || unfollowMutation.isPending}
-                    >
-                      {isFollowing ? (
-                        <>
-                          <UserCheck size={18} />
-                          <span>Seguindo</span>
-                        </>
-                      ) : isBeingFollowed ? (
-                        <>
-                          <UserPlus size={18} />
-                          <span>Seguir de volta</span>
-                        </>
-                      ) : (
-                        <>
-                          <UserPlus size={18} />
-                          <span>Seguir</span>
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                )}
-              </div>
-
-              {profile.city && (
-                <p className="text-gray-400 text-sm mt-1 flex items-center gap-1">
-                  <MapPin className="h-4 w-4" />
-                  Mora em {profile.city}
-                </p>
-              )}
-
-              <div className="space-y-2 mt-3">
-                {profile.relationship_status && (
-                  <p className="text-gray-400 text-sm flex items-center gap-1">
-                    <Heart className="h-4 w-4" />
-                    {formatRelationshipStatus(profile.relationship_status)}
-                  </p>
-                )}
-                
-                {profile.birth_date && (
-                  <p className="text-gray-400 text-sm flex items-center gap-1">
-                    <Calendar className="h-4 w-4" />
-                    {formatBirthDate(profile.birth_date)}
-                  </p>
-                )}
-                
-                <div className="flex flex-col gap-2 mt-2">
-                  {profile.instagram_url && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex items-center gap-1 w-fit"
-                      onClick={() => window.open(profile.instagram_url, '_blank')}
-                    >
-                      <Instagram className="h-4 w-4" />
-                      Instagram
-                    </Button>
-                  )}
-                  
-                  {profile.website && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex items-center gap-1 w-fit"
-                      onClick={() => window.open(profile.website, '_blank')}
-                    >
-                      <Globe className="h-4 w-4" />
-                      Website
-                    </Button>
-                  )}
-                </div>
-              </div>
-
-              <div className="mt-6">
-                <ProfileTabs 
-                  userProducts={userProducts} 
-                  userPosts={userPosts}
-                  isLoading={isLoadingPosts}
-                />
-              </div>
-            </div>
+          <div className="flex flex-wrap gap-2 justify-center mb-4">
+            {profileUser.city && profileUser.state && (
+              <Badge variant="outline" className="flex items-center gap-1">
+                <MapPin className="h-3 w-3" />
+                {profileUser.city}, {profileUser.state}
+              </Badge>
+            )}
+            {profileUser.occupation && (
+              <Badge variant="outline">{profileUser.occupation}</Badge>
+            )}
+            {profileUser.relationship_status && (
+              <Badge variant="outline">{profileUser.relationship_status}</Badge>
+            )}
           </div>
         </div>
-      </div>
 
+        <ProfileTabs 
+          userProducts={userProducts} 
+          userPosts={userPosts}
+          isLoading={isProductsLoading || isPostsLoading}
+          profileUserId={profileUserId}
+          isOwnProfile={false}
+        />
+      </div>
       <BottomNav />
     </div>
   );
-}
+};
+
+export default UserProfile;
