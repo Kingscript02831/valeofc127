@@ -1,25 +1,31 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../integrations/supabase/client";
 import { MediaCarousel } from "../components/MediaCarousel";
 import { useToast } from "../hooks/use-toast";
-import { 
-  Heart, 
-  Reply,
-  ChevronDown,
-  Flame
-} from "lucide-react";
-import { Card } from "../components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Textarea } from "../components/ui/textarea";
+import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
+import { formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { MapPin } from "lucide-react";
 import Navbar from "../components/Navbar";
 import BottomNav from "../components/BottomNav";
-import ReactionMenu from "../components/ReactionMenu";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getReactionIcon } from "../utils/emojisPosts";
+import { ReactionMenu } from "../components/ReactionMenu";
+import { 
+  Heart, 
+  MessageCircle, 
+  Share2,
+  Send
+} from "lucide-react";
+import { getEmojiForReaction } from "../utils/emojisPosts";
 import Tags from "../components/Tags";
 
 interface Post {
@@ -37,6 +43,7 @@ interface Post {
     username: string;
     full_name: string;
     avatar_url: string;
+    location_name: string;
   };
 }
 
@@ -85,7 +92,8 @@ const PostDetails = () => {
             id,
             username,
             full_name,
-            avatar_url
+            avatar_url,
+            location_name
           ),
           post_likes (
             reaction_type,
@@ -413,85 +421,95 @@ const PostDetails = () => {
       <Navbar />
       <main className="container mx-auto py-8 px-4 pt-20 pb-24">
         <div className="max-w-xl mx-auto space-y-4">
-          <Card className="overflow-hidden bg-white dark:bg-card border-none shadow-sm">
-            <div className="p-4">
-              <div className="flex items-center gap-3 mb-4">
-                <Avatar 
-                  className="cursor-pointer hover:opacity-80 transition-opacity"
-                  onClick={() => navigate(`/perfil/${post?.user.username}`)}
-                >
-                  <AvatarImage src={post?.user.avatar_url} />
+          <Card className="mb-4">
+            <CardHeader className="space-y-4">
+              <div className="flex items-center space-x-4">
+                <Avatar>
+                  <AvatarImage src={post.user?.avatar_url} />
                   <AvatarFallback>
-                    {post?.user.full_name?.charAt(0).toUpperCase()}
+                    {post.user?.username?.[0]?.toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <h2 className="font-semibold">{post?.user.full_name}</h2>
-                  <p className="text-sm text-muted-foreground">
-                    {formatDate(post?.created_at)}
+                  <p className="font-semibold">{post.user?.username}</p>
+                  <p className="text-sm text-gray-500">
+                    {formatDistanceToNow(new Date(post.created_at), {
+                      addSuffix: true,
+                      locale: ptBR,
+                    })}
                   </p>
                 </div>
               </div>
 
-              {post?.content && (
-                <p className="text-foreground mb-4">
+              {post.content && (
+                <div className="mt-2">
                   <Tags content={post.content} />
-                </p>
-              )}
-
-              {(post?.images?.length > 0 || post?.video_urls?.length > 0) && (
-                <MediaCarousel
-                  images={post?.images || []}
-                  videoUrls={post?.video_urls || []}
-                  title={post?.content || ""}
-                />
-              )}
-
-              <div className="flex items-center justify-between mt-4 pt-4 border-t border-border/40">
-                <div className="relative">
-                  <button
-                    className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                    onClick={() => setActiveReactionMenu(activeReactionMenu === post?.id ? null : post?.id)}
-                  >
-                    {post?.reaction_type ? getReactionIcon(post.reaction_type) : (
-                      <img src="/curtidas.png" alt="Curtir" className="w-5 h-5" />
-                    )}
-                    <span className={post?.reaction_type ? 'text-blue-500' : 'text-muted-foreground'}>
-                      {post?.likes || 0}
-                    </span>
-                  </button>
-
-                  <ReactionMenu
-                    isOpen={activeReactionMenu === post?.id}
-                    onSelect={handleReaction}
-                    currentReaction={post?.reaction_type}
-                  />
                 </div>
+              )}
 
-                <button 
+              {post.location_name && (
+                <div className="flex items-center gap-1 text-sm text-gray-500">
+                  <MapPin className="h-4 w-4" />
+                  <span>{post.location_name}</span>
+                </div>
+              )}
+            </CardHeader>
+
+            {(post.images?.length > 0 || post.video_urls?.length > 0) && (
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/30 to-blue-500/30 rounded-lg pointer-events-none" />
+                <MediaCarousel
+                  images={post.images || []}
+                  videoUrls={post.video_urls || []}
+                  title="Mídia do post"
+                />
+              </div>
+            )}
+
+            <CardFooter className="flex items-center justify-between mt-4 pt-4 border-t border-border/40">
+              <div className="relative">
+                <button
                   className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                  onClick={() => setActiveReactionMenu(activeReactionMenu === post?.id ? null : post?.id)}
                 >
-                  <img src="/comentario.png" alt="Comentários" className="w-5 h-5" />
-                  <span className="text-sm text-muted-foreground">
-                    {comments?.length || 0}
+                  {post?.reaction_type ? getEmojiForReaction(post.reaction_type) : (
+                    <img src="/curtidas.png" alt="Curtir" className="w-5 h-5" />
+                  )}
+                  <span className={post?.reaction_type ? 'text-blue-500' : 'text-muted-foreground'}>
+                    {post?.likes || 0}
                   </span>
                 </button>
 
-                <button
-                  className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                  onClick={handleWhatsAppShare}
-                >
-                  <img src="/whatsapp.png" alt="WhatsApp" className="w-5 h-5" />
-                </button>
-
-                <button
-                  className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                  onClick={handleShare}
-                >
-                  <img src="/compartilharlink.png" alt="Compartilhar" className="w-5 h-5" />
-                </button>
+                <ReactionMenu
+                  isOpen={activeReactionMenu === post?.id}
+                  onSelect={handleReaction}
+                  currentReaction={post?.reaction_type}
+                />
               </div>
-            </div>
+
+              <button 
+                className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              >
+                <img src="/comentario.png" alt="Comentários" className="w-5 h-5" />
+                <span className="text-sm text-muted-foreground">
+                  {comments?.length || 0}
+                </span>
+              </button>
+
+              <button
+                className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                onClick={handleWhatsAppShare}
+              >
+                <img src="/whatsapp.png" alt="WhatsApp" className="w-5 h-5" />
+              </button>
+
+              <button
+                className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                onClick={handleShare}
+              >
+                <img src="/compartilharlink.png" alt="Compartilhar" className="w-5 h-5" />
+              </button>
+            </CardFooter>
           </Card>
 
           <Card className="p-4 bg-white dark:bg-card border-none shadow-sm">
