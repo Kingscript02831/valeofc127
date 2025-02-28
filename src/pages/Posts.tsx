@@ -1,8 +1,9 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Share2, MessageCircle, MessageSquareMore, ThumbsUp } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 import { MediaCarousel } from "@/components/MediaCarousel";
 import Navbar from "@/components/Navbar";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -267,7 +268,7 @@ const Posts: React.FC = () => {
                             {getReactionIcon(post.reaction_type)}
                           </span>
                         ) : (
-                          <ThumbsUp className="w-5 h-5 text-muted-foreground" />
+                          <img src="/icone de curtida.png" alt="Curtir" className="w-5 h-5" />
                         )}
                         <span className={`text-sm ${post.reaction_type ? 'text-blue-500' : 'text-muted-foreground'}`}>
                           {post.likes || 0}
@@ -286,7 +287,7 @@ const Posts: React.FC = () => {
                       onClick={() => navigate(`/posts/${post.id}`)}
                       className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                     >
-                      <MessageCircle className="w-5 h-5 text-muted-foreground" />
+                      <img src="/comentario.png" alt="Comentários" className="w-5 h-5" />
                       <span className="text-sm text-muted-foreground">
                         {post.comment_count || 0}
                       </span>
@@ -296,14 +297,14 @@ const Posts: React.FC = () => {
                       className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-[#25D366]/10 hover:bg-[#25D366]/20 transition-colors"
                       onClick={() => handleWhatsAppShare(post.id)}
                     >
-                      <MessageSquareMore className="w-5 h-5 text-[#25D366]" />
+                      <img src="/whatsapp.png" alt="WhatsApp" className="w-5 h-5" />
                     </button>
 
                     <button
                       className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                       onClick={() => handleShare(post.id)}
                     >
-                      <Share2 className="w-5 h-5 text-muted-foreground" />
+                      <img src="/compartilhar.png" alt="Compartilhar" className="w-5 h-5" />
                     </button>
                   </div>
                 </CardContent>

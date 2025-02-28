@@ -1,15 +1,12 @@
+
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { MediaCarousel } from "@/components/MediaCarousel";
 import { useToast } from "@/hooks/use-toast";
 import { 
-  Share2, 
-  ThumbsUp, 
   Heart, 
   Smile, 
-  MessageCircle, 
-  MessageSquareMore, 
   Frown, 
   Angry,
   Reply,
@@ -459,7 +456,7 @@ const PostDetails = () => {
                   onClick={() => setActiveReactionMenu(activeReactionMenu === post?.id ? null : post?.id)}
                 >
                   {post?.reaction_type ? getReactionIcon(post.reaction_type) : (
-                    <ThumbsUp className="w-5 h-5 text-muted-foreground" />
+                    <img src="/icone de curtida.png" alt="Curtir" className="w-5 h-5" />
                   )}
                   <span className={post?.reaction_type ? 'text-blue-500' : 'text-muted-foreground'}>
                     {post?.likes || 0}
@@ -476,7 +473,7 @@ const PostDetails = () => {
               <button 
                 className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
               >
-                <MessageCircle className="w-5 h-5 text-muted-foreground" />
+                <img src="/comentario.png" alt="Comentários" className="w-5 h-5" />
                 <span className="text-sm text-muted-foreground">
                   {comments?.length || 0}
                 </span>
@@ -486,14 +483,14 @@ const PostDetails = () => {
                 className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-[#25D366]/10 hover:bg-[#25D366]/20 transition-colors"
                 onClick={handleWhatsAppShare}
               >
-                <MessageSquareMore className="w-5 h-5 text-[#25D366]" />
+                <img src="/whatsapp.png" alt="WhatsApp" className="w-5 h-5" />
               </button>
 
               <button
                 className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                 onClick={handleShare}
               >
-                <Share2 className="w-5 h-5 text-muted-foreground" />
+                <img src="/compartilhar.png" alt="Compartilhar" className="w-5 h-5" />
               </button>
             </div>
           </Card>
