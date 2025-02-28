@@ -24,6 +24,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getReactionIcon } from "@/utils/emojisPosts";
+import { sendCommentNotification, sendLikeNotification } from "@/services/notificationService";
 
 interface Post {
   id: string;
@@ -246,6 +247,11 @@ const PostDetails = () => {
             .update({ reaction_type: reactionType })
             .eq('post_id', id)
             .eq('user_id', currentUser.id);
+            
+          // Enviar notificação de curtida apenas quando não está removendo uma reação existente
+          if (post) {
+            sendLikeNotification(id!, post.user_id);
+          }
         }
       } else {
         await supabase
@@ -255,6 +261,11 @@ const PostDetails = () => {
             user_id: currentUser.id,
             reaction_type: reactionType
           });
+          
+        // Enviar notificação de curtida ao adicionar uma nova curtida
+        if (post) {
+          sendLikeNotification(id!, post.user_id);
+        }
       }
 
       await queryClient.invalidateQueries({ queryKey: ['post', id] });
@@ -301,6 +312,11 @@ const PostDetails = () => {
         });
 
       if (error) throw error;
+
+      // Enviar notificação de comentário
+      if (post) {
+        sendCommentNotification(id!, post.user_id, newComment.trim());
+      }
 
       setNewComment("");
       setReplyTo(null);
