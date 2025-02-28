@@ -112,7 +112,7 @@ const Notify = () => {
     queryFn: async () => {
       if (!currentUserId) return [];
 
-      // Fetch all notifications for current user
+      // Alteração aqui - sem o erro de uso inadequado do join pela foreign key
       const { data, error } = await supabase
         .from("notifications")
         .select("*")
@@ -124,11 +124,11 @@ const Notify = () => {
         throw error;
       }
       
-      // For each notification, fetch sender profile data if available
+      // Para cada notificação, buscar dados do sender se necessário
       const notificationsWithSenders = await Promise.all(
         data.map(async (notification) => {
           if (notification.reference_id && notification.message?.includes('começou a seguir você')) {
-            // Fetch profile data for the user who followed
+            // Buscar dados do usuário que seguiu
             const { data: senderData } = await supabase
               .from('profiles')
               .select('id, username, full_name, avatar_url')
@@ -136,7 +136,7 @@ const Notify = () => {
               .single();
             
             if (senderData) {
-              // Check if we're following this user
+              // Verificar status de seguidor
               checkFollowStatus(senderData.id);
               return { ...notification, sender: senderData };
             }
@@ -444,9 +444,9 @@ const Notify = () => {
                 >
                   <div className="flex items-start gap-3">
                     {notification.sender?.avatar_url ? (
-                      <Avatar className="h-10 w-10 border-2 border-background bg-gradient-to-br from-pink-500 via-red-500 to-yellow-500 p-[2px]">
+                      <Avatar className="h-10 w-10 border-2 border-primary/10">
                         <AvatarImage src={notification.sender.avatar_url} alt={notification.sender.username || 'User'} />
-                        <AvatarFallback className="bg-gradient-to-br from-pink-500 via-red-500 to-yellow-500">
+                        <AvatarFallback>
                           {notification.sender.full_name?.charAt(0).toUpperCase() || 'U'}
                         </AvatarFallback>
                       </Avatar>
@@ -480,27 +480,26 @@ const Notify = () => {
                         )}
                       </div>
 
-                      {isFollowNotification ? (
-                        <div className="mb-0.5">
-                          <span className="font-semibold text-white">@{notification.sender?.username}</span>
-                          <span className="text-muted-foreground"> começou a seguir você.</span>
-                        </div>
-                      ) : (
-                        <h3 className={cn(
-                          "text-sm font-medium mb-0.5",
-                          !notification.read && "text-primary"
-                        )}>
-                          {notification.publication_title || notification.title}
-                        </h3>
-                      )}
+                      <h3 className={cn(
+                        "text-sm font-medium mb-0.5",
+                        !notification.read && "text-primary"
+                      )}>
+                        {notification.sender?.username ? (
+                          <span className="font-semibold">@{notification.sender.username}</span>
+                        ) : ''}
+                        {' '}
+                        {isFollowNotification ? 
+                          'começou a seguir você.' : 
+                          notification.publication_title || notification.title}
+                      </h3>
                       
-                      {notification.publication_description && !isFollowNotification && (
+                      {notification.publication_description && (
                         <p className="text-xs text-muted-foreground mb-1 line-clamp-1">
                           {notification.publication_description}
                         </p>
                       )}
                       
-                      {!isFollowNotification && notification.message && (
+                      {!isFollowNotification && (
                         <p className="text-xs text-muted-foreground line-clamp-1">
                           {notification.message}
                         </p>
@@ -508,7 +507,7 @@ const Notify = () => {
 
                       <div className="flex items-center justify-between mt-2">
                         <div className="flex items-center gap-2">
-                          {notification.reference_id && !isFollowNotification && (
+                          {notification.reference_id && (
                             <Button
                               variant="link"
                               size="sm"
@@ -527,12 +526,7 @@ const Notify = () => {
                             <Button
                               variant={isFollowing ? "outline" : "default"}
                               size="sm"
-                              className={cn(
-                                "h-8 rounded-full",
-                                isFollowing 
-                                  ? "bg-gray-800 hover:bg-gray-700 text-white border-gray-600" 
-                                  : "text-white"
-                              )}
+                              className={`h-8 ${isFollowing ? 'bg-gray-800 hover:bg-gray-700 text-white' : 'text-white'}`}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleFollowAction(userId);
@@ -556,9 +550,7 @@ const Notify = () => {
                         
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                           <span>
-                            {notification.created_at 
-                              ? format(new Date(notification.created_at), "d 'dias'", { locale: ptBR })
-                              : ""}
+                            {format(new Date(notification.created_at), "dd MMM HH:mm", { locale: ptBR })}
                           </span>
                           {notification.read ? (
                             <CheckCircle className="h-3 w-3 text-green-500" />
