@@ -136,27 +136,27 @@ const Index = () => {
     <div className="min-h-screen flex flex-col pb-[72px] md:pb-0">
       <Navbar />
       <SubNav />
-      <main className="flex-1 container mx-auto py-8 px-4">
-        <div className="flex flex-col gap-4">
-          <div className="sticky top-16 z-10 bg-background/80 backdrop-blur-sm pb-4">
+      <main className="flex-1 container mx-auto py-6 px-3">
+        <div className="flex flex-col gap-3">
+          <div className="sticky top-16 z-10 bg-background/80 backdrop-blur-sm pb-3">
             <div className="flex gap-2">
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={handleNotificationClick}
-                className="hover:scale-105 transition-transform text-foreground"
+                className="h-9 w-9 hover:scale-105 transition-transform text-foreground"
               >
-                <Bell className="h-5 w-5" />
+                <Bell className="h-4 w-4" />
               </Button>
               <div className="relative flex-1">
                 <Input
                   placeholder="Buscar notícias..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pr-10 rounded-full bg-card/50 backdrop-blur-sm border-none shadow-lg"
+                  className="h-9 text-sm pr-9 rounded-full bg-card/50 backdrop-blur-sm border-none shadow-sm"
                 />
                 <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                  <Search className="h-5 w-5 text-foreground" />
+                  <Search className="h-4 w-4 text-foreground" />
                 </div>
               </div>
               <DropdownMenu>
@@ -164,15 +164,15 @@ const Index = () => {
                   <Button
                     variant="outline"
                     size="icon"
-                    className="hover:scale-105 transition-transform text-foreground rounded-full shadow-lg"
+                    className="h-9 w-9 hover:scale-105 transition-transform text-foreground rounded-full shadow-sm"
                   >
                     <Menu className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuItem
                     onClick={() => setSelectedCategory(null)}
-                    className={`${!selectedCategory ? "bg-accent" : ""}`}
+                    className={`text-xs ${!selectedCategory ? "bg-accent" : ""}`}
                   >
                     Todas as categorias
                   </DropdownMenuItem>
@@ -180,7 +180,7 @@ const Index = () => {
                     <DropdownMenuItem
                       key={category.id}
                       onClick={() => setSelectedCategory(category.id)}
-                      className={`${selectedCategory === category.id ? "bg-accent" : ""}`}
+                      className={`text-xs ${selectedCategory === category.id ? "bg-accent" : ""}`}
                     >
                       {category.name}
                     </DropdownMenuItem>
@@ -191,21 +191,21 @@ const Index = () => {
           </div>
 
           {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {[1,2,3].map((i) => (
                 <div key={i} className="animate-pulse">
-                  <div className="h-48 bg-gray-200 rounded-lg mb-4"></div>
-                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                  <div className="h-40 bg-gray-200 rounded-lg mb-3"></div>
+                  <div className="h-3 bg-gray-200 rounded w-3/4 mb-2"></div>
+                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
                 </div>
               ))}
             </div>
           ) : error ? (
-            <p className="text-center py-8 text-red-500">
+            <p className="text-center py-6 text-red-500 text-sm">
               Erro ao carregar notícias. Por favor, tente novamente.
             </p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {news.map((item) => {
                 const instagramMedia = item.instagram_media 
                   ? (typeof item.instagram_media === 'string' 
@@ -234,7 +234,7 @@ const Index = () => {
                 );
               })}
               {!isLoading && news.length === 0 && (
-                <p className="text-gray-500 col-span-full text-center py-8">
+                <p className="text-gray-500 col-span-full text-center py-6 text-sm">
                   Nenhuma notícia encontrada.
                 </p>
               )}
