@@ -17,7 +17,6 @@ import Tags from "@/components/Tags";
 import { Button } from "@/components/ui/button";
 import { UserPlus, UserCheck, MoreVertical } from "lucide-react";
 import { toast } from "sonner";
-import LocPost from "@/components/LocPost";
 
 interface Post {
   id: string;
@@ -339,19 +338,22 @@ const Posts: React.FC = () => {
                   <div className="p-3 space-y-2">
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-3">
-                        <Avatar 
-                          className="h-12 w-12 cursor-pointer hover:opacity-80 transition-opacity"
-                          onClick={() => navigate(`/perfil/${post.user.username}`)}
-                        >
-                          <AvatarImage src={post.user.avatar_url || "/placeholder.svg"} />
-                          <AvatarFallback>
-                            {post.user.full_name?.charAt(0).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
+                        <div className="relative rounded-full p-[3px] bg-gradient-to-tr from-pink-500 via-purple-500 to-yellow-500">
+                          <Avatar 
+                            className="h-12 w-12 border-2 border-white dark:border-gray-800 cursor-pointer hover:opacity-80 transition-opacity"
+                            onClick={() => navigate(`/perfil/${post.user.username}`)}
+                          >
+                            <AvatarImage src={post.user.avatar_url || "/placeholder.svg"} />
+                            <AvatarFallback>
+                              {post.user.full_name?.charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                        </div>
                         <div>
                           <h2 className="font-bold text-lg">{post.user.username}</h2>
-                          {/* Here we use the LocPost component */}
-                          <LocPost userId={post.user.id} />
+                          <p className="text-sm text-muted-foreground font-medium uppercase">
+                            GRÃO Mogol-MG
+                          </p>
                         </div>
                       </div>
                       
