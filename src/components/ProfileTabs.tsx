@@ -167,7 +167,7 @@ const ProfileTabs = ({ userProducts, userPosts, isLoading }: ProfileTabsProps) =
                   </div>
 
                   {(post.images?.length > 0 || post.video_urls?.length > 0) && (
-                    <div className="w-full">
+                    <div className="relative w-full">
                       <MediaCarousel
                         images={post.images || []}
                         videoUrls={post.video_urls || []}
