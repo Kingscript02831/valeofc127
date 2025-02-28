@@ -51,7 +51,7 @@ const Navbar = () => {
                 className="text-3xl font-bold tracking-tighter"
                 style={{ color: config.text_color }}
               >
-                {config.navbar_title || 'Vale Notícias'}
+                {config.navbar_logo_text || 'Vale Notícias'}
               </span>
             )}
           </Link>
