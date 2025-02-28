@@ -74,56 +74,6 @@ export type Database = {
           },
         ]
       }
-      chat_participants: {
-        Row: {
-          chat_id: string | null
-          created_at: string | null
-          id: string
-          last_read_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          chat_id?: string | null
-          created_at?: string | null
-          id?: string
-          last_read_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          chat_id?: string | null
-          created_at?: string | null
-          id?: string
-          last_read_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "chat_participants_chat_id_fkey"
-            columns: ["chat_id"]
-            isOneToOne: false
-            referencedRelation: "chats"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      chats: {
-        Row: {
-          created_at: string | null
-          id: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       comment_likes: {
         Row: {
           comment_id: string
@@ -371,41 +321,6 @@ export type Database = {
         }
         Relationships: []
       }
-      messages: {
-        Row: {
-          chat_id: string | null
-          content: string
-          created_at: string | null
-          id: string
-          read: boolean | null
-          sender_id: string | null
-        }
-        Insert: {
-          chat_id?: string | null
-          content: string
-          created_at?: string | null
-          id?: string
-          read?: boolean | null
-          sender_id?: string | null
-        }
-        Update: {
-          chat_id?: string | null
-          content?: string
-          created_at?: string | null
-          id?: string
-          read?: boolean | null
-          sender_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "messages_chat_id_fkey"
-            columns: ["chat_id"]
-            isOneToOne: false
-            referencedRelation: "chats"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       news: {
         Row: {
           button_color: string | null
@@ -473,6 +388,7 @@ export type Database = {
           created_at: string | null
           id: string
           message: string
+          metadata: Json | null
           publication_category: string | null
           publication_date: string | null
           publication_description: string | null
@@ -487,6 +403,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           message: string
+          metadata?: Json | null
           publication_category?: string | null
           publication_date?: string | null
           publication_description?: string | null
@@ -501,6 +418,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           message?: string
+          metadata?: Json | null
           publication_category?: string | null
           publication_date?: string | null
           publication_description?: string | null
