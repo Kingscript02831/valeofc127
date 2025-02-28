@@ -20,13 +20,13 @@ export function ThemeToggle() {
         <Button 
           variant="ghost" 
           size="icon" 
-          className="transition-all duration-300 ease-out hover:scale-110 rounded-full p-2 hover:bg-primary/20 border border-gray-200 dark:border-gray-700"
+          className="transition-all duration-300 ease-out hover:scale-110 rounded-full p-2 hover:bg-primary/20"
           style={{ 
-            color: config?.text_color || "hsl(var(--foreground))",
+            color: config?.text_color,
           }}
         >
-          <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0 text-amber-500" strokeWidth={2} />
-          <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 text-blue-500" strokeWidth={2} />
+          <Sun className="h-6 w-6 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" strokeWidth={2.5} />
+          <Moon className="absolute h-6 w-6 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" strokeWidth={2.5} />
           <span className="sr-only">Alternar tema</span>
         </Button>
       </DropdownMenuTrigger>
