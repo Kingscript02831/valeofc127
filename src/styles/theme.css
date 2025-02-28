@@ -20,7 +20,7 @@
     --border: 240 5.9% 90%;
     --input: 240 5.9% 90%;
     --ring: 240 5.9% 10%;
-    --radius: 1rem;
+    --radius: 0.5rem;
   }
 
   .dark {
@@ -102,4 +102,42 @@
 
 .card-gradient {
   @apply bg-gradient-to-br from-card to-secondary/80 backdrop-blur-sm;
+}
+
+/* Styles for post icons in light mode */
+.light .post-icon,
+:root:not(.dark) .post-icon {
+  @apply text-gray-700 fill-gray-700;
+}
+
+/* Compact UI styles */
+.compact-ui {
+  @apply text-sm;
+}
+
+.compact-ui h2 {
+  @apply text-base;
+}
+
+.compact-ui .post-button {
+  @apply py-1.5 px-3;
+}
+
+.compact-ui .post-icon {
+  @apply w-4 h-4;
+}
+
+/* Reduzir o espaçamento entre os posts */
+.post-card {
+  @apply mb-3;
+}
+
+/* Reduzir o tamanho dos avatares */
+.compact-avatar {
+  @apply w-9 h-9;
+}
+
+/* Ajustar o tamanho dos botões de ação */
+.action-button {
+  @apply py-1.5 px-3 text-sm;
 }
