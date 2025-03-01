@@ -97,5 +97,18 @@ export default defineConfig(async ({ mode }) => {
         "@": path.resolve(__dirname, "./src"),
       },
     },
+    build: {
+      outDir: 'dist',
+      sourcemap: true,
+      minify: true,
+      // Ajustes para Cloudflare Pages e Netlify
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            vendor: ['react', 'react-dom', 'react-router-dom'],
+          }
+        }
+      }
+    }
   }
 });

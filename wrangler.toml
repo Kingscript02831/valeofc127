@@ -1,0 +1,22 @@
+
+name = "valeofc"
+type = "webpack"
+account_id = ""
+zone_id = ""
+route = ""
+workers_dev = true
+
+[site]
+bucket = "dist"
+entry-point = "."
+
+[build]
+command = "npm install --legacy-peer-deps && npm run build"
+upload.format = "service-worker"
+
+[build.upload]
+format = "service-worker"
+
+[env.production]
+NODE_VERSION = "18"
+
