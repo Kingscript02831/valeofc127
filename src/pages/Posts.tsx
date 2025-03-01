@@ -241,51 +241,37 @@ const Posts: React.FC = () => {
         .eq('user_id', user.id)
         .single();
 
-      setActiveReactionMenu(null);
-      
-      queryClient.setQueryData(['posts'], (oldData: any) => {
-        if (!oldData) return oldData;
-        
-        return oldData.map((post: Post) => {
-          if (post.id === postId) {
-            const isRemovingSameReaction = existingReaction && existingReaction.reaction_type === reactionType;
-            
-            return {
-              ...post,
-              reaction_type: isRemovingSameReaction ? null : reactionType,
-              likes: isRemovingSameReaction 
-                ? Math.max(0, post.likes - 1) 
-                : existingReaction ? post.likes : post.likes + 1
-            };
-          }
-          return post;
-        });
-      });
-
       if (existingReaction) {
         if (existingReaction.reaction_type === reactionType) {
-          await supabase
+          const { error: deleteError } = await supabase
             .from('post_likes')
             .delete()
             .eq('post_id', postId)
             .eq('user_id', user.id);
+
+          if (deleteError) throw deleteError;
         } else {
-          await supabase
+          const { error: updateError } = await supabase
             .from('post_likes')
             .update({ reaction_type: reactionType })
             .eq('post_id', postId)
             .eq('user_id', user.id);
+
+          if (updateError) throw updateError;
         }
       } else {
-        await supabase
+        const { error: insertError } = await supabase
           .from('post_likes')
           .insert({
             post_id: postId,
             user_id: user.id,
             reaction_type: reactionType
           });
+
+        if (insertError) throw insertError;
       }
 
+      setActiveReactionMenu(null);
       await queryClient.invalidateQueries({ queryKey: ['posts'] });
       
     } catch (error) {

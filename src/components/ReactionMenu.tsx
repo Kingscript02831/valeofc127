@@ -21,19 +21,11 @@ const ReactionMenu = ({ isOpen, onSelect, currentReaction }: ReactionMenuProps) 
     }
   }, [isOpen]);
 
-  // Pre-load all reaction images when component mounts
-  useEffect(() => {
-    reactionsList.forEach(({ emoji }) => {
-      const img = new Image();
-      img.src = emoji;
-    });
-  }, []);
-
   if (!mounted) return null;
 
   return (
     <div className={cn(
-      "absolute bottom-full left-0 mb-2 p-6 rounded-3xl bg-gray-900/95 border border-gray-800 shadow-lg transition-all duration-200 z-50 w-[450px]",
+      "absolute bottom-full left-0 mb-2 p-6 rounded-3xl bg-gray-900/95 border border-gray-800 shadow-lg transition-all duration-200 z-50 w-[350px]",
       isOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
     )}>
       <div className="grid grid-cols-3 gap-6">
@@ -50,7 +42,6 @@ const ReactionMenu = ({ isOpen, onSelect, currentReaction }: ReactionMenuProps) 
               src={emoji} 
               alt={label} 
               className="w-16 h-16 mb-2"
-              loading="eager" 
             />
             <span className="text-gray-300 text-sm font-medium text-center whitespace-nowrap">
               {label}
