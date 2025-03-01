@@ -8,7 +8,7 @@ workers_dev = true
 
 [site]
 bucket = "dist"
-entry-point = "."
+entry-point = "src/_worker.js"
 
 [build]
 command = "npm install --legacy-peer-deps && npm run build"
@@ -20,7 +20,7 @@ format = "service-worker"
 [env.production]
 NODE_VERSION = "18"
 
-# Adicionar configuração específica para SPA
+# SPA configuration
 [[routes]]
 pattern = "/*"
 script = "src/_worker.js"

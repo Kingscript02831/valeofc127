@@ -13,11 +13,14 @@
     <meta property="og:image" content="/og-image.png" />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
+    <!-- Ensure base URL is set for client-side routing -->
+    <base href="/" />
     <title>Vale OFC</title>
   </head>
 
   <body>
     <div id="root"></div>
+    <!-- GPT Engineer script must come before the main app script -->
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>

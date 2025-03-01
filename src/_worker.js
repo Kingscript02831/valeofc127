@@ -4,28 +4,25 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     
-    // Handle requests for static assets
-    if (url.pathname.startsWith('/assets/') || 
-        url.pathname.includes('.') || 
-        url.pathname.startsWith('/pwa-')) {
-      // Pass through to the static asset
+    // Check if the request is for a static file
+    if (
+      url.pathname.startsWith('/assets/') || 
+      url.pathname.match(/\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$/) ||
+      url.pathname.startsWith('/pwa-')
+    ) {
+      // Forward the request for static assets
       return fetch(request);
     }
     
-    // Serving the SPA's index.html for all routes for client-side routing
+    // For all other routes, serve index.html to support client-side routing
     try {
-      // Try to serve the requested path first
-      const response = await fetch(request);
-      if (response.status === 200) {
-        return response;
-      }
-      
-      // If the path doesn't exist, serve index.html
-      return fetch(new Request(`${url.origin}/index.html`, request));
+      // Always serve index.html for non-static paths to support SPA routing
+      return fetch(new Request(`${url.origin}/index.html`, {
+        headers: request.headers
+      }));
     } catch (e) {
-      console.error('Error serving request:', e);
-      // If there's any error, serve index.html
-      return fetch(new Request(`${url.origin}/index.html`, request));
+      console.error('Error serving index.html:', e);
+      return new Response('Error loading the application', { status: 500 });
     }
   }
-}
+};
