@@ -42,7 +42,10 @@ const PagCurtidas = () => {
         .eq('id', id)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching post details:", error);
+        throw error;
+      }
       return data;
     },
   });
@@ -50,42 +53,51 @@ const PagCurtidas = () => {
   const { data: allReactions, isLoading: isLoadingReactions } = useQuery({
     queryKey: ['post-reactions', id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('post_reactions')
-        .select(`
-          id,
-          reaction_type,
-          created_at,
-          user:user_id(
+      try {
+        console.log("Fetching reactions for post ID:", id);
+        
+        const { data, error } = await supabase
+          .from('post_reactions')
+          .select(`
             id,
-            username,
-            full_name,
-            avatar_url
-          )
-        `)
-        .eq('post_id', id)
-        .order('created_at', { ascending: false });
+            reaction_type,
+            created_at,
+            user_id,
+            profiles:user_id(
+              id,
+              username,
+              full_name,
+              avatar_url
+            )
+          `)
+          .eq('post_id', id)
+          .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error("Error fetching reactions:", error);
-        throw error;
-      }
-      
-      // Map the data to the expected format and filter out any entries with missing user data
-      const formattedData = data
-        .filter(item => item.user && !item.user.error)
-        .map(item => ({
+        if (error) {
+          console.error("Error fetching reactions:", error);
+          throw error;
+        }
+        
+        console.log("Raw reactions data:", data);
+        
+        // Formatando os dados para o formato esperado pela interface
+        const formattedData = data.map(item => ({
           user: {
-            id: item.user.id,
-            username: item.user.username,
-            full_name: item.user.full_name,
-            avatar_url: item.user.avatar_url
+            id: item.profiles?.id || item.user_id,
+            username: item.profiles?.username || "usuário",
+            full_name: item.profiles?.full_name || "Usuário",
+            avatar_url: item.profiles?.avatar_url || ""
           },
           reaction_type: item.reaction_type,
           created_at: item.created_at
         }));
 
-      return formattedData as UserReaction[];
+        console.log("Formatted reactions data:", formattedData);
+        return formattedData as UserReaction[];
+      } catch (error) {
+        console.error("Error in query function:", error);
+        return [];
+      }
     },
   });
 
@@ -186,7 +198,7 @@ const PagCurtidas = () => {
                         <Avatar>
                           <AvatarImage src={reaction.user.avatar_url} />
                           <AvatarFallback>
-                            {reaction.user.full_name?.charAt(0).toUpperCase()}
+                            {reaction.user.full_name?.charAt(0).toUpperCase() || "U"}
                           </AvatarFallback>
                         </Avatar>
                         <div>
