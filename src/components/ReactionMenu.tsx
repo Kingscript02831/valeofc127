@@ -1,34 +1,39 @@
 
-import { useState, useEffect } from 'react';
-import { cn } from '../lib/utils';
-import { reactionsList } from '../utils/emojisPosts';
+import { cn } from "@/lib/utils";
+import { useRef, useEffect } from "react";
+import { reactionsList } from "@/utils/emojisPosts";
 
 interface ReactionMenuProps {
   isOpen: boolean;
   onSelect: (type: string) => void;
-  currentReaction?: string | null;
+  currentReaction?: string;
 }
 
 const ReactionMenu = ({ isOpen, onSelect, currentReaction }: ReactionMenuProps) => {
-  const [mounted, setMounted] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (isOpen) {
-      setMounted(true);
-    } else {
-      const timer = setTimeout(() => setMounted(false), 200);
-      return () => clearTimeout(timer);
-    }
-  }, [isOpen]);
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        // Close menu by clicking elsewhere
+      }
+    };
 
-  if (!mounted) return null;
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
 
   return (
     <div className={cn(
       "absolute bottom-full left-0 mb-2 p-3 rounded-xl bg-gray-900/95 border border-gray-800 shadow-lg transition-all duration-200 z-50 max-w-[280px] w-auto",
       isOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
-    )}>
-      <div className="grid grid-cols-3 gap-2">
+    )} ref={menuRef}>
+      <div className="grid grid-cols-2 gap-2">
         {reactionsList.map(({ emoji, type, label }) => (
           <button
             key={type}
