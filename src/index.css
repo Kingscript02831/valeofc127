@@ -216,12 +216,3 @@
   min-width: 60px;
   padding: 8px;
 }
-
-/* Fix for text-only post reaction positioning */
-.text-only-post .reaction-counter {
-  position: relative !important;
-  bottom: 0 !important;
-  margin-top: 8px !important;
-  margin-bottom: 8px !important;
-  display: inline-flex !important;
-}

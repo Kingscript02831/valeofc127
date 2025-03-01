@@ -13,15 +13,14 @@ import { ArrowLeft } from "lucide-react";
 import { Skeleton } from "../components/ui/skeleton";
 
 interface UserReaction {
-  id: string;
-  reaction_type: string;
-  created_at: string;
   user: {
     id: string;
     username: string;
     full_name: string;
     avatar_url: string;
   };
+  reaction_type: string;
+  created_at: string;
 }
 
 const PagCurtidas = () => {
@@ -68,7 +67,6 @@ const PagCurtidas = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      console.log("Reactions data:", data);
       return data as UserReaction[];
     },
   });
@@ -162,7 +160,7 @@ const PagCurtidas = () => {
                 {filteredReactions && filteredReactions.length > 0 ? (
                   filteredReactions.map((reaction) => (
                     <div 
-                      key={reaction.id} 
+                      key={reaction.user.id} 
                       className="flex items-center justify-between cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 p-2 rounded-lg transition-colors"
                       onClick={() => navigate(`/perfil/${reaction.user.username}`)}
                     >
