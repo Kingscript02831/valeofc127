@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -101,6 +102,10 @@ const Posts: React.FC = () => {
             ),
             post_comments (
               id
+            ),
+            post_reactions (
+              reaction_type,
+              user_id
             )
           `)
           .order('created_at', { ascending: false });
@@ -108,12 +113,27 @@ const Posts: React.FC = () => {
         const { data: postsData, error } = await query;
         if (error) throw error;
 
-        const postsWithCounts = postsData?.map(post => ({
-          ...post,
-          reaction_type: post.post_likes?.find(like => like.user_id === currentUser?.id)?.reaction_type,
-          likes: post.post_likes?.length || 0,
-          comment_count: post.post_comments?.length || 0
-        }));
+        const postsWithCounts = postsData?.map(post => {
+          // Get reaction counts by type
+          const reactionsByType: Record<string, number> = {};
+          post.post_reactions?.forEach((reaction: any) => {
+            if (!reactionsByType[reaction.reaction_type]) {
+              reactionsByType[reaction.reaction_type] = 0;
+            }
+            reactionsByType[reaction.reaction_type]++;
+          });
+
+          // Get user's reaction if any
+          const userReaction = post.post_reactions?.find((r: any) => r.user_id === currentUser?.id)?.reaction_type;
+
+          return {
+            ...post,
+            reaction_type: userReaction,
+            reactionsByType,
+            likes: post.post_reactions?.length || 0,
+            comment_count: post.post_comments?.length || 0
+          };
+        });
 
         setReactionsLoading(false);
         return postsWithCounts;
@@ -239,7 +259,7 @@ const Posts: React.FC = () => {
       }
 
       const { data: existingReaction } = await supabase
-        .from('post_likes')
+        .from('post_reactions')
         .select('*')
         .eq('post_id', postId)
         .eq('user_id', user.id)
@@ -248,7 +268,7 @@ const Posts: React.FC = () => {
       if (existingReaction) {
         if (existingReaction.reaction_type === reactionType) {
           const { error: deleteError } = await supabase
-            .from('post_likes')
+            .from('post_reactions')
             .delete()
             .eq('post_id', postId)
             .eq('user_id', user.id);
@@ -256,7 +276,7 @@ const Posts: React.FC = () => {
           if (deleteError) throw deleteError;
         } else {
           const { error: updateError } = await supabase
-            .from('post_likes')
+            .from('post_reactions')
             .update({ reaction_type: reactionType })
             .eq('post_id', postId)
             .eq('user_id', user.id);
@@ -265,7 +285,7 @@ const Posts: React.FC = () => {
         }
       } else {
         const { error: insertError } = await supabase
-          .from('post_likes')
+          .from('post_reactions')
           .insert({
             post_id: postId,
             user_id: user.id,
@@ -441,9 +461,6 @@ const Posts: React.FC = () => {
                             }}
                           />
                         )}
-                        <span className={`text-sm ${reactionsLoading ? 'text-gray-400' : (post.reaction_type ? 'text-blue-500' : 'text-muted-foreground')}`}>
-                          {post.likes || 0}
-                        </span>
                       </button>
 
                       <div className="relative">
@@ -454,6 +471,35 @@ const Posts: React.FC = () => {
                         />
                       </div>
                     </div>
+
+                    {/* Display reaction counts with icons */}
+                    {post.likes > 0 && (
+                      <div 
+                        className="flex items-center gap-1 cursor-pointer"
+                        onClick={() => post.likes > 0 && navigate(`/pagcurtidas/${post.id}`)}
+                      >
+                        <div className="flex -space-x-2 overflow-hidden">
+                          {post.reactionsByType && Object.keys(post.reactionsByType).slice(0, 3).map((type, index) => (
+                            <img 
+                              key={type} 
+                              src={getReactionIcon(type)} 
+                              alt={type}
+                              className="inline-block h-6 w-6 rounded-full ring-2 ring-white dark:ring-gray-800"
+                              style={{ zIndex: 3 - index }}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-sm text-blue-500 hover:underline reaction-count">
+                          {post.reaction_type && post.likes > 1 ? (
+                            <span>Você e outras {post.likes - 1} pessoas</span>
+                          ) : post.reaction_type ? (
+                            <span>Você</span>
+                          ) : post.likes > 0 ? (
+                            <span>{post.likes} pessoas</span>
+                          ) : null}
+                        </span>
+                      </div>
+                    )}
 
                     <button 
                       onClick={() => navigate(`/posts/${post.id}`)}

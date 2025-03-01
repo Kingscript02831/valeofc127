@@ -200,10 +200,25 @@ const PostDetails = () => {
 
       if (error) throw error;
       
+      const reactionGroups: Record<string, {count: number, users: {username: string, full_name: string}[]}> = {};
+      
+      data.forEach(reaction => {
+        if (!reactionGroups[reaction.reaction_type]) {
+          reactionGroups[reaction.reaction_type] = {
+            count: 0,
+            users: []
+          };
+        }
+        
+        reactionGroups[reaction.reaction_type].count++;
+        reactionGroups[reaction.reaction_type].users.push(reaction.user);
+      });
+      
       const currentUserReaction = data.find(r => r.user.username === currentUser?.user_metadata?.username);
       
       return {
         total: data.length,
+        byType: reactionGroups,
         currentUserReaction: currentUserReaction?.reaction_type
       };
     },
@@ -483,28 +498,6 @@ const PostDetails = () => {
                     ) : (
                       <img src="/curtidas1.png" alt="Reagir" className="w-6 h-6 opacity-70" />
                     )}
-                    
-                    <div 
-                      className="text-sm cursor-pointer"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (post?.likes > 0) {
-                          navigate(`/pagcurtidas/${id}`);
-                        }
-                      }}
-                    >
-                      {reactionSummary?.currentUserReaction && post?.likes > 1 ? (
-                        <span className="text-blue-500">
-                          Você e outras {post.likes - 1} pessoas
-                        </span>
-                      ) : reactionSummary?.currentUserReaction ? (
-                        <span className="text-blue-500">Você</span>
-                      ) : post?.likes > 0 ? (
-                        <span className="text-muted-foreground">{post.likes} pessoas</span>
-                      ) : (
-                        <span className="text-muted-foreground">0</span>
-                      )}
-                    </div>
                   </button>
 
                   <ReactionMenu
@@ -513,6 +506,34 @@ const PostDetails = () => {
                     currentReaction={post?.reaction_type}
                   />
                 </div>
+
+                {post?.likes > 0 && (
+                  <div 
+                    className="flex items-center gap-1 cursor-pointer"
+                    onClick={() => post?.likes > 0 && navigate(`/pagcurtidas/${id}`)}
+                  >
+                    <div className="flex -space-x-2 overflow-hidden">
+                      {reactionSummary?.byType && Object.keys(reactionSummary.byType).slice(0, 3).map((type, index) => (
+                        <img 
+                          key={type} 
+                          src={getReactionIcon(type)} 
+                          alt={type}
+                          className="inline-block h-6 w-6 rounded-full ring-2 ring-white"
+                          style={{ zIndex: 3 - index }}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-sm text-blue-500 hover:underline">
+                      {reactionSummary?.currentUserReaction && post?.likes > 1 ? (
+                        <span>Você e outras {post.likes - 1} pessoas</span>
+                      ) : reactionSummary?.currentUserReaction ? (
+                        <span>Você</span>
+                      ) : post?.likes > 0 ? (
+                        <span>{post.likes} pessoas</span>
+                      ) : null}
+                    </span>
+                  </div>
+                )}
 
                 <button 
                   className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
