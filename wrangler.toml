@@ -19,3 +19,8 @@ format = "service-worker"
 
 [env.production]
 NODE_VERSION = "18"
+
+# Adicionar configuração específica para SPA
+[[routes]]
+pattern = "/*"
+script = "src/_worker.js"
