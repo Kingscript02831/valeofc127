@@ -450,11 +450,17 @@ const PostDetails = () => {
               <div className="flex items-center justify-between mt-4 pt-4 border-t border-border/40">
                 <div className="relative">
                   <button
-                    className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                    className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                     onClick={() => setActiveReactionMenu(activeReactionMenu === post?.id ? null : post?.id)}
                   >
-                    {post?.reaction_type ? getReactionIcon(post.reaction_type) : (
-                      <img src="/curtidas.png" alt="Curtir" className="w-5 h-5" />
+                    {post?.reaction_type ? (
+                      <img 
+                        src={getReactionIcon(post.reaction_type)} 
+                        alt={post.reaction_type} 
+                        className="w-6 h-6"
+                      />
+                    ) : (
+                      <img src="/curtidas1.png" alt="Reagir" className="w-6 h-6 opacity-70" />
                     )}
                     <span className={post?.reaction_type ? 'text-blue-500' : 'text-muted-foreground'}>
                       {post?.likes || 0}
@@ -469,7 +475,7 @@ const PostDetails = () => {
                 </div>
 
                 <button 
-                  className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                  className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                 >
                   <img src="/comentario.png" alt="Comentários" className="w-5 h-5" />
                   <span className="text-sm text-muted-foreground">
@@ -478,14 +484,14 @@ const PostDetails = () => {
                 </button>
 
                 <button
-                  className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                  className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                   onClick={handleWhatsAppShare}
                 >
                   <img src="/whatsapp.png" alt="WhatsApp" className="w-5 h-5" />
                 </button>
 
                 <button
-                  className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                  className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                   onClick={handleShare}
                 >
                   <img src="/compartilharlink.png" alt="Compartilhar" className="w-5 h-5" />

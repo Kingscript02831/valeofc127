@@ -25,7 +25,7 @@ const ReactionMenu = ({ isOpen, onSelect, currentReaction }: ReactionMenuProps) 
 
   return (
     <div className={cn(
-      "absolute bottom-full left-0 mb-2 flex gap-1 p-2 rounded-full bg-background/95 border border-border/40 shadow-lg transition-all duration-200",
+      "absolute bottom-full left-0 mb-2 p-4 rounded-3xl bg-gray-900/95 border border-gray-800 shadow-lg transition-all duration-200 grid grid-cols-3 gap-x-8 gap-y-4 z-50",
       isOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
     )}>
       {reactionsList.map(({ emoji, type, label }) => (
@@ -33,15 +33,19 @@ const ReactionMenu = ({ isOpen, onSelect, currentReaction }: ReactionMenuProps) 
           key={type}
           onClick={() => onSelect(type)}
           className={cn(
-            "flex flex-col items-center p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-all text-xl",
+            "flex flex-col items-center gap-2 transition-all",
             "group relative",
-            currentReaction === type && "bg-gray-100 dark:bg-gray-800"
+            currentReaction === type && "scale-110"
           )}
         >
-          <span className="transition-transform group-hover:scale-125">
-            {emoji}
-          </span>
-          <span className="absolute -bottom-8 text-xs bg-gray-800 text-white px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="w-14 h-14 flex items-center justify-center">
+            <img 
+              src={emoji} 
+              alt={label} 
+              className="w-12 h-12 transition-transform group-hover:scale-125"
+            />
+          </div>
+          <span className="text-gray-300 text-sm">
             {label}
           </span>
         </button>
