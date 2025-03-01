@@ -33,10 +33,10 @@ const ReactionMenu = ({ isOpen, onSelect, currentReaction }: ReactionMenuProps) 
 
   return (
     <div className={cn(
-      "absolute bottom-full left-1/2 -translate-x-1/2 mb-2 p-3 rounded-xl bg-gray-900/95 border border-gray-800 shadow-lg transition-all duration-200 z-[100]",
+      "absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-4 py-3 rounded-xl bg-gray-900/95 border border-gray-800 shadow-lg transition-all duration-200 z-[100] mx-auto",
       isOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
     )}>
-      <div className="flex overflow-x-auto pb-2 px-1 space-x-3 min-w-[300px] max-w-[95vw] scrollbar-hide">
+      <div className="flex overflow-x-auto pb-2 px-2 space-x-4 min-w-[300px] max-w-[90vw] scrollbar-hide">
         {reactionsList.map(({ emoji, type, label }) => (
           <button
             key={type}
