@@ -57,10 +57,10 @@ const ReactionMenu = ({ isOpen, onSelect, currentReaction }: ReactionMenuProps) 
 
   return (
     <div className={cn(
-      "reaction-menu absolute bottom-full mb-2 p-3 rounded-xl bg-gray-900/95 border border-gray-800 shadow-lg transition-all duration-200",
+      "reaction-menu p-3 rounded-xl bg-gray-900/95 border border-gray-800 shadow-lg transition-all duration-200",
       isOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
     )}>
-      <div className="flex overflow-x-auto pb-2 px-1 space-x-3 scrollbar-hide" style={{ minWidth: '300px', maxWidth: '95vw' }}>
+      <div className="flex justify-center overflow-x-auto pb-2 px-1 space-x-4 scrollbar-hide" style={{ minWidth: '300px', maxWidth: '95vw' }}>
         {reactionsList.map(({ emoji, type, label }) => (
           <button
             key={type}

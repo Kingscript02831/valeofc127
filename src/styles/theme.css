@@ -1,4 +1,3 @@
-
 @layer base {
   :root {
     --background: 0 0% 98%;
@@ -100,31 +99,35 @@
   }
 
   .reaction-menu {
-    @apply z-50 shadow-xl fixed left-1/2 transform -translate-x-1/2 mx-auto;
+    @apply z-50 shadow-xl fixed mx-auto;
+    position: fixed;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
     max-width: 95vw !important;
     width: auto !important;
-    position: absolute;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
   }
 
   .reaction-menu-enter {
     opacity: 0;
-    transform: scale(0.95);
+    transform: scale(0.95) translateX(-50%);
   }
 
   .reaction-menu-enter-active {
     opacity: 1;
-    transform: scale(1);
+    transform: scale(1) translateX(-50%);
     transition: opacity 200ms, transform 200ms;
   }
 
   .reaction-menu-exit {
     opacity: 1;
-    transform: scale(1);
+    transform: scale(1) translateX(-50%);
   }
 
   .reaction-menu-exit-active {
     opacity: 0;
-    transform: scale(0.95);
+    transform: scale(0.95) translateX(-50%);
     transition: opacity 200ms, transform 200ms;
   }
 

@@ -57,12 +57,10 @@
     @apply bg-background text-foreground antialiased;
   }
   
-  /* Força o modo claro nas páginas admin */
   [data-route^="/admin"] {
     @apply !bg-white !text-black;
   }
 
-  /* Corrige as descrições em modo escuro */
   .dark textarea,
   .dark input[type="text"],
   .dark input[type="search"],
@@ -70,22 +68,18 @@
     @apply bg-background text-foreground border-border;
   }
 
-  /* Ajusta os cartões em modo escuro */
   .dark .card-content {
     @apply bg-background text-foreground border-border;
   }
 
-  /* Ajusta os botões em modo escuro */
   .dark .button-default {
     @apply bg-accent text-accent-foreground hover:bg-accent/90;
   }
 
-  /* Ajusta a página de produtos em modo escuro */
   .dark [data-route="/products"] {
     @apply bg-black;
   }
 
-  /* Ajustes do menu em modo escuro */
   .dark .menu-item {
     @apply hover:bg-accent/20;
   }
@@ -94,7 +88,6 @@
     @apply bg-primary/20;
   }
   
-  /* Fix for icon visibility in light mode */
   .light img[src*="curtidas.png"],
   .light img[src*="comentario.png"],
   .light img[src*="compartilharlink.png"],
@@ -106,7 +99,6 @@
     filter: invert(0.5) brightness(0.7);
   }
   
-  /* More compact UI */
   .compact-ui button {
     @apply text-sm py-1.5 px-3;
   }
@@ -173,7 +165,6 @@
   animation: bounce 2s infinite ease-in-out;
 }
 
-/* Compact post card styles */
 .post-card {
   @apply mb-3;
 }
@@ -194,21 +185,32 @@
   @apply text-sm;
 }
 
-/* Post action buttons */
 .post-action {
   @apply flex items-center justify-center gap-1 py-1.5 px-3 rounded-xl transition-colors text-sm;
 }
 
-/* Post profile section */
 .post-profile {
   @apply flex items-center gap-2;
 }
 
-/* Centralização e largura máxima do menu de reação */
 .reaction-menu {
   margin-left: auto !important;
   margin-right: auto !important;
   left: 50% !important;
   transform: translateX(-50%) !important;
   width: auto !important;
+  max-width: 95vw !important;
+  position: fixed !important;
+  z-index: 100 !important;
+}
+
+.reaction-emoji {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+.reaction-menu button {
+  min-width: 60px;
+  padding: 8px;
 }
