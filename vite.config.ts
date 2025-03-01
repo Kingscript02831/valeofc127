@@ -43,7 +43,6 @@ export default defineConfig(async ({ mode }) => {
     console.log("Using PWA icon:", pwaConfig.pwa_app_icon);
   }
 
-  // Definir os tipos corretos para as propriedades do manifesto
   const manifestConfig = {
     registerType: "autoUpdate" as const,
     includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
@@ -53,7 +52,7 @@ export default defineConfig(async ({ mode }) => {
       description: pwaConfig?.pwa_description || 'Seu app de notícias local',
       theme_color: pwaConfig?.pwa_theme_color || '#000000',
       background_color: pwaConfig?.pwa_background_color || '#ffffff',
-      display: 'standalone' as const, // Corrigido o tipo aqui
+      display: 'standalone',
       icons: [
         {
           src: pwaConfig?.pwa_app_icon || '/pwa-192x192.png',
@@ -98,18 +97,5 @@ export default defineConfig(async ({ mode }) => {
         "@": path.resolve(__dirname, "./src"),
       },
     },
-    build: {
-      outDir: 'dist',
-      sourcemap: true,
-      minify: true,
-      // Ajustes para Cloudflare Pages e Netlify
-      rollupOptions: {
-        output: {
-          manualChunks: {
-            vendor: ['react', 'react-dom', 'react-router-dom'],
-          }
-        }
-      }
-    }
   }
 });
