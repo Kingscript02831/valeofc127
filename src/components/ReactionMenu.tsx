@@ -33,7 +33,7 @@ const ReactionMenu = ({ isOpen, onSelect, currentReaction }: ReactionMenuProps) 
 
   return (
     <div className={cn(
-      "absolute bottom-full left-0 mb-2 p-6 rounded-3xl bg-gray-900/95 border border-gray-800 shadow-lg transition-all duration-200 z-50 w-[450px]",
+      "fixed bottom-full left-0 md:absolute mb-3 p-6 rounded-3xl bg-gray-900/95 border border-gray-800 shadow-lg transition-all duration-200 z-50 w-[450px] max-w-[90vw] reaction-menu",
       isOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
     )}>
       <div className="grid grid-cols-3 gap-6">
