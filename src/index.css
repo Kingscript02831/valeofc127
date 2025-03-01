@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -203,4 +202,13 @@
 /* Post profile section */
 .post-profile {
   @apply flex items-center gap-2;
+}
+
+/* Centralização e largura máxima do menu de reação */
+.reaction-menu {
+  margin-left: auto !important;
+  margin-right: auto !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: auto !important;
 }

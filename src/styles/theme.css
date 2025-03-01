@@ -100,7 +100,10 @@
   }
 
   .reaction-menu {
-    @apply z-50 shadow-xl;
+    @apply z-50 shadow-xl fixed left-1/2 transform -translate-x-1/2 mx-auto;
+    max-width: 95vw !important;
+    width: auto !important;
+    position: absolute;
   }
 
   .reaction-menu-enter {
