@@ -1,4 +1,24 @@
 
+// Pre-load images when the module is imported
+const preloadImages = () => {
+  const imageUrls = [
+    '/curtidas1.png',
+    '/amei1.png',
+    '/haha1.png',
+    '/uau1.png',
+    '/triste1.png',
+    '/ggr1.png',
+  ];
+
+  imageUrls.forEach(url => {
+    const img = new Image();
+    img.src = url;
+  });
+};
+
+// Start pre-loading
+preloadImages();
+
 export const getReactionIcon = (type: string) => {
   switch (type) {
     case 'like':
