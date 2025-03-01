@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { cn } from '../lib/utils';
 import { reactionsList } from '../utils/emojisPosts';
 
@@ -11,7 +11,22 @@ interface ReactionMenuProps {
 
 const ReactionMenu = ({ isOpen, onSelect, currentReaction }: ReactionMenuProps) => {
   const [mounted, setMounted] = useState(false);
+  const [position, setPosition] = useState<'top' | 'bottom'>('top');
+  const menuRef = useRef<HTMLDivElement>(null);
 
+  // Verifica se o menu cabe acima do botão, senão posiciona abaixo
+  useEffect(() => {
+    if (isOpen && menuRef.current) {
+      const rect = menuRef.current.getBoundingClientRect();
+      if (rect.top < 0) {
+        setPosition('bottom');
+      } else {
+        setPosition('top');
+      }
+    }
+  }, [isOpen]);
+
+  // Controla a montagem/desmontagem do componente para animação
   useEffect(() => {
     if (isOpen) {
       setMounted(true);
@@ -21,14 +36,31 @@ const ReactionMenu = ({ isOpen, onSelect, currentReaction }: ReactionMenuProps) 
     }
   }, [isOpen]);
 
+  // Pré-carrega as imagens das reações para melhorar o tempo de carregamento
+  useEffect(() => {
+    reactionsList.forEach(({ emoji }) => {
+      const img = new Image();
+      img.src = emoji;
+    });
+  }, []);
+
   if (!mounted) return null;
 
   return (
-    <div className={cn(
-      "absolute bottom-full left-0 mb-2 p-4 rounded-xl bg-gray-900/95 border border-gray-800 shadow-lg transition-all duration-200 z-50 w-[320px]",
-      isOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
-    )}>
-      <div className="grid grid-cols-3 gap-4">
+    <div 
+      ref={menuRef}
+      className={cn(
+        "absolute z-50 p-3 rounded-xl bg-gray-900/95 border border-gray-800 shadow-lg transition-all duration-200 w-[320px]",
+        position === 'top' ? 'bottom-full mb-2' : 'top-full mt-2',
+        isOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+      )}
+      style={{ 
+        maxWidth: '95vw',
+        left: '50%',
+        transform: `translateX(-50%) scale(${isOpen ? '1' : '0.95'})`,
+      }}
+    >
+      <div className="grid grid-cols-3 gap-3">
         {reactionsList.map(({ emoji, type, label }) => (
           <button
             key={type}
@@ -41,7 +73,8 @@ const ReactionMenu = ({ isOpen, onSelect, currentReaction }: ReactionMenuProps) 
             <img 
               src={emoji} 
               alt={label} 
-              className="w-10 h-10 mb-2"
+              className="w-10 h-10 mb-1"
+              loading="eager"
             />
             <span className="text-gray-300 text-xs font-medium text-center whitespace-nowrap">
               {label}
