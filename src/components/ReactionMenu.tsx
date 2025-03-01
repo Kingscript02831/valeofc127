@@ -11,6 +11,7 @@ interface ReactionMenuProps {
 
 const ReactionMenu = ({ isOpen, onSelect, currentReaction }: ReactionMenuProps) => {
   const [mounted, setMounted] = useState(false);
+  const [imagesLoaded, setImagesLoaded] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -23,10 +24,33 @@ const ReactionMenu = ({ isOpen, onSelect, currentReaction }: ReactionMenuProps) 
 
   // Preload images for faster loading
   useEffect(() => {
+    let loadedCount = 0;
+    const totalImages = reactionsList.length;
+    
     reactionsList.forEach(({ emoji }) => {
       const img = new Image();
+      img.onload = () => {
+        loadedCount++;
+        if (loadedCount === totalImages) {
+          setImagesLoaded(true);
+        }
+      };
+      img.onerror = () => {
+        console.error(`Failed to load emoji: ${emoji}`);
+        loadedCount++;
+        if (loadedCount === totalImages) {
+          setImagesLoaded(true);
+        }
+      };
       img.src = emoji;
     });
+    
+    // Fallback in case images don't load
+    const timeout = setTimeout(() => {
+      if (!imagesLoaded) setImagesLoaded(true);
+    }, 2000);
+    
+    return () => clearTimeout(timeout);
   }, []);
 
   if (!mounted) return null;
@@ -49,7 +73,7 @@ const ReactionMenu = ({ isOpen, onSelect, currentReaction }: ReactionMenuProps) 
             <img 
               src={emoji} 
               alt={label} 
-              className="w-10 h-10 mb-1"
+              className="w-10 h-10 mb-1 reaction-emoji"
               loading="eager"
             />
             <span className="text-gray-300 text-xs font-medium text-center whitespace-nowrap">

@@ -43,6 +43,7 @@ const Posts: React.FC = () => {
   const queryClient = useQueryClient();
   const [activeReactionMenu, setActiveReactionMenu] = useState<string | null>(null);
   const [followingUsers, setFollowingUsers] = useState<Record<string, boolean>>({});
+  const [reactionsLoading, setReactionsLoading] = useState(true);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -83,6 +84,7 @@ const Posts: React.FC = () => {
     queryKey: ['posts'],
     queryFn: async () => {
       try {
+        setReactionsLoading(true);
         let query = supabase
           .from('posts')
           .select(`
@@ -113,8 +115,10 @@ const Posts: React.FC = () => {
           comment_count: post.post_comments?.length || 0
         }));
 
+        setReactionsLoading(false);
         return postsWithCounts;
       } catch (error) {
+        setReactionsLoading(false);
         console.error('Error fetching posts:', error);
         return [];
       }
@@ -414,16 +418,30 @@ const Posts: React.FC = () => {
                         className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                         onClick={() => setActiveReactionMenu(activeReactionMenu === post.id ? null : post.id)}
                       >
-                        {post.reaction_type ? (
+                        {reactionsLoading ? (
+                          <div className="w-5 h-5 rounded-full animate-pulse bg-gray-300 dark:bg-gray-600"></div>
+                        ) : post.reaction_type ? (
                           <img 
                             src={getReactionIcon(post.reaction_type)} 
                             alt={post.reaction_type} 
                             className="w-5 h-5"
+                            onError={(e) => {
+                              console.error(`Failed to load reaction icon: ${getReactionIcon(post.reaction_type)}`);
+                              (e.target as HTMLImageElement).src = "/curtidas.png";
+                            }}
                           />
                         ) : (
-                          <img src="/curtidas.png" alt="Curtir" className="w-5 h-5" />
+                          <img 
+                            src="/curtidas.png" 
+                            alt="Curtir" 
+                            className="w-5 h-5"
+                            onError={(e) => {
+                              console.error("Failed to load default like icon");
+                              (e.target as HTMLImageElement).src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z'%3E%3C/path%3E%3C/svg%3E";
+                            }}
+                          />
                         )}
-                        <span className={`text-sm ${post.reaction_type ? 'text-blue-500' : 'text-muted-foreground'}`}>
+                        <span className={`text-sm ${reactionsLoading ? 'text-gray-400' : (post.reaction_type ? 'text-blue-500' : 'text-muted-foreground')}`}>
                           {post.likes || 0}
                         </span>
                       </button>
@@ -432,6 +450,7 @@ const Posts: React.FC = () => {
                         <ReactionMenu
                           isOpen={activeReactionMenu === post.id}
                           onSelect={(type) => handleReaction(post.id, type)}
+                          currentReaction={post.reaction_type}
                         />
                       </div>
                     </div>
