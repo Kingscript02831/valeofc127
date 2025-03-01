@@ -1,4 +1,3 @@
-
 @layer base {
   :root {
     --background: 0 0% 98%;
@@ -127,37 +126,54 @@
   @apply w-4 h-4;
 }
 
-/* Reduzir o espaçamento entre os posts */
+/* Reaction menu styles */
+.reaction-menu {
+  @apply max-w-[360px] min-w-[320px]; 
+}
+
+.reaction-menu-grid {
+  @apply grid-cols-3 gap-2;
+}
+
+.reaction-button {
+  @apply flex flex-col items-center p-1;
+}
+
+.reaction-emoji {
+  @apply w-10 h-10;
+}
+
+/* Post spacing */
 .post-card {
   @apply mb-3;
 }
 
-/* Reduzir o tamanho dos avatares */
+/* Compact avatars */
 .compact-avatar {
   @apply w-9 h-9;
 }
 
-/* Ajustar o tamanho dos botões de ação */
+/* Action buttons */
 .action-button {
   @apply py-1.5 px-3 text-sm;
 }
 
-/* Estilização para o botão de seguir */
+/* Follow button */
 .follow-button {
   @apply py-1 px-4 text-xs font-medium rounded-full h-8;
 }
 
-/* Estilos para WhatsApp com fundo consistente */
+/* WhatsApp button */
 .whatsapp-button {
   @apply bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700;
 }
 
-/* Estilização para textos de localização */
+/* Location text */
 .location-text {
   @apply text-xs text-muted-foreground;
 }
 
-/* Reduzir o texto de localização */
+/* Location display */
 .location-display {
   @apply text-xs font-medium flex items-center gap-1;
 }
