@@ -114,6 +114,7 @@ const Posts: React.FC = () => {
         if (error) throw error;
 
         const postsWithCounts = postsData?.map(post => {
+          // Get reaction counts by type
           const reactionsByType: Record<string, number> = {};
           post.post_reactions?.forEach((reaction: any) => {
             if (!reactionsByType[reaction.reaction_type]) {
@@ -122,6 +123,7 @@ const Posts: React.FC = () => {
             reactionsByType[reaction.reaction_type]++;
           });
 
+          // Get user's reaction if any
           const userReaction = post.post_reactions?.find((r: any) => r.user_id === currentUser?.id)?.reaction_type;
 
           return {
@@ -430,34 +432,6 @@ const Posts: React.FC = () => {
                     </div>
                   )}
 
-                  {post.likes > 0 && (
-                    <div 
-                      className="flex items-center gap-2 px-3 mt-3 mb-2 bg-gray-100 dark:bg-gray-800 rounded-lg p-2 mx-3 cursor-pointer"
-                      onClick={() => post.likes > 0 && navigate(`/pagcurtidas/${post.id}`)}
-                    >
-                      <div className="flex -space-x-2 overflow-hidden">
-                        {post.reactionsByType && Object.keys(post.reactionsByType).slice(0, 3).map((type, index) => (
-                          <img 
-                            key={type} 
-                            src={getReactionIcon(type)} 
-                            alt={type}
-                            className="inline-block h-6 w-6 rounded-full ring-2 ring-white dark:ring-gray-800"
-                            style={{ zIndex: 3 - index }}
-                          />
-                        ))}
-                      </div>
-                      <span className="text-sm hover:underline">
-                        {post.reaction_type && post.likes > 1 ? (
-                          <span>Você e outras {post.likes - 1} pessoas</span>
-                        ) : post.reaction_type ? (
-                          <span>Você</span>
-                        ) : post.likes > 0 ? (
-                          <span>{post.likes} pessoas</span>
-                        ) : null}
-                      </span>
-                    </div>
-                  )}
-
                   <div className="flex items-center justify-between p-2 mt-2 border-t border-border/40 relative">
                     <div className="relative">
                       <button
@@ -497,6 +471,35 @@ const Posts: React.FC = () => {
                         />
                       </div>
                     </div>
+
+                    {/* Display reaction counts with icons */}
+                    {post.likes > 0 && (
+                      <div 
+                        className="flex items-center gap-1 cursor-pointer absolute left-0 -top-7 bg-gray-800/80 text-white rounded-full py-1 px-3"
+                        onClick={() => post.likes > 0 && navigate(`/pagcurtidas/${post.id}`)}
+                      >
+                        <div className="flex -space-x-2 overflow-hidden">
+                          {post.reactionsByType && Object.keys(post.reactionsByType).slice(0, 2).map((type, index) => (
+                            <img 
+                              key={type} 
+                              src={getReactionIcon(type)} 
+                              alt={type}
+                              className="inline-block h-6 w-6 rounded-full ring-2 ring-white dark:ring-gray-800"
+                              style={{ zIndex: 3 - index }}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-sm text-white hover:underline reaction-count">
+                          {post.reaction_type && post.likes > 1 ? (
+                            <span>Você e outras {post.likes - 1} pessoas</span>
+                          ) : post.reaction_type ? (
+                            <span>Você</span>
+                          ) : post.likes > 0 ? (
+                            <span>{post.likes} pessoas</span>
+                          ) : null}
+                        </span>
+                      </div>
+                    )}
 
                     <button 
                       onClick={() => navigate(`/posts/${post.id}`)}
