@@ -195,12 +195,12 @@ const PostDetails = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('post_reactions')
-        .select('reaction_type, user:user_id(username, full_name)')
+        .select('reaction_type, user:user_id(username, full_name, avatar_url)')
         .eq('post_id', id);
 
       if (error) throw error;
       
-      const reactionGroups: Record<string, {count: number, users: {username: string, full_name: string}[]}> = {};
+      const reactionGroups: Record<string, {count: number, users: {username: string, full_name: string, avatar_url: string}[]}> = {};
       
       data.forEach(reaction => {
         if (!reactionGroups[reaction.reaction_type]) {
@@ -483,6 +483,34 @@ const PostDetails = () => {
                 />
               )}
 
+              {post?.likes > 0 && (
+                <div 
+                  className="flex items-center gap-2 mt-3 bg-gray-100 dark:bg-gray-800 rounded-lg p-2 cursor-pointer"
+                  onClick={() => post?.likes > 0 && navigate(`/pagcurtidas/${id}`)}
+                >
+                  <div className="flex -space-x-2 overflow-hidden">
+                    {reactionSummary?.byType && Object.keys(reactionSummary.byType).slice(0, 3).map((type, index) => (
+                      <img 
+                        key={type} 
+                        src={getReactionIcon(type)} 
+                        alt={type}
+                        className="inline-block h-6 w-6 rounded-full ring-2 ring-white dark:ring-gray-800"
+                        style={{ zIndex: 3 - index }}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-sm hover:underline">
+                    {reactionSummary?.currentUserReaction && post?.likes > 1 ? (
+                      <span>Você e outras {post.likes - 1} pessoas</span>
+                    ) : reactionSummary?.currentUserReaction ? (
+                      <span>Você</span>
+                    ) : post?.likes > 0 ? (
+                      <span>{post.likes} pessoas</span>
+                    ) : null}
+                  </span>
+                </div>
+              )}
+
               <div className="flex items-center justify-between mt-4 pt-4 border-t border-border/40">
                 <div className="relative">
                   <button
@@ -506,34 +534,6 @@ const PostDetails = () => {
                     currentReaction={post?.reaction_type}
                   />
                 </div>
-
-                {post?.likes > 0 && (
-                  <div 
-                    className="flex items-center gap-1 cursor-pointer absolute left-0 -top-7 bg-gray-800/80 text-white rounded-full py-1 px-3"
-                    onClick={() => post?.likes > 0 && navigate(`/pagcurtidas/${id}`)}
-                  >
-                    <div className="flex -space-x-2 overflow-hidden">
-                      {reactionSummary?.byType && Object.keys(reactionSummary.byType).slice(0, 3).map((type, index) => (
-                        <img 
-                          key={type} 
-                          src={getReactionIcon(type)} 
-                          alt={type}
-                          className="inline-block h-6 w-6 rounded-full ring-2 ring-white"
-                          style={{ zIndex: 3 - index }}
-                        />
-                      ))}
-                    </div>
-                    <span className="text-sm text-white hover:underline">
-                      {reactionSummary?.currentUserReaction && post?.likes > 1 ? (
-                        <span>Você e outras {post.likes - 1} pessoas</span>
-                      ) : reactionSummary?.currentUserReaction ? (
-                        <span>Você</span>
-                      ) : post?.likes > 0 ? (
-                        <span>{post.likes} pessoas</span>
-                      ) : null}
-                    </span>
-                  </div>
-                )}
 
                 <button 
                   className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
