@@ -2,27 +2,30 @@
 export const getReactionIcon = (type: string) => {
   switch (type) {
     case 'like':
-      return '👍';
+      return '/curtidas1.png';
     case 'love':
-      return '❤️';
+      return '/amei1.png';
     case 'haha':
-      return '😂';
+      return '/haha1.png';
     case 'fire':
-      return '🔥';
+      return '/forca1.png';
+    case 'uau':
+      return '/uau1.png';
     case 'sad':
-      return '🥲';
+      return '/triste1.png';
     case 'angry':
-      return '🤬';
+      return '/ggr1.png';
     default:
-      return '👍';
+      return '/curtidas1.png';
   }
 };
 
 export const reactionsList = [
-  { emoji: '👍', type: 'like', label: 'Curtir' },
-  { emoji: '❤️', type: 'love', label: 'Amei' },
-  { emoji: '😂', type: 'haha', label: 'Haha' },
-  { emoji: '🔥', type: 'fire', label: 'Fogo' },
-  { emoji: '🥲', type: 'sad', label: 'Triste' },
-  { emoji: '🤬', type: 'angry', label: 'Grr' },
+  { emoji: '/curtidas1.png', type: 'like', label: 'Curtir' },
+  { emoji: '/amei1.png', type: 'love', label: 'Amei' },
+  { emoji: '/haha1.png', type: 'haha', label: 'Haha' },
+  { emoji: '/forca1.png', type: 'fire', label: 'Fogo' },
+  { emoji: '/uau1.png', type: 'uau', label: 'Uau' },
+  { emoji: '/triste1.png', type: 'sad', label: 'Triste' },
+  { emoji: '/ggr1.png', type: 'angry', label: 'Grr' },
 ];
