@@ -1,15 +1,15 @@
 
 import { useParams, useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "../integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card } from "@/components/ui/card";
-import BottomNav from "@/components/BottomNav";
-import { getReactionIcon } from "@/utils/emojisPosts";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
+import { Card } from "../components/ui/card";
+import BottomNav from "../components/BottomNav";
+import { getReactionIcon } from "../utils/emojisPosts";
 import { ArrowLeft } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "../components/ui/skeleton";
 
 interface UserReaction {
   user: {
@@ -55,7 +55,24 @@ const PagCurtidas = () => {
       try {
         console.log("Fetching reactions for post ID:", id);
         
-        // Alterando a consulta para usar o relacionamento correto com profiles
+        // Verificando se o post_id existe na tabela post_reactions
+        const { count, error: countError } = await supabase
+          .from('post_reactions')
+          .select('*', { count: 'exact', head: true })
+          .eq('post_id', id);
+          
+        if (countError) {
+          console.error("Error checking reactions count:", countError);
+          return [];
+        }
+        
+        console.log(`Found ${count} reactions for post ID: ${id}`);
+        
+        if (count === 0) {
+          return [];
+        }
+        
+        // Buscando as reações com informações do usuário
         const { data, error } = await supabase
           .from('post_reactions')
           .select(`
@@ -63,7 +80,7 @@ const PagCurtidas = () => {
             reaction_type,
             created_at,
             user_id,
-            profiles:profiles(
+            user:profiles!post_reactions_user_id_fkey(
               id,
               username,
               full_name,
@@ -83,10 +100,10 @@ const PagCurtidas = () => {
         // Formatando os dados para o formato esperado pela interface
         const formattedData = data.map(item => ({
           user: {
-            id: item.profiles?.id || item.user_id,
-            username: item.profiles?.username || "usuário",
-            full_name: item.profiles?.full_name || "Usuário",
-            avatar_url: item.profiles?.avatar_url || ""
+            id: item.user?.id || item.user_id,
+            username: item.user?.username || "usuário",
+            full_name: item.user?.full_name || "Usuário",
+            avatar_url: item.user?.avatar_url || ""
           },
           reaction_type: item.reaction_type,
           created_at: item.created_at
