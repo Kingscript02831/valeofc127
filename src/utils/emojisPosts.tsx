@@ -24,5 +24,5 @@ export const reactionsList = [
   { emoji: '/haha1.png', type: 'haha', label: 'Haha' },
   { emoji: '/uau1.png', type: 'wow', label: 'Uau' },
   { emoji: '/triste1.png', type: 'sad', label: 'Triste' },
-  { emoji: '/ggr1.png', type: 'angry', label: 'Grr' },
+  { emoji: '/ggr1.png', type: 'angry', label: 'Grr' }
 ];
