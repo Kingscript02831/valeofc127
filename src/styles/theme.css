@@ -170,9 +170,10 @@
     @apply cursor-pointer hover:underline text-sm;
   }
 
-  /* Reaction count display */
+  /* Reaction count display - updated position */
   .reaction-counter {
-    @apply absolute left-0 -top-7 bg-gray-800/80 dark:bg-gray-800/95 text-white rounded-full py-1 px-3 flex items-center gap-1 transition-all;
+    @apply absolute left-0 bg-gray-800/80 dark:bg-gray-800/95 text-white rounded-full py-1 px-3 flex items-center gap-1 transition-all;
+    bottom: 40px; /* Position above the buttons instead of on top of content */
     z-index: 10;
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
   }
