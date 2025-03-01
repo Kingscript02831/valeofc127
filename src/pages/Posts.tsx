@@ -1,23 +1,22 @@
-
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
-import { MediaCarousel } from "@/components/MediaCarousel";
-import Navbar from "@/components/Navbar";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { supabase } from "../integrations/supabase/client";
+import { Card, CardContent } from "../components/ui/card";
+import { useToast } from "../hooks/use-toast";
+import { MediaCarousel } from "../components/MediaCarousel";
+import Navbar from "../components/Navbar";
+import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
-import ReactionMenu from "@/components/ReactionMenu";
-import BottomNav from "@/components/BottomNav";
+import ReactionMenu from "../components/ReactionMenu";
+import BottomNav from "../components/BottomNav";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { getReactionIcon } from "@/utils/emojisPosts";
-import Tags from "@/components/Tags";
-import { Button } from "@/components/ui/button";
+import { getReactionIcon } from "../utils/emojisPosts";
+import Tags from "../components/Tags";
+import { Button } from "../components/ui/button";
 import { UserPlus, UserCheck, MoreVertical } from "lucide-react";
 import { toast } from "sonner";
-import LocationDisplay from "@/components/locpost";
+import LocationDisplay from "../components/locpost";
 
 interface Post {
   id: string;
@@ -30,6 +29,7 @@ interface Post {
   created_at: string;
   user_has_liked?: boolean;
   comment_count: number;
+  reactionsByType?: Record<string, number>;
   user: {
     username: string;
     full_name: string;
@@ -432,7 +432,7 @@ const Posts: React.FC = () => {
                     </div>
                   )}
 
-                  <div className="flex items-center justify-between p-2 mt-2 border-t border-border/40">
+                  <div className="flex items-center justify-between p-2 mt-2 border-t border-border/40 relative">
                     <div className="relative">
                       <button
                         className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
@@ -475,11 +475,11 @@ const Posts: React.FC = () => {
                     {/* Display reaction counts with icons */}
                     {post.likes > 0 && (
                       <div 
-                        className="flex items-center gap-1 cursor-pointer"
+                        className="flex items-center gap-1 cursor-pointer absolute left-0 -top-7 bg-gray-800/80 text-white rounded-full py-1 px-3"
                         onClick={() => post.likes > 0 && navigate(`/pagcurtidas/${post.id}`)}
                       >
                         <div className="flex -space-x-2 overflow-hidden">
-                          {post.reactionsByType && Object.keys(post.reactionsByType).slice(0, 3).map((type, index) => (
+                          {post.reactionsByType && Object.keys(post.reactionsByType).slice(0, 2).map((type, index) => (
                             <img 
                               key={type} 
                               src={getReactionIcon(type)} 
@@ -489,7 +489,7 @@ const Posts: React.FC = () => {
                             />
                           ))}
                         </div>
-                        <span className="text-sm text-blue-500 hover:underline reaction-count">
+                        <span className="text-sm text-white hover:underline reaction-count">
                           {post.reaction_type && post.likes > 1 ? (
                             <span>Você e outras {post.likes - 1} pessoas</span>
                           ) : post.reaction_type ? (

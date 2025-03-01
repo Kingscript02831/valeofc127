@@ -3,14 +3,14 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
+import { Card } from "../components/ui/card";
 import Navbar from "../components/Navbar";
 import BottomNav from "../components/BottomNav";
 import { getReactionIcon } from "../utils/emojisPosts";
 import { ArrowLeft } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "../components/ui/skeleton";
 
 interface UserReaction {
   user: {
@@ -157,33 +157,33 @@ const PagCurtidas = () => {
 
             <TabsContent value={activeTab} className="mt-0">
               <div className="space-y-4">
-                {filteredReactions?.map((reaction) => (
-                  <div 
-                    key={reaction.user.id} 
-                    className="flex items-center justify-between"
-                    onClick={() => navigate(`/perfil/${reaction.user.username}`)}
-                  >
-                    <div className="flex items-center gap-3 cursor-pointer">
-                      <Avatar>
-                        <AvatarImage src={reaction.user.avatar_url} />
-                        <AvatarFallback>
-                          {reaction.user.full_name?.charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <h3 className="font-medium">{reaction.user.full_name}</h3>
-                        <p className="text-sm text-muted-foreground">@{reaction.user.username}</p>
+                {filteredReactions && filteredReactions.length > 0 ? (
+                  filteredReactions.map((reaction) => (
+                    <div 
+                      key={reaction.user.id} 
+                      className="flex items-center justify-between cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 p-2 rounded-lg transition-colors"
+                      onClick={() => navigate(`/perfil/${reaction.user.username}`)}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Avatar>
+                          <AvatarImage src={reaction.user.avatar_url} />
+                          <AvatarFallback>
+                            {reaction.user.full_name?.charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <h3 className="font-medium">{reaction.user.full_name}</h3>
+                          <p className="text-sm text-muted-foreground">@{reaction.user.username}</p>
+                        </div>
                       </div>
+                      <img 
+                        src={getReactionIcon(reaction.reaction_type)} 
+                        alt={reaction.reaction_type} 
+                        className="w-6 h-6"
+                      />
                     </div>
-                    <img 
-                      src={getReactionIcon(reaction.reaction_type)} 
-                      alt={reaction.reaction_type} 
-                      className="w-6 h-6"
-                    />
-                  </div>
-                ))}
-
-                {filteredReactions?.length === 0 && (
+                  ))
+                ) : (
                   <p className="text-center text-muted-foreground py-6">
                     Nenhuma reação encontrada
                   </p>

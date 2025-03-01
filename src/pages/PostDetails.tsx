@@ -509,7 +509,7 @@ const PostDetails = () => {
 
                 {post?.likes > 0 && (
                   <div 
-                    className="flex items-center gap-1 cursor-pointer"
+                    className="flex items-center gap-1 cursor-pointer absolute left-0 -top-7 bg-gray-800/80 text-white rounded-full py-1 px-3"
                     onClick={() => post?.likes > 0 && navigate(`/pagcurtidas/${id}`)}
                   >
                     <div className="flex -space-x-2 overflow-hidden">
@@ -523,7 +523,7 @@ const PostDetails = () => {
                         />
                       ))}
                     </div>
-                    <span className="text-sm text-blue-500 hover:underline">
+                    <span className="text-sm text-white hover:underline">
                       {reactionSummary?.currentUserReaction && post?.likes > 1 ? (
                         <span>Você e outras {post.likes - 1} pessoas</span>
                       ) : reactionSummary?.currentUserReaction ? (

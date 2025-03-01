@@ -169,70 +169,93 @@
   .reaction-count {
     @apply cursor-pointer hover:underline text-sm;
   }
-}
 
-.card-gradient {
-  @apply bg-gradient-to-br from-card to-secondary/80 backdrop-blur-sm;
-}
+  /* Reaction count display */
+  .reaction-counter {
+    @apply absolute left-0 -top-7 bg-gray-800/80 dark:bg-gray-800/95 text-white rounded-full py-1 px-3 flex items-center gap-1 transition-all;
+    z-index: 10;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  }
+  
+  .reaction-counter:hover {
+    @apply bg-gray-800/95;
+  }
+  
+  .reaction-counter-icons {
+    @apply flex -space-x-2 overflow-hidden;
+  }
+  
+  .reaction-counter-icon {
+    @apply inline-block h-6 w-6 rounded-full ring-2 ring-white dark:ring-gray-800;
+  }
+  
+  .reaction-counter-text {
+    @apply text-sm text-white hover:underline;
+  }
 
-/* Styles for post icons in light mode */
-.light .post-icon,
-:root:not(.dark) .post-icon {
-  @apply text-gray-700 fill-gray-700;
-}
+  .card-gradient {
+    @apply bg-gradient-to-br from-card to-secondary/80 backdrop-blur-sm;
+  }
 
-/* Compact UI styles */
-.compact-ui {
-  @apply text-sm;
-}
+  /* Styles for post icons in light mode */
+  .light .post-icon,
+  :root:not(.dark) .post-icon {
+    @apply text-gray-700 fill-gray-700;
+  }
 
-.compact-ui h2 {
-  @apply text-base;
-}
+  /* Compact UI styles */
+  .compact-ui {
+    @apply text-sm;
+  }
 
-.compact-ui .post-button {
-  @apply py-1.5 px-3;
-}
+  .compact-ui h2 {
+    @apply text-base;
+  }
 
-.compact-ui .post-icon {
-  @apply w-4 h-4;
-}
+  .compact-ui .post-button {
+    @apply py-1.5 px-3;
+  }
 
-/* Reduzir o espaçamento entre os posts */
-.post-card {
-  @apply mb-3;
-}
+  .compact-ui .post-icon {
+    @apply w-4 h-4;
+  }
 
-/* Reduzir o tamanho dos avatares */
-.compact-avatar {
-  @apply w-9 h-9;
-}
+  /* Reduzir o espaçamento entre os posts */
+  .post-card {
+    @apply mb-3;
+  }
 
-/* Ajustar o tamanho dos botões de ação */
-.action-button {
-  @apply py-1.5 px-3 text-sm;
-}
+  /* Reduzir o tamanho dos avatares */
+  .compact-avatar {
+    @apply w-9 h-9;
+  }
 
-/* Estilização para o botão de seguir */
-.follow-button {
-  @apply py-1 px-4 text-xs font-medium rounded-full h-8;
-}
+  /* Ajustar o tamanho dos botões de ação */
+  .action-button {
+    @apply py-1.5 px-3 text-sm;
+  }
 
-/* Estilos para WhatsApp com fundo consistente */
-.whatsapp-button {
-  @apply bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700;
-}
+  /* Estilização para o botão de seguir */
+  .follow-button {
+    @apply py-1 px-4 text-xs font-medium rounded-full h-8;
+  }
 
-/* Estilização para textos de localização */
-.location-text {
-  @apply text-xs text-muted-foreground;
-}
+  /* Estilos para WhatsApp com fundo consistente */
+  .whatsapp-button {
+    @apply bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700;
+  }
 
-/* Reduzir o texto de localização */
-.location-display {
-  @apply text-xs font-medium flex items-center gap-1;
-}
+  /* Estilização para textos de localização */
+  .location-text {
+    @apply text-xs text-muted-foreground;
+  }
 
-.location-icon {
-  @apply h-3 w-3;
+  /* Reduzir o texto de localização */
+  .location-display {
+    @apply text-xs font-medium flex items-center gap-1;
+  }
+
+  .location-icon {
+    @apply h-3 w-3;
+  }
 }
