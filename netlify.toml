@@ -16,4 +16,3 @@
   NODE_VERSION = "18.20.6"
   NPM_VERSION = "10.8.2"
   NPM_FLAGS = "--legacy-peer-deps"
-

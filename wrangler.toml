@@ -1,5 +1,5 @@
 
-name = "valeofc"
+name = "valeofc357"
 type = "webpack"
 account_id = ""
 zone_id = ""
@@ -19,4 +19,3 @@ format = "service-worker"
 
 [env.production]
 NODE_VERSION = "18"
-
