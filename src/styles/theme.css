@@ -127,54 +127,37 @@
   @apply w-4 h-4;
 }
 
-/* Reaction menu styles */
-.reaction-menu {
-  @apply w-full; 
-}
-
-.reaction-menu-grid {
-  @apply grid-cols-4 gap-2;
-}
-
-.reaction-button {
-  @apply flex flex-col items-center p-1;
-}
-
-.reaction-emoji {
-  @apply w-10 h-10;
-}
-
-/* Post spacing */
+/* Reduzir o espaçamento entre os posts */
 .post-card {
   @apply mb-3;
 }
 
-/* Compact avatars */
+/* Reduzir o tamanho dos avatares */
 .compact-avatar {
   @apply w-9 h-9;
 }
 
-/* Action buttons */
+/* Ajustar o tamanho dos botões de ação */
 .action-button {
   @apply py-1.5 px-3 text-sm;
 }
 
-/* Follow button */
+/* Estilização para o botão de seguir */
 .follow-button {
   @apply py-1 px-4 text-xs font-medium rounded-full h-8;
 }
 
-/* WhatsApp button */
+/* Estilos para WhatsApp com fundo consistente */
 .whatsapp-button {
   @apply bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700;
 }
 
-/* Location text */
+/* Estilização para textos de localização */
 .location-text {
   @apply text-xs text-muted-foreground;
 }
 
-/* Location display */
+/* Reduzir o texto de localização */
 .location-display {
   @apply text-xs font-medium flex items-center gap-1;
 }
