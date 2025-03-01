@@ -1,33 +1,31 @@
 
-export const reactionsList = [
+export const emojis = [
   {
-    emoji: "/curtidas1.png",
-    type: "like",
-    label: "Curtir"
+    name: "amei1",
+    label: "Amei",
   },
   {
-    emoji: "/amei1.png",
-    type: "love",
-    label: "Amei" 
+    name: "curtidas1",
+    label: "Curti",
   },
   {
-    emoji: "/haha1.png",
-    type: "haha",
-    label: "Haha"
+    name: "haha1", 
+    label: "Haha",
   },
   {
-    emoji: "/uau1.png",
-    type: "wow",
-    label: "Uau"
+    name: "uau1",
+    label: "Uau",
   },
   {
-    emoji: "/triste1.png",
-    type: "sad",
-    label: "Triste"
+    name: "triste1",
+    label: "Triste",
+  },
+  {
+    name: "ggr1",
+    label: "Grr",
   }
 ];
 
-export const getReactionIcon = (type: string) => {
-  const reaction = reactionsList.find(r => r.type === type);
-  return reaction ? reaction.emoji : "/curtidas1.png";
+export const getReactionIcon = (reactionType: string) => {
+  return `/public/${reactionType}.png`;
 };
