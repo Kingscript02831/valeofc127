@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { cn } from '../lib/utils';
 import { reactionsList } from '../utils/emojisPosts';
 
@@ -12,15 +12,37 @@ interface ReactionMenuProps {
 const ReactionMenu = ({ isOpen, onSelect, currentReaction }: ReactionMenuProps) => {
   const [mounted, setMounted] = useState(false);
   const [imagesLoaded, setImagesLoaded] = useState(false);
+  const lastScrollY = useRef(0);
 
   useEffect(() => {
     if (isOpen) {
       setMounted(true);
+      // Armazenar a posição de rolagem atual quando o menu abre
+      lastScrollY.current = window.scrollY;
+      
+      // Adicionar event listener para detectar rolagem
+      const handleScroll = () => {
+        // Se rolou para cima (scrollY menor que o valor anterior)
+        if (window.scrollY < lastScrollY.current) {
+          // Fechar o menu chamando onSelect com o valor atual
+          // Isso simula o usuário clicando no mesmo emoji ou em nenhum
+          onSelect(currentReaction || '');
+        }
+        // Atualizar a posição de rolagem
+        lastScrollY.current = window.scrollY;
+      };
+      
+      window.addEventListener('scroll', handleScroll);
+      
+      return () => {
+        // Remover o event listener quando o componente for desmontado
+        window.removeEventListener('scroll', handleScroll);
+      };
     } else {
       const timer = setTimeout(() => setMounted(false), 200);
       return () => clearTimeout(timer);
     }
-  }, [isOpen]);
+  }, [isOpen, onSelect, currentReaction]);
 
   // Preload images for faster loading
   useEffect(() => {
