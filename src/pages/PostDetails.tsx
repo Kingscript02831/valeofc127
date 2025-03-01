@@ -453,20 +453,14 @@ const PostDetails = () => {
                     className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                     onClick={() => setActiveReactionMenu(activeReactionMenu === post?.id ? null : post?.id)}
                   >
-                    {post?.reaction_type ? (
-                      <img 
-                        src={getReactionIcon(post.reaction_type)} 
-                        alt={post.reaction_type}
-                        className="w-5 h-5"
-                      />
-                    ) : (
+                    {post?.reaction_type ? getReactionIcon(post.reaction_type) : (
                       <img src="/curtidas.png" alt="Curtir" className="w-5 h-5" />
                     )}
                     <span className={post?.reaction_type ? 'text-blue-500' : 'text-muted-foreground'}>
                       {post?.likes || 0}
                     </span>
                   </button>
-                  
+
                   <ReactionMenu
                     isOpen={activeReactionMenu === post?.id}
                     onSelect={handleReaction}
