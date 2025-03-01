@@ -1,3 +1,4 @@
+
 @layer base {
   :root {
     --background: 0 0% 98%;
@@ -128,11 +129,11 @@
 
 /* Reaction menu styles */
 .reaction-menu {
-  @apply max-w-[360px] min-w-[320px]; 
+  @apply w-full; 
 }
 
 .reaction-menu-grid {
-  @apply grid-cols-3 gap-2;
+  @apply grid-cols-4 gap-2;
 }
 
 .reaction-button {
