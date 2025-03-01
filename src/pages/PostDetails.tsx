@@ -190,6 +190,26 @@ const PostDetails = () => {
     enabled: Object.values(showReplies).some(value => value)
   });
 
+  const { data: reactionSummary } = useQuery({
+    queryKey: ['post-reactions-summary', id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('post_reactions')
+        .select('reaction_type, user:user_id(username, full_name)')
+        .eq('post_id', id);
+
+      if (error) throw error;
+      
+      const currentUserReaction = data.find(r => r.user.username === currentUser?.user_metadata?.username);
+      
+      return {
+        total: data.length,
+        currentUserReaction: currentUserReaction?.reaction_type
+      };
+    },
+    enabled: !!currentUser && !!id
+  });
+
   const handleShare = async () => {
     try {
       await navigator.share({
@@ -224,7 +244,7 @@ const PostDetails = () => {
 
     try {
       const { data: existingReaction } = await supabase
-        .from('post_likes')
+        .from('post_reactions')
         .select('*')
         .eq('post_id', id)
         .eq('user_id', currentUser.id)
@@ -233,20 +253,20 @@ const PostDetails = () => {
       if (existingReaction) {
         if (existingReaction.reaction_type === reactionType) {
           await supabase
-            .from('post_likes')
+            .from('post_reactions')
             .delete()
             .eq('post_id', id)
             .eq('user_id', currentUser.id);
         } else {
           await supabase
-            .from('post_likes')
+            .from('post_reactions')
             .update({ reaction_type: reactionType })
             .eq('post_id', id)
             .eq('user_id', currentUser.id);
         }
       } else {
         await supabase
-          .from('post_likes')
+          .from('post_reactions')
           .insert({
             post_id: id,
             user_id: currentUser.id,
@@ -255,6 +275,7 @@ const PostDetails = () => {
       }
 
       await queryClient.invalidateQueries({ queryKey: ['post', id] });
+      await queryClient.invalidateQueries({ queryKey: ['post-reactions-summary', id] });
       setActiveReactionMenu(null);
     } catch (error) {
       console.error('Error in reaction handler:', error);
@@ -462,9 +483,28 @@ const PostDetails = () => {
                     ) : (
                       <img src="/curtidas1.png" alt="Reagir" className="w-6 h-6 opacity-70" />
                     )}
-                    <span className={post?.reaction_type ? 'text-blue-500' : 'text-muted-foreground'}>
-                      {post?.likes || 0}
-                    </span>
+                    
+                    <div 
+                      className="text-sm cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (post?.likes > 0) {
+                          navigate(`/pagcurtidas/${id}`);
+                        }
+                      }}
+                    >
+                      {reactionSummary?.currentUserReaction && post?.likes > 1 ? (
+                        <span className="text-blue-500">
+                          Você e outras {post.likes - 1} pessoas
+                        </span>
+                      ) : reactionSummary?.currentUserReaction ? (
+                        <span className="text-blue-500">Você</span>
+                      ) : post?.likes > 0 ? (
+                        <span className="text-muted-foreground">{post.likes} pessoas</span>
+                      ) : (
+                        <span className="text-muted-foreground">0</span>
+                      )}
+                    </div>
                   </button>
 
                   <ReactionMenu

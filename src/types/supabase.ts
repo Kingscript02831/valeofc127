@@ -50,6 +50,29 @@ export interface Database {
           instagram_url?: string;
         };
       };
+      post_reactions: {
+        Row: {
+          id: string;
+          post_id: string;
+          user_id: string;
+          reaction_type: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          post_id: string;
+          user_id: string;
+          reaction_type: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          post_id?: string;
+          user_id?: string;
+          reaction_type?: string;
+          created_at?: string;
+        };
+      };
       // Adicione outras tabelas conforme necessário
     };
   };
