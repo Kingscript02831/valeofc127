@@ -66,8 +66,26 @@ const PagCurtidas = () => {
         .eq('post_id', id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      return data as UserReaction[];
+      if (error) {
+        console.error("Error fetching reactions:", error);
+        throw error;
+      }
+      
+      // Map the data to the expected format and filter out any entries with missing user data
+      const formattedData = data
+        .filter(item => item.user && !item.user.error)
+        .map(item => ({
+          user: {
+            id: item.user.id,
+            username: item.user.username,
+            full_name: item.user.full_name,
+            avatar_url: item.user.avatar_url
+          },
+          reaction_type: item.reaction_type,
+          created_at: item.created_at
+        }));
+
+      return formattedData as UserReaction[];
     },
   });
 
@@ -158,9 +176,9 @@ const PagCurtidas = () => {
             <TabsContent value={activeTab} className="mt-0">
               <div className="space-y-4">
                 {filteredReactions && filteredReactions.length > 0 ? (
-                  filteredReactions.map((reaction) => (
+                  filteredReactions.map((reaction, index) => (
                     <div 
-                      key={reaction.user.id} 
+                      key={`${reaction.user.id}-${index}`} 
                       className="flex items-center justify-between cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 p-2 rounded-lg transition-colors"
                       onClick={() => navigate(`/perfil/${reaction.user.username}`)}
                     >
