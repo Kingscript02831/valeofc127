@@ -1,16 +1,15 @@
 
 import { useParams, useNavigate } from "react-router-dom";
-import { supabase } from "../integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
-import { Card } from "../components/ui/card";
-import Navbar from "../components/Navbar";
-import BottomNav from "../components/BottomNav";
-import { getReactionIcon } from "../utils/emojisPosts";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Card } from "@/components/ui/card";
+import BottomNav from "@/components/BottomNav";
+import { getReactionIcon } from "@/utils/emojisPosts";
 import { ArrowLeft } from "lucide-react";
-import { Skeleton } from "../components/ui/skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface UserReaction {
   user: {
@@ -56,6 +55,7 @@ const PagCurtidas = () => {
       try {
         console.log("Fetching reactions for post ID:", id);
         
+        // Alterando a consulta para usar o relacionamento correto com profiles
         const { data, error } = await supabase
           .from('post_reactions')
           .select(`
@@ -63,7 +63,7 @@ const PagCurtidas = () => {
             reaction_type,
             created_at,
             user_id,
-            profiles:user_id(
+            profiles:profiles(
               id,
               username,
               full_name,
@@ -116,8 +116,7 @@ const PagCurtidas = () => {
   if (isLoadingPost || isLoadingReactions) {
     return (
       <div className="min-h-screen bg-background">
-        <Navbar />
-        <main className="container mx-auto py-8 px-4 pt-20 pb-24 max-w-lg">
+        <main className="container mx-auto py-8 px-4 pt-6 pb-24 max-w-lg">
           <div className="flex items-center mb-6">
             <button 
               onClick={() => navigate(-1)}
@@ -151,8 +150,7 @@ const PagCurtidas = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
-      <main className="container mx-auto py-8 px-4 pt-20 pb-24 max-w-lg">
+      <main className="container mx-auto py-8 px-4 pt-6 pb-24 max-w-lg">
         <div className="flex items-center mb-6">
           <button 
             onClick={() => navigate(-1)}
