@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -202,21 +203,4 @@
 /* Post profile section */
 .post-profile {
   @apply flex items-center gap-2;
-}
-
-/* Reaction menu positioning */
-.reaction-menu {
-  transform-origin: bottom left;
-  min-width: 450px;
-  max-height: 90vh;
-  overflow-y: auto;
-}
-
-@media (max-width: 640px) {
-  .reaction-menu {
-    transform-origin: bottom center;
-    min-width: 300px;
-    width: 90vw !important;
-    left: 5vw !important;
-  }
 }
