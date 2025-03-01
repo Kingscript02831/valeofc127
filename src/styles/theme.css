@@ -170,14 +170,15 @@
     @apply cursor-pointer hover:underline text-sm;
   }
 
-  /* Reaction count display - updated to remove background */
+  /* Reaction count display */
   .reaction-counter {
-    @apply absolute left-0 -top-7 text-foreground rounded-full py-1 px-3 flex items-center gap-1 transition-all;
+    @apply absolute left-0 -top-7 bg-gray-800/80 dark:bg-gray-800/95 text-white rounded-full py-1 px-3 flex items-center gap-1 transition-all;
     z-index: 10;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
   }
   
   .reaction-counter:hover {
-    @apply bg-transparent;
+    @apply bg-gray-800/95;
   }
   
   .reaction-counter-icons {
@@ -185,11 +186,11 @@
   }
   
   .reaction-counter-icon {
-    @apply inline-block h-6 w-6 rounded-full;
+    @apply inline-block h-6 w-6 rounded-full ring-2 ring-white dark:ring-gray-800;
   }
   
   .reaction-counter-text {
-    @apply text-sm hover:underline;
+    @apply text-sm text-white hover:underline;
   }
 
   .card-gradient {
