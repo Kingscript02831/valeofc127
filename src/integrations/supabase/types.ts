@@ -684,6 +684,38 @@ export type Database = {
           },
         ]
       }
+      post_reactions: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          reaction_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          reaction_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          reaction_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_reactions_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       post_views: {
         Row: {
           created_at: string
@@ -1911,6 +1943,13 @@ export type Database = {
         }
         Returns: boolean
       }
+      count_reactions_by_type: {
+        Args: {
+          post_id_param: string
+          reaction_type_param: string
+        }
+        Returns: number
+      }
       create_private_chat: {
         Args: {
           other_user_id: string
@@ -2512,6 +2551,13 @@ export type Database = {
           "": unknown
         }
         Returns: unknown
+      }
+      has_user_reacted: {
+        Args: {
+          post_id_param: string
+          user_id_param: string
+        }
+        Returns: string
       }
       json: {
         Args: {
