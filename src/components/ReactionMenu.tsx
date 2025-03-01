@@ -25,7 +25,7 @@ const ReactionMenu = ({ isOpen, onSelect, currentReaction }: ReactionMenuProps) 
 
   return (
     <div className={cn(
-      "absolute bottom-full left-0 mb-2 flex gap-2 p-3 rounded-full bg-background/95 border border-border/40 shadow-lg transition-all duration-200",
+      "absolute bottom-full left-0 mb-2 flex gap-1 p-2 rounded-full bg-background/95 border border-border/40 shadow-lg transition-all duration-200",
       isOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
     )}>
       {reactionsList.map(({ emoji, type, label }) => (
@@ -33,17 +33,15 @@ const ReactionMenu = ({ isOpen, onSelect, currentReaction }: ReactionMenuProps) 
           key={type}
           onClick={() => onSelect(type)}
           className={cn(
-            "flex flex-col items-center p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-all",
-            "group relative min-w-[40px]",
+            "flex flex-col items-center p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-all text-xl",
+            "group relative",
             currentReaction === type && "bg-gray-100 dark:bg-gray-800"
           )}
         >
-          <img 
-            src={emoji} 
-            alt={label} 
-            className="w-6 h-6 transition-transform group-hover:scale-125"
-          />
-          <span className="absolute -bottom-8 text-xs bg-gray-800 text-white px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+          <span className="transition-transform group-hover:scale-125">
+            {emoji}
+          </span>
+          <span className="absolute -bottom-8 text-xs bg-gray-800 text-white px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
             {label}
           </span>
         </button>
