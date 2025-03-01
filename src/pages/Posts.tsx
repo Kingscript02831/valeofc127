@@ -415,9 +415,11 @@ const Posts: React.FC = () => {
                         onClick={() => setActiveReactionMenu(activeReactionMenu === post.id ? null : post.id)}
                       >
                         {post.reaction_type ? (
-                          <span className="text-blue-500">
-                            {getReactionIcon(post.reaction_type)}
-                          </span>
+                          <img 
+                            src={getReactionIcon(post.reaction_type)} 
+                            alt={post.reaction_type} 
+                            className="w-5 h-5"
+                          />
                         ) : (
                           <img src="/curtidas.png" alt="Curtir" className="w-5 h-5" />
                         )}
