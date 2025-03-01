@@ -24,6 +24,11 @@ export const reactionsList = [
     emoji: "/triste1.png",
     type: "sad",
     label: "Triste"
+  },
+  {
+    emoji: "/ggr1.png",
+    type: "ggr",
+    label: "GGR"
   }
 ];
 

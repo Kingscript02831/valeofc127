@@ -432,17 +432,17 @@ const Posts: React.FC = () => {
 
                   {post.likes > 0 && (
                     <div 
-                      className="flex items-center gap-2 px-3 mt-3 mb-2 bg-gray-100 dark:bg-gray-800 rounded-lg p-2 mx-3 cursor-pointer"
+                      className="flex items-center gap-2 px-3 mt-3 mb-2 rounded-lg p-2 mx-3 cursor-pointer"
                       onClick={() => post.likes > 0 && navigate(`/pagcurtidas/${post.id}`)}
                     >
                       <div className="flex -space-x-2 overflow-hidden">
-                        {post.reactionsByType && Object.keys(post.reactionsByType).slice(0, 3).map((type, index) => (
+                        {post.reactionsByType && Object.keys(post.reactionsByType).map((type, index) => (
                           <img 
                             key={type} 
                             src={getReactionIcon(type)} 
                             alt={type}
-                            className="inline-block h-6 w-6 rounded-full ring-2 ring-white dark:ring-gray-800"
-                            style={{ zIndex: 3 - index }}
+                            className="inline-block h-6 w-6 rounded-full"
+                            style={{ zIndex: 10 - index }}
                           />
                         ))}
                       </div>
