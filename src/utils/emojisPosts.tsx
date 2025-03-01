@@ -2,28 +2,27 @@
 export const getReactionIcon = (type: string) => {
   switch (type) {
     case 'like':
-      return '/curtidas1.png';
+      return '👍';
     case 'love':
-      return '/amei1.png';
+      return '❤️';
     case 'haha':
-      return '/haha1.png';
-    case 'wow':
-      return '/uau1.png';
+      return '😂';
+    case 'fire':
+      return '🔥';
     case 'sad':
-      return '/triste1.png';
+      return '🥲';
     case 'angry':
-      return '/grr1.png';
+      return '🤬';
     default:
-      return '/curtidas1.png';
+      return '👍';
   }
 };
 
 export const reactionsList = [
-  { emoji: '/curtidas1.png', type: 'like', label: 'Curtir' },
-  { emoji: '/amei1.png', type: 'love', label: 'Amei' },
-  { emoji: '/haha1.png', type: 'haha', label: 'Haha' },
-  { emoji: '/uau1.png', type: 'wow', label: 'Uau' },
-  { emoji: '/triste1.png', type: 'sad', label: 'Triste' },
-  { emoji: '/grr1.png', type: 'angry', label: 'Grr' },
+  { emoji: '👍', type: 'like', label: 'Curtir' },
+  { emoji: '❤️', type: 'love', label: 'Amei' },
+  { emoji: '😂', type: 'haha', label: 'Haha' },
+  { emoji: '🔥', type: 'fire', label: 'Fogo' },
+  { emoji: '🥲', type: 'sad', label: 'Triste' },
+  { emoji: '🤬', type: 'angry', label: 'Grr' },
 ];
-
