@@ -7,7 +7,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
 import BottomNav from "../components/BottomNav";
 import { getReactionIcon } from "../utils/emojisPosts";
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 
 interface Reaction {
   id: string;
@@ -27,6 +27,7 @@ const PagCurtidas = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
+  // Optimized query with refetch on mount and window focus
   const { data: reactions, isLoading, refetch } = useQuery({
     queryKey: ['post-reactions', id],
     queryFn: async () => {
@@ -49,9 +50,10 @@ const PagCurtidas = () => {
           throw error;
         }
 
+        // Debug data to help troubleshoot
         console.log("Reactions data:", data);
         
-        // Ensure we have valid reaction data
+        // Ensure valid reaction data
         if (!data || data.length === 0) {
           return [];
         }
@@ -63,21 +65,21 @@ const PagCurtidas = () => {
       }
     },
     enabled: !!id,
-    staleTime: 0, // Always treat the data as stale to ensure fresh fetches
+    staleTime: 0, // Always consider data stale for fresh fetches
     refetchOnMount: true, // Always refetch when component mounts
-    refetchOnWindowFocus: true // Refetch when window gets focus
+    refetchOnWindowFocus: true, // Refetch when window gets focus
   });
 
-  // Force a refetch when the component mounts to ensure we have the latest data
+  // Force a refetch when the component mounts
   useEffect(() => {
     if (id) {
+      console.log("PagCurtidas mounted, refetching data for post ID:", id);
       refetch();
     }
   }, [id, refetch]);
 
   return (
     <div className="min-h-screen bg-background">
-      {/* No Navbar here as requested */}
       <main className="container mx-auto py-8 px-4 pt-6 pb-24">
         <div className="max-w-xl mx-auto">
           <div className="flex items-center justify-between mb-6">

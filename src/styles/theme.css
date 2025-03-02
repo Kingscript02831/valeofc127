@@ -1,3 +1,4 @@
+
 @layer base {
   :root {
     --background: 0 0% 98%;
@@ -173,8 +174,8 @@
   /* Reaction count display - updated position */
   .reaction-counter {
     @apply absolute left-0 bg-gray-800/80 dark:bg-gray-800/95 text-white rounded-full py-1 px-3 flex items-center gap-1 transition-all;
-    bottom: 40px; /* Position above the buttons instead of on top of content */
-    z-index: 10;
+    bottom: 60px; /* Increased from 40px to ensure it doesn't overlap with bottom nav */
+    z-index: 20; /* Increased z-index to ensure it appears above other elements */
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
   }
   
