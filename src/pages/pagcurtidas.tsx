@@ -7,7 +7,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
 import BottomNav from "../components/BottomNav";
 import { getReactionIcon } from "../utils/emojisPosts";
-import React from "react";
+import React, { useEffect } from "react";
 
 interface Reaction {
   id: string;
@@ -27,7 +27,7 @@ const PagCurtidas = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const { data: reactions, isLoading } = useQuery({
+  const { data: reactions, isLoading, refetch } = useQuery({
     queryKey: ['post-reactions', id],
     queryFn: async () => {
       try {
@@ -49,6 +49,8 @@ const PagCurtidas = () => {
           throw error;
         }
 
+        console.log("Reactions data:", data);
+        
         // Ensure we have valid reaction data
         if (!data || data.length === 0) {
           return [];
@@ -62,6 +64,11 @@ const PagCurtidas = () => {
     },
     enabled: !!id,
   });
+
+  // Force a refetch when the component mounts to ensure we have the latest data
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
 
   return (
     <div className="min-h-screen bg-background">
