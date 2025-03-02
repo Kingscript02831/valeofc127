@@ -17,6 +17,7 @@ import { Button } from "../components/ui/button";
 import { UserPlus, UserCheck, MoreVertical } from "lucide-react";
 import { toast } from "sonner";
 import LocationDisplay from "../components/locpost";
+import StoriesBar from "../components/StoriesBar";
 
 interface Post {
   id: string;
@@ -114,7 +115,6 @@ const Posts: React.FC = () => {
         if (error) throw error;
 
         const postsWithCounts = postsData?.map(post => {
-          // Get reaction counts by type
           const reactionsByType: Record<string, number> = {};
           post.post_reactions?.forEach((reaction: any) => {
             if (!reactionsByType[reaction.reaction_type]) {
@@ -123,7 +123,6 @@ const Posts: React.FC = () => {
             reactionsByType[reaction.reaction_type]++;
           });
 
-          // Get user's reaction if any
           const userReaction = post.post_reactions?.find((r: any) => r.user_id === currentUser?.id)?.reaction_type;
 
           return {
@@ -349,6 +348,8 @@ const Posts: React.FC = () => {
       <Navbar />
       <main className="container mx-auto py-8 px-4 pt-20 pb-24">
         <div className="max-w-xl mx-auto space-y-4">
+          <StoriesBar />
+          <div className="h-px bg-gray-200 dark:bg-gray-800 w-full my-2"></div>
           {isLoading ? (
             <div className="space-y-4">
               {[1, 2, 3].map((i) => (
@@ -472,7 +473,6 @@ const Posts: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Display reaction counts with icons */}
                     {post.likes > 0 && (
                       <div 
                         className="flex items-center gap-1 cursor-pointer absolute left-0 -top-7 bg-gray-800/80 text-white rounded-full py-1 px-3"

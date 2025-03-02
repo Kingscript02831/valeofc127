@@ -36,6 +36,8 @@ import PostDetails from "@/pages/PostDetails";
 import PagCurtidas from "@/pages/pagcurtidas";
 import Menu from "@/pages/Menu";
 import Search from "@/pages/Search";
+import StoryForm from "@/pages/StoryForm";
+import StoryViewer from "@/pages/StoryViewer";
 
 const queryClient = new QueryClient();
 
@@ -79,6 +81,11 @@ const App: React.FC = () => {
                   <Route path="/pagcurtidas/:id" element={<PagCurtidas />} />
                   <Route path="/menu" element={<Menu />} />
                   <Route path="/search" element={<Search />} />
+                  
+                  {/* Novas rotas para stories */}
+                  <Route path="/story/new" element={<StoryForm />} />
+                  <Route path="/story/view/:userId" element={<StoryViewer />} />
+                  
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </AuthWrapper>

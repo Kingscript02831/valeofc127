@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -165,6 +166,53 @@
   animation: bounce 2s infinite ease-in-out;
 }
 
+/* Estilos específicos para stories */
+.story-gradient {
+  background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+  background-size: 200% 200%;
+  animation: gradient 2s ease infinite;
+}
+
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.stories-bar {
+  overflow-x: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer/Edge */
+}
+
+.stories-bar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* Animação sutil para destacar stories não vistos */
+@keyframes pulse-border {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 0, 128, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 5px rgba(255, 0, 128, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 0, 128, 0);
+  }
+}
+
+.story-unviewed {
+  animation: pulse-border 2s infinite;
+}
+
+/* Restante dos estilos existentes */
 .post-card {
   @apply mb-3;
 }
