@@ -11,6 +11,7 @@ interface FollowingProfile {
   username: string;
   avatar_url: string;
   has_active_stories: boolean;
+  has_viewed_stories: boolean; // New property to track if user has viewed the stories
 }
 
 const StoriesBar = () => {
@@ -61,28 +62,56 @@ const StoriesBar = () => {
       
       if (!profiles || profiles.length === 0) return [];
       
-      // Para cada perfil, verifica se tem stories ativos
+      // Para cada perfil, verifica se tem stories ativos e se o usuário já os viu
       const profilesWithStoryStatus = await Promise.all(profiles.map(async (profile) => {
-        const { count, error } = await supabase
+        // Check for active stories
+        const { data: stories, error: storiesError } = await supabase
           .from("stories")
-          .select("*", { count: "exact", head: true })
+          .select("id")
           .eq("user_id", profile.id)
           .gt("expires_at", new Date().toISOString());
           
-        if (error) throw error;
+        if (storiesError) throw storiesError;
+        
+        // If there are no active stories, don't include this profile
+        if (!stories || stories.length === 0) {
+          return {
+            ...profile,
+            has_active_stories: false,
+            has_viewed_stories: false
+          };
+        }
+        
+        // Check if user has viewed all stories
+        const storyIds = stories.map(s => s.id);
+        
+        const { data: views, error: viewsError } = await supabase
+          .from("story_views")
+          .select("story_id")
+          .eq("viewer_id", currentUser.id)
+          .in("story_id", storyIds);
+          
+        if (viewsError) throw viewsError;
+        
+        // User has viewed all stories if the number of views equals the number of stories
+        const hasViewedAll = views && views.length === stories.length;
         
         return {
           ...profile,
-          has_active_stories: count > 0
+          has_active_stories: true,
+          has_viewed_stories: hasViewedAll
         };
       }));
       
-      // Reorganiza para que perfis com stories fiquem primeiro
-      return profilesWithStoryStatus.sort((a, b) => {
-        if (a.has_active_stories && !b.has_active_stories) return -1;
-        if (!a.has_active_stories && b.has_active_stories) return 1;
-        return 0;
-      });
+      // Filter out profiles with no active stories and sort by viewed status
+      // (unviewed stories first, then viewed stories)
+      return profilesWithStoryStatus
+        .filter(profile => profile.has_active_stories)
+        .sort((a, b) => {
+          if (!a.has_viewed_stories && b.has_viewed_stories) return -1;
+          if (a.has_viewed_stories && !b.has_viewed_stories) return 1;
+          return 0;
+        });
     },
     enabled: !!currentUser?.id,
   });
@@ -136,7 +165,10 @@ const StoriesBar = () => {
               onClick={() => handleStoryClick(profile.id)}
             >
               <Avatar 
-                className={`w-16 h-16 ${profile.has_active_stories ? 'border-2 border-pink-500' : 'border border-gray-500'}`}
+                className={`w-16 h-16 ${profile.has_viewed_stories 
+                  ? 'border-2 border-red-500' // Red border for viewed stories
+                  : 'border-2 border-green-500' // Green border for unviewed stories
+                }`}
               >
                 {profile.avatar_url ? (
                   <AvatarImage src={profile.avatar_url} alt={profile.username || ""} />
