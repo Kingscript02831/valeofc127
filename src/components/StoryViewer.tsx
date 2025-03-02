@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent } from "./ui/dialog";
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { X } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface StoryViewerProps {
   isOpen: boolean;
@@ -22,7 +24,7 @@ const StoryViewer: React.FC<StoryViewerProps> = ({
   const [progress, setProgress] = useState(0);
   
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && storyId) {
       setProgress(0);
       const interval = setInterval(() => {
         setProgress(prev => {
@@ -34,10 +36,40 @@ const StoryViewer: React.FC<StoryViewerProps> = ({
           return prev + 1;
         });
       }, 50); // 5 seconds total duration
+
+      // Mark story as viewed if we have a storyId
+      const markAsViewed = async () => {
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user && storyId) {
+            // Check if already viewed
+            const { data: existingView } = await supabase
+              .from('story_views')
+              .select('*')
+              .eq('story_id', storyId)
+              .eq('viewer_id', user.id)
+              .single();
+              
+            if (!existingView) {
+              // Insert new view
+              await supabase
+                .from('story_views')
+                .insert({
+                  story_id: storyId,
+                  viewer_id: user.id
+                });
+            }
+          }
+        } catch (error) {
+          console.error('Error marking story as viewed:', error);
+        }
+      };
+      
+      markAsViewed();
       
       return () => clearInterval(interval);
     }
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, storyId]);
   
   return (
     <Dialog open={isOpen} onOpenChange={() => onClose()}>

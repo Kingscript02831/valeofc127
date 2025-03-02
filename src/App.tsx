@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -36,6 +35,7 @@ import PostDetails from "@/pages/PostDetails";
 import PagCurtidas from "@/pages/pagcurtidas";
 import Menu from "@/pages/Menu";
 import Search from "@/pages/Search";
+import AddStory from "./pages/AddStory";
 
 const queryClient = new QueryClient();
 
@@ -79,6 +79,7 @@ const App: React.FC = () => {
                   <Route path="/pagcurtidas/:id" element={<PagCurtidas />} />
                   <Route path="/menu" element={<Menu />} />
                   <Route path="/search" element={<Search />} />
+                  <Route path="/add-story" element={<AddStory />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </AuthWrapper>

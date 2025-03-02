@@ -1,23 +1,18 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ScrollArea, ScrollBar } from "./ui/scroll-area";
 import StoryCircle from "./StoryCircle";
+import StoryViewer from "./StoryViewer";
 import { toast } from "sonner";
-
-// Mock data for stories with profile pictures
-const MOCK_STORIES = [
-  { id: "own", imageUrl: "/placeholder.svg", username: "Seu story", isOwn: true, isNew: false },
-  { id: "1", imageUrl: "https://i.pravatar.cc/150?img=1", username: "glaucia_araujo", isNew: true },
-  { id: "2", imageUrl: "https://i.pravatar.cc/150?img=2", username: "mellyyzw", isNew: true },
-  { id: "3", imageUrl: "https://i.pravatar.cc/150?img=3", username: "_nar.aa", isNew: true },
-  { id: "4", imageUrl: "https://i.pravatar.cc/150?img=4", username: "marcos.v", isNew: true },
-  { id: "5", imageUrl: "https://i.pravatar.cc/150?img=5", username: "carolina_r", isNew: true },
-  { id: "6", imageUrl: "https://i.pravatar.cc/150?img=6", username: "pedro_s", isNew: true },
-  { id: "7", imageUrl: "https://i.pravatar.cc/150?img=7", username: "julia.costa", isNew: true },
-];
+import { supabase } from "@/integrations/supabase/client";
+import { Story } from '@/types/stories';
+import { useNavigate } from 'react-router-dom';
 
 const StoriesRow: React.FC = () => {
   const [viewedStories, setViewedStories] = useState<Record<string, boolean>>({});
+  const [stories, setStories] = useState<Story[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState<any>(null);
   const [currentStory, setCurrentStory] = useState<{
     open: boolean;
     username: string;
@@ -30,11 +25,99 @@ const StoriesRow: React.FC = () => {
     id: ""
   });
   
+  const navigate = useNavigate();
+
+  // Function to fetch stories from Supabase
+  const fetchStories = async () => {
+    try {
+      setLoading(true);
+      
+      // First get the current user
+      const { data: { user } } = await supabase.auth.getUser();
+      setCurrentUser(user);
+      
+      if (user) {
+        // Get all stories that haven't expired
+        const { data: storiesData, error } = await supabase
+          .from('stories')
+          .select(`
+            *,
+            user:user_id (
+              username,
+              full_name,
+              avatar_url
+            )
+          `)
+          .gt('expires_at', new Date().toISOString())
+          .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        
+        // Get all stories that the current user has viewed
+        const { data: viewedData, error: viewedError } = await supabase
+          .from('story_views')
+          .select('story_id')
+          .eq('viewer_id', user.id);
+        
+        if (viewedError) throw viewedError;
+        
+        // Create a map of viewed stories
+        const viewedMap: Record<string, boolean> = {};
+        viewedData?.forEach((view) => {
+          viewedMap[view.story_id] = true;
+        });
+        
+        setViewedStories(viewedMap);
+        
+        // Mark which stories have been viewed
+        const processedStories = storiesData?.map(story => ({
+          ...story,
+          viewed: !!viewedMap[story.id]
+        })) || [];
+        
+        setStories(processedStories);
+      }
+      
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching stories:', error);
+      setLoading(false);
+      toast.error('Erro ao carregar stories');
+    }
+  };
+
+  useEffect(() => {
+    fetchStories();
+    
+    // Set up a subscription to refresh stories when they change
+    const storiesSubscription = supabase
+      .channel('stories_changes')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'stories' 
+      }, () => {
+        fetchStories();
+      })
+      .subscribe();
+    
+    return () => {
+      storiesSubscription.unsubscribe();
+    };
+  }, []);
+
+  // Group stories by user (latest story per user)
+  const userStories: Record<string, Story> = {};
+  stories.forEach(story => {
+    if (!userStories[story.user_id] || 
+        new Date(story.created_at) > new Date(userStories[story.user_id].created_at)) {
+      userStories[story.user_id] = story;
+    }
+  });
+
   const handleStoryClick = (storyId: string, username: string, imageUrl: string) => {
     if (storyId === "own") {
-      toast.info("Criar novo story", {
-        description: "Esta funcionalidade será implementada em breve"
-      });
+      navigate('/add-story');
     } else {
       // Open the story viewer
       setCurrentStory({
@@ -53,19 +136,54 @@ const StoriesRow: React.FC = () => {
     setCurrentStory({...currentStory, open: false});
   };
   
+  if (loading) {
+    return (
+      <div className="w-full py-2">
+        <ScrollArea className="w-full whitespace-nowrap">
+          <div className="flex space-x-4 px-4 py-2">
+            {Array(5).fill(0).map((_, i) => (
+              <div key={i} className="flex flex-col items-center space-y-1">
+                <div className="h-16 w-16 rounded-full bg-gray-300 dark:bg-gray-700 animate-pulse" />
+                <div className="h-2 w-16 bg-gray-300 dark:bg-gray-700 animate-pulse" />
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
+      </div>
+    );
+  }
+  
+  // For the "add your story" circle
+  const ownStoryCircle = currentUser && (
+    <StoryCircle
+      key="own"
+      imageUrl={currentUser?.user_metadata?.avatar_url || "/placeholder.svg"}
+      username="Seu story"
+      isOwn={true}
+      onClick={() => navigate('/add-story')}
+    />
+  );
+  
   return (
     <div className="w-full py-2">
       <ScrollArea className="w-full whitespace-nowrap">
         <div className="flex space-x-4 px-4 py-2">
-          {MOCK_STORIES.map((story) => (
+          {/* First item - Add your story */}
+          {ownStoryCircle}
+          
+          {/* User stories */}
+          {Object.values(userStories).map((story) => (
             <StoryCircle
               key={story.id}
-              imageUrl={story.imageUrl}
-              username={story.username}
-              isNew={story.isNew}
-              isOwn={story.isOwn}
-              isViewed={viewedStories[story.id]}
-              onClick={() => handleStoryClick(story.id, story.username, story.imageUrl)}
+              imageUrl={story.user?.avatar_url || "/placeholder.svg"}
+              username={story.user?.username || "Usuário"}
+              isNew={true}
+              isViewed={story.viewed}
+              onClick={() => handleStoryClick(
+                story.id, 
+                story.user?.username || "Usuário", 
+                story.media_url
+              )}
             />
           ))}
         </div>
@@ -73,38 +191,13 @@ const StoriesRow: React.FC = () => {
       </ScrollArea>
       
       {currentStory.open && (
-        <div className="fixed inset-0 z-50 bg-black flex flex-col">
-          {/* Story header */}
-          <div className="p-4 flex items-center justify-between bg-gradient-to-b from-black/60 to-transparent absolute top-0 left-0 right-0 z-10">
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-full overflow-hidden">
-                <img 
-                  src={currentStory.imageUrl}
-                  alt={currentStory.username}
-                  className="h-full w-full object-cover"
-                />
-              </div>
-              <span className="text-white font-medium">{currentStory.username}</span>
-            </div>
-            <button 
-              onClick={handleCloseStory}
-              className="text-white p-1"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M18 6 6 18" /><path d="m6 6 12 12" />
-              </svg>
-            </button>
-          </div>
-          
-          {/* Story image */}
-          <div className="flex-1 flex items-center justify-center">
-            <img 
-              src={currentStory.imageUrl}
-              alt={currentStory.username}
-              className="max-h-full w-auto object-contain"
-            />
-          </div>
-        </div>
+        <StoryViewer
+          isOpen={currentStory.open}
+          onClose={handleCloseStory}
+          username={currentStory.username}
+          imageUrl={currentStory.imageUrl}
+          storyId={currentStory.id}
+        />
       )}
     </div>
   );
