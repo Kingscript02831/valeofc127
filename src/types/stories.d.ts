@@ -7,24 +7,8 @@ export interface Story {
   media_type: 'image' | 'video';
   created_at: string;
   expires_at: string;
-  profiles?: {
-    username: string;
-    avatar_url: string;
-  };
-}
-
-export interface StoryViewerProps {
-  isOpen: boolean;
-  onClose: () => void;
-  username: string;
-  imageUrl: string;
-  storyId: string;
-}
-
-export interface StoryCircleProps {
-  imageUrl: string;
-  username: string;
-  isNew?: boolean;
+  username?: string;
+  avatar_url?: string;
   isOwn?: boolean;
-  isViewed?: boolean;
+  isNew?: boolean;
 }

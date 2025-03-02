@@ -90,7 +90,7 @@ const StoriesRow: React.FC = () => {
           media_type, 
           created_at, 
           expires_at,
-          profiles:user_id(username, avatar_url)
+          profiles(username, avatar_url)
         `)
         .lt('expires_at', new Date(Date.now() + 1000).toISOString())
         .gt('expires_at', new Date().toISOString())
@@ -103,24 +103,19 @@ const StoriesRow: React.FC = () => {
       } else {
         // Format the data
         if (data && data.length > 0) {
-          const formattedStories = data.map(story => {
-            // Handle the case where profiles might be null
-            const profileData = story.profiles as { username: string; avatar_url: string } | null;
-            
-            return {
-              id: story.id,
-              user_id: story.user_id,
-              content: story.content,
-              media_url: story.media_url,
-              media_type: story.media_type as 'image' | 'video',
-              created_at: story.created_at,
-              expires_at: story.expires_at,
-              username: profileData?.username || 'Usuário',
-              avatar_url: profileData?.avatar_url || '/placeholder.svg',
-              isOwn: story.user_id === user.id,
-              isNew: true // Consider all as new initially
-            };
-          });
+          const formattedStories = data.map(story => ({
+            id: story.id,
+            user_id: story.user_id,
+            content: story.content,
+            media_url: story.media_url,
+            media_type: story.media_type as 'image' | 'video',
+            created_at: story.created_at,
+            expires_at: story.expires_at,
+            username: story.profiles?.username || 'Usuário',
+            avatar_url: story.profiles?.avatar_url || '/placeholder.svg',
+            isOwn: story.user_id === user.id,
+            isNew: true // Consider all as new initially
+          }));
 
           // Group stories by user (to show only the most recent per user)
           const userStories: Record<string, Story[]> = {};
