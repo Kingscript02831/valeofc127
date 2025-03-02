@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import {
   Carousel,
@@ -34,6 +34,25 @@ export const MediaCarousel = ({
 
   if (!allMedia.length) return null;
 
+  // Pré-carregamento das imagens para melhorar a experiência do usuário
+  // e garantir que as imagens sejam armazenadas no cache do navegador
+  useEffect(() => {
+    // Função para pré-carregar imagens
+    const preloadImages = () => {
+      images.forEach(url => {
+        if (url) {
+          const img = new Image();
+          img.src = url;
+        }
+      });
+    };
+
+    // Executa o pré-carregamento apenas se houver imagens
+    if (images.length > 0) {
+      preloadImages();
+    }
+  }, [images]);
+
   const getVideoUrl = (url: string) => {
     if (url.includes('youtube.com/watch?v=')) {
       const videoId = url.split('v=')[1]?.split('&')[0];
@@ -67,6 +86,7 @@ export const MediaCarousel = ({
                       allowFullScreen
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                       title={title}
+                      loading="lazy" // Adicionado para melhorar performance
                     />
                   </div>
                 ) : (
@@ -78,6 +98,7 @@ export const MediaCarousel = ({
                     className="w-full max-h-[80vh] object-contain"
                     controlsList="nodownload"
                     autoPlay={autoplay}
+                    preload="metadata" // Carrega apenas os metadados inicialmente
                   >
                     Seu navegador não suporta a reprodução de vídeos.
                   </video>
@@ -91,7 +112,8 @@ export const MediaCarousel = ({
                   "w-full max-h-[80vh]",
                   cropMode === 'contain' ? "object-contain" : "object-cover"
                 )}
-                loading="lazy"
+                loading="lazy" // Carregamento lento para melhorar performance
+                decoding="async" // Decodificação assíncrona
               />
             )}
           </CarouselItem>

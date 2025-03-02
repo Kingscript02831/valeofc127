@@ -5,6 +5,7 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { VitePWA } from 'vite-plugin-pwa';
 import { createClient } from '@supabase/supabase-js';
+import { pwaCache, precacheUrls } from "./src/pwa-cache-config";
 
 const supabase = createClient(
   "https://cxnktrfpqjjkdfmiyhdz.supabase.co",
@@ -71,6 +72,92 @@ export default defineConfig(async ({ mode }) => {
           purpose: 'any maskable'
         }
       ]
+    },
+    workbox: {
+      // Configuração do Workbox para cache
+      runtimeCaching: [
+        {
+          urlPattern: pwaCache.images.pattern,
+          handler: pwaCache.images.strategy,
+          options: {
+            cacheName: pwaCache.images.name,
+            expiration: {
+              maxEntries: pwaCache.images.maxEntries,
+              maxAgeSeconds: pwaCache.images.maxAgeSeconds
+            },
+            cacheableResponse: {
+              statuses: [0, 200]
+            }
+          }
+        },
+        {
+          urlPattern: pwaCache.videos.pattern,
+          handler: pwaCache.videos.strategy,
+          options: {
+            cacheName: pwaCache.videos.name,
+            expiration: {
+              maxEntries: pwaCache.videos.maxEntries,
+              maxAgeSeconds: pwaCache.videos.maxAgeSeconds
+            },
+            cacheableResponse: {
+              statuses: [0, 200]
+            }
+          }
+        },
+        {
+          urlPattern: pwaCache.fonts.pattern,
+          handler: pwaCache.fonts.strategy,
+          options: {
+            cacheName: pwaCache.fonts.name,
+            expiration: {
+              maxEntries: pwaCache.fonts.maxEntries,
+              maxAgeSeconds: pwaCache.fonts.maxAgeSeconds
+            },
+            cacheableResponse: {
+              statuses: [0, 200]
+            }
+          }
+        },
+        {
+          urlPattern: pwaCache.assets.pattern,
+          handler: pwaCache.assets.strategy,
+          options: {
+            cacheName: pwaCache.assets.name,
+            expiration: {
+              maxEntries: pwaCache.assets.maxEntries,
+              maxAgeSeconds: pwaCache.assets.maxAgeSeconds
+            },
+            cacheableResponse: {
+              statuses: [0, 200]
+            }
+          }
+        },
+        // Cache para requisições da API Supabase (com revalidação na rede)
+        {
+          urlPattern: /^https:\/\/cxnktrfpqjjkdfmiyhdz\.supabase\.co\/.*/i,
+          handler: 'NetworkFirst',
+          options: {
+            cacheName: 'supabase-api-cache',
+            expiration: {
+              maxEntries: 50,
+              maxAgeSeconds: 60 * 60 // 1 hora
+            },
+            cacheableResponse: {
+              statuses: [0, 200]
+            },
+            networkTimeoutSeconds: 10
+          }
+        }
+      ],
+      // Precache de recursos específicos
+      globPatterns: ['**/*.{js,css,html}'],
+      skipWaiting: true,
+      clientsClaim: true,
+      // Adiciona URLs específicas para pré-cache
+      additionalManifestEntries: precacheUrls.map(url => ({
+        url,
+        revision: null
+      }))
     },
     devOptions: {
       enabled: true,
