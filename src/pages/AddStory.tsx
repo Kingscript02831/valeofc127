@@ -4,67 +4,34 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Plus, Image, Trash2 } from 'lucide-react';
-import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import PhotoUrlDialog from '@/components/PhotoUrlDialog';
-import MediaCarousel from '@/components/MediaCarousel';
+import { ArrowLeft, Upload, Image } from 'lucide-react';
 
 const AddStory: React.FC = () => {
+  const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
-  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
-  const [videoUrls, setVideoUrls] = useState<string[]>([]);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const navigate = useNavigate();
   
-  // Image URL dialog
-  const [showImageUrlDialog, setShowImageUrlDialog] = useState(false);
-  const [showVideoUrlDialog, setShowVideoUrlDialog] = useState(false);
-  
-  const handleAddImageUrl = (url: string) => {
-    if (!url) return;
-    
-    // Convert Dropbox URL if needed
-    let finalUrl = url;
-    if (finalUrl.includes('dropbox.com')) {
-      // Remove dl=0 if exists
-      finalUrl = finalUrl.replace(/[&?]dl=0/g, '');
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const selectedFile = e.target.files[0];
+      setFile(selectedFile);
       
-      // Add dl=1 at the end
-      finalUrl = finalUrl.includes('?') ? `${finalUrl}&dl=1` : `${finalUrl}?dl=1`;
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setPreviewUrl(e.target?.result as string);
+      };
+      reader.readAsDataURL(selectedFile);
     }
-    
-    setPreviewUrls([...previewUrls, finalUrl]);
-  };
-  
-  const handleAddVideoUrl = (url: string) => {
-    if (!url) return;
-    
-    // Convert Dropbox URL if needed
-    let finalUrl = url;
-    if (finalUrl.includes('dropbox.com')) {
-      // Remove dl=0 if exists
-      finalUrl = finalUrl.replace(/[&?]dl=0/g, '');
-      
-      // Add dl=1 at the end
-      finalUrl = finalUrl.includes('?') ? `${finalUrl}&dl=1` : `${finalUrl}?dl=1`;
-    }
-    
-    setVideoUrls([...videoUrls, finalUrl]);
-  };
-  
-  const handleRemoveImage = (index: number) => {
-    setPreviewUrls(previewUrls.filter((_, i) => i !== index));
-  };
-  
-  const handleRemoveVideo = (index: number) => {
-    setVideoUrls(videoUrls.filter((_, i) => i !== index));
   };
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (previewUrls.length === 0 && videoUrls.length === 0) {
-      toast.error("Por favor, adicione pelo menos uma mídia para o seu story");
+    if (!file) {
+      toast.error("Por favor, selecione uma imagem para o seu story");
       return;
     }
     
@@ -79,22 +46,30 @@ const AddStory: React.FC = () => {
         return;
       }
       
-      // Set expiration time (24 hours from now)
-      const expiresAt = new Date();
-      expiresAt.setHours(expiresAt.getHours() + 24);
+      // Upload the file to storage
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+      const filePath = `stories/${user.id}/${fileName}`;
       
-      // First media is used as the main media
-      const media = previewUrls.length > 0 ? previewUrls[0] : videoUrls[0];
-      const mediaType = previewUrls.length > 0 ? 'image' : 'video';
+      // Check if the stories folder exists, if not create it
+      const { error: uploadError } = await supabase.storage
+        .from('public')
+        .upload(filePath, file);
+      
+      if (uploadError) throw uploadError;
+      
+      // Get the public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('public')
+        .getPublicUrl(filePath);
       
       // Save story to database
       const { error: storyError } = await supabase
         .from('stories')
         .insert({
           user_id: user.id,
-          media_url: media,
-          media_type: mediaType,
-          expires_at: expiresAt.toISOString()
+          media_url: publicUrl,
+          duration: 5000 // 5 seconds
         });
       
       if (storyError) throw storyError;
@@ -121,80 +96,47 @@ const AddStory: React.FC = () => {
       <div className="container mx-auto pt-20 pb-24 px-4">
         <div className="max-w-md mx-auto">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {(previewUrls.length > 0 || videoUrls.length > 0) && (
-              <div className="mb-4">
-                <MediaCarousel
-                  images={previewUrls}
-                  videoUrls={videoUrls}
-                  title="Preview do Story"
-                />
-              </div>
-            )}
-            
-            <div className="space-y-4">
-              <div className="flex flex-col space-y-2">
-                <Label>Adicionar mídia</Label>
-                <div className="flex flex-wrap gap-2">
-                  <Button 
-                    type="button" 
-                    variant="outline"
-                    onClick={() => setShowImageUrlDialog(true)}
-                    className="flex-1"
+            <div className="flex flex-col items-center justify-center">
+              {previewUrl ? (
+                <div className="relative w-full h-[500px] rounded-lg overflow-hidden border border-gray-200 dark:border-gray-800">
+                  <img 
+                    src={previewUrl} 
+                    alt="Story preview" 
+                    className="w-full h-full object-cover"
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="absolute bottom-4 right-4"
+                    onClick={() => {
+                      setFile(null);
+                      setPreviewUrl(null);
+                    }}
                   >
-                    <Image className="mr-2 h-4 w-4" />
-                    Adicionar Imagem
-                  </Button>
-                  
-                  <Button 
-                    type="button" 
-                    variant="outline"
-                    onClick={() => setShowVideoUrlDialog(true)}
-                    className="flex-1"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
-                      <polygon points="23 7 16 12 23 17 23 7" />
-                      <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
-                    </svg>
-                    Adicionar Vídeo
+                    Trocar imagem
                   </Button>
                 </div>
-              </div>
-              
-              {previewUrls.length > 0 && (
-                <div>
-                  <Label>Imagens ({previewUrls.length})</Label>
-                  {previewUrls.map((url, index) => (
-                    <div key={index} className="flex items-center gap-2 mt-2">
-                      <Input value={url} readOnly />
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="icon"
-                        onClick={() => handleRemoveImage(index)}
-                      >
-                        <Trash2 className="h-4 w-4" />
+              ) : (
+                <div className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-12 w-full text-center">
+                  <div className="flex flex-col items-center">
+                    <Image className="h-12 w-12 text-gray-400 mb-4" />
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                      Selecione uma imagem para o seu story
+                    </p>
+                    <Input
+                      type="file"
+                      id="story-image"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                    <label htmlFor="story-image">
+                      <Button type="button" variant="secondary" className="cursor-pointer">
+                        <Upload className="h-4 w-4 mr-2" />
+                        Selecionar imagem
                       </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-              
-              {videoUrls.length > 0 && (
-                <div>
-                  <Label>Vídeos ({videoUrls.length})</Label>
-                  {videoUrls.map((url, index) => (
-                    <div key={index} className="flex items-center gap-2 mt-2">
-                      <Input value={url} readOnly />
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="icon"
-                        onClick={() => handleRemoveVideo(index)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
+                    </label>
+                  </div>
                 </div>
               )}
             </div>
@@ -202,28 +144,13 @@ const AddStory: React.FC = () => {
             <Button
               type="submit"
               className="w-full"
-              disabled={loading || (previewUrls.length === 0 && videoUrls.length === 0)}
+              disabled={loading || !file}
             >
               {loading ? "Adicionando..." : "Adicionar Story"}
             </Button>
           </form>
         </div>
       </div>
-      
-      {/* Dialogs for URL input */}
-      <PhotoUrlDialog
-        isOpen={showImageUrlDialog}
-        onClose={() => setShowImageUrlDialog(false)}
-        onConfirm={handleAddImageUrl}
-        title="Adicionar imagem do Dropbox"
-      />
-      
-      <PhotoUrlDialog
-        isOpen={showVideoUrlDialog}
-        onClose={() => setShowVideoUrlDialog(false)}
-        onConfirm={handleAddVideoUrl}
-        title="Adicionar vídeo do Dropbox"
-      />
     </div>
   );
 };

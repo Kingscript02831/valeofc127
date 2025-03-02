@@ -3,8 +3,7 @@ export interface Story {
   id: string;
   user_id: string;
   media_url: string;
-  media_type?: string;
-  duration?: number;
+  duration: number;
   created_at: string;
   expires_at: string;
   viewed?: boolean;
