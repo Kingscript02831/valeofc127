@@ -53,7 +53,7 @@ export default defineConfig(async ({ mode }) => {
       description: pwaConfig?.pwa_description || 'Seu app de notícias local',
       theme_color: pwaConfig?.pwa_theme_color || '#000000',
       background_color: pwaConfig?.pwa_background_color || '#ffffff',
-      display: 'standalone',
+      display: 'standalone' as const, // Corrigido aqui para usar 'as const'
       icons: [
         {
           src: pwaConfig?.pwa_app_icon || '/pwa-192x192.png',
