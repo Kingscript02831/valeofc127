@@ -63,12 +63,17 @@ const PagCurtidas = () => {
       }
     },
     enabled: !!id,
+    staleTime: 0, // Always treat the data as stale to ensure fresh fetches
+    refetchOnMount: true, // Always refetch when component mounts
+    refetchOnWindowFocus: true // Refetch when window gets focus
   });
 
   // Force a refetch when the component mounts to ensure we have the latest data
   useEffect(() => {
-    refetch();
-  }, [refetch]);
+    if (id) {
+      refetch();
+    }
+  }, [id, refetch]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -112,11 +117,11 @@ const PagCurtidas = () => {
                         onClick={() => navigate(`/perfil/${reaction.profiles.username}`)}
                       >
                         <AvatarImage src={reaction.profiles.avatar_url || "/placeholder.svg"} />
-                        <AvatarFallback>{reaction.profiles.full_name.charAt(0)}</AvatarFallback>
+                        <AvatarFallback>{reaction.profiles.full_name?.charAt(0) || '?'}</AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="font-semibold">{reaction.profiles.full_name}</p>
-                        <p className="text-sm text-muted-foreground">@{reaction.profiles.username}</p>
+                        <p className="font-semibold">{reaction.profiles.full_name || 'Usuário'}</p>
+                        <p className="text-sm text-muted-foreground">@{reaction.profiles.username || 'usuário'}</p>
                       </div>
                     </div>
                     <div className="flex items-center justify-center w-10 h-10">
