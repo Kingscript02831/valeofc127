@@ -1,537 +1,254 @@
 import { useState } from "react";
-import { supabase } from "../integrations/supabase/client";
-import { Card, CardContent } from "../components/ui/card";
-import { useToast } from "../hooks/use-toast";
-import { MediaCarousel } from "../components/MediaCarousel";
-import Navbar from "../components/Navbar";
-import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
-import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
-import ReactionMenu from "../components/ReactionMenu";
-import BottomNav from "../components/BottomNav";
-import { useNavigate } from "react-router-dom";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { getReactionIcon } from "../utils/emojisPosts";
-import Tags from "../components/Tags";
-import { Button } from "../components/ui/button";
-import { UserPlus, UserCheck, MoreVertical } from "lucide-react";
+import { Search, Bell, Menu } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import LocationDisplay from "../components/locpost";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/types/supabase";
+import NewsCard from "@/components/NewsCard";
+import Navbar from "@/components/Navbar";
+import SubNav from "@/components/SubNav";
+import Footer from "@/components/Footer";
+import BottomNav from "@/components/BottomNav";
+import PWAInstallPrompt from "@/components/PWAInstallPrompt";
+import { useNavigate } from "react-router-dom";
 import StoriesBar from "../components/StoriesBar";
 
-interface Post {
-  id: string;
-  user_id: string;
-  content: string;
-  images: string[];
-  video_urls: string[];
-  likes: number;
-  reaction_type?: string;
-  created_at: string;
-  user_has_liked?: boolean;
-  comment_count: number;
-  reactionsByType?: Record<string, number>;
-  user: {
-    username: string;
-    full_name: string;
-    avatar_url: string;
-    id: string;
-  };
-}
+type News = Database['public']['Tables']['news']['Row'] & {
+  categories: Database['public']['Tables']['categories']['Row'] | null;
+};
+type Category = Database['public']['Tables']['categories']['Row'];
 
-const Posts: React.FC = () => {
-  const { toast: toastHook } = useToast();
+const Posts = () => {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const [activeReactionMenu, setActiveReactionMenu] = useState<string | null>(null);
-  const [followingUsers, setFollowingUsers] = useState<Record<string, boolean>>({});
-  const [reactionsLoading, setReactionsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
-  const { data: currentUser } = useQuery({
-    queryKey: ['currentUser'],
+  const { data: categories = [] } = useQuery<Category[]>({
+    queryKey: ['categories', 'news'],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      return user;
-    },
-  });
-
-  useQuery({
-    queryKey: ['userFollowings', currentUser?.id],
-    queryFn: async () => {
-      if (!currentUser?.id) return {};
-
-      const { data } = await supabase
-        .from('follows')
-        .select('following_id')
-        .eq('follower_id', currentUser.id);
-      
-      const followingMap: Record<string, boolean> = {};
-      if (data) {
-        data.forEach(item => {
-          followingMap[item.following_id] = true;
-        });
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('page_type', 'news')
+        .order('name');
+      if (error) {
+        console.error('Error fetching categories:', error);
+        toast.error('Erro ao carregar categorias');
+        return [];
       }
-      
-      setFollowingUsers(followingMap);
-      return followingMap;
+      return data || [];
     },
-    enabled: !!currentUser?.id,
+    retry: false
   });
 
-  const isFollowing = (userId: string) => {
-    return !!followingUsers[userId];
-  };
-
-  const { data: posts, isLoading } = useQuery({
-    queryKey: ['posts'],
+  const { data: news = [], isLoading, error } = useQuery<News[]>({
+    queryKey: ['news', searchTerm, selectedCategory],
     queryFn: async () => {
       try {
-        setReactionsLoading(true);
         let query = supabase
-          .from('posts')
-          .select(`
-            *,
-            user:user_id (
-              id,
-              username,
-              full_name,
-              avatar_url
-            ),
-            post_likes (
-              reaction_type,
-              user_id
-            ),
-            post_comments (
-              id
-            ),
-            post_reactions (
-              reaction_type,
-              user_id
-            )
-          `)
-          .order('created_at', { ascending: false });
+          .from('news')
+          .select('*, categories(*)')
+          .order('date', { ascending: false });
 
-        const { data: postsData, error } = await query;
-        if (error) throw error;
+        if (searchTerm) {
+          query = query.ilike('title', `%${searchTerm}%`);
+        }
 
-        const postsWithCounts = postsData?.map(post => {
-          const reactionsByType: Record<string, number> = {};
-          post.post_reactions?.forEach((reaction: any) => {
-            if (!reactionsByType[reaction.reaction_type]) {
-              reactionsByType[reaction.reaction_type] = 0;
-            }
-            reactionsByType[reaction.reaction_type]++;
-          });
+        if (selectedCategory) {
+          query = query.eq('category_id', selectedCategory);
+        }
 
-          const userReaction = post.post_reactions?.find((r: any) => r.user_id === currentUser?.id)?.reaction_type;
-
-          return {
-            ...post,
-            reaction_type: userReaction,
-            reactionsByType,
-            likes: post.post_reactions?.length || 0,
-            comment_count: post.post_comments?.length || 0
-          };
-        });
-
-        setReactionsLoading(false);
-        return postsWithCounts;
-      } catch (error) {
-        setReactionsLoading(false);
-        console.error('Error fetching posts:', error);
+        const { data, error } = await query;
+        
+        if (error) {
+          console.error('Supabase query error:', error);
+          return [];
+        }
+        
+        console.log('Fetched news:', data); // Debug log
+        return data as News[];
+      } catch (err) {
+        console.error('Error fetching news:', err);
         return [];
       }
     },
+    retry: false
   });
 
-  const followMutation = useMutation({
-    mutationFn: async (userId: string) => {
-      if (!currentUser?.id) {
-        throw new Error("Você precisa estar logado para seguir usuários");
-      }
-
-      const { data, error } = await supabase
-        .from('follows')
-        .insert([
-          { follower_id: currentUser.id, following_id: userId }
-        ]);
-
-      if (error) throw error;
-
-      await supabase
-        .from('notifications')
-        .insert([
-          {
-            user_id: userId,
-            title: 'Novo seguidor',
-            message: `@${currentUser.id} começou a seguir você.`,
-            type: 'system',
-          }
-        ]);
-
-      return data;
-    },
-    onSuccess: (_, userId) => {
-      setFollowingUsers(prev => ({...prev, [userId]: true}));
-      toast.success("Seguindo com sucesso!");
-      queryClient.invalidateQueries({ queryKey: ['userFollowings', currentUser?.id] });
-    },
-    onError: (error) => {
-      console.error("Error following user:", error);
-      toast.error("Erro ao seguir usuário");
-    }
-  });
-
-  const unfollowMutation = useMutation({
-    mutationFn: async (userId: string) => {
-      if (!currentUser?.id) {
-        throw new Error("Você precisa estar logado para deixar de seguir usuários");
-      }
-
-      const { data, error } = await supabase
-        .from('follows')
-        .delete()
-        .eq('follower_id', currentUser.id)
-        .eq('following_id', userId);
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: (_, userId) => {
-      setFollowingUsers(prev => {
-        const newState = {...prev};
-        delete newState[userId];
-        return newState;
-      });
-      toast.success("Deixou de seguir com sucesso!");
-      queryClient.invalidateQueries({ queryKey: ['userFollowings', currentUser?.id] });
-    },
-    onError: (error) => {
-      console.error("Error unfollowing user:", error);
-      toast.error("Erro ao deixar de seguir usuário");
-    }
-  });
-
-  const handleFollowAction = (userId: string) => {
-    if (!currentUser) {
-      navigate("/login");
-      return;
-    }
-
-    if (currentUser.id === userId) {
-      return;
-    }
-
-    const lastActionTime = localStorage.getItem(`followAction_${userId}`);
-    const now = Date.now();
-    const cooldownPeriod = 30000; // 30 seconds in milliseconds
-
-    if (lastActionTime) {
-      const timeSinceLastAction = now - parseInt(lastActionTime);
-      if (timeSinceLastAction < cooldownPeriod) {
-        const remainingSeconds = Math.ceil((cooldownPeriod - timeSinceLastAction) / 1000);
-        toast.error(`Aguarde ${remainingSeconds} segundos antes de alterar o status de seguir novamente.`);
-        return;
-      }
-    }
-
-    localStorage.setItem(`followAction_${userId}`, now.toString());
-
-    if (isFollowing(userId)) {
-      unfollowMutation.mutate(userId);
-    } else {
-      followMutation.mutate(userId);
-    }
-  };
-
-  const handleReaction = async (postId: string, reactionType: string) => {
+  const handleNotificationClick = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
-        toastHook({
-          title: "Erro",
-          description: "Você precisa estar logado para reagir a posts",
-          variant: "destructive",
-        });
+        toast.error('Faça login para ativar as notificações');
         return;
       }
 
-      const { data: existingReaction } = await supabase
-        .from('post_reactions')
-        .select('*')
-        .eq('post_id', postId)
+      // Verifica se já existe uma configuração de notificação
+      const { data: existing } = await supabase
+        .from('notifications')
+        .select('enabled')
         .eq('user_id', user.id)
+        .eq('type', 'news')
         .single();
 
-      if (existingReaction) {
-        if (existingReaction.reaction_type === reactionType) {
-          const { error: deleteError } = await supabase
-            .from('post_reactions')
-            .delete()
-            .eq('post_id', postId)
-            .eq('user_id', user.id);
+      const newStatus = !existing?.enabled;
 
-          if (deleteError) throw deleteError;
-        } else {
-          const { error: updateError } = await supabase
-            .from('post_reactions')
-            .update({ reaction_type: reactionType })
-            .eq('post_id', postId)
-            .eq('user_id', user.id);
+      // Atualiza ou cria a configuração de notificação
+      const { error } = await supabase
+        .from('notifications')
+        .upsert({
+          user_id: user.id,
+          type: 'news',
+          enabled: newStatus,
+          title: 'Notificações de Notícias',
+          message: newStatus ? 'Você receberá notificações de novas notícias' : 'Notificações de notícias desativadas',
+          read: false
+        });
 
-          if (updateError) throw updateError;
-        }
-      } else {
-        const { error: insertError } = await supabase
-          .from('post_reactions')
-          .insert({
-            post_id: postId,
-            user_id: user.id,
-            reaction_type: reactionType
-          });
-
-        if (insertError) throw insertError;
+      if (error) {
+        console.error('Error updating notification settings:', error);
+        toast.error('Erro ao atualizar notificações');
+        return;
       }
 
-      setActiveReactionMenu(null);
-      await queryClient.invalidateQueries({ queryKey: ['posts'] });
-      
+      toast.success(newStatus 
+        ? 'Notificações de notícias ativadas!' 
+        : 'Notificações de notícias desativadas');
+
+      // Redireciona para mostrar a notificação
+      navigate('/notify');
     } catch (error) {
-      console.error('Error in reaction handler:', error);
-      toastHook({
-        title: "Erro",
-        description: "Não foi possível processar sua reação",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleShare = async (postId: string) => {
-    try {
-      await navigator.share({
-        url: `${window.location.origin}/posts/${postId}`,
-      });
-    } catch (error) {
-      console.error('Error sharing:', error);
-      navigator.clipboard.writeText(`${window.location.origin}/posts/${postId}`);
-      toastHook({
-        title: "Link copiado",
-        description: "O link foi copiado para sua área de transferência",
-      });
-    }
-  };
-
-  const handleWhatsAppShare = async (postId: string) => {
-    const postUrl = `${window.location.origin}/posts/${postId}`;
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(postUrl)}`;
-    window.open(whatsappUrl, '_blank');
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    if (date.toDateString() === today.toDateString()) {
-      return `Hoje às ${format(date, 'HH:mm')}`;
-    } else if (date.toDateString() === yesterday.toDateString()) {
-      return `Ontem às ${format(date, 'HH:mm')}`;
-    } else {
-      return format(date, "d 'de' MMMM 'às' HH:mm", { locale: ptBR });
+      console.error('Error handling notifications:', error);
+      toast.error('Erro ao configurar notificações');
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-background">
       <Navbar />
-      <main className="container mx-auto py-8 px-4 pt-20 pb-24">
-        <div className="max-w-xl mx-auto space-y-4">
-          <StoriesBar />
-          <div className="h-px bg-gray-200 dark:bg-gray-800 w-full my-2"></div>
+      <SubNav />
+      
+      {/* Add StoriesBar here */}
+      <StoriesBar />
+      
+      {/* Main content container */}
+      <div className="container mx-auto p-4 pb-20">
+        <div className="flex flex-col gap-4">
+          <div className="sticky top-16 z-10 bg-background/80 backdrop-blur-sm pb-4">
+            <div className="flex gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleNotificationClick}
+                className="hover:scale-105 transition-transform text-foreground"
+              >
+                <Bell className="h-5 w-5" />
+              </Button>
+              <div className="relative flex-1">
+                <Input
+                  placeholder="Buscar notícias..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pr-10 rounded-full bg-card/50 backdrop-blur-sm border-none shadow-lg"
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <Search className="h-5 w-5 text-foreground" />
+                </div>
+              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="hover:scale-105 transition-transform text-foreground rounded-full shadow-lg"
+                  >
+                    <Menu className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem
+                    onClick={() => setSelectedCategory(null)}
+                    className={`${!selectedCategory ? "bg-accent" : ""}`}
+                  >
+                    Todas as categorias
+                  </DropdownMenuItem>
+                  {categories?.map((category) => (
+                    <DropdownMenuItem
+                      key={category.id}
+                      onClick={() => setSelectedCategory(category.id)}
+                      className={`${selectedCategory === category.id ? "bg-accent" : ""}`}
+                    >
+                      {category.name}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+
           {isLoading ? (
-            <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <Card key={i} className="border-none shadow-sm animate-pulse">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gray-200" />
-                      <div className="flex-1">
-                        <div className="h-4 w-24 bg-gray-200 rounded" />
-                        <div className="h-3 w-16 bg-gray-200 rounded mt-2" />
-                      </div>
-                    </div>
-                    <div className="h-24 bg-gray-200 rounded mt-4" />
-                  </CardContent>
-                </Card>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1,2,3].map((i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="h-48 bg-gray-200 rounded-lg mb-4"></div>
+                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                </div>
               ))}
             </div>
+          ) : error ? (
+            <p className="text-center py-8 text-red-500">
+              Erro ao carregar notícias. Por favor, tente novamente.
+            </p>
           ) : (
-            posts?.map((post: Post) => (
-              <Card key={post.id} className="overflow-hidden bg-white dark:bg-card border-none shadow-sm">
-                <CardContent className="p-0">
-                  <div className="p-3 space-y-2">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        <div className="relative rounded-full p-[3px] bg-gradient-to-tr from-pink-500 via-purple-500 to-yellow-500">
-                          <Avatar 
-                            className="h-12 w-12 border-2 border-white dark:border-gray-800 cursor-pointer hover:opacity-80 transition-opacity"
-                            onClick={() => navigate(`/perfil/${post.user.username}`)}
-                          >
-                            <AvatarImage src={post.user.avatar_url || "/placeholder.svg"} />
-                            <AvatarFallback>
-                              {post.user.full_name?.charAt(0).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                        </div>
-                        <div>
-                          <h2 className="font-bold text-lg">{post.user.username}</h2>
-                          <LocationDisplay userId={post.user_id} defaultCity="GRÃO MOGOL" />
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-2">
-                        {currentUser && currentUser.id !== post.user.id && (
-                          <Button 
-                            onClick={() => handleFollowAction(post.user.id)}
-                            variant="outline"
-                            size="sm"
-                            className={`h-10 px-5 rounded-full text-base font-semibold ${
-                              isFollowing(post.user.id) 
-                                ? "bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-black dark:text-white" 
-                                : "bg-black dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-200 text-white dark:text-black"
-                            }`}
-                            disabled={followMutation.isPending || unfollowMutation.isPending}
-                          >
-                            {isFollowing(post.user.id) ? "Seguindo" : "Seguir"}
-                          </Button>
-                        )}
-                        <Button variant="ghost" size="icon" className="text-gray-600 dark:text-gray-300">
-                          <MoreVertical size={20} />
-                        </Button>
-                      </div>
-                    </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {news.map((item) => {
+                const instagramMedia = item.instagram_media 
+                  ? (typeof item.instagram_media === 'string' 
+                      ? JSON.parse(item.instagram_media) 
+                      : item.instagram_media)
+                  : [];
 
-                    {post.content && (
-                      <p className="text-foreground text-[15px] leading-normal">
-                        <Tags content={post.content} />
-                      </p>
-                    )}
-                  </div>
-
-                  {(post.images?.length > 0 || post.video_urls?.length > 0) && (
-                    <div className="w-full">
-                      <MediaCarousel
-                        images={post.images || []}
-                        videoUrls={post.video_urls || []}
-                        title={post.content || ""}
-                        autoplay={false}
-                        showControls={true}
-                        cropMode="contain"
-                      />
-                    </div>
-                  )}
-
-                  <div className="flex items-center justify-between p-2 mt-2 border-t border-border/40 relative">
-                    <div className="relative">
-                      <button
-                        className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                        onClick={() => setActiveReactionMenu(activeReactionMenu === post.id ? null : post.id)}
-                      >
-                        {reactionsLoading ? (
-                          <div className="w-5 h-5 rounded-full animate-pulse bg-gray-300 dark:bg-gray-600"></div>
-                        ) : post.reaction_type ? (
-                          <img 
-                            src={getReactionIcon(post.reaction_type)} 
-                            alt={post.reaction_type} 
-                            className="w-5 h-5"
-                            onError={(e) => {
-                              console.error(`Failed to load reaction icon: ${getReactionIcon(post.reaction_type)}`);
-                              (e.target as HTMLImageElement).src = "/curtidas.png";
-                            }}
-                          />
-                        ) : (
-                          <img 
-                            src="/curtidas.png" 
-                            alt="Curtir" 
-                            className="w-5 h-5"
-                            onError={(e) => {
-                              console.error("Failed to load default like icon");
-                              (e.target as HTMLImageElement).src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z'%3E%3C/path%3E%3C/svg%3E";
-                            }}
-                          />
-                        )}
-                      </button>
-
-                      <div className="relative">
-                        <ReactionMenu
-                          isOpen={activeReactionMenu === post.id}
-                          onSelect={(type) => handleReaction(post.id, type)}
-                          currentReaction={post.reaction_type}
-                        />
-                      </div>
-                    </div>
-
-                    {post.likes > 0 && (
-                      <div 
-                        className="flex items-center gap-1 cursor-pointer absolute left-0 -top-7 bg-gray-800/80 text-white rounded-full py-1 px-3"
-                        onClick={() => post.likes > 0 && navigate(`/pagcurtidas/${post.id}`)}
-                      >
-                        <div className="flex -space-x-2 overflow-hidden">
-                          {post.reactionsByType && Object.keys(post.reactionsByType).slice(0, 2).map((type, index) => (
-                            <img 
-                              key={type} 
-                              src={getReactionIcon(type)} 
-                              alt={type}
-                              className="inline-block h-6 w-6 rounded-full ring-2 ring-white dark:ring-gray-800"
-                              style={{ zIndex: 3 - index }}
-                            />
-                          ))}
-                        </div>
-                        <span className="text-sm text-white hover:underline reaction-count">
-                          {post.reaction_type && post.likes > 1 ? (
-                            <span>Você e outras {post.likes - 1} pessoas</span>
-                          ) : post.reaction_type ? (
-                            <span>Você</span>
-                          ) : post.likes > 0 ? (
-                            <span>{post.likes} pessoas</span>
-                          ) : null}
-                        </span>
-                      </div>
-                    )}
-
-                    <button 
-                      onClick={() => navigate(`/posts/${post.id}`)}
-                      className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                    >
-                      <img src="/comentario.png" alt="Comentários" className="w-5 h-5" />
-                      <span className="text-sm text-muted-foreground">
-                        {post.comment_count || 0}
-                      </span>
-                    </button>
-
-                    <button
-                      className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                      onClick={() => handleWhatsAppShare(post.id)}
-                    >
-                      <img src="/whatsapp.png" alt="WhatsApp" className="w-5 h-5" />
-                    </button>
-
-                    <button
-                      className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                      onClick={() => handleShare(post.id)}
-                    >
-                      <img src="/compartilharlink.png" alt="Compartilhar" className="w-5 h-5" />
-                    </button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
+                return (
+                  <NewsCard
+                    key={item.id}
+                    id={item.id}
+                    title={item.title}
+                    content={item.content}
+                    date={item.date}
+                    createdAt={item.created_at}
+                    images={item.images || []}
+                    video_urls={item.video_urls || []}
+                    instagramMedia={instagramMedia}
+                    category={item.categories ? {
+                      name: item.categories.name,
+                      slug: item.categories.slug,
+                      background_color: item.categories.background_color
+                    } : null}
+                    buttonColor={item.button_color || undefined}
+                  />
+                );
+              })}
+              {!isLoading && news.length === 0 && (
+                <p className="text-gray-500 col-span-full text-center py-8">
+                  Nenhuma notícia encontrada.
+                </p>
+              )}
+            </div>
           )}
         </div>
-      </main>
+      </div>
       <BottomNav />
+      <PWAInstallPrompt />
     </div>
   );
 };
