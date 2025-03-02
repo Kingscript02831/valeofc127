@@ -1,88 +1,124 @@
 
-import { useMemo } from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { cn } from "@/lib/utils";
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { supabase } from "../integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 
 interface StoryCircleProps {
   userId: string;
   username: string;
-  avatarUrl?: string;
+  avatarUrl: string | null;
   isCurrentUser?: boolean;
   hasStories?: boolean;
-  onClick?: () => void;
 }
 
-const StoryCircle = ({ 
-  userId, 
-  username, 
-  avatarUrl, 
-  isCurrentUser = false,
-  hasStories = false,
-  onClick
-}: StoryCircleProps) => {
-  // Check if user has active stories
-  const { data: hasActiveStories } = useQuery({
-    queryKey: ["userHasStories", userId],
+const StoryCircle = ({ userId, username, avatarUrl, isCurrentUser = false, hasStories: propHasStories }: StoryCircleProps) => {
+  const navigate = useNavigate();
+  const [hasUnviewedStories, setHasUnviewedStories] = useState(false);
+
+  // Check if user has unviewed stories
+  const { data: storiesData } = useQuery({
+    queryKey: ["userStories", userId],
     queryFn: async () => {
-      if (!userId) return false;
-      
-      // Skip query if we already know the status
-      if (hasStories !== undefined) return hasStories;
-      
-      const { count, error } = await supabase
+      // Get all non-expired stories from the user
+      const { data: stories, error } = await supabase
         .from("stories")
-        .select("*", { count: "exact", head: true })
+        .select("id")
         .eq("user_id", userId)
         .gt("expires_at", new Date().toISOString());
-        
-      if (error) {
-        console.error("Error checking stories:", error);
-        return false;
+
+      if (error) throw error;
+      
+      if (!stories || stories.length === 0) {
+        setHasUnviewedStories(false);
+        return { hasStories: propHasStories || false, stories: [] };
       }
       
-      return count > 0;
+      // If it's the current user, no need to check views
+      if (isCurrentUser) {
+        setHasUnviewedStories(true);
+        return { hasStories: true, stories };
+      }
+      
+      // For other users, check if there are any unviewed stories
+      const { data: currentUser } = await supabase.auth.getUser();
+      if (!currentUser.user) return { hasStories: propHasStories || false, stories: [] };
+      
+      const storyIds = stories.map(story => story.id);
+      
+      const { data: views, error: viewsError } = await supabase
+        .from("story_views")
+        .select("story_id")
+        .eq("viewer_id", currentUser.user.id)
+        .in("story_id", storyIds);
+        
+      if (viewsError) throw viewsError;
+      
+      // If number of views is less than number of stories, there are unviewed stories
+      const hasUnviewed = views ? stories.length > views.length : true;
+      setHasUnviewedStories(hasUnviewed);
+      
+      return { 
+        hasStories: true, 
+        hasUnviewedStories: hasUnviewed,
+        stories 
+      };
     },
-    // Don't refetch unnecessarily
-    staleTime: 1000 * 60 * 2, // 2 minutes
-    enabled: !isCurrentUser && hasStories === undefined
+    refetchInterval: 60000, // Refetch every minute
   });
 
-  const displayName = username ? (username.length > 10 ? username.substring(0, 8) + "..." : username) : "Usuário";
-  
-  // Determine if we should show the story ring
-  const showStoryRing = useMemo(() => {
-    if (hasStories !== undefined) return hasStories;
-    return hasActiveStories;
-  }, [hasStories, hasActiveStories]);
+  const handleClick = () => {
+    if (isCurrentUser) {
+      // Modificação para visualizar os próprios stories ao invés de adicionar
+      navigate(`/story/manage`);
+    } else if (storiesData?.hasStories) {
+      // View user's stories
+      navigate(`/story/view/${userId}`);
+    }
+  };
+
+  // Display name truncation 
+  const displayName = isCurrentUser ? "Seu story" : 
+    username.length > 9 ? username.substring(0, 8) + '...' : username;
 
   return (
-    <div 
-      className="flex flex-col items-center cursor-pointer" 
-      onClick={onClick}
-    >
-      <div className={cn(
-        "p-[2px] rounded-full",
-        showStoryRing 
-          ? "bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-500" 
-          : "bg-transparent"
-      )}>
-        <Avatar className="w-[58px] h-[58px] border-2 border-background">
+    <div className="flex flex-col items-center w-[62px]">
+      <div 
+        className="relative w-[62px] h-[62px] flex items-center justify-center cursor-pointer"
+        onClick={handleClick}
+      >
+        {/* Gradient circle for unviewed stories - Instagram style gradient */}
+        {storiesData?.hasStories && hasUnviewedStories ? (
+          <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-yellow-500 via-orange-500 via-red-500 via-purple-500 to-blue-500"></div>
+        ) : storiesData?.hasStories ? (
+          <div className="absolute inset-0 rounded-full bg-gray-300 dark:bg-gray-700"></div>
+        ) : null}
+
+        {/* White inner circle - smaller gap for Instagram look */}
+        <div className="absolute inset-[2px] bg-white dark:bg-black rounded-full"></div>
+
+        {/* User avatar */}
+        <Avatar className="h-[56px] w-[56px] relative">
           {avatarUrl ? (
-            <AvatarImage 
-              src={avatarUrl} 
-              alt={displayName}
-              className="object-cover"
-            />
+            <AvatarImage src={avatarUrl} alt={username} className="object-cover" />
           ) : (
-            <AvatarFallback className="text-lg">
-              {displayName.charAt(0).toUpperCase()}
+            <AvatarFallback className="text-xs">
+              {username?.charAt(0).toUpperCase() || "U"}
             </AvatarFallback>
           )}
         </Avatar>
+
+        {/* "+" button for current user - Instagram style */}
+        {isCurrentUser && (
+          <div className="absolute bottom-0 right-0 bg-blue-500 rounded-full border-2 border-white dark:border-black w-4 h-4 flex items-center justify-center">
+            <span className="text-white text-[10px] font-bold">+</span>
+          </div>
+        )}
       </div>
-      <span className="text-xs mt-1 text-center max-w-[62px] truncate">
+
+      {/* Username below - smaller text for Instagram look */}
+      <span className="mt-1 text-[11px] text-center truncate w-full">
         {displayName}
       </span>
     </div>
