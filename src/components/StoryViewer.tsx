@@ -10,6 +10,7 @@ interface StoryViewerProps {
   username: string;
   imageUrl: string;
   storyId?: string;
+  onViewed?: () => void;
 }
 
 const StoryViewer: React.FC<StoryViewerProps> = ({
@@ -17,7 +18,8 @@ const StoryViewer: React.FC<StoryViewerProps> = ({
   onClose,
   username,
   imageUrl,
-  storyId
+  storyId,
+  onViewed
 }) => {
   const [progress, setProgress] = useState(0);
   
@@ -28,6 +30,7 @@ const StoryViewer: React.FC<StoryViewerProps> = ({
         setProgress(prev => {
           if (prev >= 100) {
             clearInterval(interval);
+            if (onViewed) onViewed();
             setTimeout(() => onClose(), 300);
             return 100;
           }
@@ -37,7 +40,7 @@ const StoryViewer: React.FC<StoryViewerProps> = ({
       
       return () => clearInterval(interval);
     }
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, onViewed]);
   
   // Determine if it's a video or image based on file extension
   const isVideo = imageUrl && (
@@ -61,9 +64,9 @@ const StoryViewer: React.FC<StoryViewerProps> = ({
           {/* User info */}
           <div className="absolute top-0 left-0 right-0 p-4 z-10 flex items-center justify-between bg-gradient-to-b from-black/60 to-transparent">
             <div className="flex items-center gap-2">
-              <Avatar className="h-8 w-8">
+              <Avatar className="h-8 w-8 border border-white">
                 <AvatarImage src={imageUrl} alt={username} />
-                <AvatarFallback>{username?.charAt(0)?.toUpperCase()}</AvatarFallback>
+                <AvatarFallback className="bg-gray-800 text-white">{username?.charAt(0)?.toUpperCase()}</AvatarFallback>
               </Avatar>
               <span className="text-white font-medium text-sm">{username}</span>
               <span className="text-gray-300 text-xs">agora</span>
@@ -74,7 +77,7 @@ const StoryViewer: React.FC<StoryViewerProps> = ({
           </div>
           
           {/* Story content */}
-          <div className="flex-1 flex items-center justify-center bg-gray-900">
+          <div className="flex-1 flex items-center justify-center bg-black">
             {isVideo ? (
               <video 
                 src={imageUrl} 
