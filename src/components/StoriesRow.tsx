@@ -93,7 +93,7 @@ const StoriesRow: React.FC = () => {
           user_id: story.user_id,
           content: story.content,
           media_url: story.media_url,
-          media_type: story.media_type,
+          media_type: story.media_type as 'image' | 'video',
           created_at: story.created_at,
           expires_at: story.expires_at,
           username: story.profiles?.username || 'Usuário',
