@@ -35,6 +35,25 @@ export const pwaCache = {
     strategy: 'CacheFirst',
     maxEntries: 100, 
     maxAgeSeconds: 30 * 24 * 60 * 60, // 30 dias
+  },
+  
+  // NOVO: Estratégia para dados de API (reações, comentários, etc)
+  apiData: {
+    name: 'api-data-cache',
+    pattern: /\/(post_reactions|post_comments|profiles|posts|stories)/,
+    strategy: 'NetworkFirst',
+    maxEntries: 200,
+    maxAgeSeconds: 60 * 60, // 1 hora
+    networkTimeoutSeconds: 5, // Tempo limite para buscar da rede antes de usar cache
+  },
+  
+  // NOVO: Cache para diferentes tipos de links compartilháveis
+  shareLinks: {
+    name: 'share-links-cache',
+    pattern: /\/posts\/|\/noticias\/|\/eventos\/|\/produtos\//,
+    strategy: 'NetworkFirst',
+    maxEntries: 100,
+    maxAgeSeconds: 24 * 60 * 60, // 1 dia
   }
 };
 
@@ -46,5 +65,13 @@ export const precacheUrls = [
   '/compartilharlink.png',
   '/whatsapp.png',
   '/placeholder.svg',
+  // Ícones de reações
+  '/amei1.png',
+  '/haha1.png',
+  '/triste1.png',
+  '/uau1.png',
+  // Ícones de compartilhamento
+  '/facebook.png',
+  '/instagram.png',
   // Outros recursos importantes que devem estar disponíveis offline
 ];
