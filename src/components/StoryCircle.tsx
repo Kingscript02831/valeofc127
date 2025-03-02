@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { supabase } from "../integrations/supabase/client";
@@ -10,10 +10,9 @@ interface StoryCircleProps {
   username: string;
   avatarUrl: string | null;
   isCurrentUser?: boolean;
-  size?: "sm" | "md" | "lg";
 }
 
-const StoryCircle = ({ userId, username, avatarUrl, isCurrentUser = false, size = "md" }: StoryCircleProps) => {
+const StoryCircle = ({ userId, username, avatarUrl, isCurrentUser = false }: StoryCircleProps) => {
   const navigate = useNavigate();
   const [hasUnviewedStories, setHasUnviewedStories] = useState(false);
 
@@ -79,32 +78,13 @@ const StoryCircle = ({ userId, username, avatarUrl, isCurrentUser = false, size 
     }
   };
 
-  // Tamanhos diferentes baseados na prop size
-  const sizeClasses = {
-    sm: {
-      container: "w-16 h-16",
-      avatar: "w-14 h-14",
-      label: "text-xs",
-    },
-    md: {
-      container: "w-20 h-20",
-      avatar: "w-18 h-18",
-      label: "text-sm",
-    },
-    lg: {
-      container: "w-24 h-24",
-      avatar: "w-22 h-22",
-      label: "text-base",
-    }
-  };
-
   return (
     <div className="flex flex-col items-center">
       <div 
-        className={`relative ${sizeClasses[size].container} flex items-center justify-center cursor-pointer`}
+        className="relative w-20 h-20 flex items-center justify-center cursor-pointer"
         onClick={handleClick}
       >
-        {/* Círculo gradiente ou círculo apagado */}
+        {/* Círculo gradiente para histórias não visualizadas */}
         <div 
           className={`absolute inset-0 rounded-full ${
             storiesData?.hasStories && hasUnviewedStories
@@ -119,7 +99,7 @@ const StoryCircle = ({ userId, username, avatarUrl, isCurrentUser = false, size 
         <div className="absolute inset-1 bg-white dark:bg-black rounded-full" />
 
         {/* Avatar do usuário */}
-        <Avatar className={`${sizeClasses[size].avatar} relative border-2 border-white dark:border-gray-800`}>
+        <Avatar className="w-18 h-18 relative border-2 border-white dark:border-gray-800">
           {avatarUrl ? (
             <AvatarImage src={avatarUrl} alt={username} />
           ) : (
@@ -138,7 +118,7 @@ const StoryCircle = ({ userId, username, avatarUrl, isCurrentUser = false, size 
       </div>
 
       {/* Nome de usuário abaixo */}
-      <span className={`mt-1 ${sizeClasses[size].label} text-center font-medium truncate w-full`}>
+      <span className="mt-1 text-sm text-center font-medium truncate w-full">
         {isCurrentUser ? "Seu story" : username}
       </span>
     </div>

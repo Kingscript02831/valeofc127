@@ -6,7 +6,7 @@ import { supabase } from "../integrations/supabase/client";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { toast } from "sonner";
-import { ArrowLeft, Camera, Plus, Video } from "lucide-react";
+import { ArrowLeft, Camera, Video } from "lucide-react";
 import PhotoUrlDialog from "../components/PhotoUrlDialog";
 import { MediaCarousel } from "../components/MediaCarousel";
 
