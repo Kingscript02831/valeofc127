@@ -45,7 +45,7 @@ export default defineConfig(async ({ mode }) => {
   }
 
   const manifestConfig = {
-    registerType: "autoUpdate" as const,
+    registerType: "autoUpdate",
     includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
     manifest: {
       name: pwaConfig?.pwa_name || 'ValeOfc',
