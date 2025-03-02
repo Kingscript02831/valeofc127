@@ -344,11 +344,13 @@ const Posts: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-background">
+    <div className="bg-white dark:bg-background min-h-screen pb-16">
       <Navbar />
-      <main className="container mx-auto py-8 px-4 pt-20 pb-24">
-        <div className="max-w-xl mx-auto space-y-4">
+      <div className="container max-w-3xl mx-auto px-0 sm:px-4">
+        <div className="mb-2 pt-2">
           <StoriesBar />
+        </div>
+        <div className="max-w-xl mx-auto space-y-4">
           <div className="h-px bg-gray-200 dark:bg-gray-800 w-full my-2"></div>
           {isLoading ? (
             <div className="space-y-4">
@@ -530,7 +532,7 @@ const Posts: React.FC = () => {
             ))
           )}
         </div>
-      </main>
+      </div>
       <BottomNav />
     </div>
   );
