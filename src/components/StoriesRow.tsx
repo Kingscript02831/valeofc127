@@ -1,332 +1,287 @@
-
 import React, { useState, useEffect } from 'react';
 import { ScrollArea, ScrollBar } from "./ui/scroll-area";
 import StoryCircle from "./StoryCircle";
-import StoryViewer from "./StoryViewer";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import PhotoUrlDialog from "./PhotoUrlDialog";
-import { useToast } from "@/hooks/use-toast";
-import { PlusCircle } from "lucide-react";
+import { Image, Video } from "lucide-react";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import StoryViewer from './StoryViewer';
 
 interface Story {
   id: string;
   user_id: string;
-  image_url: string;
+  content?: string;
+  media_url?: string;
+  media_type: 'image' | 'video';
   created_at: string;
-  profiles: {
-    username: string;
-    avatar_url: string;
-  };
-  viewed?: boolean;
+  expires_at: string;
+  username: string;
+  avatar_url: string;
+  isOwn?: boolean;
+  isNew?: boolean;
 }
 
-interface ViewedStory {
-  id: string;
-  viewed_at: string;
-}
-
-const StoriesRow = () => {
+const StoriesRow: React.FC = () => {
   const [stories, setStories] = useState<Story[]>([]);
-  const [viewedStories, setViewedStories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const [viewerOpen, setViewerOpen] = useState(false);
-  const [currentStory, setCurrentStory] = useState<Story | null>(null);
-  const [photoDialogOpen, setPhotoDialogOpen] = useState(false);
-  const { toast } = useToast();
+  const [viewedStories, setViewedStories] = useState<Record<string, boolean>>({});
+  const [isPhotoUrlDialogOpen, setIsPhotoUrlDialogOpen] = useState(false);
+  const [mediaType, setMediaType] = useState<'image' | 'video'>('image');
+  const [currentStory, setCurrentStory] = useState<{
+    open: boolean;
+    username: string;
+    imageUrl: string;
+    id: string;
+  }>({
+    open: false,
+    username: "",
+    imageUrl: "",
+    id: ""
+  });
   
-  // Check if user is logged in
-  const [userId, setUserId] = useState<string | null>(null);
-  const [userProfile, setUserProfile] = useState<any>(null);
-
-  // Get current user
   useEffect(() => {
-    const getUser = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          setUserId(user.id);
-          console.log("User logged in:", user.id);
-          
-          // Fetch user profile
-          const { data: profileData, error: profileError } = await supabase
-            .from('profiles')
-            .select('username, avatar_url')
-            .eq('id', user.id)
-            .single();
-            
-          if (profileData && !profileError) {
-            setUserProfile(profileData);
-            console.log("User profile:", profileData);
-          } else {
-            console.log("Error fetching profile:", profileError);
-          }
-        } else {
-          console.log("No user logged in");
-          setUserId(null);
-          setUserProfile(null);
-        }
-      } catch (error) {
-        console.error("Error checking user:", error);
-        setUserId(null);
-        setUserProfile(null);
-      }
-    };
-    
-    getUser();
+    fetchStories();
   }, []);
 
-  // Load viewed stories from localStorage
-  useEffect(() => {
-    try {
-      const viewedStoriesStr = localStorage.getItem('viewedStories');
-      if (viewedStoriesStr) {
-        const parsedViewedStories = JSON.parse(viewedStoriesStr);
-        // Filter out viewed stories older than 24 hours
-        const now = new Date();
-        const filteredViewedStories = Object.entries(parsedViewedStories)
-          .filter(([_, viewedAt]: [string, any]) => {
-            const viewedTime = new Date(viewedAt);
-            const hoursDiff = (now.getTime() - viewedTime.getTime()) / (1000 * 60 * 60);
-            return hoursDiff < 24;
-          })
-          .map(([id]) => id);
-
-        setViewedStories(filteredViewedStories);
-      }
-    } catch (error) {
-      console.error("Error loading viewed stories:", error);
-    }
-  }, []);
-
-  // Mark a story as viewed
-  const markAsViewed = (storyId: string) => {
-    try {
-      // Get current viewed stories
-      const viewedStoriesStr = localStorage.getItem('viewedStories') || '{}';
-      const viewedStoriesObj = JSON.parse(viewedStoriesStr);
-      
-      // Add current story with timestamp
-      viewedStoriesObj[storyId] = new Date().toISOString();
-      
-      // Save back to localStorage
-      localStorage.setItem('viewedStories', JSON.stringify(viewedStoriesObj));
-      
-      // Update state
-      setViewedStories(prev => [...prev, storyId]);
-      
-      // Update the stories array to mark this one as viewed
-      setStories(prev => 
-        prev.map(story => 
-          story.id === storyId ? { ...story, viewed: true } : story
-        )
-      );
-    } catch (error) {
-      console.error("Error marking story as viewed:", error);
-    }
-  };
-
-  // Function to fetch stories
   const fetchStories = async () => {
     try {
       setLoading(true);
-      console.log("Fetching stories...");
       
-      // Build a query to get all stories that haven't expired yet
+      // First, check if the user is logged in
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        // If not logged in, just show the "Your story" option
+        setStories([
+          { id: "own", user_id: "own", media_type: 'image', username: "Seu story", avatar_url: "/placeholder.svg", isOwn: true, isNew: false, created_at: new Date().toISOString(), expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() }
+        ]);
+        setLoading(false);
+        return;
+      }
+
+      // Fetch stories that haven't expired yet (24 hours)
       const { data, error } = await supabase
         .from('stories')
         .select(`
-          id,
-          user_id,
-          media_url as image_url,
-          created_at,
+          id, 
+          user_id, 
+          content, 
+          media_url, 
+          media_type, 
+          created_at, 
           expires_at,
           profiles:user_id (username, avatar_url)
         `)
         .gt('expires_at', new Date().toISOString())
         .order('created_at', { ascending: false });
-      
+
       if (error) {
         console.error('Error fetching stories:', error);
+        toast.error('Não foi possível carregar os stories');
+      } else {
+        // Format the data
+        const formattedStories = data.map(story => ({
+          id: story.id,
+          user_id: story.user_id,
+          content: story.content,
+          media_url: story.media_url,
+          media_type: story.media_type,
+          created_at: story.created_at,
+          expires_at: story.expires_at,
+          username: story.profiles?.username || 'Usuário',
+          avatar_url: story.profiles?.avatar_url || '/placeholder.svg',
+          isOwn: story.user_id === user.id,
+          isNew: true // Consider all as new initially
+        }));
+
+        // Add the "Your story" option at the beginning
+        const ownStory = {
+          id: "own",
+          user_id: user.id,
+          media_type: 'image' as 'image' | 'video',
+          username: "Seu story",
+          avatar_url: user.user_metadata?.avatar_url || "/placeholder.svg",
+          isOwn: true,
+          isNew: false,
+          created_at: new Date().toISOString(),
+          expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+        };
+
+        // Group stories by user (to show only the most recent per user)
+        const userStories: Record<string, Story[]> = {};
+        formattedStories.forEach(story => {
+          if (!userStories[story.user_id]) {
+            userStories[story.user_id] = [];
+          }
+          userStories[story.user_id].push(story);
+        });
+
+        // Get only the most recent story for each user
+        const uniqueUserStories = Object.values(userStories).map(userStoryList => 
+          userStoryList.sort((a, b) => 
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          )[0]
+        );
+
+        // Sort by creation date (most recent first)
+        const sortedStories = [ownStory, ...uniqueUserStories.filter(story => story.user_id !== user.id)];
+        setStories(sortedStories);
+      }
+
+      setLoading(false);
+    } catch (error) {
+      console.error('Error loading stories:', error);
+      setLoading(false);
+      toast.error('Erro ao carregar stories');
+    }
+  };
+
+  const handleStoryClick = (story: Story) => {
+    if (story.id === "own") {
+      // If clicking on own story, the dropdown will handle it
+      return;
+    } else {
+      // Open the story viewer
+      setCurrentStory({
+        open: true,
+        username: story.username,
+        imageUrl: story.media_url || '',
+        id: story.id
+      });
+      
+      // Mark as viewed
+      setViewedStories(prev => ({...prev, [story.id]: true}));
+    }
+  };
+  
+  const handleCloseStory = () => {
+    setCurrentStory({...currentStory, open: false});
+  };
+
+  const handleAddStory = async (url: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast.error('Você precisa estar logado para adicionar um story');
         return;
       }
-      
-      console.log("Stories fetched:", data);
-      
-      // Format the data to match the Story interface
-      const formattedStories = data.map((story: any) => ({
-        ...story,
-        profiles: {
-          username: story.profiles?.username || 'Unknown',
-          avatar_url: story.profiles?.avatar_url || null
-        },
-        viewed: viewedStories.includes(story.id)
-      }));
-      
-      setStories(formattedStories);
-    } catch (error) {
-      console.error('Error in fetchStories:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  // Fetch stories on component mount
-  useEffect(() => {
-    fetchStories();
-    
-    // Set up a timer to refresh stories every minute
-    const interval = setInterval(() => {
-      fetchStories();
-    }, 60000); // 60 seconds
-    
-    return () => clearInterval(interval);
-  }, [viewedStories]);
+      // Expiration date (24 hours from now)
+      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
-  // Handle story click
-  const handleStoryClick = (story: Story) => {
-    setCurrentStory(story);
-    setViewerOpen(true);
-  };
-
-  // Add new story
-  const handleAddStory = async (url: string) => {
-    if (!userId) {
-      toast({
-        title: "Erro",
-        description: "Você precisa estar logado para adicionar histórias.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    try {
-      console.log("Adding story with URL:", url);
-      
-      // Calculate expiry time (24 hours from now)
-      const expiresAt = new Date();
-      expiresAt.setHours(expiresAt.getHours() + 24);
-      
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('stories')
         .insert({
-          user_id: userId,
+          user_id: user.id,
           media_url: url,
-          media_type: url.match(/\.(mp4|mov|avi)$/i) ? 'video' : 'image',
-          expires_at: expiresAt.toISOString()
-        });
-      
+          media_type: mediaType,
+          created_at: new Date().toISOString(),
+          expires_at: expiresAt
+        })
+        .select();
+
       if (error) {
         console.error('Error adding story:', error);
-        toast({
-          title: "Erro",
-          description: "Não foi possível adicionar a história.",
-          variant: "destructive",
-        });
+        toast.error('Não foi possível adicionar o story');
         return;
       }
-      
-      toast({
-        title: "Sucesso",
-        description: "História adicionada com sucesso!",
-      });
-      
-      // Refresh stories
-      fetchStories();
+
+      toast.success('Story adicionado com sucesso!');
+      fetchStories(); // Reload stories
     } catch (error) {
-      console.error('Error in handleAddStory:', error);
-      toast({
-        title: "Erro",
-        description: "Ocorreu um erro ao adicionar a história.",
-        variant: "destructive",
-      });
+      console.error('Error adding story:', error);
+      toast.error('Ocorreu um erro ao adicionar o story');
     }
   };
 
-  // Handle story viewed callback
-  const handleStoryViewed = () => {
-    if (currentStory) {
-      markAsViewed(currentStory.id);
-    }
+  const handleAddFromPhotoUrl = (url: string) => {
+    handleAddStory(url);
+    setIsPhotoUrlDialogOpen(false);
   };
 
+  const openPhotoUrlDialog = (type: 'image' | 'video') => {
+    setMediaType(type);
+    setIsPhotoUrlDialogOpen(true);
+  };
+  
   return (
-    <div className="w-full py-4 relative bg-black">
+    <div className="w-full py-2">
       <ScrollArea className="w-full whitespace-nowrap">
-        <div className="flex space-x-6 px-4">
-          {/* Add Story Button - Only shown when user is logged in */}
-          {userId && (
-            <div 
-              className="flex flex-col items-center space-y-1 cursor-pointer"
-              onClick={() => setPhotoDialogOpen(true)}
-            >
-              <div className="relative rounded-full p-[2px] bg-gray-700">
-                <div className="p-[2px] rounded-full bg-black">
-                  <Avatar className="h-16 w-16 border-2 border-black bg-gray-800">
-                    {userProfile?.avatar_url ? (
-                      <AvatarImage src={userProfile.avatar_url} alt={userProfile.username || 'Seu'} className="opacity-60" />
-                    ) : (
-                      <AvatarFallback className="bg-gray-800 text-white">
-                        {userProfile?.username?.charAt(0)?.toUpperCase() || "S"}
-                      </AvatarFallback>
-                    )}
-                  </Avatar>
-                  <div className="absolute bottom-0 right-0 bg-white rounded-full p-1 border-2 border-black">
-                    <PlusCircle className="h-5 w-5 text-black" />
-                  </div>
-                </div>
-              </div>
-              <span className="text-xs text-center truncate w-20 text-white">Seu story</span>
-            </div>
-          )}
-          
-          {/* Stories */}
+        <div className="flex space-x-4 px-4 py-2">
           {loading ? (
-            // Loading skeletons
-            Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="flex flex-col items-center space-y-1">
-                <div className="h-16 w-16 rounded-full bg-gray-800 animate-pulse" />
-                <div className="h-2 w-16 bg-gray-800 rounded animate-pulse" />
+            // Shimmer loading effect
+            Array(5).fill(0).map((_, i) => (
+              <div key={i} className="flex flex-col items-center space-y-1 animate-pulse">
+                <div className="h-16 w-16 rounded-full bg-gray-200"></div>
+                <div className="h-3 w-16 rounded bg-gray-200"></div>
               </div>
-            ))
-          ) : stories.length > 0 ? (
-            stories.map(story => (
-              <StoryCircle
-                key={story.id}
-                imageUrl={story.profiles.avatar_url || '/placeholder.svg'}
-                username={story.profiles.username}
-                isNew={true}
-                isViewed={story.viewed}
-                isOwn={userId === story.user_id}
-                onClick={() => handleStoryClick(story)}
-              />
             ))
           ) : (
-            <div className="flex items-center justify-center w-full py-2">
-              <p className="text-sm text-gray-400">Nenhuma história disponível</p>
-            </div>
+            // Actual stories
+            stories.map((story) => (
+              <div key={story.id}>
+                {story.isOwn ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <div>
+                        <StoryCircle
+                          imageUrl={story.avatar_url}
+                          username={story.username}
+                          isNew={story.isNew}
+                          isOwn={story.isOwn}
+                          isViewed={viewedStories[story.id]}
+                        />
+                      </div>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuItem onClick={() => openPhotoUrlDialog('image')}>
+                        <Image className="mr-2 h-4 w-4" />
+                        <span>Foto do Dropbox</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => openPhotoUrlDialog('video')}>
+                        <Video className="mr-2 h-4 w-4" />
+                        <span>Vídeo do Dropbox</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  <div onClick={() => handleStoryClick(story)}>
+                    <StoryCircle
+                      imageUrl={story.avatar_url}
+                      username={story.username}
+                      isNew={story.isNew}
+                      isOwn={story.isOwn}
+                      isViewed={viewedStories[story.id]}
+                    />
+                  </div>
+                )}
+              </div>
+            ))
           )}
         </div>
-        <ScrollBar orientation="horizontal" />
+        <ScrollBar orientation="horizontal" className="hidden" />
       </ScrollArea>
       
-      {/* Story Viewer */}
-      {currentStory && (
-        <StoryViewer
-          isOpen={viewerOpen}
-          onClose={() => setViewerOpen(false)}
-          username={currentStory.profiles.username}
-          imageUrl={currentStory.image_url}
-          storyId={currentStory.id}
-          onViewed={handleStoryViewed}
-        />
-      )}
-      
-      {/* Photo URL Dialog */}
       <PhotoUrlDialog
-        isOpen={photoDialogOpen}
-        onClose={() => setPhotoDialogOpen(false)}
-        onConfirm={handleAddStory}
-        title="Adicionar História"
+        isOpen={isPhotoUrlDialogOpen}
+        onClose={() => setIsPhotoUrlDialogOpen(false)}
+        onConfirm={handleAddFromPhotoUrl}
+        title={mediaType === 'image' ? "Adicionar foto do Dropbox" : "Adicionar vídeo do Dropbox"}
+      />
+
+      <StoryViewer
+        isOpen={currentStory.open}
+        onClose={handleCloseStory}
+        username={currentStory.username}
+        imageUrl={currentStory.imageUrl}
+        storyId={currentStory.id}
       />
     </div>
   );
