@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
@@ -81,9 +82,9 @@ const StoryCircle = ({ userId, username, avatarUrl, isCurrentUser = false }: Sto
     username.length > 9 ? username.substring(0, 8) + '...' : username;
 
   return (
-    <div className="flex flex-col items-center w-16">
+    <div className="flex flex-col items-center w-[62px]">
       <div 
-        className="relative w-16 h-16 flex items-center justify-center cursor-pointer"
+        className="relative w-[62px] h-[62px] flex items-center justify-center cursor-pointer"
         onClick={handleClick}
       >
         {/* Gradient circle for unviewed stories - Instagram style gradient */}
@@ -94,10 +95,10 @@ const StoryCircle = ({ userId, username, avatarUrl, isCurrentUser = false }: Sto
         ) : null}
 
         {/* White inner circle - smaller gap for Instagram look */}
-        <div className="absolute inset-0.5 bg-white dark:bg-black rounded-full"></div>
+        <div className="absolute inset-[2px] bg-white dark:bg-black rounded-full"></div>
 
         {/* User avatar */}
-        <Avatar className="h-14 w-14 relative">
+        <Avatar className="h-[56px] w-[56px] relative">
           {avatarUrl ? (
             <AvatarImage src={avatarUrl} alt={username} className="object-cover" />
           ) : (
@@ -109,14 +110,14 @@ const StoryCircle = ({ userId, username, avatarUrl, isCurrentUser = false }: Sto
 
         {/* "+" button for current user - Instagram style */}
         {isCurrentUser && (
-          <div className="absolute bottom-0 right-0 bg-blue-500 rounded-full border-2 border-white dark:border-black w-5 h-5 flex items-center justify-center">
-            <span className="text-white text-xs font-bold">+</span>
+          <div className="absolute bottom-0 right-0 bg-blue-500 rounded-full border-2 border-white dark:border-black w-4 h-4 flex items-center justify-center">
+            <span className="text-white text-[10px] font-bold">+</span>
           </div>
         )}
       </div>
 
       {/* Username below - smaller text for Instagram look */}
-      <span className="mt-1 text-xs text-center truncate w-full">
+      <span className="mt-1 text-[11px] text-center truncate w-full">
         {displayName}
       </span>
     </div>
