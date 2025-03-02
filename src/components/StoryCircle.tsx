@@ -77,48 +77,48 @@ const StoryCircle = ({ userId, username, avatarUrl, isCurrentUser = false }: Sto
     }
   };
 
+  // Display name truncation 
+  const displayName = isCurrentUser ? "Seu story" : 
+    username.length > 9 ? username.substring(0, 8) + '...' : username;
+
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex flex-col items-center w-16">
       <div 
-        className="relative w-20 h-20 flex items-center justify-center cursor-pointer"
+        className="relative w-16 h-16 flex items-center justify-center cursor-pointer"
         onClick={handleClick}
       >
-        {/* Gradient circle for unviewed stories */}
-        <div 
-          className={`absolute inset-0 rounded-full ${
-            storiesData?.hasStories && hasUnviewedStories
-              ? "bg-gradient-to-tr from-pink-500 via-purple-500 to-yellow-500" 
-              : storiesData?.hasStories 
-                ? "bg-gray-400 dark:bg-gray-600" 
-                : "bg-transparent"
-          }`}
-        />
+        {/* Gradient circle for unviewed stories - Instagram style gradient */}
+        {storiesData?.hasStories && hasUnviewedStories ? (
+          <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-yellow-500 via-orange-500 via-red-500 via-purple-500 to-blue-500"></div>
+        ) : storiesData?.hasStories ? (
+          <div className="absolute inset-0 rounded-full bg-gray-300 dark:bg-gray-700"></div>
+        ) : null}
 
-        {/* White inner circle */}
-        <div className="absolute inset-1 bg-white dark:bg-black rounded-full" />
+        {/* White inner circle - smaller gap for Instagram look */}
+        <div className="absolute inset-0.5 bg-white dark:bg-black rounded-full"></div>
 
         {/* User avatar */}
-        <Avatar className="w-18 h-18 relative border-2 border-white dark:border-gray-800">
+        <Avatar className="h-14 w-14 relative">
           {avatarUrl ? (
-            <AvatarImage src={avatarUrl} alt={username} />
+            <AvatarImage src={avatarUrl} alt={username} className="object-cover" />
           ) : (
-            <AvatarFallback>
+            <AvatarFallback className="text-xs">
               {username?.charAt(0).toUpperCase() || "U"}
             </AvatarFallback>
           )}
         </Avatar>
 
-        {/* "+" button for current user */}
+        {/* "+" button for current user - Instagram style */}
         {isCurrentUser && (
-          <div className="absolute bottom-0 right-0 bg-white dark:bg-gray-800 rounded-full border-2 border-white dark:border-gray-800 w-6 h-6 flex items-center justify-center">
-            <span className="text-lg font-bold">+</span>
+          <div className="absolute bottom-0 right-0 bg-blue-500 rounded-full border-2 border-white dark:border-black w-5 h-5 flex items-center justify-center">
+            <span className="text-white text-xs font-bold">+</span>
           </div>
         )}
       </div>
 
-      {/* Username below */}
-      <span className="mt-1 text-sm text-center font-medium truncate w-full">
-        {isCurrentUser ? "Seu story" : username}
+      {/* Username below - smaller text for Instagram look */}
+      <span className="mt-1 text-xs text-center truncate w-full">
+        {displayName}
       </span>
     </div>
   );

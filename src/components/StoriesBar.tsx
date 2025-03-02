@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../integrations/supabase/client";
 import StoryCircle from "./StoryCircle";
@@ -71,12 +72,12 @@ const StoriesBar = () => {
 
   if (isLoading) {
     return (
-      <div className="overflow-x-auto py-4 px-4">
-        <div className="flex space-x-4">
+      <div className="overflow-x-auto py-3 px-2">
+        <div className="flex space-x-3">
           {Array(5).fill(0).map((_, i) => (
             <div key={i} className="flex flex-col items-center">
-              <div className="w-20 h-20 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
-              <div className="w-16 h-4 mt-1 bg-gray-200 dark:bg-gray-700 animate-pulse rounded"></div>
+              <div className="w-16 h-16 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
+              <div className="w-14 h-3 mt-1 bg-gray-200 dark:bg-gray-700 animate-pulse rounded"></div>
             </div>
           ))}
         </div>
@@ -85,8 +86,8 @@ const StoriesBar = () => {
   }
 
   return (
-    <div className="overflow-x-auto py-4 px-4 scrollbar-hide">
-      <div className="flex space-x-4">
+    <div className="overflow-x-auto py-3 px-2 scrollbar-hide border-b border-gray-200 dark:border-gray-800">
+      <div className="flex space-x-3">
         {/* Current user's circle always appears first */}
         {currentUser && (
           <StoryCircle
