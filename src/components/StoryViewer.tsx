@@ -39,6 +39,13 @@ const StoryViewer: React.FC<StoryViewerProps> = ({
     }
   }, [isOpen, onClose]);
   
+  // Determine if it's a video or image based on file extension
+  const isVideo = imageUrl && (
+    imageUrl.toLowerCase().endsWith('.mp4') || 
+    imageUrl.toLowerCase().endsWith('.mov') || 
+    imageUrl.toLowerCase().includes('video')
+  );
+  
   return (
     <Dialog open={isOpen} onOpenChange={() => onClose()}>
       <DialogContent className="max-w-md p-0 rounded-lg overflow-hidden bg-black border-none">
@@ -68,11 +75,22 @@ const StoryViewer: React.FC<StoryViewerProps> = ({
           
           {/* Story content */}
           <div className="flex-1 flex items-center justify-center bg-gray-900">
-            <img 
-              src={imageUrl} 
-              alt="Story" 
-              className="w-full h-full object-cover"
-            />
+            {isVideo ? (
+              <video 
+                src={imageUrl} 
+                className="w-full h-full object-contain"
+                autoPlay
+                loop
+                muted
+                controls
+              />
+            ) : (
+              <img 
+                src={imageUrl} 
+                alt="Story" 
+                className="w-full h-full object-contain"
+              />
+            )}
           </div>
         </div>
       </DialogContent>

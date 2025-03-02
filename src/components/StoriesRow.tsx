@@ -5,7 +5,7 @@ import StoryCircle from "./StoryCircle";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import PhotoUrlDialog from "./PhotoUrlDialog";
-import { PlusCircle, Image, Video } from "lucide-react";
+import { Image, Video } from "lucide-react";
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -54,11 +54,11 @@ const StoriesRow: React.FC = () => {
     try {
       setLoading(true);
       
-      // Primeiro, verificamos se o usuário está logado
+      // First, check if the user is logged in
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
-        // Se não estiver logado, carregamos apenas stories de exemplo
+        // If not logged in, just show the "Your story" option
         setStories([
           { id: "own", user_id: "own", media_type: 'image', username: "Seu story", avatar_url: "/placeholder.svg", isOwn: true, isNew: false, created_at: new Date().toISOString(), expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() }
         ]);
@@ -66,7 +66,7 @@ const StoriesRow: React.FC = () => {
         return;
       }
 
-      // Buscamos stories que não expiraram ainda (24 horas)
+      // Fetch stories that haven't expired yet (24 hours)
       const { data, error } = await supabase
         .from('stories')
         .select(`
@@ -84,10 +84,10 @@ const StoriesRow: React.FC = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Erro ao buscar stories:', error);
+        console.error('Error fetching stories:', error);
         toast.error('Não foi possível carregar os stories');
       } else {
-        // Formatamos os dados para o formato que precisamos
+        // Format the data
         const formattedStories = data.map(story => ({
           id: story.id,
           user_id: story.user_id,
@@ -99,10 +99,10 @@ const StoriesRow: React.FC = () => {
           username: story.profiles?.username || 'Usuário',
           avatar_url: story.profiles?.avatar_url || '/placeholder.svg',
           isOwn: story.user_id === user.id,
-          isNew: true // Consideramos todos como novos inicialmente
+          isNew: true // Consider all as new initially
         }));
 
-        // Adicionamos o story "próprio" no início
+        // Add the "Your story" option at the beginning
         const ownStory = {
           id: "own",
           user_id: user.id,
@@ -115,7 +115,7 @@ const StoriesRow: React.FC = () => {
           expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
         };
 
-        // Agrupamos stories do mesmo usuário
+        // Group stories by user (to show only the most recent per user)
         const userStories: Record<string, Story[]> = {};
         formattedStories.forEach(story => {
           if (!userStories[story.user_id]) {
@@ -124,21 +124,21 @@ const StoriesRow: React.FC = () => {
           userStories[story.user_id].push(story);
         });
 
-        // Pegamos apenas o story mais recente de cada usuário
+        // Get only the most recent story for each user
         const uniqueUserStories = Object.values(userStories).map(userStoryList => 
           userStoryList.sort((a, b) => 
             new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
           )[0]
         );
 
-        // Ordenamos por data de criação (mais recentes primeiro)
+        // Sort by creation date (most recent first)
         const sortedStories = [ownStory, ...uniqueUserStories.filter(story => story.user_id !== user.id)];
         setStories(sortedStories);
       }
 
       setLoading(false);
     } catch (error) {
-      console.error('Erro ao carregar stories:', error);
+      console.error('Error loading stories:', error);
       setLoading(false);
       toast.error('Erro ao carregar stories');
     }
@@ -146,9 +146,10 @@ const StoriesRow: React.FC = () => {
 
   const handleStoryClick = (story: Story) => {
     if (story.id === "own") {
-      // Se clicar no próprio story, não fazemos nada pois será gerenciado pelo dropdown
+      // If clicking on own story, the dropdown will handle it
+      return;
     } else {
-      // Abrir o visualizador de story
+      // Open the story viewer
       setCurrentStory({
         open: true,
         username: story.username,
@@ -156,7 +157,7 @@ const StoriesRow: React.FC = () => {
         id: story.id
       });
       
-      // Marcar como visualizado
+      // Mark as viewed
       setViewedStories(prev => ({...prev, [story.id]: true}));
     }
   };
@@ -174,7 +175,7 @@ const StoriesRow: React.FC = () => {
         return;
       }
 
-      // Data de expiração (24 horas a partir de agora)
+      // Expiration date (24 hours from now)
       const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
       const { data, error } = await supabase
@@ -189,15 +190,15 @@ const StoriesRow: React.FC = () => {
         .select();
 
       if (error) {
-        console.error('Erro ao adicionar story:', error);
+        console.error('Error adding story:', error);
         toast.error('Não foi possível adicionar o story');
         return;
       }
 
       toast.success('Story adicionado com sucesso!');
-      fetchStories(); // Recarregar os stories
+      fetchStories(); // Reload stories
     } catch (error) {
-      console.error('Erro ao adicionar story:', error);
+      console.error('Error adding story:', error);
       toast.error('Ocorreu um erro ao adicionar o story');
     }
   };
