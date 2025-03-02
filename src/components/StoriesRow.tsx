@@ -1,10 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { ScrollArea, ScrollBar } from "./ui/scroll-area";
-import StoryCircle from "@/components/StoryCircle";
-import StoryViewer from "@/components/StoryViewer";
+import StoryCircle from "./StoryCircle";
+import StoryViewer from "./StoryViewer";
 import { supabase } from "@/integrations/supabase/client";
-import PhotoUrlDialog from "@/components/PhotoUrlDialog";
+import PhotoUrlDialog from "./PhotoUrlDialog";
 import { useToast } from "@/hooks/use-toast";
 import { PlusCircle } from "lucide-react";
 
@@ -36,6 +36,10 @@ const StoriesRow = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setUserId(user.id);
+        console.log("User logged in:", user.id);
+      } else {
+        console.log("No user logged in");
+        setUserId(null);
       }
     };
     
@@ -46,6 +50,7 @@ const StoriesRow = () => {
   const fetchStories = async () => {
     try {
       setLoading(true);
+      console.log("Fetching stories...");
       
       // Build a query to get all stories that haven't expired yet
       const { data, error } = await supabase
@@ -53,7 +58,7 @@ const StoriesRow = () => {
         .select(`
           id,
           user_id,
-          image_url,
+          media_url as image_url,
           created_at,
           expires_at,
           profiles:user_id (username, avatar_url)
@@ -66,10 +71,15 @@ const StoriesRow = () => {
         return;
       }
       
+      console.log("Stories fetched:", data);
+      
       // Format the data to match the Story interface
       const formattedStories = data.map((story: any) => ({
         ...story,
-        profiles: story.profiles[0] || { username: 'Unknown', avatar_url: null }
+        profiles: {
+          username: story.profiles?.username || 'Unknown',
+          avatar_url: story.profiles?.avatar_url || null
+        }
       }));
       
       setStories(formattedStories);
@@ -110,6 +120,8 @@ const StoriesRow = () => {
     }
     
     try {
+      console.log("Adding story with URL:", url);
+      
       // Calculate expiry time (24 hours from now)
       const expiresAt = new Date();
       expiresAt.setHours(expiresAt.getHours() + 24);
@@ -118,7 +130,8 @@ const StoriesRow = () => {
         .from('stories')
         .insert({
           user_id: userId,
-          image_url: url,
+          media_url: url,
+          media_type: url.match(/\.(mp4|mov|avi)$/i) ? 'video' : 'image',
           expires_at: expiresAt.toISOString()
         });
       
@@ -153,7 +166,7 @@ const StoriesRow = () => {
     <div className="w-full py-4 relative">
       <ScrollArea className="w-full whitespace-nowrap">
         <div className="flex space-x-4 px-4">
-          {/* Add Story Button */}
+          {/* Add Story Button - Only shown when user is logged in */}
           {userId && (
             <div 
               className="flex flex-col items-center space-y-1 cursor-pointer"
