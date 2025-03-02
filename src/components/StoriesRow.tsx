@@ -5,7 +5,7 @@ import StoryCircle from "./StoryCircle";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import PhotoUrlDialog from "./PhotoUrlDialog";
-import { Image, Video, AlertCircle } from "lucide-react";
+import { Image, Video } from "lucide-react";
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -13,7 +13,6 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import StoryViewer from './StoryViewer';
-import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface Story {
   id: string;
@@ -35,7 +34,6 @@ const StoriesRow: React.FC = () => {
   const [viewedStories, setViewedStories] = useState<Record<string, boolean>>({});
   const [isPhotoUrlDialogOpen, setIsPhotoUrlDialogOpen] = useState(false);
   const [mediaType, setMediaType] = useState<'image' | 'video'>('image');
-  const [noStoriesFound, setNoStoriesFound] = useState(false);
   const [currentStory, setCurrentStory] = useState<{
     open: boolean;
     username: string;
@@ -59,22 +57,11 @@ const StoriesRow: React.FC = () => {
       // First, check if the user is logged in
       const { data: { user } } = await supabase.auth.getUser();
       
-      // Add the "Your story" option at the beginning
-      const ownStory = {
-        id: "own",
-        user_id: user?.id || "guest",
-        media_type: 'image' as 'image' | 'video',
-        username: "Seu story",
-        avatar_url: user?.user_metadata?.avatar_url || "/placeholder.svg",
-        isOwn: true,
-        isNew: false,
-        created_at: new Date().toISOString(),
-        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
-      };
-
       if (!user) {
         // If not logged in, just show the "Your story" option
-        setStories([ownStory]);
+        setStories([
+          { id: "own", user_id: "own", media_type: 'image', username: "Seu story", avatar_url: "/placeholder.svg", isOwn: true, isNew: false, created_at: new Date().toISOString(), expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() }
+        ]);
         setLoading(false);
         return;
       }
@@ -90,7 +77,7 @@ const StoriesRow: React.FC = () => {
           media_type, 
           created_at, 
           expires_at,
-          profiles(username, avatar_url)
+          profiles:user_id (username, avatar_url)
         `)
         .lt('expires_at', new Date(Date.now() + 1000).toISOString())
         .gt('expires_at', new Date().toISOString())
@@ -99,56 +86,60 @@ const StoriesRow: React.FC = () => {
       if (error) {
         console.error('Error fetching stories:', error);
         toast.error('Não foi possível carregar os stories');
-        setNoStoriesFound(true);
       } else {
         // Format the data
-        if (data && data.length > 0) {
-          const formattedStories = data.map(story => ({
-            id: story.id,
-            user_id: story.user_id,
-            content: story.content,
-            media_url: story.media_url,
-            media_type: story.media_type as 'image' | 'video',
-            created_at: story.created_at,
-            expires_at: story.expires_at,
-            username: story.profiles?.username || 'Usuário',
-            avatar_url: story.profiles?.avatar_url || '/placeholder.svg',
-            isOwn: story.user_id === user.id,
-            isNew: true // Consider all as new initially
-          }));
+        const formattedStories = data.map(story => ({
+          id: story.id,
+          user_id: story.user_id,
+          content: story.content,
+          media_url: story.media_url,
+          media_type: story.media_type as 'image' | 'video',
+          created_at: story.created_at,
+          expires_at: story.expires_at,
+          username: story.profiles?.username || 'Usuário',
+          avatar_url: story.profiles?.avatar_url || '/placeholder.svg',
+          isOwn: story.user_id === user.id,
+          isNew: true // Consider all as new initially
+        }));
 
-          // Group stories by user (to show only the most recent per user)
-          const userStories: Record<string, Story[]> = {};
-          formattedStories.forEach(story => {
-            if (!userStories[story.user_id]) {
-              userStories[story.user_id] = [];
-            }
-            userStories[story.user_id].push(story);
-          });
+        // Add the "Your story" option at the beginning
+        const ownStory = {
+          id: "own",
+          user_id: user.id,
+          media_type: 'image' as 'image' | 'video',
+          username: "Seu story",
+          avatar_url: user.user_metadata?.avatar_url || "/placeholder.svg",
+          isOwn: true,
+          isNew: false,
+          created_at: new Date().toISOString(),
+          expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+        };
 
-          // Get only the most recent story for each user
-          const uniqueUserStories = Object.values(userStories).map(userStoryList => 
-            userStoryList.sort((a, b) => 
-              new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-            )[0]
-          );
+        // Group stories by user (to show only the most recent per user)
+        const userStories: Record<string, Story[]> = {};
+        formattedStories.forEach(story => {
+          if (!userStories[story.user_id]) {
+            userStories[story.user_id] = [];
+          }
+          userStories[story.user_id].push(story);
+        });
 
-          // Sort by creation date (most recent first)
-          const sortedStories = [ownStory, ...uniqueUserStories.filter(story => story.user_id !== user.id)];
-          setStories(sortedStories);
-          setNoStoriesFound(false);
-        } else {
-          // No stories found, but still show the own story option
-          setStories([ownStory]);
-          setNoStoriesFound(true);
-        }
+        // Get only the most recent story for each user
+        const uniqueUserStories = Object.values(userStories).map(userStoryList => 
+          userStoryList.sort((a, b) => 
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          )[0]
+        );
+
+        // Sort by creation date (most recent first)
+        const sortedStories = [ownStory, ...uniqueUserStories.filter(story => story.user_id !== user.id)];
+        setStories(sortedStories);
       }
 
       setLoading(false);
     } catch (error) {
       console.error('Error loading stories:', error);
       setLoading(false);
-      setNoStoriesFound(true);
       toast.error('Erro ao carregar stories');
     }
   };
@@ -279,17 +270,6 @@ const StoriesRow: React.FC = () => {
         </div>
         <ScrollBar orientation="horizontal" className="hidden" />
       </ScrollArea>
-      
-      {noStoriesFound && !loading && (
-        <div className="px-4 py-2">
-          <Alert variant="default" className="border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-800">
-            <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-            <AlertDescription className="text-amber-600 dark:text-amber-400 ml-2 text-sm">
-              Nenhum story encontrado. Seja o primeiro a compartilhar!
-            </AlertDescription>
-          </Alert>
-        </div>
-      )}
       
       <PhotoUrlDialog
         isOpen={isPhotoUrlDialogOpen}
