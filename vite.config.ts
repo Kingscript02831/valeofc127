@@ -45,7 +45,7 @@ export default defineConfig(async ({ mode }) => {
   }
 
   const manifestConfig = {
-    registerType: "autoUpdate" as const,
+    registerType: "autoUpdate",
     includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
     manifest: {
       name: pwaConfig?.pwa_name || 'ValeOfc',
@@ -53,7 +53,7 @@ export default defineConfig(async ({ mode }) => {
       description: pwaConfig?.pwa_description || 'Seu app de notícias local',
       theme_color: pwaConfig?.pwa_theme_color || '#000000',
       background_color: pwaConfig?.pwa_background_color || '#ffffff',
-      display: 'standalone' as const, // Corrigido aqui para usar 'as const'
+      display: 'standalone' as const,
       icons: [
         {
           src: pwaConfig?.pwa_app_icon || '/pwa-192x192.png',
@@ -78,7 +78,7 @@ export default defineConfig(async ({ mode }) => {
       runtimeCaching: [
         {
           urlPattern: pwaCache.images.pattern,
-          handler: pwaCache.images.strategy,
+          handler: pwaCache.images.strategy as any,
           options: {
             cacheName: pwaCache.images.name,
             expiration: {
@@ -92,7 +92,7 @@ export default defineConfig(async ({ mode }) => {
         },
         {
           urlPattern: pwaCache.videos.pattern,
-          handler: pwaCache.videos.strategy,
+          handler: pwaCache.videos.strategy as any,
           options: {
             cacheName: pwaCache.videos.name,
             expiration: {
@@ -106,7 +106,7 @@ export default defineConfig(async ({ mode }) => {
         },
         {
           urlPattern: pwaCache.fonts.pattern,
-          handler: pwaCache.fonts.strategy,
+          handler: pwaCache.fonts.strategy as any,
           options: {
             cacheName: pwaCache.fonts.name,
             expiration: {
@@ -120,7 +120,7 @@ export default defineConfig(async ({ mode }) => {
         },
         {
           urlPattern: pwaCache.assets.pattern,
-          handler: pwaCache.assets.strategy,
+          handler: pwaCache.assets.strategy as any,
           options: {
             cacheName: pwaCache.assets.name,
             expiration: {
@@ -135,7 +135,7 @@ export default defineConfig(async ({ mode }) => {
         // Cache para requisições da API Supabase (com revalidação na rede)
         {
           urlPattern: /^https:\/\/cxnktrfpqjjkdfmiyhdz\.supabase\.co\/.*/i,
-          handler: 'NetworkFirst',
+          handler: 'NetworkFirst' as any,
           options: {
             cacheName: 'supabase-api-cache',
             expiration: {

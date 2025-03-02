@@ -278,3 +278,19 @@
   z-index: 20; /* Increased z-index */
   box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
+
+.mention {
+  @apply text-blue-500 font-medium;
+}
+
+.fixed-comment-bar {
+  @apply fixed bottom-16 left-0 right-0 bg-background/80 backdrop-blur-md border-t border-border/40 p-3 z-10;
+}
+
+.comment-input {
+  @apply min-h-[50px] max-h-[100px] bg-gray-100 dark:bg-gray-800 border-none resize-none py-2;
+}
+
+.comment-submit-button {
+  @apply h-10 w-10 rounded-full flex items-center justify-center bg-primary text-white;
+}
