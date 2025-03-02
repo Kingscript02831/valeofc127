@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient, useQuery, useMutation } from "@tanstack/react-query";
@@ -18,13 +17,6 @@ interface Story {
   created_at: string;
   expires_at: string;
   views_count?: number;
-}
-
-interface FollowingProfile {
-  id: string;
-  username: string;
-  avatar_url: string;
-  has_active_stories: boolean;
 }
 
 const StoryManager = () => {
@@ -83,54 +75,6 @@ const StoryManager = () => {
       }));
       
       return storiesWithViews;
-    },
-    enabled: !!currentUser?.id,
-  });
-
-  // Busca perfis que o usuário está seguindo e que têm stories ativos
-  const { data: followingWithStories } = useQuery({
-    queryKey: ["followingWithStories", currentUser?.id],
-    queryFn: async () => {
-      if (!currentUser?.id) return [];
-
-      // Busca quem o usuário atual segue
-      const { data: following, error: followingError } = await supabase
-        .from("follows")
-        .select("following_id")
-        .eq("follower_id", currentUser.id);
-
-      if (followingError) throw followingError;
-      
-      if (!following.length) return [];
-      
-      const followingIds = following.map(f => f.following_id);
-      
-      // Busca perfis das pessoas que o usuário segue
-      const { data: profiles, error: profilesError } = await supabase
-        .from("profiles")
-        .select("id, username, avatar_url")
-        .in("id", followingIds);
-        
-      if (profilesError) throw profilesError;
-      
-      // Para cada perfil, verifica se tem stories ativos
-      const profilesWithStoryStatus = await Promise.all(profiles.map(async (profile) => {
-        const { count, error } = await supabase
-          .from("stories")
-          .select("*", { count: "exact", head: true })
-          .eq("user_id", profile.id)
-          .gt("expires_at", new Date().toISOString());
-          
-        if (error) throw error;
-        
-        return {
-          ...profile,
-          has_active_stories: count > 0
-        };
-      }));
-      
-      // Retorna apenas os perfis com stories ativos
-      return profilesWithStoryStatus.filter(profile => profile.has_active_stories);
     },
     enabled: !!currentUser?.id,
   });
@@ -230,35 +174,6 @@ const StoryManager = () => {
                     Adicionar Story
                   </Button>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Lista de pessoas seguidas com stories */}
-        {followingWithStories && followingWithStories.length > 0 && (
-          <Card className="mb-4 overflow-hidden bg-white dark:bg-card">
-            <CardContent className="p-4">
-              <h3 className="text-lg font-medium mb-3">Stories de quem você segue</h3>
-              <div className="flex flex-wrap gap-4">
-                {followingWithStories.map((profile) => (
-                  <div 
-                    key={profile.id}
-                    className="flex flex-col items-center cursor-pointer"
-                    onClick={() => navigate(`/story/view/${profile.id}`)}
-                  >
-                    <Avatar className="h-16 w-16 border-2 border-blue-500">
-                      {profile.avatar_url ? (
-                        <AvatarImage src={profile.avatar_url} alt={profile.username || ""} />
-                      ) : (
-                        <AvatarFallback>
-                          {profile.username?.charAt(0).toUpperCase() || "U"}
-                        </AvatarFallback>
-                      )}
-                    </Avatar>
-                    <p className="text-sm mt-1 max-w-16 truncate">{profile.username}</p>
-                  </div>
-                ))}
               </div>
             </CardContent>
           </Card>
