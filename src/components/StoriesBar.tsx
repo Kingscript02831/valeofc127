@@ -103,7 +103,7 @@ const StoriesBar = () => {
   }
 
   return (
-    <div className="bg-black w-full py-2">
+    <div className="bg-black w-full py-4">
       <div className="overflow-x-auto scrollbar-hide">
         <div className="flex space-x-4 px-4">
           {/* Círculo do usuário atual com botão de adicionar */}
