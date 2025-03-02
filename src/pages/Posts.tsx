@@ -1,22 +1,30 @@
-import { useState } from "react";
-import { supabase } from "../integrations/supabase/client";
-import { Card, CardContent } from "../components/ui/card";
-import { useToast } from "../hooks/use-toast";
-import { MediaCarousel } from "../components/MediaCarousel";
-import Navbar from "../components/Navbar";
-import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
-import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
-import ReactionMenu from "../components/ReactionMenu";
-import BottomNav from "../components/BottomNav";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "../integrations/supabase/client";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Textarea } from "../components/ui/textarea";
+import { toast } from "sonner";
+import { Heart, MessageCircle, Share2, MoreHorizontal, Image, Video, Send } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { getReactionIcon } from "../utils/emojisPosts";
-import Tags from "../components/Tags";
-import { Button } from "../components/ui/button";
-import { UserPlus, UserCheck, MoreVertical } from "lucide-react";
-import { toast } from "sonner";
-import LocationDisplay from "../components/locpost";
+import { Separator } from "../components/ui/separator";
+import { Card, CardContent } from "../components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import MediaCarousel from "../components/MediaCarousel";
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
+import BottomNav from "../components/BottomNav";
+import PWAInstallPrompt from "../components/PWAInstallPrompt";
 import StoriesBar from "../components/StoriesBar";
 
 interface Post {
@@ -26,512 +34,817 @@ interface Post {
   images: string[];
   video_urls: string[];
   likes: number;
-  reaction_type?: string;
   created_at: string;
-  user_has_liked?: boolean;
-  comment_count: number;
-  reactionsByType?: Record<string, number>;
-  user: {
+  profiles: {
     username: string;
-    full_name: string;
     avatar_url: string;
-    id: string;
+  };
+  liked_by_current_user?: boolean;
+  comments_count?: number;
+}
+
+interface Comment {
+  id: string;
+  content: string;
+  created_at: string;
+  user_id: string;
+  profiles: {
+    username: string;
+    avatar_url: string;
   };
 }
 
-const Posts: React.FC = () => {
-  const { toast: toastHook } = useToast();
+const Posts = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [activeReactionMenu, setActiveReactionMenu] = useState<string | null>(null);
-  const [followingUsers, setFollowingUsers] = useState<Record<string, boolean>>({});
-  const [reactionsLoading, setReactionsLoading] = useState(true);
+  const [newPostContent, setNewPostContent] = useState("");
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [selectedVideos, setSelectedVideos] = useState<File[]>([]);
+  const [isPostDialogOpen, setIsPostDialogOpen] = useState(false);
+  const [isCommentsDialogOpen, setIsCommentsDialogOpen] = useState(false);
+  const [currentPostId, setCurrentPostId] = useState<string | null>(null);
+  const [newComment, setNewComment] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [mediaPreviewUrls, setMediaPreviewUrls] = useState<string[]>([]);
 
+  // Busca o usuário atual
   const { data: currentUser } = useQuery({
-    queryKey: ['currentUser'],
+    queryKey: ["currentUser"],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      return user;
-    },
-  });
-
-  useQuery({
-    queryKey: ['userFollowings', currentUser?.id],
-    queryFn: async () => {
-      if (!currentUser?.id) return {};
-
+      if (!user) return null;
+      
       const { data } = await supabase
-        .from('follows')
-        .select('following_id')
-        .eq('follower_id', currentUser.id);
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
       
-      const followingMap: Record<string, boolean> = {};
-      if (data) {
-        data.forEach(item => {
-          followingMap[item.following_id] = true;
-        });
-      }
-      
-      setFollowingUsers(followingMap);
-      return followingMap;
+      return data ? { ...data, id: user.id } : null;
     },
-    enabled: !!currentUser?.id,
   });
 
-  const isFollowing = (userId: string) => {
-    return !!followingUsers[userId];
-  };
-
-  const { data: posts, isLoading } = useQuery({
-    queryKey: ['posts'],
+  // Busca posts
+  const { data: posts, isLoading: isLoadingPosts, refetch: refetchPosts } = useQuery({
+    queryKey: ["posts"],
     queryFn: async () => {
-      try {
-        setReactionsLoading(true);
-        let query = supabase
-          .from('posts')
-          .select(`
-            *,
-            user:user_id (
-              id,
-              username,
-              full_name,
-              avatar_url
-            ),
-            post_likes (
-              reaction_type,
-              user_id
-            ),
-            post_comments (
-              id
-            ),
-            post_reactions (
-              reaction_type,
-              user_id
-            )
-          `)
-          .order('created_at', { ascending: false });
+      // Busca posts com informações do perfil
+      const { data: posts, error } = await supabase
+        .from("posts")
+        .select(`
+          *,
+          profiles:user_id (username, avatar_url)
+        `)
+        .order("created_at", { ascending: false });
 
-        const { data: postsData, error } = await query;
-        if (error) throw error;
-
-        const postsWithCounts = postsData?.map(post => {
-          const reactionsByType: Record<string, number> = {};
-          post.post_reactions?.forEach((reaction: any) => {
-            if (!reactionsByType[reaction.reaction_type]) {
-              reactionsByType[reaction.reaction_type] = 0;
-            }
-            reactionsByType[reaction.reaction_type]++;
-          });
-
-          const userReaction = post.post_reactions?.find((r: any) => r.user_id === currentUser?.id)?.reaction_type;
-
-          return {
-            ...post,
-            reaction_type: userReaction,
-            reactionsByType,
-            likes: post.post_reactions?.length || 0,
-            comment_count: post.post_comments?.length || 0
-          };
-        });
-
-        setReactionsLoading(false);
-        return postsWithCounts;
-      } catch (error) {
-        setReactionsLoading(false);
-        console.error('Error fetching posts:', error);
+      if (error) {
+        console.error("Error fetching posts:", error);
         return [];
       }
-    },
-  });
 
-  const followMutation = useMutation({
-    mutationFn: async (userId: string) => {
-      if (!currentUser?.id) {
-        throw new Error("Você precisa estar logado para seguir usuários");
-      }
+      // Se o usuário estiver logado, verifica quais posts ele curtiu
+      if (currentUser?.id) {
+        const { data: likedPosts, error: likedError } = await supabase
+          .from("post_likes")
+          .select("post_id")
+          .eq("user_id", currentUser.id);
 
-      const { data, error } = await supabase
-        .from('follows')
-        .insert([
-          { follower_id: currentUser.id, following_id: userId }
-        ]);
-
-      if (error) throw error;
-
-      await supabase
-        .from('notifications')
-        .insert([
-          {
-            user_id: userId,
-            title: 'Novo seguidor',
-            message: `@${currentUser.id} começou a seguir você.`,
-            type: 'system',
-          }
-        ]);
-
-      return data;
-    },
-    onSuccess: (_, userId) => {
-      setFollowingUsers(prev => ({...prev, [userId]: true}));
-      toast.success("Seguindo com sucesso!");
-      queryClient.invalidateQueries({ queryKey: ['userFollowings', currentUser?.id] });
-    },
-    onError: (error) => {
-      console.error("Error following user:", error);
-      toast.error("Erro ao seguir usuário");
-    }
-  });
-
-  const unfollowMutation = useMutation({
-    mutationFn: async (userId: string) => {
-      if (!currentUser?.id) {
-        throw new Error("Você precisa estar logado para deixar de seguir usuários");
-      }
-
-      const { data, error } = await supabase
-        .from('follows')
-        .delete()
-        .eq('follower_id', currentUser.id)
-        .eq('following_id', userId);
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: (_, userId) => {
-      setFollowingUsers(prev => {
-        const newState = {...prev};
-        delete newState[userId];
-        return newState;
-      });
-      toast.success("Deixou de seguir com sucesso!");
-      queryClient.invalidateQueries({ queryKey: ['userFollowings', currentUser?.id] });
-    },
-    onError: (error) => {
-      console.error("Error unfollowing user:", error);
-      toast.error("Erro ao deixar de seguir usuário");
-    }
-  });
-
-  const handleFollowAction = (userId: string) => {
-    if (!currentUser) {
-      navigate("/login");
-      return;
-    }
-
-    if (currentUser.id === userId) {
-      return;
-    }
-
-    const lastActionTime = localStorage.getItem(`followAction_${userId}`);
-    const now = Date.now();
-    const cooldownPeriod = 30000; // 30 seconds in milliseconds
-
-    if (lastActionTime) {
-      const timeSinceLastAction = now - parseInt(lastActionTime);
-      if (timeSinceLastAction < cooldownPeriod) {
-        const remainingSeconds = Math.ceil((cooldownPeriod - timeSinceLastAction) / 1000);
-        toast.error(`Aguarde ${remainingSeconds} segundos antes de alterar o status de seguir novamente.`);
-        return;
-      }
-    }
-
-    localStorage.setItem(`followAction_${userId}`, now.toString());
-
-    if (isFollowing(userId)) {
-      unfollowMutation.mutate(userId);
-    } else {
-      followMutation.mutate(userId);
-    }
-  };
-
-  const handleReaction = async (postId: string, reactionType: string) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        toastHook({
-          title: "Erro",
-          description: "Você precisa estar logado para reagir a posts",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const { data: existingReaction } = await supabase
-        .from('post_reactions')
-        .select('*')
-        .eq('post_id', postId)
-        .eq('user_id', user.id)
-        .single();
-
-      if (existingReaction) {
-        if (existingReaction.reaction_type === reactionType) {
-          const { error: deleteError } = await supabase
-            .from('post_reactions')
-            .delete()
-            .eq('post_id', postId)
-            .eq('user_id', user.id);
-
-          if (deleteError) throw deleteError;
-        } else {
-          const { error: updateError } = await supabase
-            .from('post_reactions')
-            .update({ reaction_type: reactionType })
-            .eq('post_id', postId)
-            .eq('user_id', user.id);
-
-          if (updateError) throw updateError;
+        if (!likedError && likedPosts) {
+          const likedPostIds = new Set(likedPosts.map(like => like.post_id));
+          
+          // Para cada post, busca o número de comentários
+          return await Promise.all(posts.map(async (post) => {
+            const { count, error: countError } = await supabase
+              .from("post_comments")
+              .select("*", { count: "exact", head: true })
+              .eq("post_id", post.id);
+              
+            return {
+              ...post,
+              liked_by_current_user: likedPostIds.has(post.id),
+              comments_count: countError ? 0 : count
+            };
+          }));
         }
-      } else {
-        const { error: insertError } = await supabase
-          .from('post_reactions')
+      }
+
+      // Se o usuário não estiver logado ou houver erro, retorna os posts sem informação de curtida
+      return await Promise.all(posts.map(async (post) => {
+        const { count, error: countError } = await supabase
+          .from("post_comments")
+          .select("*", { count: "exact", head: true })
+          .eq("post_id", post.id);
+          
+        return {
+          ...post,
+          liked_by_current_user: false,
+          comments_count: countError ? 0 : count
+        };
+      }));
+    },
+    enabled: true,
+  });
+
+  // Busca comentários do post atual
+  const { data: comments, isLoading: isLoadingComments, refetch: refetchComments } = useQuery({
+    queryKey: ["comments", currentPostId],
+    queryFn: async () => {
+      if (!currentPostId) return [];
+
+      const { data, error } = await supabase
+        .from("post_comments")
+        .select(`
+          *,
+          profiles:user_id (username, avatar_url)
+        `)
+        .eq("post_id", currentPostId)
+        .order("created_at", { ascending: true });
+
+      if (error) {
+        console.error("Error fetching comments:", error);
+        return [];
+      }
+
+      return data;
+    },
+    enabled: !!currentPostId,
+  });
+
+  // Mutação para criar um novo post
+  const createPostMutation = useMutation({
+    mutationFn: async () => {
+      if (!currentUser) {
+        toast.error("Você precisa estar logado para publicar");
+        return;
+      }
+
+      setIsSubmitting(true);
+
+      try {
+        // Upload de imagens
+        const imageUrls = await Promise.all(
+          selectedImages.map(async (file) => {
+            const fileName = `${Date.now()}-${file.name}`;
+            const { data, error } = await supabase.storage
+              .from("post-images")
+              .upload(fileName, file);
+
+            if (error) throw error;
+
+            return supabase.storage.from("post-images").getPublicUrl(fileName).data.publicUrl;
+          })
+        );
+
+        // Upload de vídeos
+        const videoUrls = await Promise.all(
+          selectedVideos.map(async (file) => {
+            const fileName = `${Date.now()}-${file.name}`;
+            const { data, error } = await supabase.storage
+              .from("post-videos")
+              .upload(fileName, file);
+
+            if (error) throw error;
+
+            return supabase.storage.from("post-videos").getPublicUrl(fileName).data.publicUrl;
+          })
+        );
+
+        // Cria o post
+        const { data, error } = await supabase
+          .from("posts")
           .insert({
+            user_id: currentUser.id,
+            content: newPostContent,
+            images: imageUrls,
+            video_urls: videoUrls,
+          })
+          .select();
+
+        if (error) throw error;
+
+        return data;
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    onSuccess: () => {
+      toast.success("Post publicado com sucesso!");
+      setNewPostContent("");
+      setSelectedImages([]);
+      setSelectedVideos([]);
+      setMediaPreviewUrls([]);
+      setIsPostDialogOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+    },
+    onError: (error) => {
+      console.error("Error creating post:", error);
+      toast.error("Erro ao publicar o post");
+    },
+  });
+
+  // Mutação para curtir/descurtir um post
+  const toggleLikeMutation = useMutation({
+    mutationFn: async ({ postId, isLiked }: { postId: string; isLiked: boolean }) => {
+      if (!currentUser) {
+        toast.error("Você precisa estar logado para curtir");
+        return;
+      }
+
+      if (isLiked) {
+        // Remove a curtida
+        const { error } = await supabase
+          .from("post_likes")
+          .delete()
+          .eq("user_id", currentUser.id)
+          .eq("post_id", postId);
+
+        if (error) throw error;
+      } else {
+        // Adiciona a curtida
+        const { error } = await supabase
+          .from("post_likes")
+          .insert({
+            user_id: currentUser.id,
             post_id: postId,
-            user_id: user.id,
-            reaction_type: reactionType
           });
 
-        if (insertError) throw insertError;
+        if (error) throw error;
       }
 
-      setActiveReactionMenu(null);
-      await queryClient.invalidateQueries({ queryKey: ['posts'] });
+      // Atualiza o contador de curtidas
+      const { data, error } = await supabase
+        .from("posts")
+        .select("likes")
+        .eq("id", postId)
+        .single();
+
+      if (error) throw error;
+
+      const newLikes = isLiked ? data.likes - 1 : data.likes + 1;
+
+      const { error: updateError } = await supabase
+        .from("posts")
+        .update({ likes: newLikes })
+        .eq("id", postId);
+
+      if (updateError) throw updateError;
+
+      return { postId, isLiked: !isLiked, likes: newLikes };
+    },
+    onSuccess: (data) => {
+      if (!data) return;
       
-    } catch (error) {
-      console.error('Error in reaction handler:', error);
-      toastHook({
-        title: "Erro",
-        description: "Não foi possível processar sua reação",
-        variant: "destructive",
+      queryClient.setQueryData(["posts"], (oldData: any) => {
+        if (!oldData) return oldData;
+        
+        return oldData.map((post: Post) => {
+          if (post.id === data.postId) {
+            return {
+              ...post,
+              liked_by_current_user: data.isLiked,
+              likes: data.likes,
+            };
+          }
+          return post;
+        });
       });
+    },
+    onError: (error) => {
+      console.error("Error toggling like:", error);
+      toast.error("Erro ao curtir o post");
+    },
+  });
+
+  // Mutação para adicionar um comentário
+  const addCommentMutation = useMutation({
+    mutationFn: async () => {
+      if (!currentUser || !currentPostId) {
+        toast.error("Você precisa estar logado para comentar");
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("post_comments")
+        .insert({
+          user_id: currentUser.id,
+          post_id: currentPostId,
+          content: newComment,
+        })
+        .select(`
+          *,
+          profiles:user_id (username, avatar_url)
+        `);
+
+      if (error) throw error;
+
+      return data[0];
+    },
+    onSuccess: (newComment) => {
+      if (!newComment) return;
+      
+      setNewComment("");
+      refetchComments();
+      
+      // Atualiza o contador de comentários no post
+      queryClient.setQueryData(["posts"], (oldData: any) => {
+        if (!oldData) return oldData;
+        
+        return oldData.map((post: Post) => {
+          if (post.id === currentPostId) {
+            return {
+              ...post,
+              comments_count: (post.comments_count || 0) + 1,
+            };
+          }
+          return post;
+        });
+      });
+      
+      toast.success("Comentário adicionado!");
+    },
+    onError: (error) => {
+      console.error("Error adding comment:", error);
+      toast.error("Erro ao adicionar comentário");
+    },
+  });
+
+  // Manipuladores de eventos
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const filesArray = Array.from(e.target.files);
+      const imageFiles = filesArray.filter(file => file.type.startsWith('image/'));
+      
+      if (selectedImages.length + imageFiles.length > 10) {
+        toast.error("Você pode selecionar no máximo 10 imagens");
+        return;
+      }
+      
+      setSelectedImages(prev => [...prev, ...imageFiles]);
+      
+      // Cria URLs para preview
+      const newPreviewUrls = imageFiles.map(file => URL.createObjectURL(file));
+      setMediaPreviewUrls(prev => [...prev, ...newPreviewUrls]);
     }
   };
 
-  const handleShare = async (postId: string) => {
-    try {
-      await navigator.share({
-        url: `${window.location.origin}/posts/${postId}`,
-      });
-    } catch (error) {
-      console.error('Error sharing:', error);
-      navigator.clipboard.writeText(`${window.location.origin}/posts/${postId}`);
-      toastHook({
-        title: "Link copiado",
-        description: "O link foi copiado para sua área de transferência",
-      });
+  const handleVideoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const filesArray = Array.from(e.target.files);
+      const videoFiles = filesArray.filter(file => file.type.startsWith('video/'));
+      
+      if (selectedVideos.length + videoFiles.length > 2) {
+        toast.error("Você pode selecionar no máximo 2 vídeos");
+        return;
+      }
+      
+      setSelectedVideos(prev => [...prev, ...videoFiles]);
+      
+      // Cria URLs para preview
+      const newPreviewUrls = videoFiles.map(file => URL.createObjectURL(file));
+      setMediaPreviewUrls(prev => [...prev, ...newPreviewUrls]);
     }
   };
 
-  const handleWhatsAppShare = async (postId: string) => {
-    const postUrl = `${window.location.origin}/posts/${postId}`;
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(postUrl)}`;
-    window.open(whatsappUrl, '_blank');
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    if (date.toDateString() === today.toDateString()) {
-      return `Hoje às ${format(date, 'HH:mm')}`;
-    } else if (date.toDateString() === yesterday.toDateString()) {
-      return `Ontem às ${format(date, 'HH:mm')}`;
+  const handleRemoveMedia = (index: number) => {
+    // Revoga a URL do objeto para liberar memória
+    URL.revokeObjectURL(mediaPreviewUrls[index]);
+    
+    // Remove o item do array de previews
+    const newPreviewUrls = [...mediaPreviewUrls];
+    newPreviewUrls.splice(index, 1);
+    setMediaPreviewUrls(newPreviewUrls);
+    
+    // Determina se é uma imagem ou vídeo e remove do array correspondente
+    const totalImages = selectedImages.length;
+    if (index < totalImages) {
+      const newImages = [...selectedImages];
+      newImages.splice(index, 1);
+      setSelectedImages(newImages);
     } else {
-      return format(date, "d 'de' MMMM 'às' HH:mm", { locale: ptBR });
+      const videoIndex = index - totalImages;
+      const newVideos = [...selectedVideos];
+      newVideos.splice(videoIndex, 1);
+      setSelectedVideos(newVideos);
     }
   };
+
+  const handleCreatePost = () => {
+    if (!newPostContent.trim() && selectedImages.length === 0 && selectedVideos.length === 0) {
+      toast.error("Adicione um texto ou mídia para publicar");
+      return;
+    }
+    
+    createPostMutation.mutate();
+  };
+
+  const handleToggleLike = (postId: string, isLiked: boolean) => {
+    if (!currentUser) {
+      toast.error("Faça login para curtir posts");
+      return;
+    }
+    
+    toggleLikeMutation.mutate({ postId, isLiked });
+  };
+
+  const handleOpenComments = (postId: string) => {
+    setCurrentPostId(postId);
+    setIsCommentsDialogOpen(true);
+  };
+
+  const handleAddComment = () => {
+    if (!newComment.trim()) {
+      toast.error("Digite um comentário");
+      return;
+    }
+    
+    addCommentMutation.mutate();
+  };
+
+  const handleShare = (post: Post) => {
+    if (navigator.share) {
+      navigator.share({
+        title: `Post de ${post.profiles.username}`,
+        text: post.content,
+        url: `${window.location.origin}/posts/${post.id}`,
+      }).catch(err => {
+        console.error('Error sharing:', err);
+        toast.error("Erro ao compartilhar");
+      });
+    } else {
+      // Fallback para navegadores que não suportam a API Web Share
+      navigator.clipboard.writeText(`${window.location.origin}/posts/${post.id}`)
+        .then(() => toast.success("Link copiado para a área de transferência"))
+        .catch(() => toast.error("Erro ao copiar link"));
+    }
+  };
+
+  // Limpa as URLs de preview quando o componente é desmontado
+  useEffect(() => {
+    return () => {
+      mediaPreviewUrls.forEach(url => URL.revokeObjectURL(url));
+    };
+  }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-background">
+    <div className="min-h-screen flex flex-col pb-[72px] md:pb-0">
       <Navbar />
-      <main className="container mx-auto py-8 px-4 pt-20 pb-24">
-        <div className="max-w-xl mx-auto space-y-4">
-          <StoriesBar />
-          <div className="h-px bg-gray-200 dark:bg-gray-800 w-full my-2"></div>
-          {isLoading ? (
-            <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <Card key={i} className="border-none shadow-sm animate-pulse">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gray-200" />
-                      <div className="flex-1">
-                        <div className="h-4 w-24 bg-gray-200 rounded" />
-                        <div className="h-3 w-16 bg-gray-200 rounded mt-2" />
-                      </div>
-                    </div>
-                    <div className="h-24 bg-gray-200 rounded mt-4" />
-                  </CardContent>
-                </Card>
-              ))}
+      {/* Add the StoriesBar component here */}
+      <div className="mt-2 mb-2 bg-card/50">
+        <StoriesBar />
+      </div>
+      <main className="container mx-auto max-w-xl flex-1 p-4">
+        {/* Área de criação de post */}
+        <Card className="mb-6">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <Avatar className="h-10 w-10">
+                {currentUser?.avatar_url ? (
+                  <AvatarImage src={currentUser.avatar_url} alt={currentUser.username || ""} />
+                ) : (
+                  <AvatarFallback>
+                    {currentUser?.username?.charAt(0).toUpperCase() || "U"}
+                  </AvatarFallback>
+                )}
+              </Avatar>
+              <div 
+                className="flex-1 bg-muted/50 rounded-full px-4 py-2 cursor-pointer"
+                onClick={() => setIsPostDialogOpen(true)}
+              >
+                <span className="text-muted-foreground">O que está acontecendo?</span>
+              </div>
+              <Button 
+                size="icon" 
+                variant="ghost" 
+                className="rounded-full text-primary"
+                onClick={() => setIsPostDialogOpen(true)}
+              >
+                <Image className="h-5 w-5" />
+              </Button>
             </div>
-          ) : (
-            posts?.map((post: Post) => (
-              <Card key={post.id} className="overflow-hidden bg-white dark:bg-card border-none shadow-sm">
-                <CardContent className="p-0">
-                  <div className="p-3 space-y-2">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        <div className="relative rounded-full p-[3px] bg-gradient-to-tr from-pink-500 via-purple-500 to-yellow-500">
-                          <Avatar 
-                            className="h-12 w-12 border-2 border-white dark:border-gray-800 cursor-pointer hover:opacity-80 transition-opacity"
-                            onClick={() => navigate(`/perfil/${post.user.username}`)}
-                          >
-                            <AvatarImage src={post.user.avatar_url || "/placeholder.svg"} />
-                            <AvatarFallback>
-                              {post.user.full_name?.charAt(0).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                        </div>
-                        <div>
-                          <h2 className="font-bold text-lg">{post.user.username}</h2>
-                          <LocationDisplay userId={post.user_id} defaultCity="GRÃO MOGOL" />
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-2">
-                        {currentUser && currentUser.id !== post.user.id && (
-                          <Button 
-                            onClick={() => handleFollowAction(post.user.id)}
-                            variant="outline"
-                            size="sm"
-                            className={`h-10 px-5 rounded-full text-base font-semibold ${
-                              isFollowing(post.user.id) 
-                                ? "bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-black dark:text-white" 
-                                : "bg-black dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-200 text-white dark:text-black"
-                            }`}
-                            disabled={followMutation.isPending || unfollowMutation.isPending}
-                          >
-                            {isFollowing(post.user.id) ? "Seguindo" : "Seguir"}
-                          </Button>
-                        )}
-                        <Button variant="ghost" size="icon" className="text-gray-600 dark:text-gray-300">
-                          <MoreVertical size={20} />
-                        </Button>
-                      </div>
-                    </div>
+          </CardContent>
+        </Card>
 
-                    {post.content && (
-                      <p className="text-foreground text-[15px] leading-normal">
-                        <Tags content={post.content} />
-                      </p>
-                    )}
+        {/* Lista de posts */}
+        {isLoadingPosts ? (
+          <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+              <Card key={i} className="animate-pulse">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="h-10 w-10 rounded-full bg-muted"></div>
+                    <div className="flex-1">
+                      <div className="h-4 w-24 bg-muted rounded mb-2"></div>
+                      <div className="h-3 w-16 bg-muted rounded"></div>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="h-4 bg-muted rounded w-full"></div>
+                    <div className="h-4 bg-muted rounded w-full"></div>
+                    <div className="h-4 bg-muted rounded w-3/4"></div>
+                  </div>
+                  <div className="h-40 bg-muted rounded-md mt-4"></div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : posts?.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-muted-foreground mb-4">Nenhum post encontrado.</p>
+            <Button onClick={() => setIsPostDialogOpen(true)}>
+              Criar o primeiro post
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {posts?.map((post: Post) => (
+              <Card key={post.id} className="overflow-hidden">
+                <CardContent className="p-0">
+                  {/* Cabeçalho do post */}
+                  <div className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Avatar 
+                          className="h-10 w-10 cursor-pointer"
+                          onClick={() => navigate(`/perfil/${post.profiles.username}`)}
+                        >
+                          {post.profiles.avatar_url ? (
+                            <AvatarImage src={post.profiles.avatar_url} alt={post.profiles.username} />
+                          ) : (
+                            <AvatarFallback>
+                              {post.profiles.username.charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          )}
+                        </Avatar>
+                        <div>
+                          <h3 
+                            className="font-medium cursor-pointer hover:underline"
+                            onClick={() => navigate(`/perfil/${post.profiles.username}`)}
+                          >
+                            {post.profiles.username}
+                          </h3>
+                          <p className="text-xs text-muted-foreground">
+                            {format(new Date(post.created_at), "d 'de' MMMM 'às' HH:mm", { locale: ptBR })}
+                          </p>
+                        </div>
+                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => navigate(`/posts/${post.id}`)}>
+                            Ver detalhes
+                          </DropdownMenuItem>
+                          {currentUser?.id === post.user_id && (
+                            <DropdownMenuItem className="text-destructive">
+                              Excluir post
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem onClick={() => handleShare(post)}>
+                            Compartilhar
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </div>
 
+                  {/* Conteúdo do post */}
+                  {post.content && (
+                    <div className="px-4 pb-3">
+                      <p className="whitespace-pre-wrap">{post.content}</p>
+                    </div>
+                  )}
+
+                  {/* Mídia do post */}
                   {(post.images?.length > 0 || post.video_urls?.length > 0) && (
-                    <div className="w-full">
-                      <MediaCarousel
-                        images={post.images || []}
+                    <div className="mb-2">
+                      <MediaCarousel 
+                        images={post.images || []} 
                         videoUrls={post.video_urls || []}
-                        title={post.content || ""}
-                        autoplay={false}
-                        showControls={true}
-                        cropMode="contain"
+                        title={post.content || "Post"}
                       />
                     </div>
                   )}
 
-                  <div className="flex items-center justify-between p-2 mt-2 border-t border-border/40 relative">
-                    <div className="relative">
-                      <button
-                        className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                        onClick={() => setActiveReactionMenu(activeReactionMenu === post.id ? null : post.id)}
-                      >
-                        {reactionsLoading ? (
-                          <div className="w-5 h-5 rounded-full animate-pulse bg-gray-300 dark:bg-gray-600"></div>
-                        ) : post.reaction_type ? (
-                          <img 
-                            src={getReactionIcon(post.reaction_type)} 
-                            alt={post.reaction_type} 
-                            className="w-5 h-5"
-                            onError={(e) => {
-                              console.error(`Failed to load reaction icon: ${getReactionIcon(post.reaction_type)}`);
-                              (e.target as HTMLImageElement).src = "/curtidas.png";
-                            }}
-                          />
-                        ) : (
-                          <img 
-                            src="/curtidas.png" 
-                            alt="Curtir" 
-                            className="w-5 h-5"
-                            onError={(e) => {
-                              console.error("Failed to load default like icon");
-                              (e.target as HTMLImageElement).src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z'%3E%3C/path%3E%3C/svg%3E";
-                            }}
-                          />
-                        )}
-                      </button>
-
-                      <div className="relative">
-                        <ReactionMenu
-                          isOpen={activeReactionMenu === post.id}
-                          onSelect={(type) => handleReaction(post.id, type)}
-                          currentReaction={post.reaction_type}
-                        />
-                      </div>
-                    </div>
-
-                    {post.likes > 0 && (
-                      <div 
-                        className="flex items-center gap-1 cursor-pointer absolute left-0 -top-7 bg-gray-800/80 text-white rounded-full py-1 px-3"
-                        onClick={() => post.likes > 0 && navigate(`/pagcurtidas/${post.id}`)}
-                      >
-                        <div className="flex -space-x-2 overflow-hidden">
-                          {post.reactionsByType && Object.keys(post.reactionsByType).slice(0, 2).map((type, index) => (
-                            <img 
-                              key={type} 
-                              src={getReactionIcon(type)} 
-                              alt={type}
-                              className="inline-block h-6 w-6 rounded-full ring-2 ring-white dark:ring-gray-800"
-                              style={{ zIndex: 3 - index }}
-                            />
-                          ))}
-                        </div>
-                        <span className="text-sm text-white hover:underline reaction-count">
-                          {post.reaction_type && post.likes > 1 ? (
-                            <span>Você e outras {post.likes - 1} pessoas</span>
-                          ) : post.reaction_type ? (
-                            <span>Você</span>
-                          ) : post.likes > 0 ? (
-                            <span>{post.likes} pessoas</span>
-                          ) : null}
-                        </span>
-                      </div>
-                    )}
-
-                    <button 
-                      onClick={() => navigate(`/posts/${post.id}`)}
-                      className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                  {/* Ações do post */}
+                  <div className="px-4 py-2 flex items-center justify-between border-t">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className={`gap-2 ${post.liked_by_current_user ? 'text-red-500' : ''}`}
+                      onClick={() => handleToggleLike(post.id, !!post.liked_by_current_user)}
                     >
-                      <img src="/comentario.png" alt="Comentários" className="w-5 h-5" />
-                      <span className="text-sm text-muted-foreground">
-                        {post.comment_count || 0}
-                      </span>
-                    </button>
-
-                    <button
-                      className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                      onClick={() => handleWhatsAppShare(post.id)}
+                      <Heart className={`h-5 w-5 ${post.liked_by_current_user ? 'fill-current' : ''}`} />
+                      <span>{post.likes || 0}</span>
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      className="gap-2"
+                      onClick={() => handleOpenComments(post.id)}
                     >
-                      <img src="/whatsapp.png" alt="WhatsApp" className="w-5 h-5" />
-                    </button>
-
-                    <button
-                      className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                      onClick={() => handleShare(post.id)}
+                      <MessageCircle className="h-5 w-5" />
+                      <span>{post.comments_count || 0}</span>
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => handleShare(post)}
                     >
-                      <img src="/compartilharlink.png" alt="Compartilhar" className="w-5 h-5" />
-                    </button>
+                      <Share2 className="h-5 w-5" />
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
-            ))
-          )}
-        </div>
+            ))}
+          </div>
+        )}
       </main>
+      <Footer />
       <BottomNav />
+      <PWAInstallPrompt />
+
+      {/* Dialog para criar post */}
+      <Dialog open={isPostDialogOpen} onOpenChange={setIsPostDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Criar nova publicação</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Textarea
+              placeholder="O que está acontecendo?"
+              value={newPostContent}
+              onChange={(e) => setNewPostContent(e.target.value)}
+              className="min-h-[100px] resize-none"
+            />
+            
+            {mediaPreviewUrls.length > 0 && (
+              <div className="grid grid-cols-2 gap-2">
+                {mediaPreviewUrls.map((url, index) => (
+                  <div key={index} className="relative group">
+                    {url.includes('video') ? (
+                      <video 
+                        src={url} 
+                        className="h-32 w-full object-cover rounded-md"
+                        controls
+                      />
+                    ) : (
+                      <img 
+                        src={url} 
+                        alt={`Preview ${index}`} 
+                        className="h-32 w-full object-cover rounded-md"
+                      />
+                    )}
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => handleRemoveMedia(index)}
+                    >
+                      <span className="sr-only">Remover</span>
+                      <span aria-hidden="true">×</span>
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => document.getElementById('image-upload')?.click()}
+                disabled={selectedImages.length >= 10}
+              >
+                <Image className="h-4 w-4" />
+                <span>Imagem</span>
+              </Button>
+              <input
+                id="image-upload"
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={handleImageSelect}
+              />
+              
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => document.getElementById('video-upload')?.click()}
+                disabled={selectedVideos.length >= 2}
+              >
+                <Video className="h-4 w-4" />
+                <span>Vídeo</span>
+              </Button>
+              <input
+                id="video-upload"
+                type="file"
+                accept="video/*"
+                multiple
+                className="hidden"
+                onChange={handleVideoSelect}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              onClick={handleCreatePost}
+              disabled={isSubmitting || (!newPostContent.trim() && selectedImages.length === 0 && selectedVideos.length === 0)}
+              className="w-full sm:w-auto"
+            >
+              {isSubmitting ? "Publicando..." : "Publicar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog para comentários */}
+      <Dialog open={isCommentsDialogOpen} onOpenChange={setIsCommentsDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Comentários</DialogTitle>
+          </DialogHeader>
+          
+          <div className="max-h-[60vh] overflow-y-auto space-y-4">
+            {isLoadingComments ? (
+              <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex gap-3 animate-pulse">
+                    <div className="h-10 w-10 rounded-full bg-muted"></div>
+                    <div className="flex-1">
+                      <div className="h-4 w-24 bg-muted rounded mb-2"></div>
+                      <div className="h-3 w-full bg-muted rounded"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : comments?.length === 0 ? (
+              <p className="text-center py-4 text-muted-foreground">
+                Nenhum comentário ainda. Seja o primeiro a comentar!
+              </p>
+            ) : (
+              comments?.map((comment: Comment) => (
+                <div key={comment.id} className="flex gap-3">
+                  <Avatar className="h-10 w-10">
+                    {comment.profiles.avatar_url ? (
+                      <AvatarImage src={comment.profiles.avatar_url} alt={comment.profiles.username} />
+                    ) : (
+                      <AvatarFallback>
+                        {comment.profiles.username.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    )}
+                  </Avatar>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-medium">{comment.profiles.username}</h4>
+                      <span className="text-xs text-muted-foreground">
+                        {format(new Date(comment.created_at), "d MMM • HH:mm", { locale: ptBR })}
+                      </span>
+                    </div>
+                    <p className="text-sm">{comment.content}</p>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+          
+          <div className="flex items-center gap-2 pt-2 border-t">
+            <Avatar className="h-8 w-8">
+              {currentUser?.avatar_url ? (
+                <AvatarImage src={currentUser.avatar_url} alt={currentUser.username || ""} />
+              ) : (
+                <AvatarFallback>
+                  {currentUser?.username?.charAt(0).toUpperCase() || "U"}
+                </AvatarFallback>
+              )}
+            </Avatar>
+            <Input
+              placeholder="Adicione um comentário..."
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              className="flex-1"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleAddComment();
+                }
+              }}
+            />
+            <Button 
+              size="icon" 
+              onClick={handleAddComment}
+              disabled={!newComment.trim()}
+            >
+              <Send className="h-4 w-4" />
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
