@@ -86,7 +86,7 @@ const StoriesBar = () => {
   }
 
   return (
-    <div className="overflow-x-auto py-2 px-2 scrollbar-hide border-b border-gray-100 dark:border-gray-800">
+    <div className="overflow-x-auto py-2 px-2 scrollbar-hide">
       <div className="flex space-x-4 px-2">
         {/* Current user's circle always appears first */}
         {currentUser && (
@@ -105,6 +105,7 @@ const StoriesBar = () => {
             userId={user.id}
             username={user.username || ""}
             avatarUrl={user.avatar_url}
+            hasStories={!!user.stories}
           />
         ))}
       </div>

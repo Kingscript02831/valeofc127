@@ -38,6 +38,7 @@ import Menu from "./pages/Menu";
 import Search from "./pages/Search";
 import StoryForm from "./pages/StoryForm";
 import StoryViewer from "./pages/StoryViewer";
+import StoryManager from "./pages/StoryManager";
 
 const queryClient = new QueryClient();
 
@@ -82,9 +83,10 @@ const App: React.FC = () => {
                   <Route path="/menu" element={<Menu />} />
                   <Route path="/search" element={<Search />} />
                   
-                  {/* Novas rotas para stories */}
+                  {/* Rotas para stories */}
                   <Route path="/story/new" element={<StoryForm />} />
                   <Route path="/story/view/:userId" element={<StoryViewer />} />
+                  <Route path="/story/manage" element={<StoryManager />} />
                   
                   <Route path="*" element={<NotFound />} />
                 </Routes>

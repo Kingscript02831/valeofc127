@@ -10,9 +10,10 @@ interface StoryCircleProps {
   username: string;
   avatarUrl: string | null;
   isCurrentUser?: boolean;
+  hasStories?: boolean;
 }
 
-const StoryCircle = ({ userId, username, avatarUrl, isCurrentUser = false }: StoryCircleProps) => {
+const StoryCircle = ({ userId, username, avatarUrl, isCurrentUser = false, hasStories: propHasStories }: StoryCircleProps) => {
   const navigate = useNavigate();
   const [hasUnviewedStories, setHasUnviewedStories] = useState(false);
 
@@ -31,7 +32,7 @@ const StoryCircle = ({ userId, username, avatarUrl, isCurrentUser = false }: Sto
       
       if (!stories || stories.length === 0) {
         setHasUnviewedStories(false);
-        return { hasStories: false, stories: [] };
+        return { hasStories: propHasStories || false, stories: [] };
       }
       
       // If it's the current user, no need to check views
@@ -42,7 +43,7 @@ const StoryCircle = ({ userId, username, avatarUrl, isCurrentUser = false }: Sto
       
       // For other users, check if there are any unviewed stories
       const { data: currentUser } = await supabase.auth.getUser();
-      if (!currentUser.user) return { hasStories: false, stories: [] };
+      if (!currentUser.user) return { hasStories: propHasStories || false, stories: [] };
       
       const storyIds = stories.map(story => story.id);
       
@@ -69,8 +70,8 @@ const StoryCircle = ({ userId, username, avatarUrl, isCurrentUser = false }: Sto
 
   const handleClick = () => {
     if (isCurrentUser) {
-      // Open modal to add story
-      navigate("/story/new");
+      // Modificação para visualizar os próprios stories ao invés de adicionar
+      navigate(`/story/manage`);
     } else if (storiesData?.hasStories) {
       // View user's stories
       navigate(`/story/view/${userId}`);
