@@ -9,13 +9,15 @@ interface StoryViewerProps {
   onClose: () => void;
   username: string;
   imageUrl: string;
+  storyId?: string;
 }
 
 const StoryViewer: React.FC<StoryViewerProps> = ({
   isOpen,
   onClose,
   username,
-  imageUrl
+  imageUrl,
+  storyId
 }) => {
   const [progress, setProgress] = useState(0);
   
@@ -31,7 +33,7 @@ const StoryViewer: React.FC<StoryViewerProps> = ({
           }
           return prev + 1;
         });
-      }, 50);
+      }, 50); // 5 seconds total duration
       
       return () => clearInterval(interval);
     }
@@ -57,7 +59,7 @@ const StoryViewer: React.FC<StoryViewerProps> = ({
                 <AvatarFallback>{username?.charAt(0)?.toUpperCase()}</AvatarFallback>
               </Avatar>
               <span className="text-white font-medium text-sm">{username}</span>
-              <span className="text-gray-300 text-xs">3h</span>
+              <span className="text-gray-300 text-xs">agora</span>
             </div>
             <button onClick={onClose} className="text-white">
               <X size={20} />

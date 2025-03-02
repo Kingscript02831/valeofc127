@@ -8,6 +8,7 @@ interface StoryCircleProps {
   username: string;
   isNew?: boolean;
   isOwn?: boolean;
+  isViewed?: boolean;
   onClick?: () => void;
 }
 
@@ -16,6 +17,7 @@ const StoryCircle: React.FC<StoryCircleProps> = ({
   username,
   isNew = false,
   isOwn = false,
+  isViewed = false,
   onClick
 }) => {
   return (
@@ -23,7 +25,9 @@ const StoryCircle: React.FC<StoryCircleProps> = ({
       <div 
         className={cn(
           "relative rounded-full",
-          isNew ? "p-[3px] bg-gradient-to-tr from-pink-500 via-purple-500 to-yellow-500" : "p-[3px] bg-gray-700"
+          isNew && !isViewed ? "p-[3px] bg-gradient-to-tr from-pink-500 via-purple-500 to-yellow-500" : 
+          isNew && isViewed ? "p-[3px] bg-gray-400 dark:bg-gray-600" : 
+          "p-[3px] bg-gray-300 dark:bg-gray-700"
         )}
       >
         <Avatar className="h-16 w-16 border-2 border-white dark:border-gray-800 cursor-pointer hover:opacity-80 transition-opacity">
