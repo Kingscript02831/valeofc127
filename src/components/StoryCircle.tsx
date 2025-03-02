@@ -16,11 +16,11 @@ const StoryCircle = ({ userId, username, avatarUrl, isCurrentUser = false }: Sto
   const navigate = useNavigate();
   const [hasUnviewedStories, setHasUnviewedStories] = useState(false);
 
-  // Check if user has unviewed stories
+  // Verificar se o usuário tem histórias não visualizadas
   const { data: storiesData } = useQuery({
     queryKey: ["userStories", userId],
     queryFn: async () => {
-      // Get all non-expired stories from the user
+      // Buscar todas as histórias do usuário que não expiraram
       const { data: stories, error } = await supabase
         .from("stories")
         .select("id")
@@ -34,13 +34,13 @@ const StoryCircle = ({ userId, username, avatarUrl, isCurrentUser = false }: Sto
         return { hasStories: false, stories: [] };
       }
       
-      // If it's the current user, no need to check views
+      // Se for o usuário atual, não precisamos verificar visualizações
       if (isCurrentUser) {
         setHasUnviewedStories(true);
         return { hasStories: true, stories };
       }
       
-      // For other users, check if there are any unviewed stories
+      // Para outros usuários, verificar se há alguma história não visualizada pelo usuário atual
       const { data: currentUser } = await supabase.auth.getUser();
       if (!currentUser.user) return { hasStories: false, stories: [] };
       
@@ -54,7 +54,8 @@ const StoryCircle = ({ userId, username, avatarUrl, isCurrentUser = false }: Sto
         
       if (viewsError) throw viewsError;
       
-      // If number of views is less than number of stories, there are unviewed stories
+      // Se o número de visualizações for menor que o número de histórias,
+      // então há histórias não visualizadas
       const hasUnviewed = views ? stories.length > views.length : true;
       setHasUnviewedStories(hasUnviewed);
       
@@ -64,15 +65,15 @@ const StoryCircle = ({ userId, username, avatarUrl, isCurrentUser = false }: Sto
         stories 
       };
     },
-    refetchInterval: 60000, // Refetch every minute
+    refetchInterval: 60000, // Refetch a cada minuto
   });
 
   const handleClick = () => {
     if (isCurrentUser) {
-      // Open modal to add story
+      // Abrir modal para adicionar story
       navigate("/story/new");
     } else if (storiesData?.hasStories) {
-      // View user's stories
+      // Ver stories do usuário
       navigate(`/story/view/${userId}`);
     }
   };
@@ -83,7 +84,7 @@ const StoryCircle = ({ userId, username, avatarUrl, isCurrentUser = false }: Sto
         className="relative w-20 h-20 flex items-center justify-center cursor-pointer"
         onClick={handleClick}
       >
-        {/* Gradient circle for unviewed stories */}
+        {/* Círculo gradiente para histórias não visualizadas */}
         <div 
           className={`absolute inset-0 rounded-full ${
             storiesData?.hasStories && hasUnviewedStories
@@ -94,10 +95,10 @@ const StoryCircle = ({ userId, username, avatarUrl, isCurrentUser = false }: Sto
           }`}
         />
 
-        {/* White inner circle */}
+        {/* Círculo branco interno */}
         <div className="absolute inset-1 bg-white dark:bg-black rounded-full" />
 
-        {/* User avatar */}
+        {/* Avatar do usuário */}
         <Avatar className="w-18 h-18 relative border-2 border-white dark:border-gray-800">
           {avatarUrl ? (
             <AvatarImage src={avatarUrl} alt={username} />
@@ -108,7 +109,7 @@ const StoryCircle = ({ userId, username, avatarUrl, isCurrentUser = false }: Sto
           )}
         </Avatar>
 
-        {/* "+" button for current user */}
+        {/* Botão "+" para usuário atual */}
         {isCurrentUser && (
           <div className="absolute bottom-0 right-0 bg-white dark:bg-gray-800 rounded-full border-2 border-white dark:border-gray-800 w-6 h-6 flex items-center justify-center">
             <span className="text-lg font-bold">+</span>
@@ -116,7 +117,7 @@ const StoryCircle = ({ userId, username, avatarUrl, isCurrentUser = false }: Sto
         )}
       </div>
 
-      {/* Username below */}
+      {/* Nome de usuário abaixo */}
       <span className="mt-1 text-sm text-center font-medium truncate w-full">
         {isCurrentUser ? "Seu story" : username}
       </span>

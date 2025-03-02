@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../integrations/supabase/client";
 import StoryCircle from "./StoryCircle";
@@ -19,13 +20,13 @@ const StoriesBar = () => {
     },
   });
 
-  // Get users that the current user follows
+  // Buscar usuários que o usuário atual segue
   const { data: followingUsers, isLoading } = useQuery({
     queryKey: ["storiesFollowing", currentUser?.id],
     queryFn: async () => {
       if (!currentUser?.id) return [];
 
-      // Get IDs of users that the current user follows
+      // Buscar IDs dos usuários que o usuário atual segue
       const { data: followings } = await supabase
         .from("follows")
         .select("following_id")
@@ -35,7 +36,7 @@ const StoriesBar = () => {
       
       const followingIds = followings.map(f => f.following_id);
       
-      // Get profiles of followed users with active stories
+      // Buscar perfis dos usuários seguidos que têm stories ativos
       const { data: usersWithStories, error } = await supabase
         .from("profiles")
         .select(`
@@ -52,19 +53,19 @@ const StoriesBar = () => {
         return [];
       }
       
-      // Get some other followed users, even if they don't have stories
+      // Buscar outros usuários seguidos, mesmo que não tenham stories
       const { data: otherUsers } = await supabase
         .from("profiles")
         .select("id, username, avatar_url")
         .in("id", followingIds)
         .not("id", "in", usersWithStories?.map(u => u.id) || [])
-        .limit(5);  // Limit to some users to avoid overloading
+        .limit(5);  // Limitar a alguns usuários para não sobrecarregar
       
-      // Combine users with stories (first) and some without stories
+      // Combinar usuários com stories (primeiro) e alguns sem stories
       return [
         ...(usersWithStories || []),
         ...(otherUsers || [])
-      ].slice(0, 10);  // Limit to 10 users total
+      ].slice(0, 10);  // Limitar a 10 usuários no total
     },
     enabled: !!currentUser?.id,
   });
@@ -87,7 +88,7 @@ const StoriesBar = () => {
   return (
     <div className="overflow-x-auto py-4 px-4 scrollbar-hide">
       <div className="flex space-x-4">
-        {/* Current user's circle always appears first */}
+        {/* Círculo do usuário atual sempre aparece primeiro */}
         {currentUser && (
           <StoryCircle
             userId={currentUser.id}
@@ -97,7 +98,7 @@ const StoriesBar = () => {
           />
         )}
 
-        {/* Other followed users */}
+        {/* Outros usuários seguidos */}
         {followingUsers?.map((user) => (
           <StoryCircle
             key={user.id}
