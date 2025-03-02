@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { ScrollArea, ScrollBar } from "./ui/scroll-area";
 import StoryCircle from "./StoryCircle";
@@ -79,7 +78,6 @@ const StoriesRow: React.FC = () => {
           expires_at,
           profiles:user_id (username, avatar_url)
         `)
-        .lt('expires_at', new Date(Date.now() + 1000).toISOString())
         .gt('expires_at', new Date().toISOString())
         .order('created_at', { ascending: false });
 
