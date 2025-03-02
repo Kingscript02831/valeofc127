@@ -1512,29 +1512,29 @@ export type Database = {
         Row: {
           content: string | null
           created_at: string | null
-          expires_at: string | null
+          expires_at: string
           id: string
-          media_type: string
-          media_url: string | null
-          user_id: string
+          media_type: string | null
+          media_url: string
+          user_id: string | null
         }
         Insert: {
           content?: string | null
           created_at?: string | null
-          expires_at?: string | null
+          expires_at: string
           id?: string
-          media_type: string
-          media_url?: string | null
-          user_id: string
+          media_type?: string | null
+          media_url: string
+          user_id?: string | null
         }
         Update: {
           content?: string | null
           created_at?: string | null
-          expires_at?: string | null
+          expires_at?: string
           id?: string
-          media_type?: string
-          media_url?: string | null
-          user_id?: string
+          media_type?: string | null
+          media_url?: string
+          user_id?: string | null
         }
         Relationships: []
       }

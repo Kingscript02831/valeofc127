@@ -231,27 +231,3 @@
   z-index: 10;
   box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
-
-.story-circle {
-  @apply relative cursor-pointer transition-transform hover:scale-105;
-}
-
-.story-circle.has-story {
-  @apply before:absolute before:inset-0 before:rounded-full before:border-2 before:border-primary;
-}
-
-.story-circle.viewed {
-  @apply before:border-gray-400;
-}
-
-.story-progress-bar {
-  @apply absolute top-0 left-0 right-0 h-1 bg-gray-700;
-}
-
-.story-progress-fill {
-  @apply h-full bg-white transition-all duration-100;
-}
-
-.story-viewer {
-  @apply fixed inset-0 z-50 flex items-center justify-center bg-black;
-}

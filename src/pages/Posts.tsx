@@ -17,8 +17,6 @@ import { Button } from "../components/ui/button";
 import { UserPlus, UserCheck, MoreVertical } from "lucide-react";
 import { toast } from "sonner";
 import LocationDisplay from "../components/locpost";
-import StoriesRow from "../components/StoriesRow";
-import StoryViewer from "../components/StoryViewer";
 
 interface Post {
   id: string;
@@ -47,11 +45,6 @@ const Posts: React.FC = () => {
   const [activeReactionMenu, setActiveReactionMenu] = useState<string | null>(null);
   const [followingUsers, setFollowingUsers] = useState<Record<string, boolean>>({});
   const [reactionsLoading, setReactionsLoading] = useState(true);
-  const [storyViewer, setStoryViewer] = useState<{open: boolean, username: string, imageUrl: string}>({
-    open: false,
-    username: "",
-    imageUrl: ""
-  });
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -121,6 +114,7 @@ const Posts: React.FC = () => {
         if (error) throw error;
 
         const postsWithCounts = postsData?.map(post => {
+          // Get reaction counts by type
           const reactionsByType: Record<string, number> = {};
           post.post_reactions?.forEach((reaction: any) => {
             if (!reactionsByType[reaction.reaction_type]) {
@@ -129,6 +123,7 @@ const Posts: React.FC = () => {
             reactionsByType[reaction.reaction_type]++;
           });
 
+          // Get user's reaction if any
           const userReaction = post.post_reactions?.find((r: any) => r.user_id === currentUser?.id)?.reaction_type;
 
           return {
@@ -352,11 +347,7 @@ const Posts: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-background">
       <Navbar />
-      <main className="container mx-auto px-4 pt-20 pb-24">
-        <div className="max-w-xl mx-auto mb-4">
-          <StoriesRow />
-        </div>
-        
+      <main className="container mx-auto py-8 px-4 pt-20 pb-24">
         <div className="max-w-xl mx-auto space-y-4">
           {isLoading ? (
             <div className="space-y-4">
@@ -481,6 +472,7 @@ const Posts: React.FC = () => {
                       </div>
                     </div>
 
+                    {/* Display reaction counts with icons */}
                     {post.likes > 0 && (
                       <div 
                         className="flex items-center gap-1 cursor-pointer absolute left-0 -top-7 bg-gray-800/80 text-white rounded-full py-1 px-3"
@@ -540,13 +532,6 @@ const Posts: React.FC = () => {
         </div>
       </main>
       <BottomNav />
-      
-      <StoryViewer 
-        isOpen={storyViewer.open}
-        onClose={() => setStoryViewer({...storyViewer, open: false})}
-        username={storyViewer.username}
-        imageUrl={storyViewer.imageUrl}
-      />
     </div>
   );
 };
