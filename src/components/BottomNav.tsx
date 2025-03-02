@@ -16,7 +16,7 @@ import {
 const BottomNav = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { data: config } = useSiteConfig();
+  const { data: config, isLoading } = useSiteConfig();
   const [session, setSession] = useState<any>(null);
 
   useEffect(() => {
@@ -59,6 +59,13 @@ const BottomNav = () => {
     }
     navigate(path);
   };
+  
+  // Renderiza um esqueleto de carregamento se estiver carregando
+  if (isLoading) {
+    return (
+      <nav className="fixed bottom-0 left-0 right-0 h-16 animate-pulse bg-gray-200 md:hidden" />
+    );
+  }
 
   const navStyle = {
     background: config?.bottom_nav_primary_color || "#000000e6",
