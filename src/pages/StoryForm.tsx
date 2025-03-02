@@ -31,7 +31,7 @@ const StoryForm = () => {
           user_id: user.id,
           media_url: media.url,
           media_type: media.type,
-          // expires_at will be filled by default value in the table
+          // expires_at será preenchido automaticamente pelo valor padrão na tabela
         })
         .select();
 
@@ -141,7 +141,7 @@ const StoryForm = () => {
         </Card>
       </div>
 
-      {/* Dialog for adding image from Dropbox */}
+      {/* Dialog para adicionar imagem do Dropbox */}
       <PhotoUrlDialog
         isOpen={isPhotoDialogOpen}
         onClose={() => setIsPhotoDialogOpen(false)}
@@ -149,7 +149,7 @@ const StoryForm = () => {
         title="Adicionar Imagem"
       />
 
-      {/* Dialog for adding video from Dropbox */}
+      {/* Dialog para adicionar vídeo do Dropbox */}
       <PhotoUrlDialog
         isOpen={isVideoDialogOpen}
         onClose={() => setIsVideoDialogOpen(false)}

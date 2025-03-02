@@ -16,11 +16,11 @@ const StoryCircle = ({ userId, username, avatarUrl, isCurrentUser = false }: Sto
   const navigate = useNavigate();
   const [hasUnviewedStories, setHasUnviewedStories] = useState(false);
 
-  // Check if user has unviewed stories
+  // Verificar se o usuário tem histórias não visualizadas
   const { data: storiesData } = useQuery({
     queryKey: ["userStories", userId],
     queryFn: async () => {
-      // Get all non-expired stories from the user
+      // Buscar todas as histórias do usuário que não expiraram
       const { data: stories, error } = await supabase
         .from("stories")
         .select("id")
@@ -34,13 +34,13 @@ const StoryCircle = ({ userId, username, avatarUrl, isCurrentUser = false }: Sto
         return { hasStories: false, stories: [] };
       }
       
-      // If it's the current user, no need to check views
+      // Se for o usuário atual, não precisamos verificar visualizações
       if (isCurrentUser) {
         setHasUnviewedStories(true);
         return { hasStories: true, stories };
       }
       
-      // For other users, check if there are any unviewed stories
+      // Para outros usuários, verificar se há alguma história não visualizada pelo usuário atual
       const { data: currentUser } = await supabase.auth.getUser();
       if (!currentUser.user) return { hasStories: false, stories: [] };
       
@@ -54,7 +54,8 @@ const StoryCircle = ({ userId, username, avatarUrl, isCurrentUser = false }: Sto
         
       if (viewsError) throw viewsError;
       
-      // If number of views is less than number of stories, there are unviewed stories
+      // Se o número de visualizações for menor que o número de histórias,
+      // então há histórias não visualizadas
       const hasUnviewed = views ? stories.length > views.length : true;
       setHasUnviewedStories(hasUnviewed);
       
@@ -64,61 +65,61 @@ const StoryCircle = ({ userId, username, avatarUrl, isCurrentUser = false }: Sto
         stories 
       };
     },
-    refetchInterval: 60000, // Refetch every minute
+    refetchInterval: 60000, // Refetch a cada minuto
   });
 
   const handleClick = () => {
     if (isCurrentUser) {
-      // Open modal to add story
+      // Abrir modal para adicionar story
       navigate("/story/new");
     } else if (storiesData?.hasStories) {
-      // View user's stories
+      // Ver stories do usuário
       navigate(`/story/view/${userId}`);
     }
   };
 
-  // Display name truncation 
-  const displayName = isCurrentUser ? "Seu story" : 
-    username.length > 9 ? username.substring(0, 8) + '...' : username;
-
   return (
-    <div className="flex flex-col items-center w-16">
+    <div className="flex flex-col items-center">
       <div 
-        className="relative w-16 h-16 flex items-center justify-center cursor-pointer"
+        className="relative w-20 h-20 flex items-center justify-center cursor-pointer"
         onClick={handleClick}
       >
-        {/* Gradient circle for unviewed stories - Instagram style gradient */}
-        {storiesData?.hasStories && hasUnviewedStories ? (
-          <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-yellow-500 via-orange-500 via-red-500 via-purple-500 to-blue-500"></div>
-        ) : storiesData?.hasStories ? (
-          <div className="absolute inset-0 rounded-full bg-gray-300 dark:bg-gray-700"></div>
-        ) : null}
+        {/* Círculo gradiente para histórias não visualizadas */}
+        <div 
+          className={`absolute inset-0 rounded-full ${
+            storiesData?.hasStories && hasUnviewedStories
+              ? "bg-gradient-to-tr from-pink-500 via-purple-500 to-yellow-500" 
+              : storiesData?.hasStories 
+                ? "bg-gray-400 dark:bg-gray-600" 
+                : "bg-transparent"
+          }`}
+        />
 
-        {/* White inner circle - smaller gap for Instagram look */}
-        <div className="absolute inset-0.5 bg-white dark:bg-black rounded-full"></div>
+        {/* Círculo branco interno */}
+        <div className="absolute inset-1 bg-white dark:bg-black rounded-full" />
 
-        {/* User avatar */}
-        <Avatar className="h-14 w-14 relative">
+        {/* Avatar do usuário */}
+        <Avatar className="w-18 h-18 relative border-2 border-white dark:border-gray-800">
           {avatarUrl ? (
-            <AvatarImage src={avatarUrl} alt={username} className="object-cover" />
+            <AvatarImage src={avatarUrl} alt={username} />
           ) : (
-            <AvatarFallback className="text-xs">
+            <AvatarFallback>
               {username?.charAt(0).toUpperCase() || "U"}
             </AvatarFallback>
           )}
         </Avatar>
 
-        {/* "+" button for current user - Instagram style */}
+        {/* Botão "+" para usuário atual */}
         {isCurrentUser && (
-          <div className="absolute bottom-0 right-0 bg-blue-500 rounded-full border-2 border-white dark:border-black w-5 h-5 flex items-center justify-center">
-            <span className="text-white text-xs font-bold">+</span>
+          <div className="absolute bottom-0 right-0 bg-white dark:bg-gray-800 rounded-full border-2 border-white dark:border-gray-800 w-6 h-6 flex items-center justify-center">
+            <span className="text-lg font-bold">+</span>
           </div>
         )}
       </div>
 
-      {/* Username below - smaller text for Instagram look */}
-      <span className="mt-1 text-xs text-center truncate w-full">
-        {displayName}
+      {/* Nome de usuário abaixo */}
+      <span className="mt-1 text-sm text-center font-medium truncate w-full">
+        {isCurrentUser ? "Seu story" : username}
       </span>
     </div>
   );

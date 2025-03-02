@@ -30,7 +30,7 @@ const StoryViewer = () => {
   const progressInterval = useRef<NodeJS.Timeout | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  // Check if current user is the owner of the stories
+  // Verificar se o usuário atual é o dono das histórias
   const { data: currentUser } = useQuery({
     queryKey: ["currentUser"],
     queryFn: async () => {
@@ -43,7 +43,7 @@ const StoryViewer = () => {
 
   const isOwner = currentUser?.id === userId;
 
-  // Fetch user's stories
+  // Buscar histórias do usuário
   const { data: stories, isLoading } = useQuery({
     queryKey: ["viewStories", userId],
     queryFn: async () => {
@@ -66,7 +66,7 @@ const StoryViewer = () => {
 
       if (error) throw error;
 
-      // Add user info to each story
+      // Adicionar as informações do usuário a cada história
       return data.map((story: Story) => ({
         ...story,
         user: userData
@@ -75,7 +75,7 @@ const StoryViewer = () => {
     enabled: !!userId,
   });
 
-  // Mutation to mark a story as viewed
+  // Mutação para marcar uma história como visualizada
   const markAsViewedMutation = useMutation({
     mutationFn: async (storyId: string) => {
       if (!currentUser || isOwner) return;
@@ -94,7 +94,7 @@ const StoryViewer = () => {
     },
   });
 
-  // Mutation to delete a story
+  // Mutação para excluir uma história
   const deleteStoryMutation = useMutation({
     mutationFn: async (storyId: string) => {
       const { error } = await supabase
@@ -109,7 +109,7 @@ const StoryViewer = () => {
       queryClient.invalidateQueries({ queryKey: ["viewStories"] });
       toast.success("História excluída com sucesso");
       
-      // If no more stories, go back to home
+      // Se não há mais histórias, voltar para a página inicial
       if (stories && stories.length <= 1) {
         navigate("/");
       }
@@ -120,30 +120,30 @@ const StoryViewer = () => {
     },
   });
 
-  // Start progress timer
+  // Iniciar o temporizador de progresso
   useEffect(() => {
     if (isLoading || !stories || stories.length === 0) return;
 
-    // Clear any previous interval
+    // Limpar qualquer intervalo anterior
     if (progressInterval.current) {
       clearInterval(progressInterval.current);
     }
 
-    // Mark current story as viewed
+    // Marcar a história atual como visualizada
     if (stories[currentStoryIndex]) {
       markAsViewedMutation.mutate(stories[currentStoryIndex].id);
     }
 
-    // If it's a video, use video duration as timer
+    // Se for um vídeo, usar a duração do vídeo como temporizador
     if (videoRef.current && stories[currentStoryIndex]?.media_type === 'video') {
-      // Video events will handle progress
+      // Os eventos do vídeo lidarão com o progresso
       setProgress(0);
       return;
     }
 
-    // Set up timer for images (5 seconds)
-    const duration = 5000; // 5 seconds per story
-    const interval = 50; // Update every 50ms for smoothness
+    // Configurar um temporizador para imagens (5 segundos)
+    const duration = 5000; // 5 segundos por história
+    const interval = 50; // Atualizar a cada 50ms para suavidade
     const step = (interval / duration) * 100;
     
     setProgress(0);
@@ -166,7 +166,7 @@ const StoryViewer = () => {
     };
   }, [currentStoryIndex, isLoading, stories]);
 
-  // Handle video events
+  // Manipular eventos de vídeo
   const handleVideoProgress = () => {
     if (!videoRef.current) return;
     
@@ -179,26 +179,26 @@ const StoryViewer = () => {
     goToNextStory();
   };
 
-  // Navigate to next story
+  // Navegar para a próxima história
   const goToNextStory = () => {
     if (!stories || stories.length === 0) return;
     
     if (currentStoryIndex < stories.length - 1) {
       setCurrentStoryIndex(currentStoryIndex + 1);
     } else {
-      // Go back when all stories are viewed
+      // Voltar para a tela anterior quando terminar todas as histórias
       navigate(-1);
     }
   };
 
-  // Navigate to previous story
+  // Navegar para a história anterior
   const goToPrevStory = () => {
     if (currentStoryIndex > 0) {
       setCurrentStoryIndex(currentStoryIndex - 1);
     }
   };
 
-  // Handle story deletion
+  // Manipular a exclusão de uma história
   const handleDeleteStory = () => {
     if (!stories) return;
     
@@ -207,7 +207,7 @@ const StoryViewer = () => {
     }
   };
 
-  // Loading state
+  // Se estiver carregando ou não houver histórias, mostrar um estado de carregamento
   if (isLoading) {
     return (
       <div className="fixed inset-0 bg-black flex items-center justify-center">
@@ -229,7 +229,7 @@ const StoryViewer = () => {
 
   return (
     <div className="fixed inset-0 bg-black flex flex-col">
-      {/* Progress bar */}
+      {/* Barra de progresso */}
       <div className="absolute top-0 left-0 right-0 z-10 p-2 flex gap-1">
         {stories.map((_, index) => (
           <div key={index} className="h-1 bg-gray-600 flex-1 rounded-full overflow-hidden">
@@ -241,7 +241,7 @@ const StoryViewer = () => {
         ))}
       </div>
 
-      {/* Header - user info */}
+      {/* Cabeçalho - informações do usuário */}
       <div className="absolute top-4 left-0 right-0 z-10 px-4 pt-4">
         <div className="flex items-center">
           <Avatar className="h-10 w-10 mr-3 border border-white">
@@ -272,7 +272,7 @@ const StoryViewer = () => {
         </div>
       </div>
 
-      {/* Story content */}
+      {/* Conteúdo da história */}
       <div className="flex-1 flex items-center justify-center">
         {currentStory.media_type === 'video' ? (
           <video
@@ -294,7 +294,7 @@ const StoryViewer = () => {
         )}
       </div>
 
-      {/* Navigation areas */}
+      {/* Botões de navegação */}
       <div className="absolute inset-0 flex">
         <div 
           className="w-1/2 h-full" 
@@ -306,7 +306,7 @@ const StoryViewer = () => {
         />
       </div>
 
-      {/* Navigation buttons (visible on hover) */}
+      {/* Botões de navegação visíveis para debugging */}
       <div className="absolute bottom-4 left-0 right-0 flex justify-between px-4 opacity-0 hover:opacity-100 transition-opacity">
         <Button 
           variant="ghost" 
@@ -327,7 +327,7 @@ const StoryViewer = () => {
         </Button>
       </div>
 
-      {/* Delete button for owner */}
+      {/* Botão de excluir para o proprietário */}
       {isOwner && (
         <div className="absolute bottom-20 right-4">
           <Button 
