@@ -105,7 +105,7 @@ const PostForm = () => {
         user_id: user.id,
         title: "Menção em post",
         message: `@${currentUser.username} mencionou você em um post.`,
-        type: "system",
+        type: "mention",
         reference_id: postId
       }));
 
