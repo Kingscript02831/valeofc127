@@ -9,11 +9,12 @@ import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import { cn, formatDate } from "../lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { supabase } from "../integrations/supabase/client";  // Updated correct path
+import { supabase } from "../lib/supabase/client";  // Updated to the correct path
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import Tags from "../components/Tags";
 import type { Notification } from "../types/notifications";
+import FollowNotification from "../components/FollowNotification";
 
 const Notify = () => {
   const navigate = useNavigate();
@@ -416,6 +417,23 @@ const Notify = () => {
               const userId = notification.sender?.id;
               const isFollowing = userId ? followStatuses[userId] : false;
               
+              // Render special follow notification for "começou a seguir você" messages
+              if (isFollowNotification && notification.sender) {
+                return (
+                  <FollowNotification
+                    key={notification.id}
+                    username={notification.sender.username}
+                    avatarUrl={notification.sender.avatar_url}
+                    createdAt={notification.created_at}
+                    userId={notification.sender.id}
+                    isFollowing={isFollowing || false}
+                    onFollowToggle={handleFollowAction}
+                    isProcessing={followMutation.isPending || unfollowMutation.isPending}
+                  />
+                );
+              }
+              
+              // Regular notifications for all other types
               return (
                 <div
                   key={notification.id}
@@ -454,7 +472,6 @@ const Notify = () => {
                         >
                           {notification.type === 'event' ? 'Evento' : 
                            notification.type === 'news' ? 'Notícia' : 
-                           isFollowNotification ? 'Seguidor' : 
                            isCommentNotification ? 'Comentário' : 
                            isMentionNotification ? 'Menção' : 'Sistema'}
                         </Badge>
@@ -518,31 +535,6 @@ const Notify = () => {
                             >
                               Ver detalhes
                               <ChevronRight className="ml-1 h-3 w-3" />
-                            </Button>
-                          )}
-                          
-                          {isFollowNotification && userId && (
-                            <Button
-                              variant={isFollowing ? "outline" : "default"}
-                              size="sm"
-                              className={`h-8 ${isFollowing ? 'bg-gray-800 hover:bg-gray-700 text-white' : 'text-white'}`}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleFollowAction(userId);
-                              }}
-                              disabled={followMutation.isPending || unfollowMutation.isPending}
-                            >
-                              {isFollowing ? (
-                                <>
-                                  <UserCheck className="h-3.5 w-3.5 mr-1" />
-                                  <span>Seguindo</span>
-                                </>
-                              ) : (
-                                <>
-                                  <UserPlus className="h-3.5 w-3.5 mr-1" />
-                                  <span>Seguir de volta</span>
-                                </>
-                              )}
                             </Button>
                           )}
                         </div>
