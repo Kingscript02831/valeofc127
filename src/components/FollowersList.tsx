@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../integrations/supabase/client";
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { Button } from "./ui/button";
-import { UserPlus, UserMinus, UserX, Loader2 } from "lucide-react";
+import { UserPlus, UserMinus, UserX, Loader2, UserCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { Sheet, SheetContent } from "./ui/sheet";
