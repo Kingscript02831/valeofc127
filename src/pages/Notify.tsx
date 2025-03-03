@@ -2,18 +2,18 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bell, CheckCircle, Clock, ChevronRight, Calendar, Newspaper, Trash2, UserCheck, UserPlus } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { cn, formatDate } from "@/lib/utils";
+import { Badge } from "../components/ui/badge";
+import { Button } from "../components/ui/button";
+import { Switch } from "../components/ui/switch";
+import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
+import { cn, formatDate } from "../lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { supabase } from "@/lib/supabase/client";  // Fixed import path
+import { supabase } from "../integrations/supabase/client";  // Updated correct path
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-import Tags from "@/components/Tags";
-import type { Notification } from "@/types/notifications";
+import Tags from "../components/Tags";
+import type { Notification } from "../types/notifications";
 
 const Notify = () => {
   const navigate = useNavigate();
@@ -433,11 +433,11 @@ const Notify = () => {
                       <Avatar className="h-10 w-10 border-2 border-primary/10">
                         <AvatarImage src={notification.sender.avatar_url} alt={notification.sender.username || 'User'} />
                         <AvatarFallback>
-                          {notification.sender.full_name?.charAt(0).toUpperCase() || 'U'}
+                          {notification.sender.username?.[0]?.toUpperCase() || 'U'}
                         </AvatarFallback>
                       </Avatar>
                     ) : (
-                      <div className="mt-1">
+                      <div className="mt-1 bg-primary/10 h-10 w-10 rounded-full flex items-center justify-center">
                         {getNotificationIcon(notification.type)}
                       </div>
                     )}
@@ -488,11 +488,13 @@ const Notify = () => {
                         )}
                         
                         {notification.message && (
-                          <Tags 
-                            content={notification.message} 
-                            className="text-xs text-muted-foreground"
-                            linkClassName="text-primary font-medium" 
-                          />
+                          <div className="text-sm text-muted-foreground">
+                            <Tags 
+                              content={notification.message} 
+                              className="text-sm"
+                              linkClassName="text-primary font-medium" 
+                            />
+                          </div>
                         )}
                         
                         {notification.publication_description && (
@@ -533,12 +535,12 @@ const Notify = () => {
                               {isFollowing ? (
                                 <>
                                   <UserCheck className="h-3.5 w-3.5 mr-1" />
-                                  Seguindo
+                                  <span>Seguindo</span>
                                 </>
                               ) : (
                                 <>
                                   <UserPlus className="h-3.5 w-3.5 mr-1" />
-                                  Seguir de volta
+                                  <span>Seguir de volta</span>
                                 </>
                               )}
                             </Button>
