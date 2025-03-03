@@ -112,6 +112,7 @@ const Notify = () => {
     queryFn: async () => {
       if (!currentUserId) return [];
 
+      // Alteração aqui - sem o erro de uso inadequado do join pela foreign key
       const { data, error } = await supabase
         .from("notifications")
         .select("*")
@@ -126,34 +127,7 @@ const Notify = () => {
       // Para cada notificação, buscar dados do sender se necessário
       const notificationsWithSenders = await Promise.all(
         data.map(async (notification) => {
-          // Para notificações de menção, precisamos buscar o perfil do usuário que fez a menção
-          if (notification.type === 'mention' && notification.reference_id) {
-            // Primeiro, tentar usar o sender se já estiver na notificação
-            if (notification.sender?.id) {
-              return notification;
-            }
-            
-            // Se não, tentar buscar o perfil do usuário pelo reference_id
-            const { data: postData } = await supabase
-              .from('posts')
-              .select('user_id')
-              .eq('id', notification.reference_id)
-              .single();
-              
-            if (postData?.user_id) {
-              const { data: senderData } = await supabase
-                .from('profiles')
-                .select('id, username, full_name, avatar_url')
-                .eq('id', postData.user_id)
-                .single();
-                
-              if (senderData) {
-                return { ...notification, sender: senderData };
-              }
-            }
-          }
-          // Para notificações de "começou a seguir você"
-          else if (notification.reference_id && notification.message?.includes('começou a seguir você')) {
+          if (notification.reference_id && notification.message?.includes('começou a seguir você')) {
             // Buscar dados do usuário que seguiu
             const { data: senderData } = await supabase
               .from('profiles')
@@ -171,7 +145,6 @@ const Notify = () => {
         })
       );
       
-      console.log("Notificações com detalhes:", notificationsWithSenders);
       return notificationsWithSenders as Notification[];
     },
     enabled: !isLoading && !!currentUserId,
@@ -329,19 +302,13 @@ const Notify = () => {
       // Also invalidate the unreadNotifications query
       queryClient.invalidateQueries({ queryKey: ["unreadNotifications"] });
 
-      // Navegação baseada no tipo de notificação
+      // Navigate if there's a reference_id
       const notification = notifications.find(n => n.id === id);
       if (notification?.reference_id) {
-        console.log("Navegando para notificação:", notification.type, notification.reference_id);
-        
         if (notification.type === 'event') {
           navigate(`/eventos`);
         } else if (notification.type === 'news') {
-          navigate(`/noticias/${notification.reference_id}`);
-        } else if (notification.type === 'mention') {
-          // Para menções em posts, navegamos para a página do post específico
-          navigate(`/posts/${notification.reference_id}`);
-          console.log("Navegando para o post:", notification.reference_id);
+          navigate(`/`);
         } else if (notification.sender) {
           navigate(`/perfil/${notification.sender.username}`);
         }
@@ -460,7 +427,6 @@ const Notify = () => {
           ) : (
             notifications.map((notification) => {
               const isFollowNotification = notification.message?.includes('começou a seguir você');
-              const isMentionNotification = notification.type === 'mention';
               const userId = notification.sender?.id;
               const isFollowing = userId ? followStatuses[userId] : false;
               
@@ -497,13 +463,11 @@ const Notify = () => {
                             "text-xs font-medium",
                             notification.type === 'event' && "bg-blue-500/10 text-blue-700",
                             notification.type === 'news' && "bg-green-500/10 text-green-700",
-                            notification.type === 'mention' && "bg-purple-500/10 text-purple-700",
                             notification.type === 'system' && "bg-purple-500/10 text-purple-700"
                           )}
                         >
                           {notification.type === 'event' ? 'Evento' : 
                            notification.type === 'news' ? 'Notícia' : 
-                           notification.type === 'mention' ? 'Menção' :
                            isFollowNotification ? 'Seguidor' : 'Sistema'}
                         </Badge>
                         {notification.publication_category && (
@@ -524,11 +488,9 @@ const Notify = () => {
                           <span className="font-semibold">@{notification.sender.username}</span>
                         ) : ''}
                         {' '}
-                        {isMentionNotification 
-                          ? 'te mencionou em uma publicação'
-                          : isFollowNotification 
-                            ? 'começou a seguir você' 
-                            : notification.publication_title || notification.title}
+                        {isFollowNotification ? 
+                          'começou a seguir você.' : 
+                          notification.publication_title || notification.title}
                       </h3>
                       
                       {notification.publication_description && (
@@ -537,7 +499,7 @@ const Notify = () => {
                         </p>
                       )}
                       
-                      {!isFollowNotification && !isMentionNotification && (
+                      {!isFollowNotification && (
                         <p className="text-xs text-muted-foreground line-clamp-1">
                           {notification.message}
                         </p>
