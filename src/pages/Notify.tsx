@@ -1,305 +1,48 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, CheckCircle, Clock, ChevronRight, Calendar, Newspaper, Trash2, UserCheck, UserPlus, AtSign } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { cn } from "@/lib/utils";
-import { format } from "date-fns";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Bell, ArrowLeft, Check, ExternalLink } from "lucide-react";
+import { format, formatDistance } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { supabase } from "@/integrations/supabase/client";
-import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
-import { toast } from "sonner";
-import BottomNav from "@/components/BottomNav";
 import type { Notification } from "@/types/notifications";
+import BottomNav from "@/components/BottomNav";
 
 const Notify = () => {
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const [isLoading, setIsLoading] = useState(true);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [followStatuses, setFollowStatuses] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    const fetchCurrentUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        setCurrentUserId(session.user.id);
-      } else {
-        navigate("/login");
-      }
-    };
-    fetchCurrentUser();
-  }, [navigate]);
-
-  useEffect(() => {
-    const loadNotificationPreference = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user?.id) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('notifications_enabled')
-          .eq('id', session.user.id)
-          .single();
-
-        if (profile) {
-          setNotificationsEnabled(profile.notifications_enabled);
-        }
-      }
-    };
-    loadNotificationPreference();
+    fetchNotifications();
   }, []);
 
-  const toggleNotifications = async () => {
+  const fetchNotifications = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user?.id) return;
+      setLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
 
-      const newState = !notificationsEnabled;
-      const { error } = await supabase
-        .from('profiles')
-        .update({ notifications_enabled: newState })
-        .eq('id', session.user.id);
-
-      if (error) throw error;
-
-      setNotificationsEnabled(newState);
-      toast.success(
-        newState 
-          ? "Notificações ativadas com sucesso" 
-          : "Notificações desativadas com sucesso",
-        {
-          position: "top-center",
-          style: { marginTop: "64px" }
-        }
-      );
-    } catch (error) {
-      console.error("Error toggling notifications:", error);
-      toast.error("Erro ao alterar estado das notificações", {
-        position: "top-center",
-        style: { marginTop: "64px" }
-      });
-    }
-  };
-
-  useEffect(() => {
-    const checkSession = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          navigate("/login");
-          return;
-        }
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Error checking session:", error);
+      if (!user) {
         navigate("/login");
+        return;
       }
-    };
-    checkSession();
-  }, [navigate]);
 
-  const { data: notifications = [], refetch } = useQuery({
-    queryKey: ["notifications"],
-    queryFn: async () => {
-      if (!currentUserId) return [];
-
-      console.log("Fetching notifications for user:", currentUserId);
-      
       const { data, error } = await supabase
         .from("notifications")
         .select("*")
-        .eq("user_id", currentUserId)
+        .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
-      if (error) {
-        console.error("Error fetching notifications:", error);
-        throw error;
-      }
-      
-      console.log("Raw notifications data:", data);
-      
-      const notificationsWithSenders = await Promise.all(
-        data.map(async (notification) => {
-          if (notification.reference_id && notification.message?.includes('começou a seguir você')) {
-            const { data: senderData } = await supabase
-              .from('profiles')
-              .select('id, username, full_name, avatar_url')
-              .eq('id', notification.reference_id)
-              .single();
-            
-            if (senderData) {
-              checkFollowStatus(senderData.id);
-              return { ...notification, sender: senderData };
-            }
-          }
-          
-          if (notification.sender) {
-            console.log("Notification already has sender data:", notification.sender);
-            return notification;
-          }
-          
-          if (notification.type === 'mention' && notification.reference_id && !notification.sender) {
-            console.log("Fetching sender data for mention notification:", notification.id);
-            
-            const { data: postData } = await supabase
-              .from('posts')
-              .select('user_id')
-              .eq('id', notification.reference_id)
-              .single();
-              
-            if (postData) {
-              const { data: senderData } = await supabase
-                .from('profiles')
-                .select('id, username, full_name, avatar_url')
-                .eq('id', postData.user_id)
-                .single();
-                
-              if (senderData) {
-                console.log("Found sender data for mention:", senderData);
-                return { ...notification, sender: senderData };
-              }
-            }
-          }
-          
-          return notification;
-        })
-      );
-      
-      console.log("Processed notifications with senders:", notificationsWithSenders);
-      return notificationsWithSenders as Notification[];
-    },
-    enabled: !isLoading && !!currentUserId,
-  });
-
-  const checkFollowStatus = async (userId: string) => {
-    if (!currentUserId) return;
-    
-    try {
-      const { data, error } = await supabase
-        .from('follows')
-        .select('*')
-        .eq('follower_id', currentUserId)
-        .eq('following_id', userId)
-        .single();
-      
-      if (!error) {
-        setFollowStatuses(prev => ({
-          ...prev,
-          [userId]: true
-        }));
-      } else {
-        setFollowStatuses(prev => ({
-          ...prev,
-          [userId]: false
-        }));
-      }
+      if (error) throw error;
+      setNotifications(data || []);
     } catch (error) {
-      console.error("Error checking follow status:", error);
-    }
-  };
-
-  const followMutation = useMutation({
-    mutationFn: async (userId: string) => {
-      if (!currentUserId) {
-        throw new Error("Not authenticated");
-      }
-      
-      const { data, error } = await supabase
-        .from('follows')
-        .insert([
-          { follower_id: currentUserId, following_id: userId }
-        ]);
-        
-      if (error) throw error;
-      
-      await supabase
-        .from('notifications')
-        .insert([
-          {
-            user_id: userId,
-            title: 'Novo seguidor',
-            message: `@${currentUserId} começou a seguir você.`,
-            type: 'system',
-            reference_id: currentUserId
-          }
-        ]);
-        
-      return data;
-    },
-    onSuccess: (_, userId) => {
-      setFollowStatuses(prev => ({
-        ...prev,
-        [userId]: true
-      }));
-      toast.success("Seguindo com sucesso!");
-      queryClient.invalidateQueries({ queryKey: ["followStats"] });
-    },
-    onError: (error) => {
-      console.error("Error following user:", error);
-      toast.error("Erro ao seguir usuário");
-    }
-  });
-
-  const unfollowMutation = useMutation({
-    mutationFn: async (userId: string) => {
-      if (!currentUserId) {
-        throw new Error("Not authenticated");
-      }
-      
-      const { data, error } = await supabase
-        .from('follows')
-        .delete()
-        .eq('follower_id', currentUserId)
-        .eq('following_id', userId);
-        
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: (_, userId) => {
-      setFollowStatuses(prev => ({
-        ...prev,
-        [userId]: false
-      }));
-      toast.success("Deixou de seguir com sucesso!");
-      queryClient.invalidateQueries({ queryKey: ["followStats"] });
-    },
-    onError: (error) => {
-      console.error("Error unfollowing user:", error);
-      toast.error("Erro ao deixar de seguir usuário");
-    }
-  });
-
-  const deleteNotification = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from("notifications")
-        .delete()
-        .eq("id", id);
-
-      if (error) {
-        console.error("Error deleting notification:", error);
-        throw error;
-      }
-
-      queryClient.setQueryData<Notification[]>(["notifications"], (old) =>
-        old?.filter((n) => n.id !== id)
-      );
-
-      queryClient.invalidateQueries({ queryKey: ["unreadNotifications"] });
-
-      toast.success("Notificação excluída com sucesso", {
-        position: "top-center",
-        style: { marginTop: "64px" }
-      });
-    } catch (error: any) {
-      console.error("Error in deleteNotification:", error);
-      toast.error("Erro ao excluir notificação", {
-        position: "top-center",
-        style: { marginTop: "64px" }
-      });
+      console.error("Error fetching notifications:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -312,304 +55,173 @@ const Notify = () => {
 
       if (error) throw error;
 
-      queryClient.setQueryData<Notification[]>(["notifications"], (old) =>
-        old?.map((n) => (n.id === id ? { ...n, read: true } : n))
+      setNotifications(
+        notifications.map((notification) =>
+          notification.id === id ? { ...notification, read: true } : notification
+        )
       );
-
-      queryClient.invalidateQueries({ queryKey: ["unreadNotifications"] });
-
-      const notification = notifications.find(n => n.id === id);
-      if (notification?.reference_id) {
-        console.log("Navigating for notification:", notification);
-        
-        if (notification.type === 'event') {
-          navigate(`/eventos`);
-        } else if (notification.type === 'news') {
-          navigate(`/`);
-        } else if (notification.type === 'mention') {
-          navigate(`/posts/${notification.reference_id}`);
-        } else if (notification.sender) {
-          navigate(`/perfil/${notification.sender.username}`);
-        }
-      }
-    } catch (error: any) {
-      toast.error("Erro ao marcar notificação como lida", {
-        position: "top-center",
-        style: { marginTop: "64px" }
-      });
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
     }
   };
 
-  const markAllAsRead = async () => {
-    try {
-      const { error } = await supabase
-        .from("notifications")
-        .update({ read: true })
-        .eq("read", false)
-        .eq("user_id", currentUserId);
-
-      if (error) throw error;
-
-      queryClient.setQueryData<Notification[]>(["notifications"], (old) =>
-        old?.map((n) => ({ ...n, read: true }))
-      );
-
-      queryClient.invalidateQueries({ queryKey: ["unreadNotifications"] });
-
-      toast.success("Todas as notificações foram marcadas como lidas", {
-        position: "top-center",
-        style: { marginTop: "64px" }
-      });
-    } catch (error: any) {
-      toast.error("Erro ao marcar notificações como lidas", {
-        position: "top-center",
-        style: { marginTop: "64px" }
-      });
+  const handleNotificationClick = async (notification: Notification) => {
+    if (!notification.read) {
+      await markAsRead(notification.id);
     }
-  };
 
-  const handleFollowAction = (userId: string) => {
-    if (!currentUserId) {
-      navigate("/login");
-      return;
-    }
-    
-    if (followStatuses[userId]) {
-      unfollowMutation.mutate(userId);
-    } else {
-      followMutation.mutate(userId);
-    }
-  };
-
-  const getNotificationIcon = (type: Notification["type"]) => {
-    switch (type) {
-      case "event":
-        return <Calendar className="h-4 w-4" />;
+    switch (notification.type) {
       case "news":
-        return <Newspaper className="h-4 w-4" />;
+        navigate(`/noticias/${notification.reference_id}`);
+        break;
+      case "event":
+        navigate(`/eventos/${notification.reference_id}`);
+        break;
       case "mention":
-        return <AtSign className="h-4 w-4" />;
+        navigate(`/posts/${notification.reference_id}`);
+        break;
       default:
-        return <Bell className="h-4 w-4" />;
+        // If system notification or other type with no specific page, just mark as read
+        break;
     }
   };
 
-  if (isLoading) {
-    return (
-      <>
-        <div className="flex items-center justify-center min-h-screen">
-          <p>Carregando...</p>
-        </div>
-        <BottomNav />
-      </>
-    );
-  }
+  const getNotificationBadge = (type: string) => {
+    switch (type) {
+      case "news":
+        return <Badge className="bg-blue-500">Notícia</Badge>;
+      case "event":
+        return <Badge className="bg-green-500">Evento</Badge>;
+      case "mention":
+        return <Badge className="bg-purple-500">Menção</Badge>;
+      default:
+        return <Badge>Sistema</Badge>;
+    }
+  };
 
   return (
-    <>
-      <div className="max-w-3xl mx-auto p-4 md:p-6 mb-20">
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
-          <div className="flex items-center gap-3">
-            <Bell className="h-6 w-6 text-primary" />
-            <h1 className="text-xl font-bold">Notificações</h1>
-            <Badge variant="secondary" className="ml-2">
-              {notifications.filter(n => !n.read).length} não lidas
-            </Badge>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center space-x-2">
-              <Switch
-                checked={notificationsEnabled}
-                onCheckedChange={toggleNotifications}
-                aria-label="Toggle notifications"
-              />
-              <span className="text-sm text-muted-foreground">
-                {notificationsEnabled ? "Notificações ativadas" : "Notificações desativadas"}
-              </span>
-            </div>
-            <Button 
-              onClick={markAllAsRead} 
-              variant="outline" 
-              size="sm"
-              className="whitespace-nowrap"
-            >
-              Marcar todas como lidas
-            </Button>
-          </div>
-        </div>
+    <div className="min-h-screen bg-background">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md p-4 border-b border-border flex items-center">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => navigate(-1)}
+          className="mr-3"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <h1 className="text-xl font-bold">Notificações</h1>
+      </header>
 
-        <div className="space-y-2">
-          {notifications.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              Nenhuma notificação encontrada
-            </div>
-          ) : (
-            notifications.map((notification) => {
-              const isFollowNotification = notification.message?.includes('começou a seguir você');
-              const isMentionNotification = notification.type === 'mention';
-              const userId = notification.sender?.id;
-              const isFollowing = userId ? followStatuses[userId] : false;
-              
-              return (
-                <div
-                  key={notification.id}
-                  className={cn(
-                    "group flex flex-col p-3 rounded-lg border transition-all",
-                    "hover:shadow-sm cursor-pointer",
-                    notification.read 
-                      ? "bg-muted/50 border-transparent"
-                      : "bg-background border-primary/10"
-                  )}
-                  onClick={() => markAsRead(notification.id)}
-                >
+      <main className="container max-w-xl mx-auto pt-20 pb-24 px-4">
+        {loading ? (
+          <div className="space-y-4">
+            {[...Array(5)].map((_, i) => (
+              <Card key={i} className="animate-pulse">
+                <CardContent className="p-4">
+                  <div className="h-6 bg-muted rounded w-1/3 mb-3"></div>
+                  <div className="h-4 bg-muted rounded w-full mb-2"></div>
+                  <div className="h-4 bg-muted rounded w-2/3"></div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : notifications.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <Bell className="h-16 w-16 text-muted-foreground mb-4" />
+            <h2 className="text-xl font-semibold mb-2">Nenhuma notificação</h2>
+            <p className="text-muted-foreground">
+              Você não tem notificações para ver no momento.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {notifications.map((notification) => (
+              <Card
+                key={notification.id}
+                className={`transition-all border ${
+                  !notification.read
+                    ? "border-primary bg-primary/5"
+                    : "bg-card"
+                }`}
+              >
+                <CardContent className="p-4">
                   <div className="flex items-start gap-3">
-                    {notification.sender?.avatar_url ? (
-                      <Avatar className="h-10 w-10 border-2 border-primary/10">
-                        <AvatarImage src={notification.sender.avatar_url} alt={notification.sender.username || 'User'} />
-                        <AvatarFallback>
-                          {notification.sender.full_name?.charAt(0).toUpperCase() || 'U'}
+                    {notification.type === "mention" && notification.sender ? (
+                      <Avatar className="h-10 w-10 border">
+                        <AvatarImage
+                          src={notification.sender.avatar_url}
+                          alt={notification.sender.username}
+                        />
+                        <AvatarFallback className="bg-primary/10 text-primary font-medium">
+                          {notification.sender.username?.[0]?.toUpperCase() || "U"}
                         </AvatarFallback>
                       </Avatar>
                     ) : (
-                      <div className="mt-1">
-                        {getNotificationIcon(notification.type)}
+                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                        <Bell className="h-5 w-5" />
                       </div>
                     )}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex flex-wrap items-center gap-2 mb-1">
-                        <Badge
-                          variant={notification.read ? "outline" : "default"}
-                          className={cn(
-                            "text-xs font-medium",
-                            notification.type === 'event' && "bg-blue-500/10 text-blue-700",
-                            notification.type === 'news' && "bg-green-500/10 text-green-700",
-                            notification.type === 'mention' && "bg-purple-500/10 text-purple-700",
-                            notification.type === 'system' && "bg-gray-500/10 text-gray-700"
-                          )}
-                        >
-                          {notification.type === 'event' ? 'Evento' : 
-                           notification.type === 'news' ? 'Notícia' : 
-                           notification.type === 'mention' ? 'Menção' :
-                           isFollowNotification ? 'Seguidor' : 'Sistema'}
-                        </Badge>
-                        {notification.publication_category && (
-                          <Badge variant="outline" className="text-xs">
-                            {notification.publication_category}
-                          </Badge>
-                        )}
+                    
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-2">
+                          {getNotificationBadge(notification.type)}
+                          <span className="text-sm text-muted-foreground">
+                            {notification.created_at && 
+                              formatDistance(
+                                new Date(notification.created_at),
+                                new Date(),
+                                { addSuffix: true, locale: ptBR }
+                              )}
+                          </span>
+                        </div>
                         {!notification.read && (
-                          <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                          <span className="h-2 w-2 rounded-full bg-primary"></span>
                         )}
                       </div>
-
-                      <h3 className={cn(
-                        "text-sm font-medium mb-0.5",
-                        !notification.read && "text-primary"
-                      )}>
-                        {notification.sender?.username && (
-                          <span className="font-semibold">@{notification.sender.username}</span>
-                        )}
-                        {' '}
-                        {isMentionNotification ? 
-                          'mencionou você em uma publicação' : 
-                          isFollowNotification ? 
-                            'começou a seguir você.' : 
-                            notification.publication_title || notification.title}
-                      </h3>
                       
-                      {notification.publication_description && (
-                        <p className="text-xs text-muted-foreground mb-1 line-clamp-1">
-                          {notification.publication_description}
-                        </p>
-                      )}
+                      <h3 className="font-medium mb-1">{notification.title}</h3>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        {notification.message}
+                      </p>
                       
-                      {!isFollowNotification && !isMentionNotification && (
-                        <p className="text-xs text-muted-foreground line-clamp-1">
-                          {notification.message}
-                        </p>
-                      )}
-
-                      {isMentionNotification && (
-                        <p className="text-xs text-muted-foreground bg-muted/50 p-2 rounded-md mt-1 line-clamp-2">
-                          {notification.message}
-                        </p>
-                      )}
-
                       <div className="flex items-center justify-between mt-2">
-                        <div className="flex items-center gap-2">
-                          {notification.reference_id && (
-                            <Button
-                              variant="link"
-                              size="sm"
-                              className="h-auto p-0 text-xs"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                markAsRead(notification.id);
-                              }}
-                            >
-                              Ver detalhes
-                              <ChevronRight className="ml-1 h-3 w-3" />
-                            </Button>
-                          )}
-                          
-                          {isFollowNotification && userId && (
-                            <Button
-                              variant={isFollowing ? "outline" : "default"}
-                              size="sm"
-                              className={`h-8 ${isFollowing ? 'bg-gray-800 hover:bg-gray-700 text-white' : 'text-white'}`}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleFollowAction(userId);
-                              }}
-                              disabled={followMutation.isPending || unfollowMutation.isPending}
-                            >
-                              {isFollowing ? (
-                                <>
-                                  <UserCheck className="h-3.5 w-3.5 mr-1" />
-                                  Seguindo
-                                </>
-                              ) : (
-                                <>
-                                  <UserPlus className="h-3.5 w-3.5 mr-1" />
-                                  Seguir de volta
-                                </>
-                              )}
-                            </Button>
-                          )}
-                        </div>
+                        {notification.reference_id && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleNotificationClick(notification)}
+                            className="text-xs"
+                          >
+                            <ExternalLink className="h-3 w-3 mr-1" />
+                            Ver detalhes
+                          </Button>
+                        )}
                         
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <span>
-                            {format(new Date(notification.created_at), "dd MMM HH:mm", { locale: ptBR })}
-                          </span>
-                          {notification.read ? (
-                            <CheckCircle className="h-3 w-3 text-green-500" />
-                          ) : (
-                            <Clock className="h-3 w-3 text-yellow-500" />
-                          )}
+                        {!notification.read && (
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-6 w-6 p-0 hover:bg-destructive/10 hover:text-destructive"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              deleteNotification(notification.id);
-                            }}
+                            onClick={() => markAsRead(notification.id)}
+                            className="text-xs"
                           >
-                            <Trash2 className="h-3 w-3" />
+                            <Check className="h-3 w-3 mr-1" />
+                            Marcar como lida
                           </Button>
-                        </div>
+                        )}
                       </div>
                     </div>
                   </div>
-                </div>
-              );
-            })
-          )}
-        </div>
-      </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </main>
+
       <BottomNav />
-    </>
+    </div>
   );
 };
 

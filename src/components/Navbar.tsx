@@ -1,100 +1,111 @@
 
-import { Link, useNavigate } from "react-router-dom";
-import { useSiteConfig } from "@/hooks/useSiteConfig";
-import { Menu } from "lucide-react";
-import { useEffect, useState } from "react";
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Bell, Search, PlusSquare } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const Navbar = () => {
-  const { data: config, isLoading, isError } = useSiteConfig();
   const navigate = useNavigate();
-  const [visible, setVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
+  const { data: user } = useQuery({
+    queryKey: ["currentUser"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
       
-      // Determina a direção do scroll
-      if (currentScrollY > lastScrollY) {
-        // Rolando para baixo
-        setVisible(false);
-      } else {
-        // Rolando para cima
-        setVisible(true);
-      }
+      if (!user) return null;
       
-      // Atualiza a posição do último scroll
-      setLastScrollY(currentScrollY);
-    };
+      const { data } = await supabase
+        .from("profiles")
+        .select("avatar_url, username")
+        .eq("id", user.id)
+        .single();
+        
+      return { ...user, profile: data };
+    },
+  });
 
-    window.addEventListener("scroll", handleScroll);
-    
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, [lastScrollY]);
-
-  if (isLoading) {
-    return (
-      <nav className="w-full fixed top-0 z-50 h-16 animate-pulse bg-gray-200" />
-    );
-  }
-
-  if (isError || !config) {
-    return (
-      <nav className="w-full fixed top-0 z-50 h-16 bg-gray-800">
-        <div className="max-w-screen-2xl mx-auto px-4">
-          <div className="flex justify-between items-center h-16">
-            <span className="text-white">Error loading navbar</span>
-          </div>
-        </div>
-      </nav>
-    );
-  }
+  const { data: unreadCount } = useQuery({
+    queryKey: ["unreadNotifications"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return 0;
+      
+      const { count, error } = await supabase
+        .from("notifications")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("read", false);
+        
+      if (error) throw error;
+      return count || 0;
+    },
+    enabled: !!user,
+  });
 
   return (
-    <nav 
-      className={`w-full fixed top-0 z-50 shadow-md transition-transform duration-300 ${!visible ? '-translate-y-full' : 'translate-y-0'}`}
-      style={{ 
-        background: `linear-gradient(to right, ${config.navbar_color}, ${config.primary_color})`,
-        borderColor: `${config.primary_color}20`
-      }}
-    >
-      <div className="max-w-screen-2xl mx-auto px-4">
-        <div className="flex justify-between items-center h-16">
-          <Link 
-            to="/" 
-            className="flex items-center space-x-2"
+    <div className="fixed top-0 left-0 right-0 bg-background/80 backdrop-blur-md z-50 border-b border-border">
+      <div className="container mx-auto h-16 px-4 flex items-center justify-between">
+        <div className="flex items-center">
+          <Button
+            variant="ghost"
+            className="p-0 mr-4"
+            onClick={() => navigate("/")}
           >
-            {config.navbar_logo_type === 'image' && config.navbar_logo_image ? (
-              <img 
-                src={config.navbar_logo_image} 
-                alt="Logo" 
-                className="h-12 w-12 rounded-full object-cover"
-                style={{ borderColor: config.text_color }}
-              />
-            ) : (
-              <span 
-                className="text-3xl font-bold tracking-tighter"
-                style={{ color: config.text_color }}
-              >
-                {config.navbar_logo_text || 'Vale Notícias'}
-              </span>
-            )}
-          </Link>
-
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={() => navigate("/menu")}
-              className="flex items-center p-2 rounded-xl transition-all duration-300 hover:scale-105"
-              style={{ color: config.text_color }}
+            <h1 className="text-xl font-bold">Vale OFC</h1>
+          </Button>
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate("/search")}
+          >
+            <Search className="h-5 w-5" />
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate("/posts/new")}
+          >
+            <PlusSquare className="h-5 w-5" />
+          </Button>
+          
+          <div className="relative">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate("/notify")}
             >
-              <Menu className="h-6 w-6" strokeWidth={2} />
-            </button>
+              <Bell className="h-5 w-5" />
+              {unreadCount ? (
+                <span className="absolute top-1 right-1 h-4 w-4 bg-primary text-white text-xs rounded-full flex items-center justify-center">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              ) : null}
+            </Button>
           </div>
+          
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-full"
+            onClick={() => navigate("/perfil")}
+          >
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={user?.profile?.avatar_url} />
+              <AvatarFallback className="text-xs">
+                {user?.profile?.username?.[0]?.toUpperCase() || "U"}
+              </AvatarFallback>
+            </Avatar>
+          </Button>
         </div>
       </div>
-    </nav>
+    </div>
   );
 };
 

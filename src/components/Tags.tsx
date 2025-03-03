@@ -1,86 +1,59 @@
 
-import { Link } from 'react-router-dom';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 interface TagsProps {
   content: string;
 }
 
-const Tags = ({ content }: TagsProps) => {
-  const renderContent = () => {
-    // Regular expression to match both hashtags and username mentions
-    const regex = /(\s|^)([#@]\w+)/g;
-    const parts = [];
-    let lastIndex = 0;
-    let match;
-
-    // Find all matches of hashtags and mentions
-    while ((match = regex.exec(content)) !== null) {
-      const spacing = match[1]; // Capture the spacing before the tag
-      const tag = match[2]; // The actual tag including # or @
-      const matchStart = match.index;
-      const matchEnd = matchStart + match[0].length;
-
-      // Add the text before this match
-      if (matchStart > lastIndex) {
-        const textBefore = content.substring(lastIndex, matchStart);
-        // Preserve line breaks by replacing them with <br/> elements
-        const formattedText = textBefore.split('\n').map((line, i, arr) => 
-          i === arr.length - 1 ? line : (
-            <>
-              {line}
-              <br />
-            </>
-          )
+const Tags: React.FC<TagsProps> = ({ content }) => {
+  const navigate = useNavigate();
+  
+  // This function processes the text and converts @mentions to clickable elements
+  const processText = () => {
+    if (!content) return [];
+    
+    // Regular expression to find @username mentions
+    const mentionRegex = /\B@(\w+)/g;
+    
+    // Split the text by the mention patterns
+    const parts = content.split(mentionRegex);
+    
+    // Process each part and construct the result
+    const result = [];
+    let i = 0;
+    
+    // For each part, determine if it's a username or regular text
+    while (i < parts.length) {
+      // Regular text
+      if (parts[i]) {
+        result.push(
+          <span key={`text-${i}`}>{parts[i]}</span>
         );
-        parts.push(<span key={`text-${lastIndex}`}>{formattedText}</span>);
       }
-
-      // Add the spacing
-      parts.push(spacing);
-
-      // Add the tag with appropriate styling
-      if (tag.startsWith('#')) {
-        parts.push(
-          <span key={matchStart} className="text-blue-500 font-medium">
-            {tag}
-          </span>
-        );
-      } else if (tag.startsWith('@')) {
-        // For @username, create a link to their profile
-        const username = tag.substring(1); // Remove the @ symbol
-        parts.push(
-          <Link 
-            key={matchStart} 
-            to={`/perfil/${username}`} 
-            className="text-[#0EA5E9] font-medium hover:underline"
+      
+      // Username (if available)
+      if (i + 1 < parts.length) {
+        const username = parts[i + 1];
+        result.push(
+          <button
+            key={`mention-${i}`}
+            className="text-primary font-medium hover:underline"
+            onClick={() => navigate(`/perfil/${username}`)}
           >
-            {tag}
-          </Link>
+            @{username}
+          </button>
         );
+        i += 2;  // Skip the username part
+      } else {
+        i++;
       }
-
-      lastIndex = matchEnd;
     }
-
-    // Add the remaining text
-    if (lastIndex < content.length) {
-      const textAfter = content.substring(lastIndex);
-      // Preserve line breaks here too
-      const formattedText = textAfter.split('\n').map((line, i, arr) => 
-        i === arr.length - 1 ? line : (
-          <>
-            {line}
-            <br />
-          </>
-        )
-      );
-      parts.push(<span key={`text-end`}>{formattedText}</span>);
-    }
-
-    return parts;
+    
+    return result;
   };
-
-  return <>{renderContent()}</>;
+  
+  return <>{processText()}</>;
 };
 
 export default Tags;
