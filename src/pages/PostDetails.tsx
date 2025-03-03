@@ -241,6 +241,7 @@ const PostDetails = () => {
     queryFn: async () => {
       try {
         setReactionsLoading(true);
+        console.log("Fetching post with ID:", id);
         const { data: post, error } = await supabase
           .from('posts')
           .select(`
@@ -266,7 +267,12 @@ const PostDetails = () => {
           .eq('id', id)
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error("Error fetching post:", error);
+          throw error;
+        }
+
+        console.log("Post data fetched:", post);
 
         const reactionsByType: Record<string, number> = {};
         post.post_reactions?.forEach((reaction: any) => {
@@ -293,6 +299,7 @@ const PostDetails = () => {
         return null;
       }
     },
+    enabled: !!id,
   });
 
   const { data: comments, isLoading: isLoadingComments } = useQuery({

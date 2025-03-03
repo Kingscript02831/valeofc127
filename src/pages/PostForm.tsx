@@ -92,6 +92,7 @@ const PostForm = () => {
     if (mentions.length === 0) return;
 
     try {
+      console.log("Extracted mentions:", mentions);
       const { data: mentionedUsers, error } = await supabase
         .from("profiles")
         .select("id, username")
@@ -100,6 +101,8 @@ const PostForm = () => {
       if (error) throw error;
       
       if (!mentionedUsers || mentionedUsers.length === 0) return;
+      
+      console.log("Found mentioned users:", mentionedUsers);
 
       const notifications = mentionedUsers.map(user => ({
         user_id: user.id,
@@ -108,6 +111,8 @@ const PostForm = () => {
         type: "mention",
         reference_id: postId
       }));
+
+      console.log("Creating notifications:", notifications);
 
       const { error: notifError } = await supabase
         .from("notifications")
