@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -102,13 +101,12 @@ const PostForm = () => {
       
       if (!mentionedUsers || mentionedUsers.length === 0) return;
 
-      // Create notifications with the proper reference_id (post ID)
       const notifications = mentionedUsers.map(user => ({
         user_id: user.id,
         title: "Menção em post",
         message: `@${currentUser.username} mencionou você em um post.`,
         type: "system",
-        reference_id: postId // This is the post ID that will be used for navigation
+        reference_id: postId
       }));
 
       const { error: notifError } = await supabase
@@ -154,7 +152,6 @@ const PostForm = () => {
         if (error) throw error;
         
         postId = editingPost;
-        console.log("Updated post with ID:", postId);
         toast({
           title: "Sucesso",
           description: "Post atualizado com sucesso!",
@@ -171,15 +168,13 @@ const PostForm = () => {
         
         postId = data.id;
         console.log("Created post with ID:", postId);
-        
-        // Send notifications to mentioned users with the new post ID
-        await notifyMentionedUsers(newPostContent, postId);
-        
         toast({
           title: "Sucesso",
           description: "Post criado com sucesso!",
         });
       }
+
+      await notifyMentionedUsers(newPostContent, postId);
 
       setNewPostContent("");
       setSelectedImages([]);
