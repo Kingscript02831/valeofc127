@@ -1,60 +1,63 @@
 
-import React from 'react';
 import { Button } from "./ui/button";
-import { Camera, FileImage, Trash2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "./ui/dropdown-menu";
+import { Camera, Trash2 } from "lucide-react";
+import { useTheme } from "./ThemeProvider";
 
 interface EditPhotosButtonProps {
   onAvatarClick: () => void;
   onCoverClick: () => void;
   onDeleteAvatar: () => void;
   onDeleteCover: () => void;
-  avatarCount: number;
-  coverCount: number;
+  avatarCount?: number;
+  coverCount?: number;
 }
 
-const EditPhotosButton = ({
-  onAvatarClick,
-  onCoverClick,
-  onDeleteAvatar,
+const EditPhotosButton = ({ 
+  onAvatarClick, 
+  onCoverClick, 
+  onDeleteAvatar, 
   onDeleteCover,
-  avatarCount,
-  coverCount,
+  avatarCount = 0,
+  coverCount = 0
 }: EditPhotosButtonProps) => {
+  const { theme } = useTheme();
+  
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" className="border-gray-700">
-          <Camera className="h-4 w-4 mr-2" />
-          Fotos
+        <Button 
+          variant="outline" 
+          size="icon" 
+          className={`border-gray-700 ${theme === 'light' ? 'text-black' : 'text-white'}`}
+        >
+          <Camera className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="bg-gray-900 border-gray-800">
+      <DropdownMenuContent align="end" className="w-48 bg-gray-900 border-gray-800">
         <DropdownMenuItem onClick={onAvatarClick} className="text-white cursor-pointer">
-          <FileImage className="h-4 w-4 mr-2" />
-          {avatarCount > 0 ? "Alterar foto de perfil" : "Adicionar foto de perfil"}
+          <Camera className="h-4 w-4 mr-2" />
+          Alterar foto de perfil ({avatarCount})
         </DropdownMenuItem>
-        {avatarCount > 0 && (
-          <DropdownMenuItem onClick={onDeleteAvatar} className="text-red-400 cursor-pointer">
-            <Trash2 className="h-4 w-4 mr-2" />
-            Excluir foto de perfil
-          </DropdownMenuItem>
-        )}
         <DropdownMenuItem onClick={onCoverClick} className="text-white cursor-pointer">
-          <FileImage className="h-4 w-4 mr-2" />
-          {coverCount > 0 ? "Alterar capa" : "Adicionar capa"}
+          <Camera className="h-4 w-4 mr-2" />
+          Alterar capa ({coverCount})
         </DropdownMenuItem>
-        {coverCount > 0 && (
-          <DropdownMenuItem onClick={onDeleteCover} className="text-red-400 cursor-pointer">
-            <Trash2 className="h-4 w-4 mr-2" />
-            Excluir capa
-          </DropdownMenuItem>
-        )}
+        <DropdownMenuSeparator className="bg-gray-700" />
+        <DropdownMenuItem onClick={onDeleteAvatar} className="text-red-500 cursor-pointer">
+          <Trash2 className="h-4 w-4 mr-2" />
+          Excluir foto de perfil
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={onDeleteCover} className="text-red-500 cursor-pointer">
+          <Trash2 className="h-4 w-4 mr-2" />
+          Excluir capa
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

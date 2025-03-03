@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -32,7 +33,6 @@ import EditPhotosButton from "../components/EditPhotosButton";
 import PhotoUrlDialog from "../components/PhotoUrlDialog";
 import type { Profile } from "../types/profile";
 import { format } from "date-fns";
-import { toast } from "sonner";
 
 const defaultAvatarImage = "/placeholder.svg";
 const defaultCoverImage = "/placeholder.svg";
@@ -71,11 +71,13 @@ export default function Profile() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Não autenticado");
 
+      // Buscar contagem de seguidores
       const { count: followersCount } = await supabase
         .from('follows')
         .select('*', { count: 'exact', head: true })
         .eq('following_id', session.user.id);
 
+      // Buscar contagem de pessoas que o usuário segue
       const { count: followingCount } = await supabase
         .from('follows')
         .select('*', { count: 'exact', head: true })
@@ -267,12 +269,6 @@ export default function Profile() {
     return format(new Date(date), "dd/MM/yyyy");
   };
 
-  const navigateToConnections = (tab: string) => {
-    if (profile?.id) {
-      navigate(`/conexoes/${profile.id}/${tab}`);
-    }
-  };
-
   useEffect(() => {
     if (profile) {
       setAvatarCount(profile.avatar_url ? 1 : 0);
@@ -325,17 +321,11 @@ export default function Profile() {
 
           <div className="flex justify-end px-4 py-2 border-b border-gray-200 dark:border-gray-800">
             <div className="flex gap-4 text-center">
-              <div 
-                className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 px-2 py-1 rounded transition"
-                onClick={() => navigateToConnections("followers")}
-              >
+              <div>
                 <p className="font-semibold">{followStats?.followers || 0}</p>
                 <p className="text-sm text-gray-500">Seguidores</p>
               </div>
-              <div 
-                className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 px-2 py-1 rounded transition"
-                onClick={() => navigateToConnections("following")}
-              >
+              <div>
                 <p className="font-semibold">{followStats?.following || 0}</p>
                 <p className="text-sm text-gray-500">Seguindo</p>
               </div>
@@ -362,6 +352,7 @@ export default function Profile() {
               </div>
             </div>
             
+            {/* Moved edit buttons up here */}
             {!isPreviewMode ? (
               <div className="absolute top-20 right-4 flex gap-2">
                 <EditPhotosButton 
@@ -427,6 +418,7 @@ export default function Profile() {
                   )}
                 </div>
                 
+                {/* Removed buttons from here since we moved them above */}
               </div>
 
               {profile?.city && (
