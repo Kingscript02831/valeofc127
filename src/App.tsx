@@ -89,7 +89,7 @@ const App: React.FC = () => {
                   <Route path="/story/view/:userId" element={<StoryViewer />} />
                   <Route path="/story/manage" element={<StoryManager />} />
                   
-                  {/* Nova rota para seguidores */}
+                  {/* Rotas para seguidores */}
                   <Route path="/seguidores" element={<Followers />} />
                   <Route path="/seguidores/:username" element={<Followers />} />
                   <Route path="/seguidores/:username/:tab" element={<Followers />} />

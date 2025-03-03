@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -31,7 +30,6 @@ export default function Followers() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isFollowingMap, setIsFollowingMap] = useState<Record<string, boolean>>({});
 
-  // Get current user info
   useEffect(() => {
     const fetchCurrentUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -42,12 +40,10 @@ export default function Followers() {
     fetchCurrentUser();
   }, []);
 
-  // Get profile data
   const { data: profile, isLoading: isProfileLoading } = useQuery({
     queryKey: ["userProfile", username],
     queryFn: async () => {
       if (!username) {
-        // If no username provided, get current user's profile
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
           navigate("/login");
@@ -67,7 +63,6 @@ export default function Followers() {
 
         return data as Profile;
       } else {
-        // Get the specified user's profile
         const { data, error } = await supabase
           .from("profiles")
           .select("*")
@@ -84,7 +79,6 @@ export default function Followers() {
     },
   });
 
-  // Get followers
   const { data: followers, isLoading: isFollowersLoading } = useQuery({
     queryKey: ["followers", profile?.id],
     queryFn: async () => {
@@ -108,7 +102,6 @@ export default function Followers() {
     enabled: !!profile?.id,
   });
 
-  // Get following
   const { data: following, isLoading: isFollowingLoading } = useQuery({
     queryKey: ["following", profile?.id],
     queryFn: async () => {
@@ -132,21 +125,17 @@ export default function Followers() {
     enabled: !!profile?.id,
   });
 
-  // Check which users the current user is following
   useEffect(() => {
     const checkFollowingStatus = async () => {
       if (!currentUserId) return;
       
-      // Combine followers and following to check all users at once
       const usersToCheck = [
         ...(followers || []).map(f => f.profile.id),
         ...(following || []).map(f => f.profile.id)
       ];
       
-      // Remove duplicates
       const uniqueUserIds = [...new Set(usersToCheck)];
       
-      // Only check users that are not the current user
       const filteredUserIds = uniqueUserIds.filter(id => id !== currentUserId);
       
       if (filteredUserIds.length === 0) return;
@@ -179,7 +168,6 @@ export default function Followers() {
     }
   }, [currentUserId, followers, following]);
 
-  // Follow mutation
   const followMutation = useMutation({
     mutationFn: async (userId: string) => {
       if (!currentUserId) {
@@ -194,7 +182,6 @@ export default function Followers() {
 
       if (error) throw error;
 
-      // Insert notification
       await supabase
         .from('notifications')
         .insert([
@@ -210,7 +197,6 @@ export default function Followers() {
     },
     onSuccess: (_, userId) => {
       setIsFollowingMap(prev => ({ ...prev, [userId]: true }));
-      // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: ["followStats", profile?.id] });
       queryClient.invalidateQueries({ queryKey: ["followers", profile?.id] });
       queryClient.invalidateQueries({ queryKey: ["following", profile?.id] });
@@ -222,7 +208,6 @@ export default function Followers() {
     }
   });
 
-  // Unfollow mutation
   const unfollowMutation = useMutation({
     mutationFn: async (userId: string) => {
       if (!currentUserId) {
@@ -240,7 +225,6 @@ export default function Followers() {
     },
     onSuccess: (_, userId) => {
       setIsFollowingMap(prev => ({ ...prev, [userId]: false }));
-      // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: ["followStats", profile?.id] });
       queryClient.invalidateQueries({ queryKey: ["followers", profile?.id] });
       queryClient.invalidateQueries({ queryKey: ["following", profile?.id] });
@@ -260,7 +244,7 @@ export default function Followers() {
 
     const lastActionTime = localStorage.getItem(`followAction_${userId}`);
     const now = Date.now();
-    const cooldownPeriod = 30000; // 30 segundos em milissegundos
+    const cooldownPeriod = 30000;
 
     if (lastActionTime) {
       const timeSinceLastAction = now - parseInt(lastActionTime);
@@ -282,6 +266,11 @@ export default function Followers() {
 
   const handleTabChange = (value: string) => {
     setActiveTab(value as "followers" | "following");
+    if (username) {
+      navigate(`/seguidores/${username}/${value}`, { replace: true });
+    } else {
+      navigate(`/seguidores/${value}`, { replace: true });
+    }
   };
 
   const renderUserList = (data: FollowData[] | undefined, isLoading: boolean) => {
@@ -365,7 +354,7 @@ export default function Followers() {
   }
 
   if (!profile) {
-    return null; // Será redirecionado para 404
+    return null;
   }
 
   const title = username ? `@${username}` : "Seus Contatos";
