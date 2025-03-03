@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -25,11 +24,13 @@ export default function NotifySeguidor() {
   const queryClient = useQueryClient();
   const { theme } = useTheme();
 
-  const { data: notifications, isLoading } = useQuery({
+  const { data: notifications, isLoading, error } = useQuery({
     queryKey: ["notifications"],
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Não autenticado");
+      
+      console.log("Fetching notifications for user:", session.user.id);
 
       const { data, error } = await supabase
         .from("notifications")
@@ -45,10 +46,19 @@ export default function NotifySeguidor() {
         .eq("user_id", session.user.id)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching notifications:", error);
+        throw error;
+      }
+      
+      console.log("Fetched notifications:", data);
       return data as NotificationWithProfile[];
     },
   });
+
+  if (error) {
+    console.error("Error in notifications query:", error);
+  }
 
   const followMutation = useMutation({
     mutationFn: async (followerId: string) => {
