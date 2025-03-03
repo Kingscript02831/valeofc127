@@ -1,18 +1,11 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../integrations/supabase/client";
 import { Button } from "../components/ui/button";
-import { useToast } from "../hooks/use-toast";
-import { Dialog, DialogTrigger } from "../components/ui/dialog";
+import { useTheme } from "../components/ThemeProvider";
+import ProfileTabs from "../components/ProfileTabs";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "../components/ui/dropdown-menu";
-import { 
   LogOut, 
   MapPin, 
   Link2, 
@@ -26,20 +19,33 @@ import {
   Instagram,
 } from "lucide-react";
 import BottomNav from "../components/BottomNav";
-import { useTheme } from "../components/ThemeProvider";
-import ProfileTabs from "../components/ProfileTabs";
-import EditProfileDialog from "../components/EditProfileDialog";
-import EditPhotosButton from "../components/EditPhotosButton";
-import PhotoUrlDialog from "../components/PhotoUrlDialog";
+import { Dialog, DialogTrigger } from "../components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../components/ui/dropdown-menu";
 import type { Profile } from "../types/profile";
 import { format } from "date-fns";
+
+const EditProfileDialog = ({ profile, onSubmit }: { profile: any, onSubmit: (values: any) => void }) => (
+  <div>Edit Profile Dialog</div>
+);
+
+const EditPhotosButton = (props: any) => (
+  <Button>Edit Photos</Button>
+);
+
+const PhotoUrlDialog = (props: any) => (
+  <div>Photo URL Dialog</div>
+);
 
 const defaultAvatarImage = "/placeholder.svg";
 const defaultCoverImage = "/placeholder.svg";
 
 export default function Profile() {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const { theme } = useTheme();
@@ -71,13 +77,11 @@ export default function Profile() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Não autenticado");
 
-      // Buscar contagem de seguidores
       const { count: followersCount } = await supabase
         .from('follows')
         .select('*', { count: 'exact', head: true })
         .eq('following_id', session.user.id);
 
-      // Buscar contagem de pessoas que o usuário segue
       const { count: followingCount } = await supabase
         .from('follows')
         .select('*', { count: 'exact', head: true })
@@ -364,7 +368,6 @@ export default function Profile() {
               </div>
             </div>
             
-            {/* Moved edit buttons up here */}
             {!isPreviewMode ? (
               <div className="absolute top-20 right-4 flex gap-2">
                 <EditPhotosButton 
