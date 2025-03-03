@@ -1,106 +1,45 @@
 
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { cn } from '@/lib/utils';
 
 interface TagsProps {
   content: string;
-  className?: string;
-  linkClassName?: string;
-  hashtagClassName?: string;
   disableLinks?: boolean;
+  className?: string;
 }
 
-const Tags = ({ 
-  content, 
-  className, 
-  linkClassName = "text-[#0EA5E9] font-medium hover:underline", 
-  hashtagClassName = "text-blue-500 font-medium",
-  disableLinks = false
-}: TagsProps) => {
-  const renderContent = () => {
-    // Regular expression to match both hashtags and username mentions
-    const regex = /(\s|^)([#@]\w+)/g;
-    const parts = [];
-    let lastIndex = 0;
-    let match;
+const Tags: React.FC<TagsProps> = ({ content, disableLinks = false, className = '' }) => {
+  if (!content) return null;
 
-    // Find all matches of hashtags and mentions
-    while ((match = regex.exec(content)) !== null) {
-      const spacing = match[1]; // Capture the spacing before the tag
-      const tag = match[2]; // The actual tag including # or @
-      const matchStart = match.index;
-      const matchEnd = matchStart + match[0].length;
+  // Parse content to identify tags, mentions and links
+  const formatContent = (text: string) => {
+    // Replace hashtags with links
+    let formattedText = text.replace(
+      /#(\w+)/g,
+      disableLinks 
+        ? '<span class="text-blue-400">$&</span>' 
+        : '<a href="/tags/$1" class="text-blue-400 hover:underline">$&</a>'
+    );
 
-      // Add the text before this match
-      if (matchStart > lastIndex) {
-        const textBefore = content.substring(lastIndex, matchStart);
-        // Preserve line breaks by replacing them with <br/> elements
-        const formattedText = textBefore.split('\n').map((line, i, arr) => 
-          i === arr.length - 1 ? line : (
-            <>
-              {line}
-              <br />
-            </>
-          )
-        );
-        parts.push(<span key={`text-${lastIndex}`}>{formattedText}</span>);
-      }
+    // Replace mentions with links
+    formattedText = formattedText.replace(
+      /@(\w+)/g,
+      disableLinks 
+        ? '<span class="text-purple-400">$&</span>' 
+        : '<a href="/perfil/$1" class="text-purple-400 hover:underline">$&</a>'
+    );
 
-      // Add the spacing
-      parts.push(spacing);
-
-      // Add the tag with appropriate styling
-      if (tag.startsWith('#')) {
-        parts.push(
-          <span key={matchStart} className={cn(hashtagClassName)}>
-            {tag}
-          </span>
-        );
-      } else if (tag.startsWith('@')) {
-        // For @username, create a link to their profile
-        const username = tag.substring(1); // Remove the @ symbol
-        
-        if (disableLinks) {
-          parts.push(
-            <span key={matchStart} className={cn(linkClassName)}>
-              {tag}
-            </span>
-          );
-        } else {
-          parts.push(
-            <Link 
-              key={matchStart} 
-              to={`/perfil/${username}`} 
-              className={cn(linkClassName)}
-            >
-              {tag}
-            </Link>
-          );
-        }
-      }
-
-      lastIndex = matchEnd;
-    }
-
-    // Add the remaining text
-    if (lastIndex < content.length) {
-      const textAfter = content.substring(lastIndex);
-      // Preserve line breaks here too
-      const formattedText = textAfter.split('\n').map((line, i, arr) => 
-        i === arr.length - 1 ? line : (
-          <>
-            {line}
-            <br />
-          </>
-        )
-      );
-      parts.push(<span key={`text-end`}>{formattedText}</span>);
-    }
-
-    return parts;
+    return formattedText;
   };
 
-  return <div className={className}>{renderContent()}</div>;
+  const formattedContent = formatContent(content);
+
+  return (
+    <span 
+      className={className}
+      dangerouslySetInnerHTML={{ __html: formattedContent }}
+    />
+  );
 };
 
 export default Tags;
