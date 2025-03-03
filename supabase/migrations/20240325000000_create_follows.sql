@@ -23,4 +23,3 @@ FOR INSERT WITH CHECK (auth.uid() = follower_id);
 
 CREATE POLICY "Enable delete for followers" ON "public"."follows"
 FOR DELETE USING (auth.uid() = follower_id);
-

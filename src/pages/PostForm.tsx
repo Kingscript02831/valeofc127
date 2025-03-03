@@ -1,17 +1,18 @@
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Search } from "lucide-react";
 import { MediaCarousel } from "@/components/MediaCarousel";
 import Navbar from "@/components/Navbar";
 import BottomNav from "@/components/BottomNav";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import LupaUsuario from "@/components/lupausuario";
+import Tags from "@/components/Tags";
 
 interface UserPost {
   id: string;
@@ -31,10 +32,28 @@ const PostForm = () => {
   const navigate = useNavigate();
   const [newImageUrl, setNewImageUrl] = useState("");
   const [newVideoUrl, setNewVideoUrl] = useState("");
+  const [showUserSearch, setShowUserSearch] = useState(false);
+  const textAreaRef = useRef<HTMLTextAreaElement>(null);
+  const [cursorPosition, setCursorPosition] = useState(0);
+  const [currentUser, setCurrentUser] = useState<any>(null);
 
   useEffect(() => {
     fetchUserPosts();
+    fetchCurrentUser();
   }, []);
+
+  const fetchCurrentUser = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data } = await supabase
+        .from("profiles")
+        .select("id, username, full_name")
+        .eq("id", user.id)
+        .single();
+      
+      setCurrentUser(data);
+    }
+  };
 
   const fetchUserPosts = async () => {
     try {
@@ -54,6 +73,53 @@ const PostForm = () => {
     }
   };
 
+  const extractMentions = (content: string): string[] => {
+    const mentionRegex = /\B@(\w+)/g;
+    const mentions = [];
+    let match;
+
+    while ((match = mentionRegex.exec(content)) !== null) {
+      mentions.push(match[1]);
+    }
+
+    return [...new Set(mentions)];
+  };
+
+  const notifyMentionedUsers = async (content: string, postId: string) => {
+    if (!currentUser) return;
+    
+    const mentions = extractMentions(content);
+    if (mentions.length === 0) return;
+
+    try {
+      const { data: mentionedUsers, error } = await supabase
+        .from("profiles")
+        .select("id, username")
+        .in("username", mentions);
+
+      if (error) throw error;
+      
+      if (!mentionedUsers || mentionedUsers.length === 0) return;
+
+      const notifications = mentionedUsers.map(user => ({
+        user_id: user.id,
+        title: "Menção em post",
+        message: `@${currentUser.username} mencionou você em um post.`,
+        type: "system",
+        reference_id: postId
+      }));
+
+      const { error: notifError } = await supabase
+        .from("notifications")
+        .insert(notifications);
+
+      if (notifError) throw notifError;
+      
+    } catch (error) {
+      console.error("Error creating mention notifications:", error);
+    }
+  };
+
   const handleCreatePost = async () => {
     try {
       const {
@@ -70,6 +136,8 @@ const PostForm = () => {
         return;
       }
 
+      let postId;
+
       if (editingPost) {
         const { error } = await supabase
           .from("posts")
@@ -81,26 +149,30 @@ const PostForm = () => {
           .eq("id", editingPost);
 
         if (error) throw error;
-
+        
+        postId = editingPost;
         toast({
           title: "Sucesso",
           description: "Post atualizado com sucesso!",
         });
       } else {
-        const { error } = await supabase.from("posts").insert({
+        const { data, error } = await supabase.from("posts").insert({
           content: newPostContent,
           images: selectedImages,
           video_urls: selectedVideos,
           user_id: user.id,
-        });
+        }).select('id').single();
 
         if (error) throw error;
-
+        
+        postId = data.id;
         toast({
           title: "Sucesso",
           description: "Post criado com sucesso!",
         });
       }
+
+      await notifyMentionedUsers(newPostContent, postId);
 
       setNewPostContent("");
       setSelectedImages([]);
@@ -240,6 +312,48 @@ const PostForm = () => {
     setSelectedVideos(selectedVideos.filter((_, i) => i !== index));
   };
 
+  const handleTextAreaInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const text = e.target.value;
+    setNewPostContent(text);
+    setCursorPosition(e.target.selectionStart || 0);
+    
+    const lastChar = text.charAt(e.target.selectionStart - 1);
+    if (lastChar === "@") {
+      setShowUserSearch(true);
+    }
+  };
+
+  const handleSelectUser = (username: string) => {
+    if (textAreaRef.current) {
+      const beforeAt = newPostContent.substring(0, cursorPosition - 1);
+      const afterAt = newPostContent.substring(cursorPosition);
+      
+      const newContent = `${beforeAt}@${username} ${afterAt}`;
+      setNewPostContent(newContent);
+      
+      setTimeout(() => {
+        if (textAreaRef.current) {
+          textAreaRef.current.focus();
+          const newPosition = beforeAt.length + username.length + 2;
+          textAreaRef.current.setSelectionRange(newPosition, newPosition);
+          setCursorPosition(newPosition);
+        }
+      }, 0);
+    }
+  };
+  
+  const handleTextAreaClick = () => {
+    if (textAreaRef.current) {
+      setCursorPosition(textAreaRef.current.selectionStart || 0);
+    }
+  };
+
+  const handleTextAreaKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Escape" && showUserSearch) {
+      setShowUserSearch(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -250,13 +364,34 @@ const PostForm = () => {
               <h2 className="text-2xl font-semibold mb-4">
                 {editingPost ? "Editar post" : "Criar novo post"}
               </h2>
-              <Textarea
-                placeholder="O que você está pensando?"
-                value={newPostContent}
-                onChange={(e) => setNewPostContent(e.target.value)}
-                className="mb-4"
-                rows={6}
-              />
+              <div className="relative">
+                <Textarea
+                  ref={textAreaRef}
+                  placeholder="O que você está pensando? Digite @ para marcar usuários"
+                  value={newPostContent}
+                  onChange={handleTextAreaInput}
+                  onClick={handleTextAreaClick}
+                  onKeyDown={handleTextAreaKeyDown}
+                  className="mb-4"
+                  rows={6}
+                />
+                {showUserSearch && (
+                  <LupaUsuario 
+                    onClose={() => setShowUserSearch(false)} 
+                    onSelectUser={handleSelectUser} 
+                  />
+                )}
+              </div>
+              
+              {newPostContent && (
+                <div className="p-3 bg-muted/50 rounded-md mb-4">
+                  <Label className="text-sm text-muted-foreground mb-1">Preview:</Label>
+                  <p className="whitespace-pre-wrap">
+                    <Tags content={newPostContent} />
+                  </p>
+                </div>
+              )}
+              
               {(selectedImages.length > 0 || selectedVideos.length > 0) && (
                 <div className="mb-4">
                   <MediaCarousel
@@ -352,7 +487,9 @@ const PostForm = () => {
             {userPosts.map((post) => (
               <Card key={post.id} className="shadow-sm">
                 <CardContent className="pt-6">
-                  <p className="mb-4 whitespace-pre-wrap">{post.content}</p>
+                  <p className="mb-4 whitespace-pre-wrap">
+                    <Tags content={post.content} />
+                  </p>
                   {(post.images?.length > 0 || post.video_urls?.length > 0) && (
                     <div className="mb-4">
                       <MediaCarousel

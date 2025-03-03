@@ -1,41 +1,44 @@
 
 import React from "react";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "./components/ui/toaster";
+import { Toaster as Sonner } from "./components/ui/sonner";
+import { TooltipProvider } from "./components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { ThemeProvider } from "@/components/ThemeProvider";
-import AuthWrapper from "@/components/AuthWrapper";
-import Index from "@/pages/Index";
-import Events from "@/pages/Events";
-import Places from "@/pages/Places";
-import Products from "@/pages/Products";
-import ProductDetails from "@/pages/ProductDetails";
-import ProductForm from "@/pages/ProductForm";
-import Notify from "@/pages/Notify";
-import Login from "@/pages/Login";
-import SignUp from "@/pages/SignUp";
-import Config from "@/pages/config";
-import Admin from "@/pages/Admin";
-import AdminPlaces from "@/pages/AdminPlaces";
-import AdminEvents from "@/pages/AdminEvents";
-import AdminNews from "@/pages/AdminNews";
-import AdminCategories from "@/pages/AdminCategories";
-import AdminSistema from "@/pages/AdminSistema";
-import Profile from "@/pages/Profile";
-import UserProfile from "@/pages/UserProfile";
-import NotFound from "@/pages/NotFound"; 
-import ResetPassword from "@/pages/ResetPassword";
-import UpdatePassword from "@/pages/UpdatePassword";
-import UserProducts from "@/pages/UserProducts";
-import NewsDetails from "@/pages/NewsDetails";
-import Posts from "@/pages/Posts";
-import PostForm from "@/pages/PostForm";
-import PostDetails from "@/pages/PostDetails";
-import PagCurtidas from "@/pages/pagcurtidas";
-import Menu from "@/pages/Menu";
-import Search from "@/pages/Search";
+import { ThemeProvider } from "./components/ThemeProvider";
+import AuthWrapper from "./components/AuthWrapper";
+import Index from "./pages/Index";
+import Events from "./pages/Events";
+import Places from "./pages/Places";
+import Products from "./pages/Products";
+import ProductDetails from "./pages/ProductDetails";
+import ProductForm from "./pages/ProductForm";
+import Notify from "./pages/Notify";
+import Login from "./pages/Login";
+import SignUp from "./pages/SignUp";
+import Config from "./pages/config";
+import Admin from "./pages/Admin";
+import AdminPlaces from "./pages/AdminPlaces";
+import AdminEvents from "./pages/AdminEvents";
+import AdminNews from "./pages/AdminNews";
+import AdminCategories from "./pages/AdminCategories";
+import AdminSistema from "./pages/AdminSistema";
+import Profile from "./pages/Profile";
+import UserProfile from "./pages/UserProfile";
+import NotFound from "./pages/NotFound"; 
+import ResetPassword from "./pages/ResetPassword";
+import UpdatePassword from "./pages/UpdatePassword";
+import UserProducts from "./pages/UserProducts";
+import NewsDetails from "./pages/NewsDetails";
+import Posts from "./pages/Posts";
+import PostForm from "./pages/PostForm";
+import PostDetails from "./pages/PostDetails";
+import PagCurtidas from "./pages/pagcurtidas";
+import Menu from "./pages/Menu";
+import Search from "./pages/Search";
+import StoryForm from "./pages/StoryForm";
+import StoryViewer from "./pages/StoryViewer";
+import StoryManager from "./pages/StoryManager";
 
 const queryClient = new QueryClient();
 
@@ -79,6 +82,12 @@ const App: React.FC = () => {
                   <Route path="/pagcurtidas/:id" element={<PagCurtidas />} />
                   <Route path="/menu" element={<Menu />} />
                   <Route path="/search" element={<Search />} />
+                  
+                  {/* Rotas para stories */}
+                  <Route path="/story/new" element={<StoryForm />} />
+                  <Route path="/story/view/:userId" element={<StoryViewer />} />
+                  <Route path="/story/manage" element={<StoryManager />} />
+                  
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </AuthWrapper>
