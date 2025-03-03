@@ -18,12 +18,38 @@ const NotificationDebugger = () => {
     queryFn: async () => {
       if (!currentUser) return null;
       
+      console.log("DEBUG: Fetching raw notifications for user:", currentUser.id);
+      
+      // Perform a simple select to get all notifications
       const { data, error } = await supabase
         .from("notifications")
         .select('*')
         .eq("user_id", currentUser.id);
         
-      if (error) throw error;
+      if (error) {
+        console.error("DEBUG: Error fetching raw notifications:", error);
+        throw error;
+      }
+      
+      console.log("DEBUG: Raw notifications fetched:", data);
+      return data;
+    },
+    enabled: !!currentUser,
+    retry: 2,
+  });
+
+  // Try to get RLS policy info
+  const { data: rlsInfo } = useQuery({
+    queryKey: ["rlsInfo"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .rpc('check_notifications_for_user');
+      
+      if (error) {
+        console.error("Error checking RLS info:", error);
+        return null;
+      }
+      
       return data;
     },
     enabled: !!currentUser,
@@ -52,6 +78,15 @@ const NotificationDebugger = () => {
           ) : (
             <p className="italic">No raw notifications found</p>
           )}
+          
+          <div className="mt-4 p-2 bg-yellow-100 dark:bg-yellow-900 rounded">
+            <p className="font-medium">Query Troubleshooting:</p>
+            <p className="text-xs mt-1">
+              The notification system uses a Supabase query with foreign key relationships. 
+              If notifications are visible in the raw data but not in the UI, there might be 
+              an issue with the join query or missing profile data.
+            </p>
+          </div>
         </div>
       </CardContent>
     </Card>

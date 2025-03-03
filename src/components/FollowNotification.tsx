@@ -1,8 +1,6 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from "@/integrations/supabase/client";
 import { Avatar } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -23,7 +21,8 @@ const FollowNotification: React.FC<FollowNotificationProps> = ({
   onUpdateRead
 }) => {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
+  
+  console.log("Rendering notification:", notification);
 
   const handleClick = async () => {
     if (!notification.read) {
@@ -37,6 +36,9 @@ const FollowNotification: React.FC<FollowNotificationProps> = ({
       navigate(`/noticias/${notification.reference_id}`);
     } else if (notification.type === 'event' && notification.reference_id) {
       navigate(`/eventos/${notification.reference_id}`);
+    } else if (notification.type === 'system') {
+      // System notifications don't navigate
+      console.log("System notification clicked, no navigation");
     }
   };
 
@@ -59,7 +61,7 @@ const FollowNotification: React.FC<FollowNotificationProps> = ({
               />
             ) : (
               <div className="flex items-center justify-center w-full h-full bg-primary text-primary-foreground text-sm font-medium">
-                {notification.sender?.username?.charAt(0).toUpperCase() || 'U'}
+                {notification.sender?.username?.charAt(0).toUpperCase() || 'N'}
               </div>
             )}
           </Avatar>
@@ -83,7 +85,7 @@ const FollowNotification: React.FC<FollowNotificationProps> = ({
                   <strong>{notification.sender.username}</strong> {notification.message}
                 </span>
               ) : (
-                <Tags content={notification.message} disableLinks={true} />
+                <span>{notification.message}</span>
               )}
             </p>
             

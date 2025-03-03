@@ -19,4 +19,12 @@ export interface Notification {
     full_name: string;
     avatar_url: string;
   };
+  // Add any missing fields from the database
+  titulo?: string;
+  mensagem?: string;
+  tipo?: string;
+  lido?: boolean;
+  criado_em?: string;
+  id_usuario?: string;
+  id_remetente?: string;
 }

@@ -7,14 +7,17 @@ import BottomNav from "@/components/BottomNav";
 import FollowNotification from "@/components/FollowNotification";
 import { useNotifications } from "@/hooks/useNotifications";
 import NotificationDebugger from "@/components/NotificationDebugger";
+import { toast } from "sonner";
 
 const Notify = () => {
   const [activeTab, setActiveTab] = useState("all");
-  const [showDebugger, setShowDebugger] = useState(false);
+  const [showDebugger, setShowDebugger] = useState(true); // Start with debugger visible
   
   const {
     notifications,
     isLoading,
+    isError,
+    error,
     unreadCount,
     currentUser,
     markAsRead,
@@ -29,11 +32,19 @@ const Notify = () => {
 
   // Debug information
   console.log("Component rendering with:");
-  console.log("- Notifications:", notifications?.length || 0);
+  console.log("- Notifications:", notifications);
+  console.log("- Notifications count:", notifications?.length || 0);
   console.log("- Filtered Notifications:", filteredNotifications?.length || 0);
   console.log("- Is Loading:", isLoading);
+  console.log("- Is Error:", isError);
+  console.log("- Error:", error);
   console.log("- Current User:", currentUser?.id);
   console.log("- Active Tab:", activeTab);
+
+  if (isError && error) {
+    console.error("Error in notifications:", error);
+    toast.error("Erro ao carregar notificações");
+  }
 
   return (
     <div className="bg-background min-h-screen pb-20">
@@ -86,9 +97,9 @@ const Notify = () => {
                   </Card>
                 ))}
               </div>
-            ) : filteredNotifications && filteredNotifications.length > 0 ? (
+            ) : notifications && notifications.length > 0 ? (
               <div>
-                {filteredNotifications.map((notification) => (
+                {filteredNotifications && filteredNotifications.map((notification) => (
                   <FollowNotification
                     key={notification.id}
                     notification={notification}
@@ -99,7 +110,12 @@ const Notify = () => {
               </div>
             ) : (
               <div className="text-center py-10 text-muted-foreground">
-                Nenhuma notificação encontrada
+                <p>Nenhuma notificação encontrada</p>
+                {!isLoading && (
+                  <p className="text-xs mt-2 text-gray-500">
+                    Se você está vendo notificações no depurador mas não aqui, pode ser um problema de permissões ou queries.
+                  </p>
+                )}
               </div>
             )}
           </TabsContent>
@@ -134,7 +150,7 @@ const Notify = () => {
               </div>
             ) : (
               <div className="text-center py-10 text-muted-foreground">
-                Nenhuma notificação não lida
+                <p>Nenhuma notificação não lida</p>
               </div>
             )}
           </TabsContent>

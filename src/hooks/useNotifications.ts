@@ -29,11 +29,23 @@ export function useNotifications() {
 
       console.log("Fetching notifications for user:", currentUser.id);
       
+      // First try to fetch with sender profile info
       const { data, error } = await supabase
         .from("notifications")
         .select(`
-          *,
-          sender:profiles(
+          id,
+          title,
+          message,
+          type,
+          reference_id,
+          read,
+          created_at,
+          publication_title,
+          publication_description,
+          publication_date,
+          user_id,
+          sender_id,
+          sender:sender_id(
             id,
             username,
             full_name,
@@ -52,8 +64,9 @@ export function useNotifications() {
       return data as Notification[];
     },
     enabled: !!currentUser,
-    retry: 1,
+    retry: 2,
     refetchOnWindowFocus: true,
+    refetchOnMount: true,
   });
 
   // Mutation to mark a notification as read
@@ -74,6 +87,7 @@ export function useNotifications() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
       queryClient.invalidateQueries({ queryKey: ["unreadNotifications"] });
+      queryClient.invalidateQueries({ queryKey: ["rawNotifications"] });
     },
     onError: () => {
       toast.error("Erro ao marcar notificação como lida");
@@ -101,6 +115,7 @@ export function useNotifications() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
       queryClient.invalidateQueries({ queryKey: ["unreadNotifications"] });
+      queryClient.invalidateQueries({ queryKey: ["rawNotifications"] });
       toast.success("Todas as notificações foram marcadas como lidas");
     },
     onError: () => {
