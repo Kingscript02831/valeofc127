@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -272,6 +271,12 @@ export default function UserProfile() {
     }
   };
 
+  const navigateToConnections = (tab: string) => {
+    if (profile?.id) {
+      navigate(`/conexoes/${profile.id}/${tab}`);
+    }
+  };
+
   const formatRelationshipStatus = (status: string | null | undefined) => {
     if (!status) return null;
     const statusMap: Record<string, string> = {
@@ -333,11 +338,17 @@ export default function UserProfile() {
 
           <div className="flex justify-end px-4 py-2 border-b border-gray-200 dark:border-gray-800">
             <div className="flex gap-4 text-center">
-              <div>
+              <div 
+                className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 px-2 py-1 rounded transition"
+                onClick={() => navigateToConnections("followers")}
+              >
                 <p className="font-semibold">{followStats?.followers || 0}</p>
                 <p className="text-sm text-gray-500">Seguidores</p>
               </div>
-              <div>
+              <div 
+                className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 px-2 py-1 rounded transition"
+                onClick={() => navigateToConnections("following")}
+              >
                 <p className="font-semibold">{followStats?.following || 0}</p>
                 <p className="text-sm text-gray-500">Seguindo</p>
               </div>
@@ -364,7 +375,6 @@ export default function UserProfile() {
               </div>
             </div>
             
-            {/* Moved follow button up here */}
             {currentUserId && currentUserId !== profile.id && (
               <div className="absolute top-20 right-4">
                 <Button 

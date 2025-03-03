@@ -269,6 +269,12 @@ export default function Profile() {
     return format(new Date(date), "dd/MM/yyyy");
   };
 
+  const navigateToConnections = (tab: string) => {
+    if (profile?.id) {
+      navigate(`/conexoes/${profile.id}/${tab}`);
+    }
+  };
+
   useEffect(() => {
     if (profile) {
       setAvatarCount(profile.avatar_url ? 1 : 0);
@@ -321,11 +327,17 @@ export default function Profile() {
 
           <div className="flex justify-end px-4 py-2 border-b border-gray-200 dark:border-gray-800">
             <div className="flex gap-4 text-center">
-              <div>
+              <div 
+                className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 px-2 py-1 rounded transition"
+                onClick={() => navigateToConnections("followers")}
+              >
                 <p className="font-semibold">{followStats?.followers || 0}</p>
                 <p className="text-sm text-gray-500">Seguidores</p>
               </div>
-              <div>
+              <div 
+                className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 px-2 py-1 rounded transition"
+                onClick={() => navigateToConnections("following")}
+              >
                 <p className="font-semibold">{followStats?.following || 0}</p>
                 <p className="text-sm text-gray-500">Seguindo</p>
               </div>

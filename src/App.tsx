@@ -39,6 +39,7 @@ import Search from "./pages/Search";
 import StoryForm from "./pages/StoryForm";
 import StoryViewer from "./pages/StoryViewer";
 import StoryManager from "./pages/StoryManager";
+import FollowersPage from "./pages/FollowersPage";
 
 const queryClient = new QueryClient();
 
@@ -65,6 +66,7 @@ const App: React.FC = () => {
                   <Route path="/signup" element={<SignUp />} />
                   <Route path="/perfil" element={<Profile />} />
                   <Route path="/perfil/:username" element={<UserProfile />} />
+                  <Route path="/conexoes/:userId/:tab?" element={<FollowersPage />} />
                   <Route path="/config" element={<Config />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/update-password" element={<UpdatePassword />} />
