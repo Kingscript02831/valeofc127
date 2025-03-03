@@ -27,3 +27,4 @@ USING (auth.uid() = user_id);
 -- Create indexes
 CREATE INDEX idx_notifications_user_id ON notifications(user_id);
 CREATE INDEX idx_notifications_created_at ON notifications(created_at);
+
