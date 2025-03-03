@@ -17,7 +17,8 @@ import { Button } from "../components/ui/button";
 import { UserPlus, UserCheck, MoreVertical } from "lucide-react";
 import { toast } from "sonner";
 import LocationDisplay from "../components/locpost";
-import StoriesBar from "../components/StoriesBar";
+import StoriesRow from "../components/StoriesRow";
+import StoryViewer from "../components/StoryViewer";
 
 interface Post {
   id: string;
@@ -46,6 +47,11 @@ const Posts: React.FC = () => {
   const [activeReactionMenu, setActiveReactionMenu] = useState<string | null>(null);
   const [followingUsers, setFollowingUsers] = useState<Record<string, boolean>>({});
   const [reactionsLoading, setReactionsLoading] = useState(true);
+  const [storyViewer, setStoryViewer] = useState<{open: boolean, username: string, imageUrl: string}>({
+    open: false,
+    username: "",
+    imageUrl: ""
+  });
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -344,10 +350,13 @@ const Posts: React.FC = () => {
   };
 
   return (
-    <div className="bg-white dark:bg-background min-h-screen pb-16">
+    <div className="min-h-screen bg-gray-50 dark:bg-background">
       <Navbar />
-      <div className="container max-w-3xl mx-auto px-0 sm:px-4 pt-16">
-        <StoriesBar />
+      <main className="container mx-auto px-4 pt-20 pb-24">
+        <div className="max-w-xl mx-auto mb-4">
+          <StoriesRow />
+        </div>
+        
         <div className="max-w-xl mx-auto space-y-4">
           {isLoading ? (
             <div className="space-y-4">
@@ -432,34 +441,6 @@ const Posts: React.FC = () => {
                     </div>
                   )}
 
-                  {post.likes > 0 && (
-                    <div 
-                      className="flex items-center gap-1 cursor-pointer mx-3 my-2"
-                      onClick={() => post.likes > 0 && navigate(`/pagcurtidas/${post.id}`)}
-                    >
-                      <div className="flex -space-x-2 overflow-hidden">
-                        {post.reactionsByType && Object.keys(post.reactionsByType).slice(0, 2).map((type, index) => (
-                          <img 
-                            key={type} 
-                            src={getReactionIcon(type)} 
-                            alt={type}
-                            className="inline-block h-6 w-6 rounded-full ring-2 ring-white dark:ring-gray-800"
-                            style={{ zIndex: 3 - index }}
-                          />
-                        ))}
-                      </div>
-                      <span className="text-sm text-gray-600 dark:text-gray-300 hover:underline reaction-count">
-                        {post.reaction_type && post.likes > 1 ? (
-                          <span>Você e outras {post.likes - 1} pessoas</span>
-                        ) : post.reaction_type ? (
-                          <span>Você</span>
-                        ) : post.likes > 0 ? (
-                          <span>{post.likes} pessoas</span>
-                        ) : null}
-                      </span>
-                    </div>
-                  )}
-
                   <div className="flex items-center justify-between p-2 mt-2 border-t border-border/40 relative">
                     <div className="relative">
                       <button
@@ -500,6 +481,34 @@ const Posts: React.FC = () => {
                       </div>
                     </div>
 
+                    {post.likes > 0 && (
+                      <div 
+                        className="flex items-center gap-1 cursor-pointer absolute left-0 -top-7 bg-gray-800/80 text-white rounded-full py-1 px-3"
+                        onClick={() => post.likes > 0 && navigate(`/pagcurtidas/${post.id}`)}
+                      >
+                        <div className="flex -space-x-2 overflow-hidden">
+                          {post.reactionsByType && Object.keys(post.reactionsByType).slice(0, 2).map((type, index) => (
+                            <img 
+                              key={type} 
+                              src={getReactionIcon(type)} 
+                              alt={type}
+                              className="inline-block h-6 w-6 rounded-full ring-2 ring-white dark:ring-gray-800"
+                              style={{ zIndex: 3 - index }}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-sm text-white hover:underline reaction-count">
+                          {post.reaction_type && post.likes > 1 ? (
+                            <span>Você e outras {post.likes - 1} pessoas</span>
+                          ) : post.reaction_type ? (
+                            <span>Você</span>
+                          ) : post.likes > 0 ? (
+                            <span>{post.likes} pessoas</span>
+                          ) : null}
+                        </span>
+                      </div>
+                    )}
+
                     <button 
                       onClick={() => navigate(`/posts/${post.id}`)}
                       className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
@@ -529,8 +538,15 @@ const Posts: React.FC = () => {
             ))
           )}
         </div>
-      </div>
+      </main>
       <BottomNav />
+      
+      <StoryViewer 
+        isOpen={storyViewer.open}
+        onClose={() => setStoryViewer({...storyViewer, open: false})}
+        username={storyViewer.username}
+        imageUrl={storyViewer.imageUrl}
+      />
     </div>
   );
 };

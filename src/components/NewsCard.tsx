@@ -1,10 +1,8 @@
-
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Card } from "@/components/ui/card";
 import MediaCarousel from "./MediaCarousel";
 import { Link } from "react-router-dom";
-import { useEffect, useState } from "react";
 
 interface NewsCardProps {
   id: string;
@@ -32,45 +30,11 @@ const NewsCard = ({
   images = [],
   video_urls = []
 }: NewsCardProps) => {
-  const [imagesLoaded, setImagesLoaded] = useState(false);
-  
   const formattedCreatedAt = createdAt 
     ? format(new Date(createdAt), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })
     : null;
 
   const hasMedia = images?.length > 0 || video_urls?.length > 0;
-  
-  // Pré-cache de links relacionados à notícia
-  useEffect(() => {
-    const cacheNewsLinks = async () => {
-      if ('caches' in window) {
-        try {
-          // Cache da página de detalhes
-          const detailUrl = `/noticias/${id}`;
-          const cache = await caches.open('share-links-cache');
-          
-          // Verificar se já está em cache
-          const match = await cache.match(detailUrl);
-          if (!match) {
-            // Cache manual para URLs relacionadas à notícia
-            fetch(detailUrl, { method: 'HEAD' }).catch(() => {
-              // Ignora erros, apenas tenta pré-cache
-            });
-          }
-        } catch (e) {
-          // Ignora erros de cache
-        }
-      }
-    };
-    
-    // Executa o cache apenas se estiver em modo instalado (PWA)
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches 
-      || (window.navigator as any).standalone;
-    
-    if (isStandalone) {
-      cacheNewsLinks();
-    }
-  }, [id]);
 
   return (
     <Card className="overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-lg group">

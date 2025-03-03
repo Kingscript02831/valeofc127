@@ -165,53 +165,6 @@
   animation: bounce 2s infinite ease-in-out;
 }
 
-/* Estilos específicos para stories */
-.story-gradient {
-  background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
-  background-size: 200% 200%;
-  animation: gradient 2s ease infinite;
-}
-
-@keyframes gradient {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
-.stories-bar {
-  overflow-x: auto;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* Internet Explorer/Edge */
-}
-
-.stories-bar::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
-}
-
-/* Animação sutil para destacar stories não vistos */
-@keyframes pulse-border {
-  0% {
-    box-shadow: 0 0 0 0 rgba(255, 0, 128, 0.7);
-  }
-  70% {
-    box-shadow: 0 0 0 5px rgba(255, 0, 128, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(255, 0, 128, 0);
-  }
-}
-
-.story-unviewed {
-  animation: pulse-border 2s infinite;
-}
-
-/* Restante dos estilos existentes */
 .post-card {
   @apply mb-3;
 }
@@ -266,7 +219,7 @@
 .reaction-counter {
   position: absolute;
   left: 0;
-  bottom: 60px; /* Updated from 40px to 60px to prevent overlap with bottom nav */
+  bottom: 40px; /* Position above the buttons instead of on top of content */
   background-color: rgba(31, 41, 55, 0.8);
   color: white;
   border-radius: 9999px;
@@ -275,22 +228,30 @@
   align-items: center;
   gap: 0.25rem;
   transition: all 0.2s;
-  z-index: 20; /* Increased z-index */
+  z-index: 10;
   box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
 
-.mention {
-  @apply text-blue-500 font-medium;
+.story-circle {
+  @apply relative cursor-pointer transition-transform hover:scale-105;
 }
 
-.fixed-comment-bar {
-  @apply fixed bottom-16 left-0 right-0 bg-background/80 backdrop-blur-md border-t border-border/40 p-3 z-10;
+.story-circle.has-story {
+  @apply before:absolute before:inset-0 before:rounded-full before:border-2 before:border-primary;
 }
 
-.comment-input {
-  @apply min-h-[50px] max-h-[100px] bg-gray-100 dark:bg-gray-800 border-none resize-none py-2;
+.story-circle.viewed {
+  @apply before:border-gray-400;
 }
 
-.comment-submit-button {
-  @apply h-10 w-10 rounded-full flex items-center justify-center bg-primary text-white;
+.story-progress-bar {
+  @apply absolute top-0 left-0 right-0 h-1 bg-gray-700;
+}
+
+.story-progress-fill {
+  @apply h-full bg-white transition-all duration-100;
+}
+
+.story-viewer {
+  @apply fixed inset-0 z-50 flex items-center justify-center bg-black;
 }

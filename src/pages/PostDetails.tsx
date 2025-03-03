@@ -1,4 +1,5 @@
-import { useEffect, useState, useRef } from "react";
+
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../integrations/supabase/client";
 import { MediaCarousel } from "../components/MediaCarousel";
@@ -10,8 +11,7 @@ import {
   Flame,
   MoreVertical,
   UserPlus,
-  UserCheck,
-  Send
+  UserCheck
 } from "lucide-react";
 import { Card } from "../components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
@@ -64,29 +64,6 @@ interface Comment {
   replies_count: number;
 }
 
-const CommentText = ({ content, replyToUsername }: { content: string, replyToUsername?: string }) => {
-  if (!replyToUsername) return <p className="mt-1">{content}</p>;
-  
-  const mentionPattern = new RegExp(`@${replyToUsername}`, 'i');
-  const parts = content.split(mentionPattern);
-  const matches = content.match(mentionPattern);
-  
-  if (!matches) return <p className="mt-1">{content}</p>;
-  
-  return (
-    <p className="mt-1">
-      {parts.map((part, i) => (
-        <>
-          {part}
-          {i < parts.length - 1 && (
-            <span className="text-blue-500 font-medium">@{replyToUsername}</span>
-          )}
-        </>
-      ))}
-    </p>
-  );
-};
-
 const PostDetails = () => {
   const { id } = useParams();
   const { toast: toastHook } = useToast();
@@ -94,12 +71,10 @@ const PostDetails = () => {
   const queryClient = useQueryClient();
   const [newComment, setNewComment] = useState("");
   const [replyTo, setReplyTo] = useState<string | null>(null);
-  const [replyToUsername, setReplyToUsername] = useState<string | null>(null);
   const [activeReactionMenu, setActiveReactionMenu] = useState<string | null>(null);
   const [showReplies, setShowReplies] = useState<{ [key: string]: boolean }>({});
   const [followingUsers, setFollowingUsers] = useState<Record<string, boolean>>({});
   const [reactionsLoading, setReactionsLoading] = useState(true);
-  const commentInputRef = useRef<HTMLTextAreaElement>(null);
 
   const { data: currentUser } = useQuery({
     queryKey: ['currentUser'],
@@ -268,6 +243,7 @@ const PostDetails = () => {
 
         if (error) throw error;
 
+        // Get reaction counts by type
         const reactionsByType: Record<string, number> = {};
         post.post_reactions?.forEach((reaction: any) => {
           if (!reactionsByType[reaction.reaction_type]) {
@@ -276,6 +252,7 @@ const PostDetails = () => {
           reactionsByType[reaction.reaction_type]++;
         });
 
+        // Get user's reaction if any
         const userReaction = post.post_reactions?.find((r: any) => r.user_id === currentUser?.id)?.reaction_type;
 
         setReactionsLoading(false);
@@ -510,15 +487,10 @@ const PostDetails = () => {
     }
 
     try {
-      let commentContent = newComment.trim();
-      if (replyTo && replyToUsername && !commentContent.includes(`@${replyToUsername}`)) {
-        commentContent = `@${replyToUsername} ${commentContent}`;
-      }
-      
       const { error } = await supabase
         .from('post_comments')
         .insert({
-          content: commentContent,
+          content: newComment.trim(),
           post_id: id,
           user_id: currentUser.id,
           reply_to_id: replyTo
@@ -528,7 +500,6 @@ const PostDetails = () => {
 
       setNewComment("");
       setReplyTo(null);
-      setReplyToUsername(null);
       await queryClient.invalidateQueries({ queryKey: ['comments', id] });
       
       toastHook({
@@ -543,18 +514,6 @@ const PostDetails = () => {
         variant: "destructive",
       });
     }
-  };
-
-  const handleReplyClick = (commentId: string, username: string) => {
-    setReplyTo(commentId);
-    setReplyToUsername(username);
-    if (commentInputRef.current) {
-      commentInputRef.current.focus();
-    }
-    window.scrollTo({
-      top: document.body.scrollHeight - 200,
-      behavior: 'smooth'
-    });
   };
 
   const handleCommentLike = async (commentId: string) => {
@@ -649,9 +608,9 @@ const PostDetails = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-background pb-32">
+    <div className="min-h-screen bg-gray-50 dark:bg-background">
       <Navbar />
-      <main className="container mx-auto py-8 px-4 pt-20 pb-36">
+      <main className="container mx-auto py-8 px-4 pt-20 pb-24">
         <div className="max-w-xl mx-auto space-y-4">
           <Card className="overflow-hidden bg-white dark:bg-card border-none shadow-sm">
             <div className="p-3 space-y-2">
@@ -716,34 +675,6 @@ const PostDetails = () => {
               </div>
             )}
 
-            {post?.likes > 0 && (
-              <div 
-                className="flex items-center gap-1 cursor-pointer mx-3 my-2"
-                onClick={() => post?.likes > 0 && navigate(`/pagcurtidas/${post.id}`)}
-              >
-                <div className="flex -space-x-2 overflow-hidden">
-                  {post.reactionsByType && Object.keys(post.reactionsByType).slice(0, 2).map((type, index) => (
-                    <img 
-                      key={type} 
-                      src={getReactionIcon(type)} 
-                      alt={type}
-                      className="inline-block h-6 w-6 rounded-full ring-2 ring-white dark:ring-gray-800"
-                      style={{ zIndex: 3 - index }}
-                    />
-                  ))}
-                </div>
-                <span className="text-sm text-gray-600 dark:text-gray-300 hover:underline reaction-count">
-                  {post?.reaction_type && post?.likes > 1 ? (
-                    <span>Você e outras {post.likes - 1} pessoas</span>
-                  ) : post?.reaction_type ? (
-                    <span>Você</span>
-                  ) : post?.likes > 0 ? (
-                    <span>{post.likes} pessoas</span>
-                  ) : null}
-                </span>
-              </div>
-            )}
-
             <div className="flex items-center justify-between p-2 mt-2 border-t border-border/40 relative">
               <div className="relative">
                 <button
@@ -784,6 +715,35 @@ const PostDetails = () => {
                 </div>
               </div>
 
+              {/* Display reaction counts with icons */}
+              {post?.likes > 0 && (
+                <div 
+                  className="flex items-center gap-1 cursor-pointer absolute left-0 -top-7 bg-gray-800/80 text-white rounded-full py-1 px-3"
+                  onClick={() => post?.likes > 0 && navigate(`/pagcurtidas/${post.id}`)}
+                >
+                  <div className="flex -space-x-2 overflow-hidden">
+                    {post.reactionsByType && Object.keys(post.reactionsByType).slice(0, 2).map((type, index) => (
+                      <img 
+                        key={type} 
+                        src={getReactionIcon(type)} 
+                        alt={type}
+                        className="inline-block h-6 w-6 rounded-full ring-2 ring-white dark:ring-gray-800"
+                        style={{ zIndex: 3 - index }}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-sm text-white hover:underline reaction-count">
+                    {post?.reaction_type && post?.likes > 1 ? (
+                      <span>Você e outras {post.likes - 1} pessoas</span>
+                    ) : post?.reaction_type ? (
+                      <span>Você</span>
+                    ) : post?.likes > 0 ? (
+                      <span>{post.likes} pessoas</span>
+                    ) : null}
+                  </span>
+                </div>
+              )}
+
               <button 
                 className="flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
               >
@@ -812,29 +772,25 @@ const PostDetails = () => {
           <Card className="p-4 bg-white dark:bg-card border-none shadow-sm">
             <form onSubmit={handleSubmitComment} className="space-y-4">
               <Textarea
-                ref={commentInputRef}
-                placeholder={replyTo ? `Respondendo para @${replyToUsername}...` : "Escreva um comentário..."}
+                placeholder={replyTo ? "Escreva sua resposta..." : "Escreva um comentário..."}
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
-                className="min-h-[50px] max-h-[100px] flex-1 bg-gray-100 dark:bg-gray-800 border-none resize-none py-2"
+                className="min-h-[100px] bg-gray-100 dark:bg-gray-800 border-none"
               />
-              {replyTo && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => {
-                    setReplyTo(null);
-                    setReplyToUsername(null);
-                  }}
-                  className="h-8 w-8"
-                >
-                  ×
+              <div className="flex justify-between items-center">
+                {replyTo && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => setReplyTo(null)}
+                  >
+                    Cancelar resposta
+                  </Button>
+                )}
+                <Button type="submit">
+                  {replyTo ? "Responder" : "Comentar"}
                 </Button>
-              )}
-              <Button type="submit" size="icon" className="h-10 w-10">
-                <Send size={18} />
-              </Button>
+              </div>
             </form>
           </Card>
 
@@ -860,7 +816,7 @@ const PostDetails = () => {
                         {formatDate(comment.created_at)}
                       </span>
                     </div>
-                    <CommentText content={comment.content} />
+                    <p className="mt-1">{comment.content}</p>
                     <div className="flex items-center gap-4 mt-2">
                       <button
                         onClick={() => handleCommentLike(comment.id)}
@@ -874,7 +830,7 @@ const PostDetails = () => {
                         <span>{comment.likes_count || 0}</span>
                       </button>
                       <button
-                        onClick={() => handleReplyClick(comment.id, comment.user.username)}
+                        onClick={() => setReplyTo(comment.id)}
                         className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors"
                       >
                         <Reply className="w-4 h-4" />
@@ -897,55 +853,47 @@ const PostDetails = () => {
 
                     {showReplies[comment.id] && replies && replies[comment.id] && (
                       <div className="mt-4 space-y-4 pl-8 border-l-2 border-border/40">
-                        {replies[comment.id].map((reply) => {
-                          const mentionMatch = reply.content.match(/^@(\w+)/);
-                          const mentionedUser = mentionMatch ? mentionMatch[1] : null;
-                          
-                          return (
-                            <div key={reply.id} className="flex gap-3">
-                              <Avatar className="w-6 h-6" onClick={() => navigate(`/perfil/${reply.user.username}`)}>
-                                <AvatarImage src={reply.user.avatar_url} />
-                                <AvatarFallback>
-                                  {reply.user.full_name?.charAt(0).toUpperCase()}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div className="flex-1">
-                                <div className="flex items-center">
-                                  <span className="font-semibold text-sm">
-                                    {reply.user.full_name}
-                                  </span>
-                                  <span className="text-xs text-muted-foreground ml-2">
-                                    {formatDate(reply.created_at)}
-                                  </span>
-                                </div>
-                                <CommentText 
-                                  content={reply.content} 
-                                  replyToUsername={mentionedUser}
-                                />
-                                <div className="flex items-center gap-4 mt-2">
-                                  <button
-                                    onClick={() => handleCommentLike(reply.id)}
-                                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
-                                  >
-                                    <Flame 
-                                      className={`w-3 h-3 ${
-                                        reply.user_has_liked ? "text-red-500" : ""
-                                      }`}
-                                    />
-                                    <span>{reply.likes_count || 0}</span>
-                                  </button>
-                                  <button
-                                    onClick={() => handleReplyClick(comment.id, reply.user.username)}
-                                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
-                                  >
-                                    <Reply className="w-3 h-3" />
-                                    <span>Responder</span>
-                                  </button>
-                                </div>
+                        {replies[comment.id].map((reply) => (
+                          <div key={reply.id} className="flex gap-3">
+                            <Avatar className="w-6 h-6">
+                              <AvatarImage src={reply.user.avatar_url} />
+                              <AvatarFallback>
+                                {reply.user.full_name?.charAt(0).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1">
+                              <div className="flex items-center">
+                                <span className="font-semibold text-sm">
+                                  {reply.user.full_name}
+                                </span>
+                                <span className="text-xs text-muted-foreground ml-2">
+                                  {formatDate(reply.created_at)}
+                                </span>
+                              </div>
+                              <p className="text-sm mt-1">{reply.content}</p>
+                              <div className="flex items-center gap-4 mt-2">
+                                <button
+                                  onClick={() => handleCommentLike(reply.id)}
+                                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
+                                >
+                                  <Flame 
+                                    className={`w-3 h-3 ${
+                                      reply.user_has_liked ? "text-red-500" : ""
+                                    }`}
+                                  />
+                                  <span>{reply.likes_count || 0}</span>
+                                </button>
+                                <button
+                                  onClick={() => setReplyTo(comment.id)}
+                                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
+                                >
+                                  <Reply className="w-3 h-3" />
+                                  <span>Responder</span>
+                                </button>
                               </div>
                             </div>
-                          );
-                        })}
+                          </div>
+                        ))}
                       </div>
                     )}
                   </div>
@@ -955,39 +903,10 @@ const PostDetails = () => {
           </div>
         </div>
       </main>
-      
-      <div className="fixed bottom-16 left-0 right-0 bg-background border-t border-border/40 p-3 z-10">
-        <form onSubmit={handleSubmitComment} className="flex items-center gap-2 max-w-xl mx-auto">
-          <Textarea
-            ref={commentInputRef}
-            placeholder={replyTo ? `Respondendo para @${replyToUsername}...` : "Escreva um comentário..."}
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            className="min-h-[50px] max-h-[100px] flex-1 bg-gray-100 dark:bg-gray-800 border-none resize-none py-2"
-          />
-          {replyTo && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={() => {
-                setReplyTo(null);
-                setReplyToUsername(null);
-              }}
-              className="h-8 w-8"
-            >
-              ×
-            </Button>
-          )}
-          <Button type="submit" size="icon" className="h-10 w-10">
-            <Send size={18} />
-          </Button>
-        </form>
-      </div>
-      
       <BottomNav />
     </div>
   );
 };
 
 export default PostDetails;
+

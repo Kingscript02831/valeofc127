@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -24,7 +25,7 @@ import AdminCategories from "@/pages/AdminCategories";
 import AdminSistema from "@/pages/AdminSistema";
 import Profile from "@/pages/Profile";
 import UserProfile from "@/pages/UserProfile";
-import NotFound from "@/pages/NotFound";
+import NotFound from "@/pages/NotFound"; 
 import ResetPassword from "@/pages/ResetPassword";
 import UpdatePassword from "@/pages/UpdatePassword";
 import UserProducts from "@/pages/UserProducts";
@@ -35,21 +36,8 @@ import PostDetails from "@/pages/PostDetails";
 import PagCurtidas from "@/pages/pagcurtidas";
 import Menu from "@/pages/Menu";
 import Search from "@/pages/Search";
-import StoryForm from "@/pages/StoryForm";
-import StoryViewer from "@/pages/StoryViewer";
-import StoryManager from "@/pages/StoryManager";
-import Navbar from "@/components/Navbar";
-import BottomNav from "@/components/BottomNav";
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      refetchOnWindowFocus: true,
-      staleTime: 30000,
-    },
-  },
-});
+const queryClient = new QueryClient();
 
 const App: React.FC = () => {
   return (
@@ -61,7 +49,6 @@ const App: React.FC = () => {
             <Sonner />
             <BrowserRouter>
               <AuthWrapper>
-                <Navbar />
                 <Routes>
                   <Route path="/" element={<Posts />} />
                   <Route path="/noticias" element={<Index />} />
@@ -71,7 +58,6 @@ const App: React.FC = () => {
                   <Route path="/product/:id" element={<ProductDetails />} />
                   <Route path="/products/new" element={<ProductForm />} />
                   <Route path="/notify" element={<Notify />} />
-                  <Route path="/notificacoes" element={<Notify />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/signup" element={<SignUp />} />
                   <Route path="/perfil" element={<Profile />} />
@@ -93,14 +79,8 @@ const App: React.FC = () => {
                   <Route path="/pagcurtidas/:id" element={<PagCurtidas />} />
                   <Route path="/menu" element={<Menu />} />
                   <Route path="/search" element={<Search />} />
-                  
-                  <Route path="/story/new" element={<StoryForm />} />
-                  <Route path="/story/view/:userId" element={<StoryViewer />} />
-                  <Route path="/story/manage" element={<StoryManager />} />
-                  
                   <Route path="*" element={<NotFound />} />
                 </Routes>
-                <BottomNav />
               </AuthWrapper>
             </BrowserRouter>
           </TooltipProvider>

@@ -16,7 +16,7 @@ import {
 const BottomNav = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { data: config, isLoading } = useSiteConfig();
+  const { data: config } = useSiteConfig();
   const [session, setSession] = useState<any>(null);
 
   useEffect(() => {
@@ -36,26 +36,18 @@ const BottomNav = () => {
   const { data: unreadCount } = useQuery({
     queryKey: ["unreadNotifications"],
     queryFn: async () => {
-      if (!session?.user?.id) return 0;
-      
-      console.log("Fetching unread notifications count for user:", session.user.id);
+      if (!session) return 0;
       
       const { count, error } = await supabase
         .from("notifications")
         .select("*", { count: 'exact', head: true })
-        .eq("user_id", session.user.id)
         .eq("read", false);
 
-      if (error) {
-        console.error("Error fetching unread notifications:", error);
-        throw error;
-      }
-      
-      console.log("Unread notifications count:", count);
+      if (error) throw error;
       return count || 0;
     },
-    enabled: !!session?.user?.id,
-    refetchInterval: 30000, // Check every 30 seconds
+    enabled: !!session,
+    refetchInterval: 30000,
   });
 
   const handleNavigation = (path: string, e: React.MouseEvent) => {
@@ -67,13 +59,6 @@ const BottomNav = () => {
     }
     navigate(path);
   };
-  
-  // Renderiza um esqueleto de carregamento se estiver carregando
-  if (isLoading) {
-    return (
-      <nav className="fixed bottom-0 left-0 right-0 h-16 animate-pulse bg-gray-200 md:hidden" />
-    );
-  }
 
   const navStyle = {
     background: config?.bottom_nav_primary_color || "#000000e6",
@@ -151,7 +136,7 @@ const BottomNav = () => {
           <button
             onClick={(e) => handleNavigation("/notify", e)}
             className="flex items-center p-2 rounded-xl transition-all duration-300 hover:scale-105 relative"
-            style={getItemStyle(location.pathname === "/notify" || location.pathname === "/notificacoes")}
+            style={getItemStyle(location.pathname === "/notify")}
           >
             <Bell className="h-6 w-6" strokeWidth={2} />
             {unreadCount > 0 && (

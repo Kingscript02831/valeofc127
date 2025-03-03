@@ -7,7 +7,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
 import BottomNav from "../components/BottomNav";
 import { getReactionIcon } from "../utils/emojisPosts";
-import { useEffect } from "react";
+import React from "react";
 
 interface Reaction {
   id: string;
@@ -27,8 +27,7 @@ const PagCurtidas = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  // Optimized query with refetch on mount and window focus
-  const { data: reactions, isLoading, refetch } = useQuery({
+  const { data: reactions, isLoading } = useQuery({
     queryKey: ['post-reactions', id],
     queryFn: async () => {
       try {
@@ -50,10 +49,7 @@ const PagCurtidas = () => {
           throw error;
         }
 
-        // Debug data to help troubleshoot
-        console.log("Reactions data:", data);
-        
-        // Ensure valid reaction data
+        // Ensure we have valid reaction data
         if (!data || data.length === 0) {
           return [];
         }
@@ -65,21 +61,11 @@ const PagCurtidas = () => {
       }
     },
     enabled: !!id,
-    staleTime: 0, // Always consider data stale for fresh fetches
-    refetchOnMount: true, // Always refetch when component mounts
-    refetchOnWindowFocus: true, // Refetch when window gets focus
   });
-
-  // Force a refetch when the component mounts
-  useEffect(() => {
-    if (id) {
-      console.log("PagCurtidas mounted, refetching data for post ID:", id);
-      refetch();
-    }
-  }, [id, refetch]);
 
   return (
     <div className="min-h-screen bg-background">
+      {/* No Navbar here as requested */}
       <main className="container mx-auto py-8 px-4 pt-6 pb-24">
         <div className="max-w-xl mx-auto">
           <div className="flex items-center justify-between mb-6">
@@ -119,11 +105,11 @@ const PagCurtidas = () => {
                         onClick={() => navigate(`/perfil/${reaction.profiles.username}`)}
                       >
                         <AvatarImage src={reaction.profiles.avatar_url || "/placeholder.svg"} />
-                        <AvatarFallback>{reaction.profiles.full_name?.charAt(0) || '?'}</AvatarFallback>
+                        <AvatarFallback>{reaction.profiles.full_name.charAt(0)}</AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="font-semibold">{reaction.profiles.full_name || 'Usuário'}</p>
-                        <p className="text-sm text-muted-foreground">@{reaction.profiles.username || 'usuário'}</p>
+                        <p className="font-semibold">{reaction.profiles.full_name}</p>
+                        <p className="text-sm text-muted-foreground">@{reaction.profiles.username}</p>
                       </div>
                     </div>
                     <div className="flex items-center justify-center w-10 h-10">

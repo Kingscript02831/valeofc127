@@ -19,40 +19,23 @@ interface PhotoUrlDialogProps {
 
 const PhotoUrlDialog = ({ isOpen, onClose, onConfirm, title }: PhotoUrlDialogProps) => {
   const [url, setUrl] = useState("");
-  const [isValidating, setIsValidating] = useState(false);
 
   const handleConfirm = () => {
-    // Remover qualquer dl=0 existente e outros parâmetros
+    // Remove qualquer dl=0 existente e outros parâmetros
     let finalUrl = url;
-    setIsValidating(true);
     
-    try {
-      // Se é um link do Dropbox
-      if (finalUrl.includes('dropbox.com')) {
-        // Substitua www.dropbox.com por dl.dropboxusercontent.com
-        if (finalUrl.includes('www.dropbox.com')) {
-          finalUrl = finalUrl.replace('www.dropbox.com', 'dl.dropboxusercontent.com');
-        }
-        
-        // Remover dl=0 se existir
-        finalUrl = finalUrl.replace(/[&?]dl=0/g, '');
-        
-        // Adicionar dl=1 no final
-        finalUrl = finalUrl.includes('?') ? `${finalUrl}&dl=1` : `${finalUrl}?dl=1`;
-      }
+    // Se é um link do Dropbox
+    if (finalUrl.includes('dropbox.com')) {
+      // Remover dl=0 se existir
+      finalUrl = finalUrl.replace(/[&?]dl=0/g, '');
       
-      // Testar se a URL é válida
-      new URL(finalUrl);
-      
-      onConfirm(finalUrl);
-      setUrl("");
-      onClose();
-    } catch (error) {
-      console.error("URL inválida:", error);
-      alert("URL inválida. Por favor, insira uma URL válida.");
-    } finally {
-      setIsValidating(false);
+      // Adicionar dl=1 no final
+      finalUrl = finalUrl.includes('?') ? `${finalUrl}&dl=1` : `${finalUrl}?dl=1`;
     }
+
+    onConfirm(finalUrl);
+    setUrl("");
+    onClose();
   };
 
   return (
@@ -83,9 +66,9 @@ const PhotoUrlDialog = ({ isOpen, onClose, onConfirm, title }: PhotoUrlDialogPro
           <Button
             onClick={handleConfirm}
             className="bg-blue-600 text-white hover:bg-blue-700"
-            disabled={!url.trim() || isValidating}
+            disabled={!url.trim()}
           >
-            {isValidating ? "Validando..." : "Confirmar"}
+            Confirmar
           </Button>
         </DialogFooter>
       </DialogContent>

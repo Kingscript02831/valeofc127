@@ -1510,62 +1510,33 @@ export type Database = {
       }
       stories: {
         Row: {
-          created_at: string
+          content: string | null
+          created_at: string | null
           expires_at: string
           id: string
-          media_type: string
+          media_type: string | null
           media_url: string
-          thumbnail_url: string | null
-          user_id: string
+          user_id: string | null
         }
         Insert: {
-          created_at?: string
-          expires_at?: string
+          content?: string | null
+          created_at?: string | null
+          expires_at: string
           id?: string
-          media_type: string
+          media_type?: string | null
           media_url: string
-          thumbnail_url?: string | null
-          user_id: string
+          user_id?: string | null
         }
         Update: {
-          created_at?: string
+          content?: string | null
+          created_at?: string | null
           expires_at?: string
           id?: string
-          media_type?: string
+          media_type?: string | null
           media_url?: string
-          thumbnail_url?: string | null
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
-      }
-      story_views: {
-        Row: {
-          id: string
-          story_id: string
-          viewed_at: string
-          viewer_id: string
-        }
-        Insert: {
-          id?: string
-          story_id: string
-          viewed_at?: string
-          viewer_id: string
-        }
-        Update: {
-          id?: string
-          story_id?: string
-          viewed_at?: string
-          viewer_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "story_views_story_id_fkey"
-            columns: ["story_id"]
-            isOneToOne: false
-            referencedRelation: "stories"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       user_audit_logs: {
         Row: {
@@ -2039,10 +2010,6 @@ export type Database = {
           "": unknown
         }
         Returns: number
-      }
-      delete_expired_stories: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
       }
       disablelongtransactions: {
         Args: Record<PropertyKey, never>
