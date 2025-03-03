@@ -12,6 +12,7 @@ export function formatDate(date: string | number | Date): string {
   const diffInMinutes = Math.floor((now.getTime() - postDate.getTime()) / (1000 * 60));
   const diffInHours = Math.floor(diffInMinutes / 60);
   const diffInDays = Math.floor(diffInHours / 24);
+  const diffInWeeks = Math.floor(diffInDays / 7);
 
   if (diffInMinutes < 1) {
     return 'Agora';
@@ -21,6 +22,8 @@ export function formatDate(date: string | number | Date): string {
     return `${diffInHours}h`;
   } else if (diffInDays < 7) {
     return `${diffInDays}d`;
+  } else if (diffInWeeks < 5) {
+    return `${diffInWeeks} sem`;
   } else {
     // Format more compactly
     return postDate.toLocaleDateString('pt-BR', {

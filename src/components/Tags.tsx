@@ -1,11 +1,22 @@
 
 import { Link } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 
 interface TagsProps {
   content: string;
+  className?: string;
+  linkClassName?: string;
+  hashtagClassName?: string;
+  disableLinks?: boolean;
 }
 
-const Tags = ({ content }: TagsProps) => {
+const Tags = ({ 
+  content, 
+  className, 
+  linkClassName = "text-[#0EA5E9] font-medium hover:underline", 
+  hashtagClassName = "text-blue-500 font-medium",
+  disableLinks = false
+}: TagsProps) => {
   const renderContent = () => {
     // Regular expression to match both hashtags and username mentions
     const regex = /(\s|^)([#@]\w+)/g;
@@ -41,22 +52,31 @@ const Tags = ({ content }: TagsProps) => {
       // Add the tag with appropriate styling
       if (tag.startsWith('#')) {
         parts.push(
-          <span key={matchStart} className="text-blue-500 font-medium">
+          <span key={matchStart} className={cn(hashtagClassName)}>
             {tag}
           </span>
         );
       } else if (tag.startsWith('@')) {
         // For @username, create a link to their profile
         const username = tag.substring(1); // Remove the @ symbol
-        parts.push(
-          <Link 
-            key={matchStart} 
-            to={`/perfil/${username}`} 
-            className="text-[#0EA5E9] font-medium hover:underline"
-          >
-            {tag}
-          </Link>
-        );
+        
+        if (disableLinks) {
+          parts.push(
+            <span key={matchStart} className={cn(linkClassName)}>
+              {tag}
+            </span>
+          );
+        } else {
+          parts.push(
+            <Link 
+              key={matchStart} 
+              to={`/perfil/${username}`} 
+              className={cn(linkClassName)}
+            >
+              {tag}
+            </Link>
+          );
+        }
       }
 
       lastIndex = matchEnd;
@@ -80,7 +100,7 @@ const Tags = ({ content }: TagsProps) => {
     return parts;
   };
 
-  return <>{renderContent()}</>;
+  return <div className={className}>{renderContent()}</div>;
 };
 
 export default Tags;
