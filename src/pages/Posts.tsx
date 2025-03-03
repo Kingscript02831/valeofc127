@@ -157,6 +157,18 @@ const Posts: React.FC = () => {
         ]);
 
       if (error) throw error;
+
+      await supabase
+        .from('notifications')
+        .insert([
+          {
+            user_id: userId,
+            title: 'Novo seguidor',
+            message: `@${currentUser.id} começou a seguir você.`,
+            type: 'system',
+          }
+        ]);
+
       return data;
     },
     onSuccess: (_, userId) => {
