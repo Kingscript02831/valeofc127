@@ -1,10 +1,9 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../integrations/supabase/client";
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { Button } from "./ui/button";
-import { UserPlus, UserMinus, UserX, Loader2, UserCheck } from "lucide-react";
+import { UserPlus, UserMinus, Loader2, UserCheck, UserX } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { Sheet, SheetContent } from "./ui/sheet";
@@ -15,14 +14,21 @@ interface FollowersListProps {
   userId: string;
   isOpen: boolean;
   onClose: () => void;
+  initialTab?: "followers" | "following" | "notFollowing";
 }
 
 type FollowStatus = "follow" | "unfollow" | "remove";
 
-const FollowersList = ({ userId, isOpen, onClose }: FollowersListProps) => {
+const FollowersList = ({ userId, isOpen, onClose, initialTab = "followers" }: FollowersListProps) => {
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState("followers");
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
 
   React.useEffect(() => {
     const getCurrentUser = async () => {
@@ -34,7 +40,6 @@ const FollowersList = ({ userId, isOpen, onClose }: FollowersListProps) => {
     getCurrentUser();
   }, []);
 
-  // Buscar todos os seguidores do usuário
   const { data: followers, isLoading: isLoadingFollowers } = useQuery({
     queryKey: ["followers", userId],
     queryFn: async () => {
@@ -61,7 +66,6 @@ const FollowersList = ({ userId, isOpen, onClose }: FollowersListProps) => {
     enabled: isOpen && userId !== null,
   });
 
-  // Buscar todos os usuários que o usuário segue
   const { data: following, isLoading: isLoadingFollowing } = useQuery({
     queryKey: ["following", userId],
     queryFn: async () => {
@@ -88,15 +92,14 @@ const FollowersList = ({ userId, isOpen, onClose }: FollowersListProps) => {
     enabled: isOpen && userId !== null,
   });
 
-  // Buscar todos os usuários para a aba "Não seguindo"
   const { data: allUsers, isLoading: isLoadingAllUsers } = useQuery({
     queryKey: ["allUsers"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
         .select("id, username, full_name, avatar_url")
-        .neq("id", userId) // Excluir o usuário atual
-        .limit(50); // Limitar para não sobrecarregar
+        .neq("id", userId)
+        .limit(50);
 
       if (error) {
         console.error("Erro ao buscar usuários:", error);
@@ -108,7 +111,6 @@ const FollowersList = ({ userId, isOpen, onClose }: FollowersListProps) => {
     enabled: isOpen && activeTab === "notFollowing" && userId !== null,
   });
 
-  // Determinar quais usuários o usuário atual não está seguindo
   const notFollowing = React.useMemo(() => {
     if (!allUsers || !following) return [];
     
@@ -116,7 +118,6 @@ const FollowersList = ({ userId, isOpen, onClose }: FollowersListProps) => {
     return allUsers.filter(user => !followingIds.has(user.id));
   }, [allUsers, following]);
 
-  // Seguir ou deixar de seguir um usuário
   const mutateFollow = useMutation({
     mutationFn: async ({ targetId, action }: { targetId: string, action: FollowStatus }) => {
       if (!currentUserId) throw new Error("Usuário não autenticado");
@@ -147,13 +148,11 @@ const FollowersList = ({ userId, isOpen, onClose }: FollowersListProps) => {
       }
     },
     onSuccess: (result) => {
-      // Invalidar as consultas para atualizar os dados
       queryClient.invalidateQueries({ queryKey: ["followers", userId] });
       queryClient.invalidateQueries({ queryKey: ["following", userId] });
       queryClient.invalidateQueries({ queryKey: ["followStats", userId] });
       queryClient.invalidateQueries({ queryKey: ["allUsers"] });
       
-      // Mostrar mensagem de sucesso
       if (result.action === "follow") {
         toast.success("Seguindo com sucesso!");
       } else if (result.action === "unfollow") {
@@ -168,19 +167,16 @@ const FollowersList = ({ userId, isOpen, onClose }: FollowersListProps) => {
     }
   });
 
-  // Verificar se o usuário atual está seguindo outro usuário
   const checkIfFollowing = (profileId: string) => {
     if (!following) return false;
     return following.some(user => user.id === profileId);
   };
 
-  // Verificar se um usuário está seguindo o usuário atual
   const checkIfFollower = (profileId: string) => {
     if (!followers) return false;
     return followers.some(user => user.id === profileId);
   };
 
-  // Renderizar um item de usuário na lista
   const renderUserItem = (user: Profile, listType: "followers" | "following" | "notFollowing") => {
     if (!user || !user.id) return null;
     
@@ -273,7 +269,7 @@ const FollowersList = ({ userId, isOpen, onClose }: FollowersListProps) => {
         <div className="h-full flex flex-col">
           <h2 className="text-lg font-semibold mb-4">Conexões</h2>
           
-          <Tabs defaultValue="followers" value={activeTab} onValueChange={setActiveTab} className="flex-1">
+          <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab} className="flex-1">
             <TabsList className="w-full grid grid-cols-3">
               <TabsTrigger value="followers">Seguidores</TabsTrigger>
               <TabsTrigger value="following">Seguindo</TabsTrigger>

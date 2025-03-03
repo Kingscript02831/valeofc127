@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -14,8 +13,11 @@ export default function FollowersPage() {
   const navigate = useNavigate();
   const { theme } = useTheme();
   const [isFollowersOpen, setIsFollowersOpen] = useState(true);
+  
+  useEffect(() => {
+    console.log("Current tab:", tab);
+  }, [tab]);
 
-  // Obter detalhes do perfil para exibir o nome do usuário no cabeçalho
   const { data: profile } = useQuery({
     queryKey: ["profile", userId],
     queryFn: async () => {
@@ -39,10 +41,9 @@ export default function FollowersPage() {
 
   const handleClose = () => {
     setIsFollowersOpen(false);
-    setTimeout(() => navigate(-1), 300); // Pequeno atraso para a animação do Sheet
+    setTimeout(() => navigate(-1), 300); // Small delay for Sheet animation
   };
 
-  // Titulo baseado na aba atual
   const getTitle = () => {
     if (!profile) return "Conexões";
     
@@ -73,7 +74,6 @@ export default function FollowersPage() {
       </div>
 
       <div className="pt-16 pb-20">
-        {/* Este div é apenas um espaço de preenchimento, já que o componente FollowersList será um Sheet */}
         <div className="p-4">
           <p className="text-center text-gray-400">
             Carregando informações de conexões...
@@ -85,7 +85,8 @@ export default function FollowersPage() {
         <FollowersList 
           userId={userId} 
           isOpen={isFollowersOpen} 
-          onClose={handleClose} 
+          onClose={handleClose}
+          initialTab={tab as "followers" | "following" | "notFollowing"}
         />
       )}
 

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -33,6 +32,7 @@ import EditPhotosButton from "../components/EditPhotosButton";
 import PhotoUrlDialog from "../components/PhotoUrlDialog";
 import type { Profile } from "../types/profile";
 import { format } from "date-fns";
+import { toast } from "sonner";
 
 const defaultAvatarImage = "/placeholder.svg";
 const defaultCoverImage = "/placeholder.svg";
@@ -71,13 +71,11 @@ export default function Profile() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Não autenticado");
 
-      // Buscar contagem de seguidores
       const { count: followersCount } = await supabase
         .from('follows')
         .select('*', { count: 'exact', head: true })
         .eq('following_id', session.user.id);
 
-      // Buscar contagem de pessoas que o usuário segue
       const { count: followingCount } = await supabase
         .from('follows')
         .select('*', { count: 'exact', head: true })
@@ -364,7 +362,6 @@ export default function Profile() {
               </div>
             </div>
             
-            {/* Moved edit buttons up here */}
             {!isPreviewMode ? (
               <div className="absolute top-20 right-4 flex gap-2">
                 <EditPhotosButton 
@@ -430,7 +427,6 @@ export default function Profile() {
                   )}
                 </div>
                 
-                {/* Removed buttons from here since we moved them above */}
               </div>
 
               {profile?.city && (
