@@ -1,12 +1,11 @@
-
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../integrations/supabase/client";
 import { Button } from "../components/ui/button";
 import { useTheme } from "../components/ThemeProvider";
 import ProfileTabs from "../components/ProfileTabs";
-import { ArrowLeft, MapPin, Heart, Calendar, Globe, Instagram, UserPlus, UserCheck } from "lucide-react";
+import { ArrowLeft, MapPin, Heart, Calendar, Globe, Instagram, UserPlus, UserCheck, Users } from "lucide-react";
 import BottomNav from "../components/BottomNav";
 import type { Profile } from "../types/profile";
 import { toast } from "sonner";
@@ -24,7 +23,6 @@ export default function UserProfile() {
   const [isBeingFollowed, setIsBeingFollowed] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  // Get current user info
   useEffect(() => {
     const fetchCurrentUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -76,7 +74,6 @@ export default function UserProfile() {
     enabled: !!profile?.id,
   });
 
-  // Check if current user is following the profile
   useQuery({
     queryKey: ["isFollowing", currentUserId, profile?.id],
     queryFn: async () => {
@@ -90,7 +87,7 @@ export default function UserProfile() {
         .single();
 
       if (error) {
-        if (error.code !== 'PGRST116') { // PGRST116 is "no rows returned" error
+        if (error.code !== 'PGRST116') {
           console.error('Error checking follow status:', error);
         }
         setIsFollowing(false);
@@ -103,7 +100,6 @@ export default function UserProfile() {
     enabled: !!currentUserId && !!profile?.id && currentUserId !== profile.id,
   });
 
-  // Check if profile is following current user
   useQuery({
     queryKey: ["isBeingFollowed", currentUserId, profile?.id],
     queryFn: async () => {
@@ -175,7 +171,6 @@ export default function UserProfile() {
     enabled: !!profile?.id,
   });
 
-  // Follow mutation
   const followMutation = useMutation({
     mutationFn: async () => {
       if (!currentUserId || !profile?.id) {
@@ -190,7 +185,6 @@ export default function UserProfile() {
 
       if (error) throw error;
 
-      // Insert a notification about the follow
       await supabase
         .from('notifications')
         .insert([
@@ -206,7 +200,6 @@ export default function UserProfile() {
     },
     onSuccess: () => {
       setIsFollowing(true);
-      // Invalidate follow stats to refresh the counts
       queryClient.invalidateQueries({ queryKey: ["followStats", profile?.id] });
       toast.success("Seguindo com sucesso!");
     },
@@ -216,7 +209,6 @@ export default function UserProfile() {
     }
   });
 
-  // Unfollow mutation
   const unfollowMutation = useMutation({
     mutationFn: async () => {
       if (!currentUserId || !profile?.id) {
@@ -234,7 +226,6 @@ export default function UserProfile() {
     },
     onSuccess: () => {
       setIsFollowing(false);
-      // Invalidate follow stats to refresh the counts
       queryClient.invalidateQueries({ queryKey: ["followStats", profile?.id] });
       toast.success("Deixou de seguir com sucesso!");
     },
@@ -252,7 +243,7 @@ export default function UserProfile() {
 
     const lastActionTime = localStorage.getItem(`followAction_${profile?.id}`);
     const now = Date.now();
-    const cooldownPeriod = 30000; // 30 segundos em milissegundos
+    const cooldownPeriod = 30000;
 
     if (lastActionTime) {
       const timeSinceLastAction = now - parseInt(lastActionTime);
@@ -296,7 +287,7 @@ export default function UserProfile() {
   }
 
   if (!profile) {
-    return null; // Será redirecionado para 404
+    return null;
   }
 
   return (
@@ -333,14 +324,18 @@ export default function UserProfile() {
 
           <div className="flex justify-end px-4 py-2 border-b border-gray-200 dark:border-gray-800">
             <div className="flex gap-4 text-center">
-              <div>
-                <p className="font-semibold">{followStats?.followers || 0}</p>
-                <p className="text-sm text-gray-500">Seguidores</p>
-              </div>
-              <div>
-                <p className="font-semibold">{followStats?.following || 0}</p>
-                <p className="text-sm text-gray-500">Seguindo</p>
-              </div>
+              <Link to={`/seguidores/${profile.username}/followers`} className="cursor-pointer">
+                <div>
+                  <p className="font-semibold">{followStats?.followers || 0}</p>
+                  <p className="text-sm text-gray-500">Seguidores</p>
+                </div>
+              </Link>
+              <Link to={`/seguidores/${profile.username}/following`} className="cursor-pointer">
+                <div>
+                  <p className="font-semibold">{followStats?.following || 0}</p>
+                  <p className="text-sm text-gray-500">Seguindo</p>
+                </div>
+              </Link>
             </div>
           </div>
 
@@ -364,7 +359,6 @@ export default function UserProfile() {
               </div>
             </div>
             
-            {/* Moved follow button up here */}
             {currentUserId && currentUserId !== profile.id && (
               <div className="absolute top-20 right-4">
                 <Button 
@@ -406,8 +400,6 @@ export default function UserProfile() {
                     </p>
                   )}
                 </div>
-                
-                {/* Removed follow button from here since we moved it above */}
               </div>
 
               {profile.city && (
@@ -456,6 +448,16 @@ export default function UserProfile() {
                       Website
                     </Button>
                   )}
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-1 w-fit"
+                    onClick={() => navigate(`/seguidores/${profile.username}`)}
+                  >
+                    <Users className="h-4 w-4" />
+                    Ver Contatos
+                  </Button>
                 </div>
               </div>
 

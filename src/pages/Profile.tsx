@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../integrations/supabase/client";
 import { Button } from "../components/ui/button";
@@ -24,6 +23,7 @@ import {
   Heart,
   Globe,
   Instagram,
+  Users,
 } from "lucide-react";
 import BottomNav from "../components/BottomNav";
 import { useTheme } from "../components/ThemeProvider";
@@ -71,13 +71,11 @@ export default function Profile() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Não autenticado");
 
-      // Buscar contagem de seguidores
       const { count: followersCount } = await supabase
         .from('follows')
         .select('*', { count: 'exact', head: true })
         .eq('following_id', session.user.id);
 
-      // Buscar contagem de pessoas que o usuário segue
       const { count: followingCount } = await supabase
         .from('follows')
         .select('*', { count: 'exact', head: true })
@@ -321,14 +319,18 @@ export default function Profile() {
 
           <div className="flex justify-end px-4 py-2 border-b border-gray-200 dark:border-gray-800">
             <div className="flex gap-4 text-center">
-              <div>
-                <p className="font-semibold">{followStats?.followers || 0}</p>
-                <p className="text-sm text-gray-500">Seguidores</p>
-              </div>
-              <div>
-                <p className="font-semibold">{followStats?.following || 0}</p>
-                <p className="text-sm text-gray-500">Seguindo</p>
-              </div>
+              <Link to="/seguidores" className="cursor-pointer">
+                <div>
+                  <p className="font-semibold">{followStats?.followers || 0}</p>
+                  <p className="text-sm text-gray-500">Seguidores</p>
+                </div>
+              </Link>
+              <Link to="/seguidores" className="cursor-pointer">
+                <div>
+                  <p className="font-semibold">{followStats?.following || 0}</p>
+                  <p className="text-sm text-gray-500">Seguindo</p>
+                </div>
+              </Link>
             </div>
           </div>
 
@@ -352,7 +354,6 @@ export default function Profile() {
               </div>
             </div>
             
-            {/* Moved edit buttons up here */}
             {!isPreviewMode ? (
               <div className="absolute top-20 right-4 flex gap-2">
                 <EditPhotosButton 
@@ -417,8 +418,6 @@ export default function Profile() {
                     </p>
                   )}
                 </div>
-                
-                {/* Removed buttons from here since we moved them above */}
               </div>
 
               {profile?.city && (
@@ -468,6 +467,18 @@ export default function Profile() {
                     </Button>
                   )}
                 </div>
+              </div>
+
+              <div className="flex items-center mt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-1 w-fit"
+                  onClick={() => navigate('/seguidores')}
+                >
+                  <Users className="h-4 w-4" />
+                  Ver Contatos
+                </Button>
               </div>
 
               <div className="mt-6">
