@@ -101,12 +101,29 @@ const PostForm = () => {
       
       if (!mentionedUsers || mentionedUsers.length === 0) return;
 
+      const { data: currentUserDetails } = await supabase
+        .from("profiles")
+        .select("id, username, full_name, avatar_url")
+        .eq("id", currentUser.id)
+        .single();
+
+      if (!currentUserDetails) {
+        console.error("Could not get current user details");
+        return;
+      }
+      
       const notifications = mentionedUsers.map(user => ({
         user_id: user.id,
-        title: "Menção em post",
-        message: `@${currentUser.username} mencionou você em um post.`,
+        title: "Menção em publicação",
+        message: `Você foi marcado em uma Publicação`,
         type: "mention",
-        reference_id: postId
+        reference_id: postId,
+        sender: {
+          id: currentUserDetails.id,
+          username: currentUserDetails.username,
+          full_name: currentUserDetails.full_name || currentUserDetails.username,
+          avatar_url: currentUserDetails.avatar_url || ""
+        }
       }));
 
       const { error: notifError } = await supabase
@@ -115,6 +132,7 @@ const PostForm = () => {
 
       if (notifError) throw notifError;
       
+      console.log("Created mention notifications with sender data:", notifications);
     } catch (error) {
       console.error("Error creating mention notifications:", error);
     }
