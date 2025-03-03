@@ -90,13 +90,13 @@ export default function NotifySeguidor() {
       </div>
 
       <div className="pt-16 pb-20">
-        {notifications?.length === 0 ? (
+        {!notifications || notifications.length === 0 ? (
           <div className="flex flex-col items-center justify-center p-8">
             <p className="text-gray-500">Nenhuma notificação ainda</p>
           </div>
         ) : (
           <div className="space-y-4 p-4">
-            {notifications?.map((notification) => (
+            {notifications.map((notification) => (
               <div
                 key={notification.id}
                 className={`flex items-center justify-between p-4 rounded-lg ${
