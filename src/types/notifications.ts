@@ -19,7 +19,7 @@ export interface Notification {
     full_name: string;
     avatar_url: string;
   };
-  // Add any missing fields from the database
+  // Campos adicionais do banco de dados (nomes em português)
   titulo?: string;
   mensagem?: string;
   tipo?: string;

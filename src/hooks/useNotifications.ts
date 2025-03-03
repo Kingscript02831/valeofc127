@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Notification } from "@/types/notifications";
@@ -33,18 +32,7 @@ export function useNotifications() {
       const { data, error } = await supabase
         .from("notifications")
         .select(`
-          id,
-          title,
-          message,
-          type,
-          reference_id,
-          read,
-          created_at,
-          publication_title,
-          publication_description,
-          publication_date,
-          user_id,
-          sender_id,
+          *,
           sender:sender_id(
             id,
             username,
@@ -60,8 +48,32 @@ export function useNotifications() {
         throw error;
       }
 
-      console.log("Notifications fetched:", data);
-      return data as Notification[];
+      // Normalize the data to handle both English and Portuguese field names
+      const normalizedData = data.map(item => {
+        // Create normalized notification object
+        const notification: Notification = {
+          id: item.id,
+          title: item.title || item.titulo || "",
+          message: item.message || item.mensagem || "",
+          type: (item.type || item.tipo || "system") as 'news' | 'event' | 'system' | 'follow',
+          reference_id: item.reference_id,
+          read: item.read !== undefined ? item.read : (item.lido !== undefined ? item.lido : false),
+          created_at: item.created_at || item.criado_em || new Date().toISOString(),
+          user_id: item.user_id || item.id_usuario || currentUser.id,
+          sender_id: item.sender_id || item.id_remetente,
+          sender: item.sender,
+          // Keep other fields
+          publication_title: item.publication_title,
+          publication_description: item.publication_description,
+          publication_category: item.publication_category,
+          publication_date: item.publication_date,
+        };
+        
+        return notification;
+      });
+
+      console.log("Normalized notifications:", normalizedData);
+      return normalizedData as Notification[];
     },
     enabled: !!currentUser,
     retry: 2,
