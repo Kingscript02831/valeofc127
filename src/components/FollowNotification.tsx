@@ -1,13 +1,12 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "../integrations/supabase/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { formatDate } from "@/lib/utils";
 import { toast } from "sonner";
-import Tags from "@/components/Tags";
+import Tags from "./Tags";
 
 interface FollowNotificationProps {
   notification: {
@@ -32,7 +31,6 @@ const FollowNotification = ({ notification, currentUser, onUpdateRead }: FollowN
   const queryClient = useQueryClient();
   const [isFollowing, setIsFollowing] = useState(false);
   
-  // Check if current user is following the sender
   useState(() => {
     const checkFollowStatus = async () => {
       if (!currentUser?.id || !notification.sender?.id) return;
@@ -105,12 +103,10 @@ const FollowNotification = ({ notification, currentUser, onUpdateRead }: FollowN
   };
 
   const handleClick = () => {
-    // Mark as read
     if (!notification.read) {
       onUpdateRead(notification.id);
     }
     
-    // Extract username from message if it's a follow notification
     if (notification.sender?.username) {
       navigate(`/perfil/${notification.sender.username}`);
     }
