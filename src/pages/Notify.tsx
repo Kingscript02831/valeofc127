@@ -5,13 +5,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { cn } from "@/lib/utils";
+import { cn, formatDate } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-import BottomNav from "@/components/BottomNav";
+import Tags from "@/components/Tags";
 import type { Notification } from "@/types/notifications";
 
 const Notify = () => {
@@ -117,9 +117,11 @@ const Notify = () => {
         throw error;
       }
       
+      // Enhance notifications with sender data for all notification types
       const notificationsWithSenders = await Promise.all(
         data.map(async (notification) => {
-          if (notification.reference_id && notification.message?.includes('começou a seguir você')) {
+          if (notification.reference_id) {
+            // For all notification types that reference a user, get their profile
             const { data: senderData } = await supabase
               .from('profiles')
               .select('id, username, full_name, avatar_url')
@@ -127,7 +129,10 @@ const Notify = () => {
               .single();
             
             if (senderData) {
-              checkFollowStatus(senderData.id);
+              // For following notifications, also check follow status
+              if (notification.message?.includes('começou a seguir você')) {
+                checkFollowStatus(senderData.id);
+              }
               return { ...notification, sender: senderData };
             }
           }
@@ -360,7 +365,6 @@ const Notify = () => {
         <div className="flex items-center justify-center min-h-screen">
           <p>Carregando...</p>
         </div>
-        <BottomNav />
       </>
     );
   }
@@ -406,6 +410,8 @@ const Notify = () => {
           ) : (
             notifications.map((notification) => {
               const isFollowNotification = notification.message?.includes('começou a seguir você');
+              const isMentionNotification = notification.message?.includes('mencionou você');
+              const isCommentNotification = notification.message?.includes('comentou em');
               const userId = notification.sender?.id;
               const isFollowing = userId ? followStatuses[userId] : false;
               
@@ -447,42 +453,53 @@ const Notify = () => {
                         >
                           {notification.type === 'event' ? 'Evento' : 
                            notification.type === 'news' ? 'Notícia' : 
-                           isFollowNotification ? 'Seguidor' : 'Sistema'}
+                           isFollowNotification ? 'Seguidor' : 
+                           isCommentNotification ? 'Comentário' : 
+                           isMentionNotification ? 'Menção' : 'Sistema'}
                         </Badge>
+                        
                         {notification.publication_category && (
                           <Badge variant="outline" className="text-xs">
                             {notification.publication_category}
                           </Badge>
                         )}
+                        
+                        <Badge variant="outline" className="text-xs text-muted-foreground font-normal">
+                          {formatDate(notification.created_at)}
+                        </Badge>
+                        
                         {!notification.read && (
                           <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
                         )}
                       </div>
 
-                      <h3 className={cn(
-                        "text-sm font-medium mb-0.5",
-                        !notification.read && "text-primary"
-                      )}>
-                        {notification.sender?.username ? (
-                          <span className="font-semibold">@{notification.sender.username}</span>
-                        ) : ''}
-                        {' '}
-                        {isFollowNotification ? 
-                          'começou a seguir você.' : 
-                          notification.publication_title || notification.title}
-                      </h3>
-                      
-                      {notification.publication_description && (
-                        <p className="text-xs text-muted-foreground mb-1 line-clamp-1">
-                          {notification.publication_description}
-                        </p>
-                      )}
-                      
-                      {!isFollowNotification && (
-                        <p className="text-xs text-muted-foreground line-clamp-1">
-                          {notification.message}
-                        </p>
-                      )}
+                      <div className="flex flex-col gap-1">
+                        {notification.sender?.username && (
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-semibold text-sm">@{notification.sender.username}</span>
+                          </div>
+                        )}
+                        
+                        {notification.publication_title && (
+                          <h3 className="text-sm font-medium">
+                            {notification.publication_title}
+                          </h3>
+                        )}
+                        
+                        {notification.message && (
+                          <Tags 
+                            content={notification.message} 
+                            className="text-xs text-muted-foreground"
+                            linkClassName="text-primary font-medium" 
+                          />
+                        )}
+                        
+                        {notification.publication_description && (
+                          <p className="text-xs text-muted-foreground line-clamp-1 mt-1">
+                            {notification.publication_description}
+                          </p>
+                        )}
+                      </div>
 
                       <div className="flex items-center justify-between mt-2">
                         <div className="flex items-center gap-2">
@@ -528,9 +545,6 @@ const Notify = () => {
                         </div>
                         
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <span>
-                            {format(new Date(notification.created_at), "dd MMM HH:mm", { locale: ptBR })}
-                          </span>
                           {notification.read ? (
                             <CheckCircle className="h-3 w-3 text-green-500" />
                           ) : (
@@ -557,7 +571,6 @@ const Notify = () => {
           )}
         </div>
       </div>
-      <BottomNav />
     </>
   );
 };
