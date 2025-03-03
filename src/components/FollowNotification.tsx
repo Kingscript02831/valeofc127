@@ -4,10 +4,35 @@ import { useNavigate } from 'react-router-dom';
 import { Avatar } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { formatDate } from "@/lib/utils";
-import { User } from '@supabase/supabase-js';
-import Tags from "@/components/Tags";
+import { User } from '@supabase/auth-js';
 import { Notification } from "@/types/notifications";
+
+// Import formatDate from utils
+const formatDate = (date: string | number | Date): string => {
+  const now = new Date();
+  const postDate = new Date(date);
+  const diffInMinutes = Math.floor((now.getTime() - postDate.getTime()) / (1000 * 60));
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  const diffInDays = Math.floor(diffInHours / 24);
+  const diffInWeeks = Math.floor(diffInDays / 7);
+
+  if (diffInMinutes < 1) {
+    return 'Agora';
+  } else if (diffInMinutes < 60) {
+    return `${diffInMinutes}m`;
+  } else if (diffInHours < 24) {
+    return `${diffInHours}h`;
+  } else if (diffInDays < 7) {
+    return `${diffInDays}d`;
+  } else if (diffInWeeks < 5) {
+    return `${diffInWeeks} sem`;
+  } else {
+    return postDate.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: 'short',
+    });
+  }
+};
 
 interface FollowNotificationProps {
   notification: Notification;

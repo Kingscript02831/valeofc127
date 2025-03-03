@@ -38,6 +38,35 @@ const NotificationDebugger = () => {
     retry: 2,
   });
 
+  // Get profile data to check if there might be missing data
+  const { data: profiles } = useQuery({
+    queryKey: ["debugProfiles", rawNotifications],
+    queryFn: async () => {
+      if (!rawNotifications || rawNotifications.length === 0) return null;
+      
+      // Collect all sender IDs
+      const senderIds = rawNotifications
+        .map(n => n.sender_id)
+        .filter(Boolean);
+      
+      if (senderIds.length === 0) return null;
+      
+      // Fetch profiles to check if they exist
+      const { data, error } = await supabase
+        .from("profiles")
+        .select('*')
+        .in('id', senderIds);
+        
+      if (error) {
+        console.error("Error fetching sender profiles:", error);
+        return null;
+      }
+      
+      return data;
+    },
+    enabled: !!rawNotifications && rawNotifications.length > 0,
+  });
+
   // Try to get RLS policy info
   const { data: rlsInfo } = useQuery({
     queryKey: ["rlsInfo"],
@@ -67,6 +96,7 @@ const NotificationDebugger = () => {
           <p><strong>Error:</strong> {isError ? 'Yes' : 'No'}</p>
           {error && <p><strong>Error Message:</strong> {JSON.stringify(error)}</p>}
           <p><strong>Raw Notification Count:</strong> {rawNotifications?.length || 0}</p>
+          <p><strong>Sender Profiles Found:</strong> {profiles?.length || 0}</p>
           
           {rawNotifications && rawNotifications.length > 0 ? (
             <div>
@@ -86,6 +116,15 @@ const NotificationDebugger = () => {
               If notifications are visible in the raw data but not in the UI, there might be 
               an issue with the join query or missing profile data.
             </p>
+            
+            {profiles && profiles.length > 0 && (
+              <div className="mt-2">
+                <p className="text-xs font-medium">Found {profiles.length} sender profiles:</p>
+                <pre className="bg-muted mt-1 p-1 rounded text-xs overflow-auto max-h-20">
+                  {JSON.stringify(profiles.map(p => ({ id: p.id, username: p.username })), null, 2)}
+                </pre>
+              </div>
+            )}
           </div>
         </div>
       </CardContent>

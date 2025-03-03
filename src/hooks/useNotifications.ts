@@ -1,6 +1,7 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { Notification } from "@/types/notifications";
+import { supabase } from "../integrations/supabase/client";
+import { Notification } from "../types/notifications";
 import { toast } from "sonner";
 
 export function useNotifications() {
@@ -47,6 +48,8 @@ export function useNotifications() {
         console.error("Error fetching notifications:", error);
         throw error;
       }
+
+      console.log("Raw DB data:", data);
 
       // Normalize the data to handle both English and Portuguese field names
       const normalizedData = data.map(item => {
