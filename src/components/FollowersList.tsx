@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../integrations/supabase/client";
@@ -55,7 +56,6 @@ const FollowersList = ({ userId, isOpen, onClose }: FollowersListProps) => {
         return [];
       }
 
-      // Fix type conversion - map to correct format
       return data.map(item => item.follower) as Profile[];
     },
     enabled: isOpen && userId !== null,
@@ -83,7 +83,6 @@ const FollowersList = ({ userId, isOpen, onClose }: FollowersListProps) => {
         return [];
       }
 
-      // Fix type conversion - map to correct format
       return data.map(item => item.following) as Profile[];
     },
     enabled: isOpen && userId !== null,
