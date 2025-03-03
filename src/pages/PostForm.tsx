@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -103,11 +104,19 @@ const PostForm = () => {
 
       const notifications = mentionedUsers.map(user => ({
         user_id: user.id,
-        title: "Menção em post",
+        title: "Você foi marcado em uma Publicação",
         message: `@${currentUser.username} mencionou você em um post.`,
         type: "mention",
-        reference_id: postId
+        reference_id: postId,
+        sender: {
+          id: currentUser.id,
+          username: currentUser.username,
+          full_name: currentUser.full_name,
+          avatar_url: currentUser.avatar_url || ""
+        }
       }));
+
+      console.log("Enviando notificações com dados do remetente:", notifications);
 
       const { error: notifError } = await supabase
         .from("notifications")
@@ -172,6 +181,7 @@ const PostForm = () => {
         });
       }
 
+      // Ao criar ou atualizar um post, notificar usuários mencionados
       await notifyMentionedUsers(newPostContent, postId);
 
       setNewPostContent("");
