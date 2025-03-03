@@ -48,7 +48,7 @@ const Notify = () => {
 
       if (error) {
         console.error("Error fetching notifications:", error);
-        return [];
+        throw error;
       }
 
       console.log("Notifications fetched:", data);
