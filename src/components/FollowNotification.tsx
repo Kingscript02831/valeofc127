@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "../integrations/supabase/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
-import { formatDate } from "@/lib/utils";
+import { formatDate } from "../lib/utils";
 import { toast } from "sonner";
-import Tags from "@/components/Tags";
+import Tags from "./Tags";
 
 interface FollowNotificationProps {
   notification: {
