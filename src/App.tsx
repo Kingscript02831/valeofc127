@@ -40,7 +40,16 @@ import StoryForm from "./pages/StoryForm";
 import StoryViewer from "./pages/StoryViewer";
 import StoryManager from "./pages/StoryManager";
 
-const queryClient = new QueryClient();
+// Create a query client with better error handling
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: true,
+      staleTime: 30000,
+    },
+  },
+});
 
 const App: React.FC = () => {
   return (

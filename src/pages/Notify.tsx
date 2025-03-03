@@ -1,101 +1,25 @@
 
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "../integrations/supabase/client";
-import { Card, CardContent } from "../components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-import Navbar from "../components/Navbar";
-import BottomNav from "../components/BottomNav";
-import FollowNotification from "../components/FollowNotification";
-import { formatDate } from "../lib/utils";
-import { toast } from "sonner";
-import { Notification } from "../types/notifications";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import Navbar from "@/components/Navbar";
+import BottomNav from "@/components/BottomNav";
+import FollowNotification from "@/components/FollowNotification";
+import { useNotifications } from "@/hooks/useNotifications";
+import NotificationDebugger from "@/components/NotificationDebugger";
 
 const Notify = () => {
   const [activeTab, setActiveTab] = useState("all");
-  const queryClient = useQueryClient();
-
-  const { data: currentUser } = useQuery({
-    queryKey: ["currentUser"],
-    queryFn: async () => {
-      const { data } = await supabase.auth.getUser();
-      if (data.user) {
-        console.log("Current user:", data.user);
-      }
-      return data.user;
-    },
-  });
-
-  const { data: notifications, isLoading } = useQuery({
-    queryKey: ["notifications", currentUser?.id],
-    queryFn: async () => {
-      if (!currentUser) return [];
-
-      console.log("Fetching notifications for user:", currentUser.id);
-
-      const { data, error } = await supabase
-        .from("notifications")
-        .select(`
-          *,
-          sender:profiles(
-            id,
-            username,
-            avatar_url
-          )
-        `)
-        .eq("user_id", currentUser.id)
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        console.error("Error fetching notifications:", error);
-        throw error;
-      }
-
-      console.log("Notifications fetched:", data);
-      return data as Notification[];
-    },
-    enabled: !!currentUser,
-  });
-
-  const markAsReadMutation = useMutation({
-    mutationFn: async (notificationId: string) => {
-      const { error } = await supabase
-        .from("notifications")
-        .update({ read: true })
-        .eq("id", notificationId);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
-      queryClient.invalidateQueries({ queryKey: ["unreadNotifications"] });
-    },
-    onError: () => {
-      toast.error("Erro ao marcar notificação como lida");
-    },
-  });
-
-  const markAllAsReadMutation = useMutation({
-    mutationFn: async () => {
-      if (!currentUser) return;
-
-      const { error } = await supabase
-        .from("notifications")
-        .update({ read: true })
-        .eq("user_id", currentUser.id)
-        .eq("read", false);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
-      queryClient.invalidateQueries({ queryKey: ["unreadNotifications"] });
-      toast.success("Todas as notificações foram marcadas como lidas");
-    },
-    onError: () => {
-      toast.error("Erro ao marcar todas notificações como lidas");
-    },
-  });
+  const [showDebugger, setShowDebugger] = useState(false);
+  
+  const {
+    notifications,
+    isLoading,
+    unreadCount,
+    currentUser,
+    markAsRead,
+    markAllAsRead
+  } = useNotifications();
 
   const filteredNotifications = notifications?.filter((notification) => {
     if (activeTab === "all") return true;
@@ -103,39 +27,45 @@ const Notify = () => {
     return true;
   });
 
-  const unreadCount = notifications?.filter(
-    (notification) => !notification.read
-  ).length;
-
-  const handleMarkAsRead = (notificationId: string) => {
-    markAsReadMutation.mutate(notificationId);
-  };
-
-  const handleMarkAllAsRead = () => {
-    markAllAsReadMutation.mutate();
-  };
+  // Debug information
+  console.log("Component rendering with:");
+  console.log("- Notifications:", notifications?.length || 0);
+  console.log("- Filtered Notifications:", filteredNotifications?.length || 0);
+  console.log("- Is Loading:", isLoading);
+  console.log("- Current User:", currentUser?.id);
+  console.log("- Active Tab:", activeTab);
 
   return (
     <div className="bg-background min-h-screen pb-20">
       <Navbar />
       <div className="container max-w-2xl mx-auto pt-16 p-4">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold">Notificações</h1>
-          {unreadCount && unreadCount > 0 ? (
+          <h1 className="text-2xl font-bold">
+            Notificações
+            <button 
+              onClick={() => setShowDebugger(!showDebugger)}
+              className="ml-2 text-xs text-gray-400 hover:text-gray-600"
+            >
+              {showDebugger ? "(Esconder debug)" : "(Debug)"}
+            </button>
+          </h1>
+          {unreadCount > 0 && (
             <button
-              onClick={handleMarkAllAsRead}
+              onClick={markAllAsRead}
               className="text-sm text-blue-500 hover:underline"
             >
               Marcar todas como lidas
             </button>
-          ) : null}
+          )}
         </div>
+
+        {showDebugger && <NotificationDebugger />}
 
         <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-2 mb-4">
             <TabsTrigger value="all">Todas</TabsTrigger>
             <TabsTrigger value="unread">
-              Não lidas {unreadCount ? `(${unreadCount})` : ""}
+              Não lidas {unreadCount > 0 ? `(${unreadCount})` : ""}
             </TabsTrigger>
           </TabsList>
 
@@ -163,7 +93,7 @@ const Notify = () => {
                     key={notification.id}
                     notification={notification}
                     currentUser={currentUser}
-                    onUpdateRead={handleMarkAsRead}
+                    onUpdateRead={markAsRead}
                   />
                 ))}
               </div>
@@ -198,7 +128,7 @@ const Notify = () => {
                     key={notification.id}
                     notification={notification}
                     currentUser={currentUser}
-                    onUpdateRead={handleMarkAsRead}
+                    onUpdateRead={markAsRead}
                   />
                 ))}
               </div>

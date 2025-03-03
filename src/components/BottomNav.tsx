@@ -36,18 +36,26 @@ const BottomNav = () => {
   const { data: unreadCount } = useQuery({
     queryKey: ["unreadNotifications"],
     queryFn: async () => {
-      if (!session) return 0;
+      if (!session?.user?.id) return 0;
+      
+      console.log("Fetching unread notifications count for user:", session.user.id);
       
       const { count, error } = await supabase
         .from("notifications")
         .select("*", { count: 'exact', head: true })
+        .eq("user_id", session.user.id)
         .eq("read", false);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching unread notifications:", error);
+        throw error;
+      }
+      
+      console.log("Unread notifications count:", count);
       return count || 0;
     },
-    enabled: !!session,
-    refetchInterval: 30000,
+    enabled: !!session?.user?.id,
+    refetchInterval: 30000, // Check every 30 seconds
   });
 
   const handleNavigation = (path: string, e: React.MouseEvent) => {
@@ -143,7 +151,7 @@ const BottomNav = () => {
           <button
             onClick={(e) => handleNavigation("/notify", e)}
             className="flex items-center p-2 rounded-xl transition-all duration-300 hover:scale-105 relative"
-            style={getItemStyle(location.pathname === "/notify")}
+            style={getItemStyle(location.pathname === "/notify" || location.pathname === "/notificacoes")}
           >
             <Bell className="h-6 w-6" strokeWidth={2} />
             {unreadCount > 0 && (
