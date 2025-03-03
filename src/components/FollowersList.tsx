@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../integrations/supabase/client";
@@ -21,7 +22,7 @@ type FollowStatus = "follow" | "unfollow" | "remove";
 
 const FollowersList = ({ userId, isOpen, onClose, initialTab = "followers" }: FollowersListProps) => {
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState(initialTab);
+  const [activeTab, setActiveTab] = useState<"followers" | "following" | "notFollowing">(initialTab);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -61,6 +62,7 @@ const FollowersList = ({ userId, isOpen, onClose, initialTab = "followers" }: Fo
         return [];
       }
 
+      // Fix the type cast here to properly handle the returned data structure
       return data.map(item => item.follower) as Profile[];
     },
     enabled: isOpen && userId !== null,
@@ -87,6 +89,7 @@ const FollowersList = ({ userId, isOpen, onClose, initialTab = "followers" }: Fo
         return [];
       }
 
+      // Fix the type cast here to properly handle the returned data structure
       return data.map(item => item.following) as Profile[];
     },
     enabled: isOpen && userId !== null,
@@ -269,7 +272,12 @@ const FollowersList = ({ userId, isOpen, onClose, initialTab = "followers" }: Fo
         <div className="h-full flex flex-col">
           <h2 className="text-lg font-semibold mb-4">Conexões</h2>
           
-          <Tabs defaultValue={activeTab} value={activeTab} onValueChange={setActiveTab} className="flex-1">
+          <Tabs 
+            defaultValue={activeTab} 
+            value={activeTab} 
+            onValueChange={(value) => setActiveTab(value as "followers" | "following" | "notFollowing")} 
+            className="flex-1"
+          >
             <TabsList className="w-full grid grid-cols-3">
               <TabsTrigger value="followers">Seguidores</TabsTrigger>
               <TabsTrigger value="following">Seguindo</TabsTrigger>
