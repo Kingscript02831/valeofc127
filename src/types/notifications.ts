@@ -3,7 +3,7 @@ export interface Notification {
   id: string;
   title: string;
   message: string;
-  type: 'news' | 'event' | 'system';
+  type: 'news' | 'event' | 'system' | 'follow';
   reference_id?: string;
   read: boolean;
   created_at: string;
@@ -12,6 +12,7 @@ export interface Notification {
   publication_category?: string;
   publication_date?: string;
   user_id: string;
+  sender_id?: string;
   sender?: {
     id: string;
     username: string;
