@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../integrations/supabase/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -31,7 +32,7 @@ const FollowNotification = ({ notification, currentUser, onUpdateRead }: FollowN
   const queryClient = useQueryClient();
   const [isFollowing, setIsFollowing] = useState(false);
   
-  useState(() => {
+  useEffect(() => {
     const checkFollowStatus = async () => {
       if (!currentUser?.id || !notification.sender?.id) return;
       
@@ -46,7 +47,7 @@ const FollowNotification = ({ notification, currentUser, onUpdateRead }: FollowN
     };
     
     checkFollowStatus();
-  });
+  }, [currentUser, notification.sender]);
 
   const followMutation = useMutation({
     mutationFn: async () => {
