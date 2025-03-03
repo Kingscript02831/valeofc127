@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -24,7 +23,6 @@ export default function UserProfile() {
   const [isBeingFollowed, setIsBeingFollowed] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  // Get current user info
   useEffect(() => {
     const fetchCurrentUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -76,7 +74,6 @@ export default function UserProfile() {
     enabled: !!profile?.id,
   });
 
-  // Check if current user is following the profile
   useQuery({
     queryKey: ["isFollowing", currentUserId, profile?.id],
     queryFn: async () => {
@@ -90,7 +87,7 @@ export default function UserProfile() {
         .single();
 
       if (error) {
-        if (error.code !== 'PGRST116') { // PGRST116 is "no rows returned" error
+        if (error.code !== 'PGRST116') {
           console.error('Error checking follow status:', error);
         }
         setIsFollowing(false);
@@ -103,7 +100,6 @@ export default function UserProfile() {
     enabled: !!currentUserId && !!profile?.id && currentUserId !== profile.id,
   });
 
-  // Check if profile is following current user
   useQuery({
     queryKey: ["isBeingFollowed", currentUserId, profile?.id],
     queryFn: async () => {
@@ -175,38 +171,23 @@ export default function UserProfile() {
     enabled: !!profile?.id,
   });
 
-  // Follow mutation
   const followMutation = useMutation({
-    mutationFn: async () => {
-      if (!currentUserId || !profile?.id) {
-        throw new Error("User not authenticated or profile not found");
+    mutationFn: async (userId: string) => {
+      if (!currentUserId) {
+        throw new Error("User not authenticated");
       }
 
       const { data, error } = await supabase
         .from('follows')
         .insert([
-          { follower_id: currentUserId, following_id: profile.id }
+          { follower_id: currentUserId, following_id: userId }
         ]);
 
       if (error) throw error;
-
-      // Insert a notification about the follow
-      await supabase
-        .from('notifications')
-        .insert([
-          {
-            user_id: profile.id,
-            title: 'Novo seguidor',
-            message: `@${currentUserId} começou a seguir você.`,
-            type: 'system',
-          }
-        ]);
-
       return data;
     },
     onSuccess: () => {
       setIsFollowing(true);
-      // Invalidate follow stats to refresh the counts
       queryClient.invalidateQueries({ queryKey: ["followStats", profile?.id] });
       toast.success("Seguindo com sucesso!");
     },
@@ -216,7 +197,6 @@ export default function UserProfile() {
     }
   });
 
-  // Unfollow mutation
   const unfollowMutation = useMutation({
     mutationFn: async () => {
       if (!currentUserId || !profile?.id) {
@@ -234,7 +214,6 @@ export default function UserProfile() {
     },
     onSuccess: () => {
       setIsFollowing(false);
-      // Invalidate follow stats to refresh the counts
       queryClient.invalidateQueries({ queryKey: ["followStats", profile?.id] });
       toast.success("Deixou de seguir com sucesso!");
     },
@@ -252,7 +231,7 @@ export default function UserProfile() {
 
     const lastActionTime = localStorage.getItem(`followAction_${profile?.id}`);
     const now = Date.now();
-    const cooldownPeriod = 30000; // 30 segundos em milissegundos
+    const cooldownPeriod = 30000;
 
     if (lastActionTime) {
       const timeSinceLastAction = now - parseInt(lastActionTime);
@@ -296,7 +275,7 @@ export default function UserProfile() {
   }
 
   if (!profile) {
-    return null; // Será redirecionado para 404
+    return null;
   }
 
   return (
@@ -364,7 +343,6 @@ export default function UserProfile() {
               </div>
             </div>
             
-            {/* Moved follow button up here */}
             {currentUserId && currentUserId !== profile.id && (
               <div className="absolute top-20 right-4">
                 <Button 
@@ -407,7 +385,6 @@ export default function UserProfile() {
                   )}
                 </div>
                 
-                {/* Removed follow button from here since we moved it above */}
               </div>
 
               {profile.city && (
