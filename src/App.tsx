@@ -39,6 +39,8 @@ import Search from "./pages/Search";
 import StoryForm from "./pages/StoryForm";
 import StoryViewer from "./pages/StoryViewer";
 import StoryManager from "./pages/StoryManager";
+import Navbar from "./components/Navbar";
+import BottomNav from "./components/BottomNav";
 
 // Create a query client with better error handling
 const queryClient = new QueryClient({
@@ -61,6 +63,7 @@ const App: React.FC = () => {
             <Sonner />
             <BrowserRouter>
               <AuthWrapper>
+                <Navbar />
                 <Routes>
                   <Route path="/" element={<Posts />} />
                   <Route path="/noticias" element={<Index />} />
@@ -93,13 +96,14 @@ const App: React.FC = () => {
                   <Route path="/menu" element={<Menu />} />
                   <Route path="/search" element={<Search />} />
                   
-                  {/* Rotas para stories */}
+                  {/* Routes for stories */}
                   <Route path="/story/new" element={<StoryForm />} />
                   <Route path="/story/view/:userId" element={<StoryViewer />} />
                   <Route path="/story/manage" element={<StoryManager />} />
                   
                   <Route path="*" element={<NotFound />} />
                 </Routes>
+                <BottomNav />
               </AuthWrapper>
             </BrowserRouter>
           </TooltipProvider>

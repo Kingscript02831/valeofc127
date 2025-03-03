@@ -4,10 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import { Avatar } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { User } from '@supabase/auth-js';
+import { User } from '@supabase/supabase-js';
 import { Notification } from "@/types/notifications";
 
-// Import formatDate from utils
+// Format date utility function
 const formatDate = (date: string | number | Date): string => {
   const now = new Date();
   const postDate = new Date(date);

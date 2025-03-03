@@ -2,16 +2,17 @@
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import Navbar from "@/components/Navbar";
-import BottomNav from "@/components/BottomNav";
-import FollowNotification from "@/components/FollowNotification";
 import { useNotifications } from "@/hooks/useNotifications";
 import NotificationDebugger from "@/components/NotificationDebugger";
+import FollowNotification from "@/components/FollowNotification";
 import { toast } from "sonner";
+import { formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { Badge } from "@/components/ui/badge";
 
 const Notify = () => {
   const [activeTab, setActiveTab] = useState("all");
-  const [showDebugger, setShowDebugger] = useState(true); // Start with debugger visible
+  const [showDebugger, setShowDebugger] = useState(false); // Default to hidden for production
   
   const {
     notifications,
@@ -40,14 +41,6 @@ const Notify = () => {
   console.log("- Current User:", currentUser?.id);
   console.log("- Active Tab:", activeTab);
   
-  // Display individual notification objects for deeper inspection
-  if (notifications && notifications.length > 0) {
-    console.log("Detailed notification objects:");
-    notifications.forEach((notification, index) => {
-      console.log(`Notification ${index + 1}:`, notification);
-    });
-  }
-
   if (isError && error) {
     console.error("Error in notifications:", error);
     toast.error("Erro ao carregar notificações");
@@ -55,7 +48,6 @@ const Notify = () => {
 
   return (
     <div className="bg-background min-h-screen pb-20">
-      <Navbar />
       <div className="container max-w-2xl mx-auto pt-16 p-4">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold">
@@ -107,41 +99,12 @@ const Notify = () => {
             ) : notifications && notifications.length > 0 ? (
               <div>
                 {filteredNotifications?.map((notification) => (
-                  <Card 
-                    key={notification.id} 
-                    className={`mb-3 transition-all hover:shadow-md ${!notification.read ? 'border-blue-400 dark:border-blue-500' : ''}`}
-                    onClick={() => {
-                      if (!notification.read) {
-                        markAsRead(notification.id);
-                      }
-                    }}
-                  >
-                    <CardContent className="p-4 cursor-pointer">
-                      <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-medium">
-                          {notification.sender?.username?.[0]?.toUpperCase() || 'N'}
-                        </div>
-
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between">
-                            <h4 className="font-semibold">
-                              {notification.title}
-                              {!notification.read && (
-                                <span className="ml-2 bg-blue-500 text-white text-xs rounded-full px-2 py-0.5">Nova</span>
-                              )}
-                            </h4>
-                            <span className="text-xs text-muted-foreground">
-                              {new Date(notification.created_at).toLocaleDateString('pt-BR')}
-                            </span>
-                          </div>
-                          
-                          <p className="text-sm mt-1">
-                            {notification.message}
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <FollowNotification 
+                    key={notification.id}
+                    notification={notification}
+                    currentUser={currentUser}
+                    onUpdateRead={markAsRead}
+                  />
                 ))}
               </div>
             ) : (
@@ -176,41 +139,12 @@ const Notify = () => {
             ) : filteredNotifications && filteredNotifications.length > 0 ? (
               <div>
                 {filteredNotifications.map((notification) => (
-                  <Card 
-                    key={notification.id} 
-                    className={`mb-3 transition-all hover:shadow-md ${!notification.read ? 'border-blue-400 dark:border-blue-500' : ''}`}
-                    onClick={() => {
-                      if (!notification.read) {
-                        markAsRead(notification.id);
-                      }
-                    }}
-                  >
-                    <CardContent className="p-4 cursor-pointer">
-                      <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-medium">
-                          {notification.sender?.username?.[0]?.toUpperCase() || 'N'}
-                        </div>
-
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between">
-                            <h4 className="font-semibold">
-                              {notification.title}
-                              {!notification.read && (
-                                <span className="ml-2 bg-blue-500 text-white text-xs rounded-full px-2 py-0.5">Nova</span>
-                              )}
-                            </h4>
-                            <span className="text-xs text-muted-foreground">
-                              {new Date(notification.created_at).toLocaleDateString('pt-BR')}
-                            </span>
-                          </div>
-                          
-                          <p className="text-sm mt-1">
-                            {notification.message}
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <FollowNotification 
+                    key={notification.id}
+                    notification={notification}
+                    currentUser={currentUser}
+                    onUpdateRead={markAsRead}
+                  />
                 ))}
               </div>
             ) : (
@@ -221,7 +155,6 @@ const Notify = () => {
           </TabsContent>
         </Tabs>
       </div>
-      <BottomNav />
     </div>
   );
 };
