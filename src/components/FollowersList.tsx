@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../integrations/supabase/client";
@@ -62,8 +61,7 @@ const FollowersList = ({ userId, isOpen, onClose, initialTab = "followers" }: Fo
         return [];
       }
 
-      // Fix the type cast here to properly handle the returned data structure
-      return data.map(item => item.follower) as Profile[];
+      return data.map(item => item.follower as Profile);
     },
     enabled: isOpen && userId !== null,
   });
@@ -89,8 +87,7 @@ const FollowersList = ({ userId, isOpen, onClose, initialTab = "followers" }: Fo
         return [];
       }
 
-      // Fix the type cast here to properly handle the returned data structure
-      return data.map(item => item.following) as Profile[];
+      return data.map(item => item.following as Profile);
     },
     enabled: isOpen && userId !== null,
   });

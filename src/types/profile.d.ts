@@ -13,4 +13,5 @@ export interface Profile {
   relationship_status?: string | null;
   birth_date?: string | null;
   instagram_url?: string | null;
+  bio?: string | null;
 }
