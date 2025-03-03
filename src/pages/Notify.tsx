@@ -32,7 +32,6 @@ const Notify = () => {
 
   // Debug information
   console.log("Component rendering with:");
-  console.log("- Notifications:", notifications);
   console.log("- Notifications count:", notifications?.length || 0);
   console.log("- Filtered Notifications:", filteredNotifications?.length || 0);
   console.log("- Is Loading:", isLoading);
@@ -40,6 +39,14 @@ const Notify = () => {
   console.log("- Error:", error);
   console.log("- Current User:", currentUser?.id);
   console.log("- Active Tab:", activeTab);
+  
+  // Display individual notification objects for deeper inspection
+  if (notifications && notifications.length > 0) {
+    console.log("Detailed notification objects:");
+    notifications.forEach((notification, index) => {
+      console.log(`Notification ${index + 1}:`, notification);
+    });
+  }
 
   if (isError && error) {
     console.error("Error in notifications:", error);
@@ -99,13 +106,42 @@ const Notify = () => {
               </div>
             ) : notifications && notifications.length > 0 ? (
               <div>
-                {filteredNotifications && filteredNotifications.map((notification) => (
-                  <FollowNotification
-                    key={notification.id}
-                    notification={notification}
-                    currentUser={currentUser}
-                    onUpdateRead={markAsRead}
-                  />
+                {filteredNotifications?.map((notification) => (
+                  <Card 
+                    key={notification.id} 
+                    className={`mb-3 transition-all hover:shadow-md ${!notification.read ? 'border-blue-400 dark:border-blue-500' : ''}`}
+                    onClick={() => {
+                      if (!notification.read) {
+                        markAsRead(notification.id);
+                      }
+                    }}
+                  >
+                    <CardContent className="p-4 cursor-pointer">
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-medium">
+                          {notification.sender?.username?.[0]?.toUpperCase() || 'N'}
+                        </div>
+
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <h4 className="font-semibold">
+                              {notification.title}
+                              {!notification.read && (
+                                <span className="ml-2 bg-blue-500 text-white text-xs rounded-full px-2 py-0.5">Nova</span>
+                              )}
+                            </h4>
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(notification.created_at).toLocaleDateString('pt-BR')}
+                            </span>
+                          </div>
+                          
+                          <p className="text-sm mt-1">
+                            {notification.message}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
             ) : (
@@ -140,12 +176,41 @@ const Notify = () => {
             ) : filteredNotifications && filteredNotifications.length > 0 ? (
               <div>
                 {filteredNotifications.map((notification) => (
-                  <FollowNotification
-                    key={notification.id}
-                    notification={notification}
-                    currentUser={currentUser}
-                    onUpdateRead={markAsRead}
-                  />
+                  <Card 
+                    key={notification.id} 
+                    className={`mb-3 transition-all hover:shadow-md ${!notification.read ? 'border-blue-400 dark:border-blue-500' : ''}`}
+                    onClick={() => {
+                      if (!notification.read) {
+                        markAsRead(notification.id);
+                      }
+                    }}
+                  >
+                    <CardContent className="p-4 cursor-pointer">
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-medium">
+                          {notification.sender?.username?.[0]?.toUpperCase() || 'N'}
+                        </div>
+
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <h4 className="font-semibold">
+                              {notification.title}
+                              {!notification.read && (
+                                <span className="ml-2 bg-blue-500 text-white text-xs rounded-full px-2 py-0.5">Nova</span>
+                              )}
+                            </h4>
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(notification.created_at).toLocaleDateString('pt-BR')}
+                            </span>
+                          </div>
+                          
+                          <p className="text-sm mt-1">
+                            {notification.message}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
             ) : (

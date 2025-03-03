@@ -1,7 +1,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "../integrations/supabase/client";
-import { Notification } from "../types/notifications";
+import { supabase } from "@/integrations/supabase/client";
+import { Notification } from "@/types/notifications";
 import { toast } from "sonner";
 
 export function useNotifications() {
@@ -50,6 +50,12 @@ export function useNotifications() {
       }
 
       console.log("Raw DB data:", data);
+      
+      // If data is empty, return an empty array
+      if (!data || data.length === 0) {
+        console.log("No notifications found for user");
+        return [];
+      }
 
       // Normalize the data to handle both English and Portuguese field names
       const normalizedData = data.map(item => {
@@ -102,7 +108,6 @@ export function useNotifications() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
       queryClient.invalidateQueries({ queryKey: ["unreadNotifications"] });
-      queryClient.invalidateQueries({ queryKey: ["rawNotifications"] });
     },
     onError: () => {
       toast.error("Erro ao marcar notificação como lida");
@@ -130,7 +135,6 @@ export function useNotifications() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
       queryClient.invalidateQueries({ queryKey: ["unreadNotifications"] });
-      queryClient.invalidateQueries({ queryKey: ["rawNotifications"] });
       toast.success("Todas as notificações foram marcadas como lidas");
     },
     onError: () => {

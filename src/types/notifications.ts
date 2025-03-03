@@ -15,9 +15,9 @@ export interface Notification {
   sender_id?: string;
   sender?: {
     id: string;
-    username: string;
-    full_name: string;
-    avatar_url: string;
+    username?: string;
+    full_name?: string;
+    avatar_url?: string;
   };
   // Campos adicionais do banco de dados (nomes em português)
   titulo?: string;
