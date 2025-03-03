@@ -71,7 +71,7 @@ export function ThemeProvider({
       root.classList.add("compact-ui")
     }
 
-    // Update background and text colors based on theme
+    // Atualizar as cores do fundo e texto com base no tema
     if (theme === "light") {
       document.body.style.backgroundColor = "white"
       document.body.style.color = "black"

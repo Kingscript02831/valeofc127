@@ -1,92 +1,79 @@
 
-import React, { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { Card } from './ui/card';
-import { X } from 'lucide-react';
-import { Button } from './ui/button';
+import { useState } from "react";
+import { Input } from "./ui/input";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { supabase } from "@/integrations/supabase/client";
 
 interface LupaUsuarioProps {
   onClose: () => void;
   onSelectUser: (username: string) => void;
 }
 
-const LupaUsuario: React.FC<LupaUsuarioProps> = ({ onClose, onSelectUser }) => {
+const LupaUsuario = ({ onClose, onSelectUser }: LupaUsuarioProps) => {
+  const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    searchUsers();
-  }, []);
+  const handleSearch = async (query: string) => {
+    setSearchQuery(query);
+    if (query.startsWith("@")) {
+      const searchTerm = query.substring(1);
+      if (searchTerm.length > 0) {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("id, username, avatar_url, full_name")
+          .ilike("username", `${searchTerm}%`)
+          .limit(5);
 
-  const searchUsers = async () => {
-    try {
-      setLoading(true);
-      
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, username, full_name, avatar_url')
-        .limit(20);
-        
-      if (error) throw error;
-      
-      setSearchResults(data || []);
-    } catch (error) {
-      console.error('Error searching users:', error);
-    } finally {
-      setLoading(false);
+        if (error) {
+          console.error("Erro na busca:", error);
+          return;
+        }
+
+        setSearchResults(data || []);
+      } else {
+        setSearchResults([]);
+      }
     }
   };
 
-  const handleSelectUser = (username: string) => {
-    onSelectUser(username);
-    onClose();
-  };
-
   return (
-    <Card className="absolute z-50 left-0 right-0 top-full mt-1 max-h-60 overflow-y-auto shadow-lg border border-border p-2">
-      <div className="flex justify-between items-center mb-2 px-2">
-        <h3 className="font-medium text-sm">Marcar pessoa</h3>
-        <Button variant="ghost" size="sm" onClick={onClose} className="h-6 w-6 p-0">
-          <X className="h-4 w-4" />
-        </Button>
-      </div>
-      
-      {loading ? (
-        <div className="p-4 text-center">Carregando...</div>
-      ) : searchResults.length === 0 ? (
-        <div className="p-4 text-center text-muted-foreground">
-          Nenhum usuário encontrado
-        </div>
-      ) : (
-        <div className="space-y-1">
-          {searchResults.map(user => (
+    <div className="absolute top-16 left-0 right-0 bg-background border-b border-border p-4 shadow-lg">
+      <Input
+        type="text"
+        placeholder="Digite @ para buscar usuários..."
+        value={searchQuery}
+        onChange={(e) => handleSearch(e.target.value)}
+        className="max-w-md mx-auto"
+        autoFocus
+      />
+      {searchResults.length > 0 && (
+        <div className="max-w-md mx-auto mt-2 bg-background rounded-lg border border-border">
+          {searchResults.map((user) => (
             <button
               key={user.id}
-              onClick={() => handleSelectUser(user.username)}
-              className="flex items-center gap-2 w-full p-2 hover:bg-muted/50 rounded-md text-left"
+              onClick={() => {
+                onSelectUser(user.username);
+                onClose();
+              }}
+              className="flex items-center space-x-3 w-full p-3 hover:bg-accent/10 transition-colors"
             >
-              <Avatar className="h-7 w-7">
+              <Avatar className="h-8 w-8">
                 <AvatarImage src={user.avatar_url} />
                 <AvatarFallback>
-                  {user.username?.[0]?.toUpperCase() || 'U'}
+                  {user.username?.[0]?.toUpperCase() || "U"}
                 </AvatarFallback>
               </Avatar>
-              <div>
-                <div className="font-medium text-sm leading-none">
-                  {user.username}
-                </div>
-                {user.full_name && (
-                  <div className="text-xs text-muted-foreground mt-1">
-                    {user.full_name}
-                  </div>
-                )}
+              <div className="text-left">
+                <p className="font-medium">{user.username}</p>
+                <p className="text-sm text-muted-foreground">
+                  {user.full_name}
+                </p>
               </div>
             </button>
           ))}
         </div>
       )}
-    </Card>
+    </div>
   );
 };
 
