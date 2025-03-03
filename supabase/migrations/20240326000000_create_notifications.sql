@@ -62,3 +62,28 @@ CREATE TRIGGER create_follow_notification_trigger
 AFTER INSERT ON public.follows
 FOR EACH ROW
 EXECUTE FUNCTION public.create_follow_notification();
+
+-- Let's add a sample notification for testing - this will be removed in production
+DO $$ 
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM public.notifications LIMIT 1
+  ) THEN
+    INSERT INTO public.notifications (
+      user_id,
+      sender_id,
+      title,
+      message,
+      type,
+      read
+    )
+    SELECT 
+      (SELECT id FROM auth.users LIMIT 1),
+      (SELECT id FROM auth.users LIMIT 1 OFFSET 1),
+      'Notificação de teste',
+      'Esta é uma notificação de teste',
+      'test',
+      false
+    WHERE EXISTS (SELECT 1 FROM auth.users LIMIT 1 OFFSET 1);
+  END IF;
+END $$;

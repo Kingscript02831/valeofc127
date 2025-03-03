@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../integrations/supabase/client";
@@ -7,12 +6,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import Navbar from "../components/Navbar";
 import BottomNav from "../components/BottomNav";
 import FollowNotification from "../components/FollowNotification";
+import NotificationTester from "../components/NotificationTester";
 import { formatDate } from "../lib/utils";
 import { toast } from "sonner";
 
 interface Notification {
   id: string;
   user_id: string;
+  sender_id: string;
   title: string;
   message: string;
   created_at: string;
@@ -29,22 +30,32 @@ const Notify = () => {
   const [activeTab, setActiveTab] = useState("all");
   const queryClient = useQueryClient();
 
-  // Fetch current user
   const { data: currentUser } = useQuery({
     queryKey: ["currentUser"],
     queryFn: async () => {
       const { data } = await supabase.auth.getUser();
+      if (data.user) {
+        console.log("Current user:", data.user);
+      }
       return data.user;
     },
   });
 
-  // Fetch notifications
   const { data: notifications, isLoading } = useQuery({
     queryKey: ["notifications", currentUser?.id],
     queryFn: async () => {
       if (!currentUser) return [];
 
-      // Get notifications with sender information for follows
+      console.log("Fetching notifications for user:", currentUser.id);
+
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", currentUser.id)
+        .single();
+        
+      console.log("Current user profile:", profileData, profileError);
+
       const { data, error } = await supabase
         .from("notifications")
         .select(`
@@ -63,12 +74,12 @@ const Notify = () => {
         return [];
       }
 
+      console.log("Notifications fetched:", data);
       return data as Notification[];
     },
     enabled: !!currentUser,
   });
 
-  // Mark notification as read
   const markAsReadMutation = useMutation({
     mutationFn: async (notificationId: string) => {
       const { error } = await supabase
@@ -86,7 +97,6 @@ const Notify = () => {
     },
   });
 
-  // Mark all notifications as read
   const markAllAsReadMutation = useMutation({
     mutationFn: async () => {
       if (!currentUser) return;
@@ -108,14 +118,12 @@ const Notify = () => {
     },
   });
 
-  // Filter notifications based on active tab
   const filteredNotifications = notifications?.filter((notification) => {
     if (activeTab === "all") return true;
     if (activeTab === "unread") return !notification.read;
     return true;
   });
 
-  // Calculate unread count
   const unreadCount = notifications?.filter(
     (notification) => !notification.read
   ).length;
@@ -222,6 +230,8 @@ const Notify = () => {
             )}
           </TabsContent>
         </Tabs>
+        
+        <NotificationTester />
       </div>
       <BottomNav />
     </div>
