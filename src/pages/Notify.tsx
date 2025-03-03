@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bell, CheckCircle, Clock, ChevronRight, Calendar, Newspaper, Trash2, UserCheck, UserPlus } from "lucide-react";
@@ -23,7 +22,6 @@ const Notify = () => {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [followStatuses, setFollowStatuses] = useState<Record<string, boolean>>({});
 
-  // Get current user
   useEffect(() => {
     const fetchCurrentUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -36,7 +34,6 @@ const Notify = () => {
     fetchCurrentUser();
   }, [navigate]);
 
-  // Load notification preference
   useEffect(() => {
     const loadNotificationPreference = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -55,7 +52,6 @@ const Notify = () => {
     loadNotificationPreference();
   }, []);
 
-  // Toggle notifications
   const toggleNotifications = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -88,7 +84,6 @@ const Notify = () => {
     }
   };
 
-  // Check for authentication status
   useEffect(() => {
     const checkSession = async () => {
       try {
@@ -106,13 +101,11 @@ const Notify = () => {
     checkSession();
   }, [navigate]);
 
-  // Fetch notifications
   const { data: notifications = [], refetch } = useQuery({
     queryKey: ["notifications"],
     queryFn: async () => {
       if (!currentUserId) return [];
 
-      // Alteração aqui - sem o erro de uso inadequado do join pela foreign key
       const { data, error } = await supabase
         .from("notifications")
         .select("*")
@@ -124,27 +117,19 @@ const Notify = () => {
         throw error;
       }
       
-      // Para cada notificação, buscar dados do sender se necessário
       const notificationsWithSenders = await Promise.all(
         data.map(async (notification) => {
           if (notification.reference_id) {
-            // If this is a post mention notification
             if (notification.message?.includes('mencionou você em um post')) {
-              // Fetch post info if it's a post mention
-              const { data: postData } = await supabase
-                .from('posts')
-                .select('id')
-                .eq('id', notification.reference_id)
-                .single();
-                
-              if (postData) {
-                return { ...notification, postId: postData.id };
-              }
+              console.log("Found post mention notification with reference_id:", notification.reference_id);
+              
+              return { 
+                ...notification, 
+                postId: notification.reference_id 
+              };
             }
             
-            // Handle user follow notifications
             if (notification.message?.includes('começou a seguir você')) {
-              // Buscar dados do usuário que seguiu
               const { data: senderData } = await supabase
                 .from('profiles')
                 .select('id, username, full_name, avatar_url')
@@ -152,7 +137,6 @@ const Notify = () => {
                 .single();
               
               if (senderData) {
-                // Verificar status de seguidor
                 checkFollowStatus(senderData.id);
                 return { ...notification, sender: senderData };
               }
@@ -167,7 +151,6 @@ const Notify = () => {
     enabled: !isLoading && !!currentUserId,
   });
 
-  // Check if we're following a specific user
   const checkFollowStatus = async (userId: string) => {
     if (!currentUserId) return;
     
@@ -195,7 +178,6 @@ const Notify = () => {
     }
   };
 
-  // Follow a user
   const followMutation = useMutation({
     mutationFn: async (userId: string) => {
       if (!currentUserId) {
@@ -210,7 +192,6 @@ const Notify = () => {
         
       if (error) throw error;
       
-      // Add notification to the other user about being followed back
       await supabase
         .from('notifications')
         .insert([
@@ -239,7 +220,6 @@ const Notify = () => {
     }
   });
 
-  // Unfollow a user
   const unfollowMutation = useMutation({
     mutationFn: async (userId: string) => {
       if (!currentUserId) {
@@ -281,12 +261,10 @@ const Notify = () => {
         throw error;
       }
 
-      // Update local cache
       queryClient.setQueryData<Notification[]>(["notifications"], (old) =>
         old?.filter((n) => n.id !== id)
       );
 
-      // Also invalidate the unreadNotifications query
       queryClient.invalidateQueries({ queryKey: ["unreadNotifications"] });
 
       toast.success("Notificação excluída com sucesso", {
@@ -311,16 +289,13 @@ const Notify = () => {
 
       if (error) throw error;
 
-      // Update local cache
       queryClient.setQueryData<Notification[]>(["notifications"], (old) =>
         old?.map((n) => (n.id === id ? { ...n, read: true } : n))
       );
 
-      // Also invalidate the unreadNotifications query
       queryClient.invalidateQueries({ queryKey: ["unreadNotifications"] });
 
-      // Navigate based on notification type
-      const notification = notifications.find(n => n.id === id);
+      const notification = notifications?.find(n => n.id === id);
       if (notification) {
         console.log("Notification to navigate:", notification);
         
@@ -328,15 +303,20 @@ const Notify = () => {
           navigate(`/eventos`);
         } else if (notification.type === 'news') {
           navigate(`/`);
-        } else if (notification.message?.includes('mencionou você em um post') && notification.reference_id) {
-          // Navigate to post details for post mentions
-          navigate(`/post/${notification.reference_id}`);
-          console.log("Navigating to post:", notification.reference_id);
+        } else if (notification.message?.includes('mencionou você em um post')) {
+          const postId = notification.postId || notification.reference_id;
+          if (postId) {
+            navigate(`/post/${postId}`);
+          } else {
+            console.error("Missing post ID for mention notification");
+            toast.error("Erro: Post não encontrado");
+          }
         } else if (notification.sender) {
           navigate(`/perfil/${notification.sender.username}`);
         }
       }
     } catch (error: any) {
+      console.error("Error marking notification as read:", error);
       toast.error("Erro ao marcar notificação como lida", {
         position: "top-center",
         style: { marginTop: "64px" }
@@ -354,12 +334,10 @@ const Notify = () => {
 
       if (error) throw error;
 
-      // Update local cache
       queryClient.setQueryData<Notification[]>(["notifications"], (old) =>
         old?.map((n) => ({ ...n, read: true }))
       );
 
-      // Also invalidate the unreadNotifications query
       queryClient.invalidateQueries({ queryKey: ["unreadNotifications"] });
 
       toast.success("Todas as notificações foram marcadas como lidas", {
@@ -530,7 +508,7 @@ const Notify = () => {
 
                       <div className="flex items-center justify-between mt-2">
                         <div className="flex items-center gap-2">
-                          {notification.reference_id && (
+                          {(notification.reference_id || notification.postId) && (
                             <Button
                               variant="link"
                               size="sm"
