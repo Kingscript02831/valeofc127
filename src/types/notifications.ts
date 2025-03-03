@@ -18,5 +18,4 @@ export interface Notification {
     full_name: string;
     avatar_url: string;
   };
-  postId?: string; // For post mentions
 }
