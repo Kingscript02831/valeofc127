@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -88,7 +89,7 @@ export default function Followers() {
         .from("follows")
         .select(`
           *,
-          profile:follower_id(*)
+          profile:profiles!follows_follower_id_fkey(*)
         `)
         .eq("following_id", profile.id);
 
@@ -111,7 +112,7 @@ export default function Followers() {
         .from("follows")
         .select(`
           *,
-          profile:following_id(*)
+          profile:profiles!follows_following_id_fkey(*)
         `)
         .eq("follower_id", profile.id);
 
@@ -291,6 +292,8 @@ export default function Followers() {
         </div>
       );
     }
+
+    console.log("Dados dos usuários:", data);
 
     return (
       <div className="divide-y divide-gray-200 dark:divide-gray-800">
