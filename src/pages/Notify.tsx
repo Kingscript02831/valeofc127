@@ -9,22 +9,7 @@ import BottomNav from "../components/BottomNav";
 import FollowNotification from "../components/FollowNotification";
 import { formatDate } from "../lib/utils";
 import { toast } from "sonner";
-
-interface Notification {
-  id: string;
-  user_id: string;
-  sender_id: string;
-  title: string;
-  message: string;
-  created_at: string;
-  read: boolean;
-  type: string;
-  sender?: {
-    username: string;
-    avatar_url: string;
-    id: string;
-  };
-}
+import { Notification } from "../types/notifications";
 
 const Notify = () => {
   const [activeTab, setActiveTab] = useState("all");
@@ -48,19 +33,11 @@ const Notify = () => {
 
       console.log("Fetching notifications for user:", currentUser.id);
 
-      const { data: profileData, error: profileError } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", currentUser.id)
-        .single();
-        
-      console.log("Current user profile:", profileData, profileError);
-
       const { data, error } = await supabase
         .from("notifications")
         .select(`
           *,
-          sender:profiles!notifications_sender_id_fkey(
+          sender:profiles(
             id,
             username,
             avatar_url
@@ -91,6 +68,7 @@ const Notify = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["unreadNotifications"] });
     },
     onError: () => {
       toast.error("Erro ao marcar notificação como lida");
@@ -111,6 +89,7 @@ const Notify = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["unreadNotifications"] });
       toast.success("Todas as notificações foram marcadas como lidas");
     },
     onError: () => {
