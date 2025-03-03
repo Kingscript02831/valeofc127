@@ -22,17 +22,7 @@ const Tags = ({ content }: TagsProps) => {
 
       // Add the text before this match
       if (matchStart > lastIndex) {
-        const textBefore = content.substring(lastIndex, matchStart);
-        // Preserve line breaks by replacing them with <br/> elements
-        const formattedText = textBefore.split('\n').map((line, i, arr) => 
-          i === arr.length - 1 ? line : (
-            <>
-              {line}
-              <br />
-            </>
-          )
-        );
-        parts.push(<span key={`text-${lastIndex}`}>{formattedText}</span>);
+        parts.push(content.substring(lastIndex, matchStart));
       }
 
       // Add the spacing
@@ -64,17 +54,7 @@ const Tags = ({ content }: TagsProps) => {
 
     // Add the remaining text
     if (lastIndex < content.length) {
-      const textAfter = content.substring(lastIndex);
-      // Preserve line breaks here too
-      const formattedText = textAfter.split('\n').map((line, i, arr) => 
-        i === arr.length - 1 ? line : (
-          <>
-            {line}
-            <br />
-          </>
-        )
-      );
-      parts.push(<span key={`text-end`}>{formattedText}</span>);
+      parts.push(content.substring(lastIndex));
     }
 
     return parts;
