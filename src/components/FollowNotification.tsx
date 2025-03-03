@@ -1,94 +1,176 @@
 
-import React from "react";
-import { formatDistanceToNow } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "../integrations/supabase/client";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
-import { UserCheck } from "lucide-react";
-import { cn } from "../lib/utils";
+import { formatDate } from "@/lib/utils";
+import { toast } from "sonner";
+import Tags from "./Tags";
 
 interface FollowNotificationProps {
-  username: string;
-  avatarUrl: string;
-  createdAt: string;
-  userId: string;
-  isFollowing: boolean;
-  onFollowToggle: (userId: string) => void;
-  isProcessing: boolean;
+  notification: {
+    id: string;
+    user_id: string;
+    title: string;
+    message: string;
+    created_at: string;
+    read: boolean;
+    sender?: {
+      username: string;
+      avatar_url: string;
+      id: string;
+    };
+  };
+  currentUser: any;
+  onUpdateRead: (id: string) => void;
 }
 
-const FollowNotification: React.FC<FollowNotificationProps> = ({
-  username,
-  avatarUrl,
-  createdAt,
-  userId,
-  isFollowing,
-  onFollowToggle,
-  isProcessing,
-}) => {
+const FollowNotification = ({ notification, currentUser, onUpdateRead }: FollowNotificationProps) => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [isFollowing, setIsFollowing] = useState(false);
   
-  const timeAgo = formatDistanceToNow(new Date(createdAt), {
-    addSuffix: false,
-    locale: ptBR,
+  // Check if current user is following the sender
+  useState(() => {
+    const checkFollowStatus = async () => {
+      if (!currentUser?.id || !notification.sender?.id) return;
+      
+      const { data } = await supabase
+        .from('follows')
+        .select('*')
+        .eq('follower_id', currentUser.id)
+        .eq('following_id', notification.sender.id)
+        .single();
+      
+      setIsFollowing(!!data);
+    };
+    
+    checkFollowStatus();
   });
-  
-  const goToProfile = () => {
-    navigate(`/perfil/${username}`);
+
+  const followMutation = useMutation({
+    mutationFn: async () => {
+      if (!currentUser?.id || !notification.sender?.id) return;
+      
+      const { error } = await supabase
+        .from('follows')
+        .insert([
+          { follower_id: currentUser.id, following_id: notification.sender.id }
+        ]);
+      
+      if (error) throw error;
+      return true;
+    },
+    onSuccess: () => {
+      setIsFollowing(true);
+      queryClient.invalidateQueries({ queryKey: ['userFollowings'] });
+      toast.success("Seguindo com sucesso!");
+    },
+    onError: () => {
+      toast.error("Erro ao seguir usuário");
+    }
+  });
+
+  const unfollowMutation = useMutation({
+    mutationFn: async () => {
+      if (!currentUser?.id || !notification.sender?.id) return;
+      
+      const { error } = await supabase
+        .from('follows')
+        .delete()
+        .eq('follower_id', currentUser.id)
+        .eq('following_id', notification.sender.id);
+      
+      if (error) throw error;
+      return true;
+    },
+    onSuccess: () => {
+      setIsFollowing(false);
+      queryClient.invalidateQueries({ queryKey: ['userFollowings'] });
+      toast.success("Deixou de seguir com sucesso!");
+    },
+    onError: () => {
+      toast.error("Erro ao deixar de seguir usuário");
+    }
+  });
+
+  const handleFollowAction = () => {
+    if (isFollowing) {
+      unfollowMutation.mutate();
+    } else {
+      followMutation.mutate();
+    }
+  };
+
+  const handleClick = () => {
+    // Mark as read
+    if (!notification.read) {
+      onUpdateRead(notification.id);
+    }
+    
+    // Extract username from message if it's a follow notification
+    if (notification.sender?.username) {
+      navigate(`/perfil/${notification.sender.username}`);
+    }
   };
 
   return (
-    <div className="flex items-center justify-between w-full bg-black text-white p-4 rounded-lg my-2">
-      <div className="flex items-center gap-3 flex-1 min-w-0">
+    <div 
+      className={`p-4 rounded-lg bg-black text-white mb-2 ${!notification.read ? 'border-l-4 border-blue-500' : ''}`}
+    >
+      <div className="flex items-start gap-3">
         <div 
-          className="relative cursor-pointer"
-          onClick={goToProfile}
+          className="relative rounded-full p-[3px] bg-gradient-to-tr from-pink-500 via-purple-500 to-yellow-500"
+          onClick={handleClick}
         >
-          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-pink-500 via-red-500 to-yellow-500 -z-10" 
-               style={{ padding: '2px', transform: 'scale(1.05)' }} />
-          <img 
-            src={avatarUrl || '/placeholder.svg'} 
-            alt={username}
-            className="w-14 h-14 rounded-full border-2 border-black object-cover"
-          />
+          <Avatar className="h-12 w-12 border-2 border-black cursor-pointer">
+            <AvatarImage 
+              src={notification.sender?.avatar_url || undefined} 
+              alt={notification.sender?.username || "Usuário"}
+            />
+            <AvatarFallback className="bg-gray-800 text-white">
+              {notification.sender?.username?.charAt(0).toUpperCase() || "U"}
+            </AvatarFallback>
+          </Avatar>
         </div>
         
-        <div className="flex flex-col">
-          <div className="flex items-end gap-1.5">
-            <span 
-              className="font-bold text-white cursor-pointer hover:underline"
-              onClick={goToProfile}
-            >
-              {username}
-            </span>
-            <span className="text-white/80">
-              começou a seguir você. {timeAgo}
+        <div className="flex-1" onClick={handleClick}>
+          <div className="flex justify-between items-start">
+            <div>
+              <h3 className="font-bold text-white">
+                {notification.sender?.username || "Usuário"}
+              </h3>
+              <p className="text-gray-300 text-sm">
+                <Tags content={notification.message} disableLinks={true} className="text-gray-300" />
+              </p>
+            </div>
+            <span className="text-xs text-gray-400">
+              {formatDate(notification.created_at)}
             </span>
           </div>
         </div>
+        
+        {notification.sender && notification.sender.id !== currentUser?.id && (
+          <Button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleFollowAction();
+            }}
+            variant={isFollowing ? "outline" : "default"}
+            size="sm"
+            className={`rounded-full px-4 ${
+              isFollowing 
+                ? "bg-transparent text-white border-white hover:bg-gray-800" 
+                : "bg-white text-black hover:bg-gray-200"
+            }`}
+            disabled={followMutation.isPending || unfollowMutation.isPending}
+          >
+            {isFollowing ? "Seguindo" : "Seguir"}
+          </Button>
+        )}
       </div>
-      
-      <Button
-        variant="outline"
-        size="sm"
-        className={cn(
-          "rounded-full px-6 py-1 h-10 font-semibold transition-all",
-          isFollowing 
-            ? "bg-transparent text-white border-gray-600 hover:bg-gray-800" 
-            : "bg-white text-black hover:bg-gray-200"
-        )}
-        onClick={() => onFollowToggle(userId)}
-        disabled={isProcessing}
-      >
-        {isFollowing ? (
-          <>
-            <UserCheck className="h-4 w-4 mr-1" />
-            Seguindo
-          </>
-        ) : (
-          "Seguir"
-        )}
-      </Button>
     </div>
   );
 };
