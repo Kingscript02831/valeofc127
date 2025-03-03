@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Toaster } from "./components/ui/toaster";
 import { Toaster as Sonner } from "./components/ui/sonner";
@@ -39,6 +38,7 @@ import Search from "./pages/Search";
 import StoryForm from "./pages/StoryForm";
 import StoryViewer from "./pages/StoryViewer";
 import StoryManager from "./pages/StoryManager";
+import NotifySeguidor from "./pages/NotifySeguidor";
 
 const queryClient = new QueryClient();
 
@@ -87,6 +87,8 @@ const App: React.FC = () => {
                   <Route path="/story/new" element={<StoryForm />} />
                   <Route path="/story/view/:userId" element={<StoryViewer />} />
                   <Route path="/story/manage" element={<StoryManager />} />
+                  
+                  <Route path="/notificacoes/seguidores" element={<NotifySeguidor />} />
                   
                   <Route path="*" element={<NotFound />} />
                 </Routes>
