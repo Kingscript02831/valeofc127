@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../integrations/supabase/client";
@@ -6,7 +7,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import Navbar from "../components/Navbar";
 import BottomNav from "../components/BottomNav";
 import FollowNotification from "../components/FollowNotification";
-import NotificationTester from "../components/NotificationTester";
 import { formatDate } from "../lib/utils";
 import { toast } from "sonner";
 
@@ -230,8 +230,6 @@ const Notify = () => {
             )}
           </TabsContent>
         </Tabs>
-        
-        <NotificationTester />
       </div>
       <BottomNav />
     </div>
