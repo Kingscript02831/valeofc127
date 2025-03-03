@@ -127,18 +127,35 @@ const Notify = () => {
       // Para cada notificação, buscar dados do sender se necessário
       const notificationsWithSenders = await Promise.all(
         data.map(async (notification) => {
-          if (notification.reference_id && notification.message?.includes('começou a seguir você')) {
-            // Buscar dados do usuário que seguiu
-            const { data: senderData } = await supabase
-              .from('profiles')
-              .select('id, username, full_name, avatar_url')
-              .eq('id', notification.reference_id)
-              .single();
+          if (notification.reference_id) {
+            // If this is a post mention notification
+            if (notification.message?.includes('mencionou você em um post')) {
+              // Fetch post info if it's a post mention
+              const { data: postData } = await supabase
+                .from('posts')
+                .select('id')
+                .eq('id', notification.reference_id)
+                .single();
+                
+              if (postData) {
+                return { ...notification, postId: postData.id };
+              }
+            }
             
-            if (senderData) {
-              // Verificar status de seguidor
-              checkFollowStatus(senderData.id);
-              return { ...notification, sender: senderData };
+            // Handle user follow notifications
+            if (notification.message?.includes('começou a seguir você')) {
+              // Buscar dados do usuário que seguiu
+              const { data: senderData } = await supabase
+                .from('profiles')
+                .select('id, username, full_name, avatar_url')
+                .eq('id', notification.reference_id)
+                .single();
+              
+              if (senderData) {
+                // Verificar status de seguidor
+                checkFollowStatus(senderData.id);
+                return { ...notification, sender: senderData };
+              }
             }
           }
           return notification;
@@ -302,13 +319,19 @@ const Notify = () => {
       // Also invalidate the unreadNotifications query
       queryClient.invalidateQueries({ queryKey: ["unreadNotifications"] });
 
-      // Navigate if there's a reference_id
+      // Navigate based on notification type
       const notification = notifications.find(n => n.id === id);
-      if (notification?.reference_id) {
+      if (notification) {
+        console.log("Notification to navigate:", notification);
+        
         if (notification.type === 'event') {
           navigate(`/eventos`);
         } else if (notification.type === 'news') {
           navigate(`/`);
+        } else if (notification.message?.includes('mencionou você em um post') && notification.reference_id) {
+          // Navigate to post details for post mentions
+          navigate(`/post/${notification.reference_id}`);
+          console.log("Navigating to post:", notification.reference_id);
         } else if (notification.sender) {
           navigate(`/perfil/${notification.sender.username}`);
         }
@@ -427,6 +450,7 @@ const Notify = () => {
           ) : (
             notifications.map((notification) => {
               const isFollowNotification = notification.message?.includes('começou a seguir você');
+              const isPostMentionNotification = notification.message?.includes('mencionou você em um post');
               const userId = notification.sender?.id;
               const isFollowing = userId ? followStatuses[userId] : false;
               
@@ -468,7 +492,8 @@ const Notify = () => {
                         >
                           {notification.type === 'event' ? 'Evento' : 
                            notification.type === 'news' ? 'Notícia' : 
-                           isFollowNotification ? 'Seguidor' : 'Sistema'}
+                           isFollowNotification ? 'Seguidor' :
+                           isPostMentionNotification ? 'Menção' : 'Sistema'}
                         </Badge>
                         {notification.publication_category && (
                           <Badge variant="outline" className="text-xs">
@@ -499,11 +524,9 @@ const Notify = () => {
                         </p>
                       )}
                       
-                      {!isFollowNotification && (
-                        <p className="text-xs text-muted-foreground line-clamp-1">
-                          {notification.message}
-                        </p>
-                      )}
+                      <p className="text-xs text-muted-foreground line-clamp-1">
+                        {notification.message}
+                      </p>
 
                       <div className="flex items-center justify-between mt-2">
                         <div className="flex items-center gap-2">

@@ -115,6 +115,7 @@ const PostForm = () => {
 
       if (notifError) throw notifError;
       
+      console.log("Sent notifications to mentioned users:", notifications);
     } catch (error) {
       console.error("Error creating mention notifications:", error);
     }
@@ -166,6 +167,7 @@ const PostForm = () => {
         if (error) throw error;
         
         postId = data.id;
+        console.log("Created post with ID:", postId);
         toast({
           title: "Sucesso",
           description: "Post criado com sucesso!",
