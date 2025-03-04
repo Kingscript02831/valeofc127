@@ -1,11 +1,12 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "../integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { X, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Trash2, Send } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
 import { toast } from "sonner";
 
 interface Story {
@@ -21,6 +22,18 @@ interface Story {
   };
 }
 
+interface StoryComment {
+  id: string;
+  story_id: string;
+  user_id: string;
+  text: string;
+  created_at: string;
+  profiles?: {
+    username: string;
+    avatar_url: string;
+  };
+}
+
 const StoryViewer = () => {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
@@ -29,8 +42,11 @@ const StoryViewer = () => {
   const [progress, setProgress] = useState(0);
   const [hasLiked, setHasLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
+  const [commentText, setCommentText] = useState("");
+  const [showComments, setShowComments] = useState(false);
   const progressInterval = useRef<NodeJS.Timeout | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const commentInputRef = useRef<HTMLInputElement>(null);
 
   // Verificar se o usuário atual é o dono das histórias
   const { data: currentUser } = useQuery({
@@ -77,6 +93,25 @@ const StoryViewer = () => {
     enabled: !!userId,
   });
 
+  // Buscar comentários da história atual
+  const { data: comments, isLoading: isLoadingComments } = useQuery({
+    queryKey: ["storyComments", stories?.[currentStoryIndex]?.id],
+    queryFn: async () => {
+      if (!stories || stories.length === 0 || currentStoryIndex >= stories.length) return [];
+      
+      const { data, error } = await supabase
+        .from("story_comments")
+        .select("*, profiles:user_id(username, avatar_url)")
+        .eq("story_id", stories[currentStoryIndex].id)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      
+      return data as StoryComment[];
+    },
+    enabled: !!stories && stories.length > 0 && currentStoryIndex < stories.length,
+  });
+
   // Verificar se o usuário atual curtiu a história atual
   const checkUserLike = async (storyId: string) => {
     if (!currentUser || !storyId) return;
@@ -120,6 +155,7 @@ const StoryViewer = () => {
     const storyId = stories[currentStoryIndex].id;
     checkUserLike(storyId);
     fetchLikesCount(storyId);
+    setShowComments(false);
   }, [currentStoryIndex, stories, currentUser]);
 
   // Mutação para marcar uma história como visualizada
@@ -188,6 +224,37 @@ const StoryViewer = () => {
     }
   });
 
+  // Mutação para adicionar um comentário
+  const addCommentMutation = useMutation({
+    mutationFn: async ({ storyId, text }: { storyId: string, text: string }) => {
+      if (!currentUser) throw new Error("Usuário não autenticado");
+
+      const { data, error } = await supabase
+        .from("story_comments")
+        .insert({
+          story_id: storyId,
+          user_id: currentUser.id,
+          text: text,
+        })
+        .select("*, profiles:user_id(username, avatar_url)")
+        .single();
+
+      if (error) throw error;
+      
+      return data as StoryComment;
+    },
+    onSuccess: () => {
+      // Limpar o campo de texto e atualizar a lista de comentários
+      setCommentText("");
+      queryClient.invalidateQueries({ queryKey: ["storyComments", stories?.[currentStoryIndex]?.id] });
+      toast.success("Comentário adicionado!");
+    },
+    onError: (error) => {
+      console.error("Erro ao adicionar comentário:", error);
+      toast.error("Erro ao adicionar comentário");
+    }
+  });
+
   // Mutação para excluir uma história
   const deleteStoryMutation = useMutation({
     mutationFn: async (storyId: string) => {
@@ -235,6 +302,11 @@ const StoryViewer = () => {
       return;
     }
 
+    // Parar o timer se os comentários estiverem abertos
+    if (showComments) {
+      return;
+    }
+
     // Configurar um temporizador para imagens (5 segundos)
     const duration = 5000; // 5 segundos por história
     const interval = 50; // Atualizar a cada 50ms para suavidade
@@ -258,7 +330,36 @@ const StoryViewer = () => {
         clearInterval(progressInterval.current);
       }
     };
-  }, [currentStoryIndex, isLoading, stories]);
+  }, [currentStoryIndex, isLoading, stories, showComments]);
+
+  // Pausar o temporizador quando os comentários estão abertos
+  useEffect(() => {
+    if (showComments && progressInterval.current) {
+      clearInterval(progressInterval.current);
+    } else if (!showComments && stories && stories.length > 0 && !isLoading) {
+      // Reiniciar o temporizador se os comentários forem fechados
+      const duration = 5000;
+      const interval = 50;
+      const step = (interval / duration) * 100;
+      
+      progressInterval.current = setInterval(() => {
+        setProgress((prev) => {
+          const newProgress = prev + step;
+          if (newProgress >= 100) {
+            goToNextStory();
+            return 0;
+          }
+          return newProgress;
+        });
+      }, interval);
+    }
+
+    return () => {
+      if (progressInterval.current) {
+        clearInterval(progressInterval.current);
+      }
+    };
+  }, [showComments]);
 
   // Manipular eventos de vídeo
   const handleVideoProgress = () => {
@@ -306,6 +407,29 @@ const StoryViewer = () => {
     if (!stories || !currentUser) return;
     
     toggleLikeMutation.mutate(stories[currentStoryIndex].id);
+  };
+
+  // Manipular envio de comentário
+  const handleAddComment = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!commentText.trim() || !stories || !currentUser) return;
+    
+    addCommentMutation.mutate({
+      storyId: stories[currentStoryIndex].id,
+      text: commentText.trim()
+    });
+  };
+
+  // Alternar exibição de comentários
+  const toggleComments = () => {
+    setShowComments(!showComments);
+    
+    // Focar no input de comentário quando os comentários são exibidos
+    if (!showComments && commentInputRef.current) {
+      setTimeout(() => {
+        commentInputRef.current?.focus();
+      }, 300);
+    }
   };
 
   // Se estiver carregando ou não houver histórias, mostrar um estado de carregamento
@@ -428,35 +552,127 @@ const StoryViewer = () => {
         </Button>
       </div>
 
-      {/* Botão de curtir e contador */}
-      {!isOwner && currentUser && (
-        <div className="absolute bottom-20 left-4 z-10 flex items-center gap-2">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="bg-transparent hover:bg-transparent p-0"
-            onClick={handleLikeStory}
-          >
-            <img 
-              src={hasLiked ? "/amei1.png" : "/curtidas.png"} 
-              alt={hasLiked ? "Amei" : "Curtir"} 
-              className="h-8 w-8 animate-in fade-in-50 duration-300"
+      {/* Área de comentários */}
+      <div 
+        className={`absolute bottom-0 left-0 right-0 bg-black/80 backdrop-blur-md rounded-t-3xl transition-all duration-300 ease-in-out overflow-hidden ${
+          showComments ? 'h-[60vh]' : 'h-0'
+        }`}
+      >
+        <div className="p-4 h-full flex flex-col">
+          <div className="flex items-center justify-center mb-4">
+            <div className="w-12 h-1 bg-gray-700 rounded-full"></div>
+          </div>
+          
+          <h3 className="text-white font-semibold mb-4">Comentários</h3>
+          
+          <div className="flex-1 overflow-y-auto">
+            {isLoadingComments ? (
+              <div className="flex justify-center py-4">
+                <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-white"></div>
+              </div>
+            ) : comments && comments.length > 0 ? (
+              <div className="space-y-4">
+                {comments.map((comment) => (
+                  <div key={comment.id} className="flex items-start gap-3">
+                    <Avatar className="h-8 w-8 shrink-0">
+                      <AvatarImage 
+                        src={comment.profiles?.avatar_url || undefined} 
+                        alt={comment.profiles?.username || "Usuário"} 
+                      />
+                      <AvatarFallback>
+                        {comment.profiles?.username?.charAt(0).toUpperCase() || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="bg-gray-800 rounded-2xl px-4 py-3 flex-1">
+                      <p className="text-white text-sm font-medium">
+                        {comment.profiles?.username || "Usuário"}
+                      </p>
+                      <p className="text-white text-sm mt-1">{comment.text}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center text-gray-400 py-8">
+                Sem comentários ainda
+              </div>
+            )}
+          </div>
+          
+          <form onSubmit={handleAddComment} className="mt-4 flex items-center gap-2">
+            <Avatar className="h-8 w-8 shrink-0">
+              {currentUser && (
+                <>
+                  <AvatarImage 
+                    src={currentUser.user_metadata?.avatar_url || undefined} 
+                    alt={currentUser.user_metadata?.full_name || "Você"} 
+                  />
+                  <AvatarFallback>
+                    {currentUser.user_metadata?.full_name?.charAt(0).toUpperCase() || "V"}
+                  </AvatarFallback>
+                </>
+              )}
+            </Avatar>
+            <Input
+              ref={commentInputRef}
+              type="text"
+              placeholder="Adicione um comentário..."
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              className="flex-1 bg-gray-700 border-none text-white rounded-full placeholder:text-gray-400"
             />
-          </Button>
-          {likesCount > 0 && (
-            <div className="flex items-center gap-2 bg-black/30 backdrop-blur-sm px-3 py-1.5 rounded-full">
-              <img 
-                src="/curtidas.png" 
-                alt="Curtidas" 
-                className="h-4 w-4"
-              />
-              <span className="text-white font-medium text-sm">
-                {likesCount}
-              </span>
-            </div>
-          )}
+            <Button 
+              type="submit" 
+              size="icon" 
+              variant="ghost" 
+              className="text-white"
+              disabled={!commentText.trim()}
+            >
+              <Send className="h-5 w-5" />
+            </Button>
+          </form>
         </div>
-      )}
+      </div>
+
+      {/* Barra de ações inferior */}
+      <div className="absolute bottom-0 left-0 right-0 z-10 bg-black/40 backdrop-blur-sm">
+        <div className="px-4 py-3 flex items-center">
+          <div className="flex-1">
+            <form onSubmit={handleAddComment} className="flex items-center">
+              <Input
+                type="text"
+                placeholder="Enviar mensagem"
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                className="bg-gray-800/60 border-0 text-white rounded-full placeholder:text-gray-400"
+                onClick={() => setShowComments(true)}
+              />
+            </form>
+          </div>
+          <div className="flex items-center gap-4 ml-4">
+            <button 
+              className="flex items-center justify-center"
+              onClick={handleLikeStory}
+            >
+              <img 
+                src={hasLiked ? "/amei1.png" : "/curtidas.png"} 
+                alt={hasLiked ? "Amei" : "Curtir"} 
+                className="h-7 w-7"
+              />
+            </button>
+            <button 
+              className="flex items-center justify-center"
+              onClick={toggleComments}
+            >
+              <img 
+                src="/comentario.png" 
+                alt="Comentar" 
+                className="h-7 w-7"
+              />
+            </button>
+          </div>
+        </div>
+      </div>
 
       {/* Botão de excluir para o proprietário */}
       {isOwner && (
