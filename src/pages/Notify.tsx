@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bell, CheckCircle, Clock, ChevronRight, Calendar, Newspaper, Trash2, UserCheck, UserPlus } from "lucide-react";
@@ -111,7 +112,6 @@ const Notify = () => {
     queryFn: async () => {
       if (!currentUserId) return [];
 
-      // Alteração aqui - sem o erro de uso inadequado do join pela foreign key
       const { data, error } = await supabase
         .from("notifications")
         .select("*")
@@ -126,7 +126,7 @@ const Notify = () => {
       // Para cada notificação, buscar dados do sender se necessário
       const notificationsWithSenders = await Promise.all(
         data.map(async (notification) => {
-          if (notification.reference_id && notification.message?.includes('começou a seguir você')) {
+          if (notification.reference_id && notification.type === 'system' && notification.message?.includes('começou a seguir você')) {
             // Buscar dados do usuário que seguiu
             const { data: senderData } = await supabase
               .from('profiles')
@@ -192,6 +192,15 @@ const Notify = () => {
         
       if (error) throw error;
       
+      // Get current user's username for the notification
+      const { data: currentUserProfile } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('id', currentUserId)
+        .single();
+      
+      const username = currentUserProfile?.username || currentUserId;
+      
       // Add notification to the other user about being followed back
       await supabase
         .from('notifications')
@@ -199,7 +208,7 @@ const Notify = () => {
           {
             user_id: userId,
             title: 'Novo seguidor',
-            message: `@${currentUserId} começou a seguir você.`,
+            message: `@${username} começou a seguir você.`,
             type: 'system',
             reference_id: currentUserId
           }
@@ -308,7 +317,7 @@ const Notify = () => {
           navigate(`/eventos`);
         } else if (notification.type === 'news') {
           navigate(`/`);
-        } else if (notification.sender) {
+        } else if (notification.sender?.username) {
           navigate(`/perfil/${notification.sender.username}`);
         }
       }
@@ -446,7 +455,7 @@ const Notify = () => {
                       <Avatar className="h-10 w-10 border-2 border-primary/10">
                         <AvatarImage src={notification.sender.avatar_url} alt={notification.sender.username || 'User'} />
                         <AvatarFallback>
-                          {notification.sender.full_name?.charAt(0).toUpperCase() || 'U'}
+                          {notification.sender.full_name?.charAt(0).toUpperCase() || notification.sender.username?.charAt(0).toUpperCase() || 'U'}
                         </AvatarFallback>
                       </Avatar>
                     ) : (
@@ -479,18 +488,26 @@ const Notify = () => {
                         )}
                       </div>
 
-                      <h3 className={cn(
-                        "text-sm font-medium mb-0.5",
-                        !notification.read && "text-primary"
-                      )}>
-                        {notification.sender?.username ? (
-                          <span className="font-semibold">@{notification.sender.username}</span>
-                        ) : ''}
-                        {' '}
-                        {isFollowNotification ? 
-                          'começou a seguir você.' : 
-                          notification.publication_title || notification.title}
-                      </h3>
+                      {isFollowNotification ? (
+                        <h3 className={cn(
+                          "text-sm font-medium mb-0.5",
+                          !notification.read && "text-primary"
+                        )}>
+                          {notification.sender?.username ? (
+                            <>
+                              <span className="font-semibold">@{notification.sender.username}</span>
+                              {' começou a seguir você.'}
+                            </>
+                          ) : notification.message}
+                        </h3>
+                      ) : (
+                        <h3 className={cn(
+                          "text-sm font-medium mb-0.5",
+                          !notification.read && "text-primary"
+                        )}>
+                          {notification.publication_title || notification.title}
+                        </h3>
+                      )}
                       
                       {notification.publication_description && (
                         <p className="text-xs text-muted-foreground mb-1 line-clamp-1">
@@ -498,7 +515,7 @@ const Notify = () => {
                         </p>
                       )}
                       
-                      {!isFollowNotification && (
+                      {!isFollowNotification && notification.message && (
                         <p className="text-xs text-muted-foreground line-clamp-1">
                           {notification.message}
                         </p>
