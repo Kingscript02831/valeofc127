@@ -81,6 +81,60 @@ const BottomNav = () => {
       : "transparent",
   });
 
+  const handleNotificationClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!session) {
+      toast.error("Você precisa fazer login para acessar esta área");
+      navigate("/login");
+      return;
+    }
+    
+    // Query for latest notification to determine where to navigate
+    const checkLatestNotification = async () => {
+      const { data: notifications, error } = await supabase
+        .from("notifications")
+        .select("*, sender:reference_id(id, username)")
+        .eq("user_id", session.user.id)
+        .eq("read", false)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      
+      if (error) {
+        console.error("Error fetching notifications:", error);
+        navigate("/notify");
+        return;
+      }
+      
+      // If there's a notification with a follow message and sender username
+      if (notifications && notifications.length > 0) {
+        const notification = notifications[0];
+        if (
+          notification.type === 'system' && 
+          notification.message?.includes('começou a seguir você') && 
+          notification.sender?.username
+        ) {
+          // Navigate to follower's profile
+          navigate(`/perfil/${notification.sender.username}`);
+          
+          // Mark notification as read
+          await supabase
+            .from("notifications")
+            .update({ read: true })
+            .eq("id", notification.id);
+            
+          // Invalidate queries to update UI
+          queryClient.invalidateQueries({ queryKey: ["unreadNotifications"] });
+          return;
+        }
+      }
+      
+      // Default to notifications page
+      navigate("/notify");
+    };
+    
+    checkLatestNotification();
+  };
+
   return (
     <nav 
       className="fixed bottom-0 left-0 right-0 shadow-lg transition-all duration-300 md:hidden"
@@ -141,7 +195,7 @@ const BottomNav = () => {
           </DropdownMenu>
 
           <button
-            onClick={(e) => handleNavigation("/notify", e)}
+            onClick={handleNotificationClick}
             className="flex items-center p-2 rounded-xl transition-all duration-300 hover:scale-105 relative"
             style={getItemStyle(location.pathname === "/notify")}
           >

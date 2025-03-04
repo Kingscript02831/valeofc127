@@ -3,7 +3,7 @@ export interface Notification {
   id: string;
   title: string;
   message: string;
-  type: 'news' | 'event' | 'system';
+  type: 'news' | 'event' | 'system' | 'follow';
   reference_id?: string;
   read: boolean;
   created_at: string;
@@ -15,7 +15,7 @@ export interface Notification {
   sender?: {
     id: string;
     username: string;
-    full_name: string;
-    avatar_url: string;
+    full_name?: string;
+    avatar_url?: string;
   };
 }
