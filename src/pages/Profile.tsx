@@ -466,19 +466,17 @@ export default function Profile() {
                       Website
                     </Button>
                   )}
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-1 w-fit"
+                    onClick={() => navigate('/seguidores')}
+                  >
+                    <Users className="h-4 w-4" />
+                    Ver Contatos
+                  </Button>
                 </div>
-              </div>
-
-              <div className="flex items-center mt-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-1 w-fit"
-                  onClick={() => navigate('/seguidores')}
-                >
-                  <Users className="h-4 w-4" />
-                  Ver Contatos
-                </Button>
               </div>
 
               <div className="mt-6">
