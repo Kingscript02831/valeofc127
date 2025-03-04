@@ -452,6 +452,7 @@ export default function Followers() {
     if (username) {
       navigate(`/seguidores/${username}/${value}`, { replace: true });
     } else {
+      // This was causing the issue - we need to maintain the routing structure consistency
       navigate(`/seguidores/${value}`, { replace: true });
     }
   };
