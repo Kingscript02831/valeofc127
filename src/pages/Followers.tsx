@@ -21,17 +21,13 @@ interface FollowData {
 }
 
 export default function Followers() {
-  // Get the tab parameter, defaulting to "followers" if not present
-  const { username, tab } = useParams<{ username?: string; tab?: string }>();
+  const { username, tab = "followers" } = useParams();
   const navigate = useNavigate();
   const { theme } = useTheme();
   const queryClient = useQueryClient();
-  
-  // Initialize activeTab based on the tab parameter, ensuring it's either "followers" or "following"
   const [activeTab, setActiveTab] = useState<"followers" | "following">(
     tab === "following" ? "following" : "followers"
   );
-  
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isFollowingMap, setIsFollowingMap] = useState<Record<string, boolean>>({});
 
@@ -47,13 +43,6 @@ export default function Followers() {
     };
     fetchCurrentUser();
   }, []);
-
-  // Make sure the activeTab is updated when the tab parameter changes
-  useEffect(() => {
-    if (tab) {
-      setActiveTab(tab === "following" ? "following" : "followers");
-    }
-  }, [tab]);
 
   const { data: profile, isLoading: isProfileLoading } = useQuery({
     queryKey: ["userProfile", username],
@@ -453,8 +442,6 @@ export default function Followers() {
 
   const handleTabChange = (value: string) => {
     setActiveTab(value as "followers" | "following");
-    
-    // Update the URL to reflect the tab change
     if (username) {
       navigate(`/seguidores/${username}/${value}`, { replace: true });
     } else {

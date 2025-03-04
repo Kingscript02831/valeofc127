@@ -15,10 +15,4 @@ export interface Profile {
   instagram_url?: string | null;
   relationship_status?: string | null;
   birth_date?: string | null;
-  phone?: string | null;
-  street?: string | null;
-  house_number?: string | null;
-  postal_code?: string | null;
-  location_id?: string | null;
-  basic_info_updated_at?: string | null;
 }
