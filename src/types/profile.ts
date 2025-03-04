@@ -15,4 +15,6 @@ export interface Profile {
   instagram_url?: string | null;
   relationship_status?: string | null;
   birth_date?: string | null;
+  has_active_stories?: boolean;
+  has_viewed_stories?: boolean;
 }

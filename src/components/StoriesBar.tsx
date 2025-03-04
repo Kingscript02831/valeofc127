@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -125,16 +126,13 @@ const StoriesBar = () => {
     }
   };
 
-  // Se não tiver usuário atual nem usuários seguidos com stories, não mostra nada
-  if ((!currentUser || !followingWithStories || followingWithStories.length === 0) && !isLoading) {
-    return null;
-  }
-
+  // Sempre mostrar a barra de stories, mesmo que não haja stories para exibir
+  // Removemos a condição que fazia a barra desaparecer
   return (
     <div className="bg-black w-full py-4">
       <div className="overflow-x-auto scrollbar-hide">
         <div className="flex space-x-4 px-4">
-          {/* Círculo do usuário atual com botão de adicionar */}
+          {/* Círculo do usuário atual com botão de adicionar - sempre mostrado */}
           {currentUser && (
             <div 
               className="flex flex-col items-center cursor-pointer"
@@ -179,7 +177,7 @@ const StoriesBar = () => {
             </div>
           ))}
 
-          {/* Placeholder para carregamento */}
+          {/* Exibe placeholders apenas durante o carregamento */}
           {isLoading && (
             <>
               {[1, 2, 3].map((i) => (
@@ -189,6 +187,13 @@ const StoriesBar = () => {
                 </div>
               ))}
             </>
+          )}
+          
+          {/* Quando não há stories e não está carregando, mostra uma mensagem ou um visual alternativo */}
+          {!isLoading && (!followingWithStories || followingWithStories.length === 0) && !currentUser && (
+            <div className="flex items-center justify-center w-full py-2">
+              <p className="text-xs text-gray-400">Entre para ver stories</p>
+            </div>
           )}
         </div>
       </div>

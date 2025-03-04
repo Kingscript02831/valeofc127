@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { supabase } from "../integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { Plus } from "lucide-react";
 
 interface StoryCircleProps {
   userId: string;
@@ -11,9 +12,10 @@ interface StoryCircleProps {
   avatarUrl: string | null;
   isCurrentUser?: boolean;
   hasStories?: boolean;
+  onNoStories?: () => void;
 }
 
-const StoryCircle = ({ userId, username, avatarUrl, isCurrentUser = false, hasStories: propHasStories }: StoryCircleProps) => {
+const StoryCircle = ({ userId, username, avatarUrl, isCurrentUser = false, hasStories: propHasStories, onNoStories }: StoryCircleProps) => {
   const navigate = useNavigate();
   const [hasUnviewedStories, setHasUnviewedStories] = useState(false);
 
@@ -32,6 +34,8 @@ const StoryCircle = ({ userId, username, avatarUrl, isCurrentUser = false, hasSt
       
       if (!stories || stories.length === 0) {
         setHasUnviewedStories(false);
+        // Notificar componente pai que não há stories, se necessário
+        if (onNoStories) onNoStories();
         return { hasStories: propHasStories || false, stories: [] };
       }
       
@@ -93,7 +97,9 @@ const StoryCircle = ({ userId, username, avatarUrl, isCurrentUser = false, hasSt
           <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-yellow-500 via-orange-500 via-red-500 via-purple-500 to-blue-500"></div>
         ) : storiesData?.hasStories ? (
           <div className="absolute inset-0 rounded-full bg-gray-300 dark:bg-gray-700"></div>
-        ) : null}
+        ) : (
+          <div className="absolute inset-0 rounded-full bg-gray-200 dark:bg-gray-800"></div>
+        )}
 
         {/* White inner circle - smaller gap for Instagram look */}
         <div className="absolute inset-[2px] bg-white dark:bg-black rounded-full"></div>
@@ -112,7 +118,7 @@ const StoryCircle = ({ userId, username, avatarUrl, isCurrentUser = false, hasSt
         {/* "+" button for current user - Instagram style */}
         {isCurrentUser && (
           <div className="absolute bottom-0 right-0 bg-blue-500 rounded-full border-2 border-white dark:border-black w-4 h-4 flex items-center justify-center">
-            <span className="text-white text-[10px] font-bold">+</span>
+            <Plus className="h-2 w-2 text-white" />
           </div>
         )}
       </div>
