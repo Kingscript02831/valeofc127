@@ -926,14 +926,20 @@ const PostDetails = () => {
         </div>
       </main>
       
-      <div className="fixed bottom-16 left-0 right-0 bg-background border-t border-border/40 p-3 z-10">
+      <div className="fixed bottom-16 left-0 right-0 bg-[#1A1F2C] border-t border-border/40 p-3 z-10">
         <form onSubmit={handleSubmitComment} className="flex items-center gap-2 max-w-xl mx-auto">
+          <button
+            type="button"
+            className="p-2 text-gray-400 hover:text-gray-300 transition-colors"
+          >
+            <Smile className="h-6 w-6" />
+          </button>
           <Textarea
             ref={commentInputRef}
             placeholder={replyTo ? `Respondendo para @${replyToUsername}...` : "Escreva um comentário..."}
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
-            className="min-h-[50px] max-h-[100px] flex-1 bg-gray-100 dark:bg-gray-800 border-none resize-none py-2"
+            className="min-h-[50px] max-h-[100px] flex-1 bg-[#403E43] border-none resize-none py-2 text-white placeholder:text-gray-400"
           />
           {replyTo && (
             <Button
@@ -944,13 +950,17 @@ const PostDetails = () => {
                 setReplyTo(null);
                 setReplyToUsername(null);
               }}
-              className="h-8 w-8"
+              className="h-8 w-8 text-gray-400 hover:text-gray-300"
             >
               ×
             </Button>
           )}
-          <Button type="submit" size="icon" className="h-10 w-10">
-            <Send size={18} />
+          <Button 
+            type="submit" 
+            size="icon" 
+            className="h-10 w-10 bg-[#0084FF] hover:bg-blue-600 transition-colors"
+          >
+            <Send size={18} className="text-white" />
           </Button>
         </form>
       </div>
