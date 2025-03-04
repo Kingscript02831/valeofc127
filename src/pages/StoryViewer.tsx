@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { supabase } from "../integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { X, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
@@ -432,21 +432,28 @@ const StoryViewer = () => {
       {!isOwner && currentUser && (
         <div className="absolute bottom-20 left-4 z-10 flex items-center gap-2">
           <Button 
-            variant="outline" 
+            variant="ghost" 
             size="icon" 
-            className={`${hasLiked ? 'bg-black/30 backdrop-blur-sm border-white/30' : 'bg-black/30 backdrop-blur-sm border-white/30'}`}
+            className="bg-transparent hover:bg-transparent p-0"
             onClick={handleLikeStory}
           >
             <img 
               src={hasLiked ? "/amei1.png" : "/curtidas.png"} 
               alt={hasLiked ? "Amei" : "Curtir"} 
-              className="h-5 w-5"
+              className="h-8 w-8 animate-in fade-in-50 duration-300"
             />
           </Button>
           {likesCount > 0 && (
-            <span className="text-white font-medium bg-black/30 backdrop-blur-sm px-2 py-1 rounded-full text-sm">
-              {likesCount}
-            </span>
+            <div className="flex items-center gap-2 bg-black/30 backdrop-blur-sm px-3 py-1.5 rounded-full">
+              <img 
+                src="/curtidas.png" 
+                alt="Curtidas" 
+                className="h-4 w-4"
+              />
+              <span className="text-white font-medium text-sm">
+                {likesCount}
+              </span>
+            </div>
           )}
         </div>
       )}
