@@ -111,6 +111,7 @@ const Notify = () => {
     queryFn: async () => {
       if (!currentUserId) return [];
 
+      // Alteração aqui - sem o erro de uso inadequado do join pela foreign key
       const { data, error } = await supabase
         .from("notifications")
         .select("*")
