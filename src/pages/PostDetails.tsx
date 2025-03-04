@@ -808,35 +808,6 @@ const PostDetails = () => {
             </div>
           </Card>
 
-          <Card className="p-4 bg-white dark:bg-card border-none shadow-sm">
-            <form onSubmit={handleSubmitComment} className="space-y-4">
-              <Textarea
-                ref={commentInputRef}
-                placeholder={replyTo ? `Respondendo para @${replyToUsername}...` : "Escreva um comentário..."}
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                className="min-h-[50px] max-h-[100px] flex-1 bg-gray-100 dark:bg-gray-800 border-none resize-none py-2"
-              />
-              {replyTo && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => {
-                    setReplyTo(null);
-                    setReplyToUsername(null);
-                  }}
-                  className="h-8 w-8"
-                >
-                  ×
-                </Button>
-              )}
-              <Button type="submit" size="icon" className="h-10 w-10">
-                <Send size={18} />
-              </Button>
-            </form>
-          </Card>
-
           <div className="space-y-4">
             {comments?.map((comment) => (
               <Card key={comment.id} className="p-4 bg-white dark:bg-card border-none shadow-sm">
