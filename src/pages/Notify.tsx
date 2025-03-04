@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bell, CheckCircle, Clock, ChevronRight, Calendar, Newspaper, Trash2, UserCheck, UserPlus } from "lucide-react";
@@ -112,7 +111,6 @@ const Notify = () => {
     queryFn: async () => {
       if (!currentUserId) return [];
 
-      // Alteração aqui - sem o erro de uso inadequado do join pela foreign key
       const { data, error } = await supabase
         .from("notifications")
         .select("*")
