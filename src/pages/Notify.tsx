@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Bell, CheckCircle, Clock, ChevronRight, Calendar, Newspaper, Trash2, UserCheck, UserPlus } from "lucide-react";
@@ -23,7 +22,6 @@ const Notify = () => {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [followStatuses, setFollowStatuses] = useState<Record<string, boolean>>({});
 
-  // Get current user
   useEffect(() => {
     const fetchCurrentUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -36,7 +34,6 @@ const Notify = () => {
     fetchCurrentUser();
   }, [navigate]);
 
-  // Load notification preference
   useEffect(() => {
     const loadNotificationPreference = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -55,7 +52,6 @@ const Notify = () => {
     loadNotificationPreference();
   }, []);
 
-  // Toggle notifications
   const toggleNotifications = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -88,7 +84,6 @@ const Notify = () => {
     }
   };
 
-  // Check for authentication status
   useEffect(() => {
     const checkSession = async () => {
       try {
@@ -106,7 +101,6 @@ const Notify = () => {
     checkSession();
   }, [navigate]);
 
-  // Fetch notifications
   const { data: notifications = [], refetch } = useQuery({
     queryKey: ["notifications"],
     queryFn: async () => {
@@ -123,11 +117,9 @@ const Notify = () => {
         throw error;
       }
       
-      // Para cada notificação, buscar dados do sender se necessário
       const notificationsWithSenders = await Promise.all(
         data.map(async (notification) => {
           if (notification.reference_id && notification.type === 'system' && notification.message?.includes('começou a seguir você')) {
-            // Buscar dados do usuário que seguiu
             const { data: senderData } = await supabase
               .from('profiles')
               .select('id, username, full_name, avatar_url')
@@ -135,9 +127,17 @@ const Notify = () => {
               .single();
             
             if (senderData) {
-              // Verificar status de seguidor
+              let formattedMessage = notification.message;
+              if (senderData.username) {
+                formattedMessage = `@${senderData.username} começou a seguir você.`;
+              }
+              
               checkFollowStatus(senderData.id);
-              return { ...notification, sender: senderData };
+              return { 
+                ...notification, 
+                sender: senderData,
+                message: formattedMessage 
+              };
             }
           }
           return notification;
@@ -149,7 +149,6 @@ const Notify = () => {
     enabled: !isLoading && !!currentUserId,
   });
 
-  // Check if we're following a specific user
   const checkFollowStatus = async (userId: string) => {
     if (!currentUserId) return;
     
@@ -177,7 +176,6 @@ const Notify = () => {
     }
   };
 
-  // Follow a user
   const followMutation = useMutation({
     mutationFn: async (userId: string) => {
       if (!currentUserId) {
@@ -192,7 +190,6 @@ const Notify = () => {
         
       if (error) throw error;
       
-      // Get current user's username for the notification
       const { data: currentUserProfile } = await supabase
         .from('profiles')
         .select('username')
@@ -201,7 +198,6 @@ const Notify = () => {
       
       const username = currentUserProfile?.username || currentUserId;
       
-      // Add notification to the other user about being followed back
       await supabase
         .from('notifications')
         .insert([
@@ -230,7 +226,6 @@ const Notify = () => {
     }
   });
 
-  // Unfollow a user
   const unfollowMutation = useMutation({
     mutationFn: async (userId: string) => {
       if (!currentUserId) {
@@ -272,12 +267,10 @@ const Notify = () => {
         throw error;
       }
 
-      // Update local cache
       queryClient.setQueryData<Notification[]>(["notifications"], (old) =>
         old?.filter((n) => n.id !== id)
       );
 
-      // Also invalidate the unreadNotifications query
       queryClient.invalidateQueries({ queryKey: ["unreadNotifications"] });
 
       toast.success("Notificação excluída com sucesso", {
@@ -302,15 +295,12 @@ const Notify = () => {
 
       if (error) throw error;
 
-      // Update local cache
       queryClient.setQueryData<Notification[]>(["notifications"], (old) =>
         old?.map((n) => (n.id === id ? { ...n, read: true } : n))
       );
 
-      // Also invalidate the unreadNotifications query
       queryClient.invalidateQueries({ queryKey: ["unreadNotifications"] });
 
-      // Navigate if there's a reference_id
       const notification = notifications.find(n => n.id === id);
       if (notification?.reference_id) {
         if (notification.type === 'event') {
@@ -339,12 +329,10 @@ const Notify = () => {
 
       if (error) throw error;
 
-      // Update local cache
       queryClient.setQueryData<Notification[]>(["notifications"], (old) =>
         old?.map((n) => ({ ...n, read: true }))
       );
 
-      // Also invalidate the unreadNotifications query
       queryClient.invalidateQueries({ queryKey: ["unreadNotifications"] });
 
       toast.success("Todas as notificações foram marcadas como lidas", {
@@ -493,12 +481,7 @@ const Notify = () => {
                           "text-sm font-medium mb-0.5",
                           !notification.read && "text-primary"
                         )}>
-                          {notification.sender?.username ? (
-                            <>
-                              <span className="font-semibold">@{notification.sender.username}</span>
-                              {' começou a seguir você.'}
-                            </>
-                          ) : notification.message}
+                          {notification.message}
                         </h3>
                       ) : (
                         <h3 className={cn(
