@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -372,7 +373,7 @@ export default function UserProfile() {
                   <p className="text-sm text-gray-500">Seguidores</p>
                 </div>
               </Link>
-              <Link to={`/seguindo/${profile.username}`} className="cursor-pointer">
+              <Link to={`/seguidores/${profile.username}/following`} className="cursor-pointer">
                 <div>
                   <p className="font-semibold">{followingCount || 0}</p>
                   <p className="text-sm text-gray-500">Seguindo</p>
@@ -495,10 +496,10 @@ export default function UserProfile() {
                     variant="outline"
                     size="sm"
                     className="flex items-center gap-1 w-fit"
-                    onClick={() => navigate(`/seguindo/${profile.username}`)}
+                    onClick={() => navigate(`/seguidores/${profile.username}`)}
                   >
                     <Users className="h-4 w-4" />
-                    Ver Quem Segue
+                    Ver Contatos
                   </Button>
                 </div>
               </div>
