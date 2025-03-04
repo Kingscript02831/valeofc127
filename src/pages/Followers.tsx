@@ -17,7 +17,7 @@ interface FollowData {
   follower_id: string;
   following_id: string;
   created_at: string;
-  profiles: Profile; // This matches the profile of the follower or following
+  profile: Profile; // This will store the follower or following profile
 }
 
 export default function Followers() {
@@ -99,6 +99,48 @@ export default function Followers() {
     },
   });
 
+  // Get followers count - separate query to ensure it's always current
+  const { data: followersCount, refetch: refetchFollowersCount } = useQuery({
+    queryKey: ["followersCount", profile?.id],
+    queryFn: async () => {
+      if (!profile?.id) return 0;
+      
+      const { count, error } = await supabase
+        .from('follows')
+        .select('id', { count: 'exact', head: true })
+        .eq('following_id', profile.id);
+      
+      if (error) {
+        console.error("Error fetching followers count:", error);
+        return 0;
+      }
+      
+      return count || 0;
+    },
+    enabled: !!profile?.id,
+  });
+
+  // Get following count - separate query to ensure it's always current
+  const { data: followingCount, refetch: refetchFollowingCount } = useQuery({
+    queryKey: ["followingCount", profile?.id],
+    queryFn: async () => {
+      if (!profile?.id) return 0;
+      
+      const { count, error } = await supabase
+        .from('follows')
+        .select('id', { count: 'exact', head: true })
+        .eq('follower_id', profile.id);
+      
+      if (error) {
+        console.error("Error fetching following count:", error);
+        return 0;
+      }
+      
+      return count || 0;
+    },
+    enabled: !!profile?.id,
+  });
+
   const { data: followers, isLoading: isFollowersLoading } = useQuery({
     queryKey: ["followers", profile?.id],
     queryFn: async () => {
@@ -109,31 +151,52 @@ export default function Followers() {
 
       console.log("Fetching followers for profile ID:", profile.id);
       
-      // Get all followers of the profile
-      const { data, error } = await supabase
+      // First, get all followers of the profile
+      const { data: followData, error: followError } = await supabase
         .from("follows")
-        .select(`
-          id,
-          follower_id,
-          following_id,
-          created_at,
-          profiles:follower_id(*)
-        `)
+        .select("id, follower_id, following_id, created_at")
         .eq("following_id", profile.id);
 
-      if (error) {
-        console.error("Error fetching followers:", error);
+      if (followError) {
+        console.error("Error fetching follows data:", followError);
         return [];
       }
 
-      console.log("Raw followers data:", data);
-      
-      if (!data || data.length === 0) {
+      if (!followData || followData.length === 0) {
         console.log("No followers found for user", profile.id);
         return [];
       }
 
-      return data as unknown as FollowData[];
+      console.log("Raw follows data:", followData);
+      
+      // Get the follower IDs
+      const followerIds = followData.map(f => f.follower_id);
+      
+      // Now fetch the profile data for each follower
+      const { data: profilesData, error: profilesError } = await supabase
+        .from("profiles")
+        .select("*")
+        .in("id", followerIds);
+        
+      if (profilesError) {
+        console.error("Error fetching follower profiles:", profilesError);
+        return [];
+      }
+      
+      console.log("Follower profiles data:", profilesData);
+      
+      // Combine the follow data with profile data
+      const result = followData.map(follow => {
+        const profile = profilesData?.find(p => p.id === follow.follower_id);
+        return {
+          ...follow,
+          profile: profile || null
+        };
+      }).filter(item => item.profile !== null);
+      
+      console.log("Combined follower data:", result);
+      
+      return result as FollowData[];
     },
     enabled: !!profile?.id,
   });
@@ -149,30 +212,51 @@ export default function Followers() {
       console.log("Fetching following for profile ID:", profile.id);
       
       // Get all users that the profile is following
-      const { data, error } = await supabase
+      const { data: followData, error: followError } = await supabase
         .from("follows")
-        .select(`
-          id,
-          follower_id,
-          following_id,
-          created_at,
-          profiles:following_id(*)
-        `)
+        .select("id, follower_id, following_id, created_at")
         .eq("follower_id", profile.id);
 
-      if (error) {
-        console.error("Error fetching following:", error);
+      if (followError) {
+        console.error("Error fetching following data:", followError);
         return [];
       }
 
-      console.log("Raw following data:", data);
-      
-      if (!data || data.length === 0) {
+      if (!followData || followData.length === 0) {
         console.log("User", profile.id, "is not following anyone");
         return [];
       }
 
-      return data as unknown as FollowData[];
+      console.log("Raw following data:", followData);
+      
+      // Get the following IDs
+      const followingIds = followData.map(f => f.following_id);
+      
+      // Now fetch the profile data for each following
+      const { data: profilesData, error: profilesError } = await supabase
+        .from("profiles")
+        .select("*")
+        .in("id", followingIds);
+        
+      if (profilesError) {
+        console.error("Error fetching following profiles:", profilesError);
+        return [];
+      }
+      
+      console.log("Following profiles data:", profilesData);
+      
+      // Combine the follow data with profile data
+      const result = followData.map(follow => {
+        const profile = profilesData?.find(p => p.id === follow.following_id);
+        return {
+          ...follow,
+          profile: profile || null
+        };
+      }).filter(item => item.profile !== null);
+      
+      console.log("Combined following data:", result);
+      
+      return result as FollowData[];
     },
     enabled: !!profile?.id,
   });
@@ -184,17 +268,17 @@ export default function Followers() {
         return;
       }
       
-      const usersToCheck = [
-        ...(followers || []).map(f => f.profiles?.id).filter(Boolean),
-        ...(following || []).map(f => f.profiles?.id).filter(Boolean)
-      ];
+      const allProfiles = [
+        ...(followers || []).map(f => f.profile?.id).filter(Boolean),
+        ...(following || []).map(f => f.profile?.id).filter(Boolean)
+      ] as string[];
       
-      if (usersToCheck.length === 0) {
+      if (allProfiles.length === 0) {
         console.log("No users to check following status");
         return;
       }
 
-      const uniqueUserIds = [...new Set(usersToCheck)];
+      const uniqueUserIds = [...new Set(allProfiles)];
       console.log("Checking following status for users:", uniqueUserIds);
       
       const filteredUserIds = uniqueUserIds.filter(id => id !== currentUserId);
@@ -222,7 +306,7 @@ export default function Followers() {
         followingMap[id] = false;
       });
 
-      data.forEach(item => {
+      data?.forEach(item => {
         followingMap[item.following_id] = true;
       });
 
@@ -230,7 +314,7 @@ export default function Followers() {
       setIsFollowingMap(followingMap);
     };
 
-    if (followers || following) {
+    if ((followers && followers.length > 0) || (following && following.length > 0)) {
       checkFollowingStatus();
     }
   }, [currentUserId, followers, following]);
@@ -249,24 +333,39 @@ export default function Followers() {
 
       if (error) throw error;
 
-      await supabase
-        .from('notifications')
-        .insert([
-          {
-            user_id: userId,
-            title: 'Novo seguidor',
-            message: `@${currentUserId} começou a seguir você.`,
-            type: 'system',
-          }
-        ]);
+      try {
+        await supabase
+          .from('notifications')
+          .insert([
+            {
+              user_id: userId,
+              title: 'Novo seguidor',
+              message: `Alguém começou a seguir você.`,
+              type: 'follow',
+            }
+          ]);
+      } catch (notifError) {
+        console.error("Error creating notification:", notifError);
+        // Continue despite notification error
+      }
 
       return data;
     },
     onSuccess: (_, userId) => {
       setIsFollowingMap(prev => ({ ...prev, [userId]: true }));
-      queryClient.invalidateQueries({ queryKey: ["followStats", profile?.id] });
-      queryClient.invalidateQueries({ queryKey: ["followers", profile?.id] });
-      queryClient.invalidateQueries({ queryKey: ["following", profile?.id] });
+      
+      // Invalidate all relevant queries
+      queryClient.invalidateQueries({ queryKey: ["followersCount"] });
+      queryClient.invalidateQueries({ queryKey: ["followingCount"] });
+      queryClient.invalidateQueries({ queryKey: ["followers"] });
+      queryClient.invalidateQueries({ queryKey: ["following"] });
+      queryClient.invalidateQueries({ queryKey: ["isFollowing"] });
+      queryClient.invalidateQueries({ queryKey: ["isBeingFollowed"] });
+      
+      // Explicitly refetch the counts
+      refetchFollowersCount();
+      refetchFollowingCount();
+      
       toast.success("Seguindo com sucesso!");
     },
     onError: (error) => {
@@ -292,9 +391,19 @@ export default function Followers() {
     },
     onSuccess: (_, userId) => {
       setIsFollowingMap(prev => ({ ...prev, [userId]: false }));
-      queryClient.invalidateQueries({ queryKey: ["followStats", profile?.id] });
-      queryClient.invalidateQueries({ queryKey: ["followers", profile?.id] });
-      queryClient.invalidateQueries({ queryKey: ["following", profile?.id] });
+      
+      // Invalidate all relevant queries
+      queryClient.invalidateQueries({ queryKey: ["followersCount"] });
+      queryClient.invalidateQueries({ queryKey: ["followingCount"] });
+      queryClient.invalidateQueries({ queryKey: ["followers"] });
+      queryClient.invalidateQueries({ queryKey: ["following"] });
+      queryClient.invalidateQueries({ queryKey: ["isFollowing"] });
+      queryClient.invalidateQueries({ queryKey: ["isBeingFollowed"] });
+      
+      // Explicitly refetch the counts
+      refetchFollowersCount();
+      refetchFollowingCount();
+      
       toast.success("Deixou de seguir com sucesso!");
     },
     onError: (error) => {
@@ -311,7 +420,7 @@ export default function Followers() {
 
     const lastActionTime = localStorage.getItem(`followAction_${userId}`);
     const now = Date.now();
-    const cooldownPeriod = 30000;
+    const cooldownPeriod = 30000; // 30 seconds
 
     if (lastActionTime) {
       const timeSinceLastAction = now - parseInt(lastActionTime);
@@ -364,7 +473,7 @@ export default function Followers() {
     return (
       <div className="divide-y divide-gray-200 dark:divide-gray-800">
         {data.map((item) => {
-          if (!item.profiles) {
+          if (!item.profile) {
             console.warn("Item missing profile data:", item);
             return null;
           }
@@ -373,35 +482,35 @@ export default function Followers() {
             <div key={item.id} className="flex items-center justify-between py-4 px-4">
               <div 
                 className="flex items-center space-x-3 cursor-pointer" 
-                onClick={() => navigate(`/perfil/${item.profiles.username}`)}
+                onClick={() => navigate(`/perfil/${item.profile.username}`)}
               >
                 <Avatar className="h-12 w-12">
                   <AvatarImage 
-                    src={item.profiles.avatar_url || "/placeholder.svg"} 
-                    alt={item.profiles.username || "usuário"} 
+                    src={item.profile.avatar_url || "/placeholder.svg"} 
+                    alt={item.profile.username || "usuário"} 
                   />
                   <AvatarFallback>
-                    {(item.profiles.full_name || item.profiles.username || "?")[0]?.toUpperCase()}
+                    {(item.profile.full_name || item.profile.username || "?")[0]?.toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="font-semibold">{item.profiles.full_name}</p>
-                  <p className="text-sm text-gray-500">@{item.profiles.username}</p>
+                  <p className="font-semibold">{item.profile.full_name}</p>
+                  <p className="text-sm text-gray-500">@{item.profile.username}</p>
                 </div>
               </div>
               
-              {currentUserId && currentUserId !== item.profiles.id && (
+              {currentUserId && currentUserId !== item.profile.id && (
                 <Button 
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleFollowAction(item.profiles.id);
+                    handleFollowAction(item.profile.id);
                   }}
                   className={`bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-lg flex items-center gap-2`}
                   disabled={followMutation.isPending || unfollowMutation.isPending}
                   variant="secondary"
                   size="sm"
                 >
-                  {isFollowingMap[item.profiles.id] ? (
+                  {isFollowingMap[item.profile.id] ? (
                     <>
                       <UserCheck size={16} />
                       <span>Seguindo</span>
@@ -448,10 +557,10 @@ export default function Followers() {
         <Tabs defaultValue={activeTab} className="w-full" onValueChange={handleTabChange}>
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="followers">
-              Seguidores {followers?.length ? `(${followers.length})` : ''}
+              Seguidores {followersCount !== undefined ? `(${followersCount})` : ''}
             </TabsTrigger>
             <TabsTrigger value="following">
-              Seguindo {following?.length ? `(${following.length})` : ''}
+              Seguindo {followingCount !== undefined ? `(${followingCount})` : ''}
             </TabsTrigger>
           </TabsList>
           <TabsContent value="followers">

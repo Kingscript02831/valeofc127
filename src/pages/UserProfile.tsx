@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -51,25 +52,42 @@ export default function UserProfile() {
     },
   });
 
-  const { data: followStats } = useQuery({
-    queryKey: ["followStats", profile?.id],
+  const { data: followersCount, refetch: refetchFollowersCount } = useQuery({
+    queryKey: ["followersCount", profile?.id],
     queryFn: async () => {
-      if (!profile?.id) return { followers: 0, following: 0 };
-
-      const { count: followersCount } = await supabase
+      if (!profile?.id) return 0;
+      
+      const { count, error } = await supabase
         .from('follows')
-        .select('*', { count: 'exact', head: true })
+        .select('id', { count: 'exact', head: true })
         .eq('following_id', profile.id);
+      
+      if (error) {
+        console.error("Error fetching followers count:", error);
+        return 0;
+      }
+      
+      return count || 0;
+    },
+    enabled: !!profile?.id,
+  });
 
-      const { count: followingCount } = await supabase
+  const { data: followingCount, refetch: refetchFollowingCount } = useQuery({
+    queryKey: ["followingCount", profile?.id],
+    queryFn: async () => {
+      if (!profile?.id) return 0;
+      
+      const { count, error } = await supabase
         .from('follows')
-        .select('*', { count: 'exact', head: true })
+        .select('id', { count: 'exact', head: true })
         .eq('follower_id', profile.id);
-
-      return {
-        followers: followersCount || 0,
-        following: followingCount || 0
-      };
+      
+      if (error) {
+        console.error("Error fetching following count:", error);
+        return 0;
+      }
+      
+      return count || 0;
     },
     enabled: !!profile?.id,
   });
@@ -185,22 +203,37 @@ export default function UserProfile() {
 
       if (error) throw error;
 
-      await supabase
-        .from('notifications')
-        .insert([
-          {
-            user_id: profile.id,
-            title: 'Novo seguidor',
-            message: `@${currentUserId} começou a seguir você.`,
-            type: 'system',
-          }
-        ]);
+      try {
+        await supabase
+          .from('notifications')
+          .insert([
+            {
+              user_id: profile.id,
+              title: 'Novo seguidor',
+              message: `Alguém começou a seguir você.`,
+              type: 'follow',
+            }
+          ]);
+      } catch (notifError) {
+        console.error("Error creating notification:", notifError);
+        // Continue despite notification error
+      }
 
       return data;
     },
     onSuccess: () => {
       setIsFollowing(true);
-      queryClient.invalidateQueries({ queryKey: ["followStats", profile?.id] });
+      
+      // Invalidate all relevant queries
+      queryClient.invalidateQueries({ queryKey: ["followersCount"] });
+      queryClient.invalidateQueries({ queryKey: ["followingCount"] });
+      queryClient.invalidateQueries({ queryKey: ["followers"] });
+      queryClient.invalidateQueries({ queryKey: ["following"] });
+      
+      // Explicitly refetch the counts
+      refetchFollowersCount();
+      refetchFollowingCount();
+      
       toast.success("Seguindo com sucesso!");
     },
     onError: (error) => {
@@ -226,7 +259,17 @@ export default function UserProfile() {
     },
     onSuccess: () => {
       setIsFollowing(false);
-      queryClient.invalidateQueries({ queryKey: ["followStats", profile?.id] });
+      
+      // Invalidate all relevant queries
+      queryClient.invalidateQueries({ queryKey: ["followersCount"] });
+      queryClient.invalidateQueries({ queryKey: ["followingCount"] });
+      queryClient.invalidateQueries({ queryKey: ["followers"] });
+      queryClient.invalidateQueries({ queryKey: ["following"] });
+      
+      // Explicitly refetch the counts
+      refetchFollowersCount();
+      refetchFollowingCount();
+      
       toast.success("Deixou de seguir com sucesso!");
     },
     onError: (error) => {
@@ -326,13 +369,13 @@ export default function UserProfile() {
             <div className="flex gap-4 text-center">
               <Link to={`/seguidores/${profile.username}/followers`} className="cursor-pointer">
                 <div>
-                  <p className="font-semibold">{followStats?.followers || 0}</p>
+                  <p className="font-semibold">{followersCount || 0}</p>
                   <p className="text-sm text-gray-500">Seguidores</p>
                 </div>
               </Link>
               <Link to={`/seguidores/${profile.username}/following`} className="cursor-pointer">
                 <div>
-                  <p className="font-semibold">{followStats?.following || 0}</p>
+                  <p className="font-semibold">{followingCount || 0}</p>
                   <p className="text-sm text-gray-500">Seguindo</p>
                 </div>
               </Link>
