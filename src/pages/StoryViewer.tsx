@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { X, ChevronLeft, ChevronRight, Trash2, Heart } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
 import { toast } from "sonner";
@@ -432,12 +432,16 @@ const StoryViewer = () => {
       {!isOwner && currentUser && (
         <div className="absolute bottom-20 left-4 z-10 flex items-center gap-2">
           <Button 
-            variant={hasLiked ? "default" : "outline"} 
+            variant="outline" 
             size="icon" 
-            className={`${hasLiked ? 'bg-red-500 hover:bg-red-600' : 'bg-black/30 backdrop-blur-sm text-white border-white/30'}`}
+            className={`${hasLiked ? 'bg-black/30 backdrop-blur-sm border-white/30' : 'bg-black/30 backdrop-blur-sm border-white/30'}`}
             onClick={handleLikeStory}
           >
-            <Heart className={`h-5 w-5 ${hasLiked ? 'fill-white' : ''}`} />
+            <img 
+              src={hasLiked ? "/amei1.png" : "/curtidas.png"} 
+              alt={hasLiked ? "Amei" : "Curtir"} 
+              className="h-5 w-5"
+            />
           </Button>
           {likesCount > 0 && (
             <span className="text-white font-medium bg-black/30 backdrop-blur-sm px-2 py-1 rounded-full text-sm">
