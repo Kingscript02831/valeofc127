@@ -1,3 +1,4 @@
+<lov-code>
 import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../integrations/supabase/client";
@@ -885,89 +886,4 @@ const PostDetails = () => {
                                     {reply.user.full_name}
                                   </span>
                                   <span className="text-xs text-muted-foreground ml-2">
-                                    {formatDate(reply.created_at)}
-                                  </span>
-                                </div>
-                                <CommentText 
-                                  content={reply.content} 
-                                  replyToUsername={mentionedUser}
-                                />
-                                <div className="flex items-center gap-4 mt-2">
-                                  <button
-                                    onClick={() => handleCommentLike(reply.id)}
-                                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
-                                  >
-                                    <Flame 
-                                      className={`w-3 h-3 ${
-                                        reply.user_has_liked ? "text-red-500" : ""
-                                      }`}
-                                    />
-                                    <span>{reply.likes_count || 0}</span>
-                                  </button>
-                                  <button
-                                    onClick={() => handleReplyClick(comment.id, reply.user.username)}
-                                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
-                                  >
-                                    <Reply className="w-3 h-3" />
-                                    <span>Responder</span>
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </main>
-      
-      <div className="fixed bottom-16 left-0 right-0 bg-[#1A1F2C] border-t border-border/40 p-3 z-10">
-        <form onSubmit={handleSubmitComment} className="flex items-center gap-2 max-w-xl mx-auto">
-          <button
-            type="button"
-            className="p-2 text-gray-400 hover:text-gray-300 transition-colors"
-          >
-            <Smile className="h-6 w-6" />
-          </button>
-          <Textarea
-            ref={commentInputRef}
-            placeholder={replyTo ? `Respondendo para @${replyToUsername}...` : "Escreva um comentário..."}
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            className="min-h-[50px] max-h-[100px] flex-1 bg-[#403E43] border-none resize-none py-2 text-white placeholder:text-gray-400"
-          />
-          {replyTo && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={() => {
-                setReplyTo(null);
-                setReplyToUsername(null);
-              }}
-              className="h-8 w-8 text-gray-400 hover:text-gray-300"
-            >
-              ×
-            </Button>
-          )}
-          <Button 
-            type="submit" 
-            size="icon" 
-            className="h-10 w-10 bg-[#0084FF] hover:bg-blue-600 transition-colors"
-          >
-            <Send size={18} className="text-white" />
-          </Button>
-        </form>
-      </div>
-      
-      <BottomNav />
-    </div>
-  );
-};
-
-export default PostDetails;
+                                    {formatDate(reply.
