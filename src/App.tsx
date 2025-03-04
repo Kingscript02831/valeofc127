@@ -91,8 +91,6 @@ const App: React.FC = () => {
                   
                   {/* Rotas para seguidores */}
                   <Route path="/seguidores" element={<Followers />} />
-                  <Route path="/seguidores/followers" element={<Followers />} />
-                  <Route path="/seguidores/following" element={<Followers />} />
                   <Route path="/seguidores/:username" element={<Followers />} />
                   <Route path="/seguidores/:username/:tab" element={<Followers />} />
                   

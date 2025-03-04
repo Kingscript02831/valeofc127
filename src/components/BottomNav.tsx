@@ -5,7 +5,7 @@ import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,7 +16,6 @@ import {
 const BottomNav = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const { data: config, isLoading } = useSiteConfig();
   const [session, setSession] = useState<any>(null);
 
@@ -82,73 +81,6 @@ const BottomNav = () => {
       : "transparent",
   });
 
-  const handleNotificationClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (!session) {
-      toast.error("Você precisa fazer login para acessar esta área");
-      navigate("/login");
-      return;
-    }
-    
-    // Query for latest notification to determine where to navigate
-    const checkLatestNotification = async () => {
-      const { data: notifications, error } = await supabase
-        .from("notifications")
-        .select("*, reference_id")
-        .eq("user_id", session.user.id)
-        .eq("read", false)
-        .order("created_at", { ascending: false })
-        .limit(1);
-      
-      if (error) {
-        console.error("Error fetching notifications:", error);
-        navigate("/notify");
-        return;
-      }
-      
-      // If there's a notification with a follow message
-      if (notifications && notifications.length > 0) {
-        const notification = notifications[0];
-        // Check if it's a follow notification
-        if (notification.type === 'system' && 
-            notification.message?.includes('começou a seguir você') && 
-            notification.reference_id) {
-          
-          // Get the follower's username
-          const { data: userData, error: userError } = await supabase
-            .from('profiles')
-            .select('username')
-            .eq('id', notification.reference_id)
-            .single();
-          
-          if (userError || !userData?.username) {
-            console.error("Error fetching user data:", userError);
-            navigate("/notify");
-            return;
-          }
-          
-          // Navigate to follower's profile
-          navigate(`/perfil/${userData.username}`);
-          
-          // Mark notification as read
-          await supabase
-            .from("notifications")
-            .update({ read: true })
-            .eq("id", notification.id);
-            
-          // Invalidate queries to update UI
-          queryClient.invalidateQueries({ queryKey: ["unreadNotifications"] });
-          return;
-        }
-      }
-      
-      // Default to notifications page
-      navigate("/notify");
-    };
-    
-    checkLatestNotification();
-  };
-
   return (
     <nav 
       className="fixed bottom-0 left-0 right-0 shadow-lg transition-all duration-300 md:hidden"
@@ -209,7 +141,7 @@ const BottomNav = () => {
           </DropdownMenu>
 
           <button
-            onClick={handleNotificationClick}
+            onClick={(e) => handleNavigation("/notify", e)}
             className="flex items-center p-2 rounded-xl transition-all duration-300 hover:scale-105 relative"
             style={getItemStyle(location.pathname === "/notify")}
           >

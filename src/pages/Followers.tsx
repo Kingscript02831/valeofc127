@@ -448,13 +448,11 @@ export default function Followers() {
   const handleTabChange = (value: string) => {
     setActiveTab(value as "followers" | "following");
     
-    // Fix the URL construction to avoid 404 errors
+    // Update the URL without navigating to a different route
     if (username) {
-      // For viewing other users' followers/following
       navigate(`/seguidores/${username}/${value}`, { replace: true });
     } else {
-      // For viewing your own followers/following
-      // This is the key fix - we need to make sure we're using a consistent URL structure
+      // This was causing the issue - we need to maintain the routing structure consistency
       navigate(`/seguidores/${value}`, { replace: true });
     }
   };
