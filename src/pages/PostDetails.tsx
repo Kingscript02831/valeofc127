@@ -718,8 +718,7 @@ const PostDetails = () => {
 
             {post?.likes > 0 && (
               <div 
-                className="flex items-center gap-1 cursor-pointer mx-3 my-2"
-                onClick={() => post?.likes > 0 && navigate(`/pagcurtidas/${post.id}`)}
+                className="flex items-center gap-1 mx-3 my-2"
               >
                 <div className="flex -space-x-2 overflow-hidden">
                   {post.reactionsByType && Object.keys(post.reactionsByType).slice(0, 2).map((type, index) => (
@@ -732,7 +731,7 @@ const PostDetails = () => {
                     />
                   ))}
                 </div>
-                <span className="text-sm text-gray-600 dark:text-gray-300 hover:underline reaction-count">
+                <span className="text-sm text-gray-600 dark:text-gray-300">
                   {post?.reaction_type && post?.likes > 1 ? (
                     <span>Você e outras {post.likes - 1} pessoas</span>
                   ) : post?.reaction_type ? (
