@@ -17,7 +17,7 @@ interface FollowData {
   follower_id: string;
   following_id: string;
   created_at: string;
-  profile: Profile;
+  profiles: Profile; // This matches the profile of the follower or following
 }
 
 export default function Followers() {
@@ -112,7 +112,13 @@ export default function Followers() {
       // Get all followers of the profile
       const { data, error } = await supabase
         .from("follows")
-        .select("*, profiles!follows_follower_id_fkey(*)")
+        .select(`
+          id,
+          follower_id,
+          following_id,
+          created_at,
+          profiles:follower_id(*)
+        `)
         .eq("following_id", profile.id);
 
       if (error) {
@@ -127,14 +133,7 @@ export default function Followers() {
         return [];
       }
 
-      // Transform the data to match our expected format
-      const transformedData = data.map(item => ({
-        ...item,
-        profile: item.profiles
-      }));
-
-      console.log("Transformed followers data:", transformedData);
-      return transformedData as unknown as FollowData[];
+      return data as unknown as FollowData[];
     },
     enabled: !!profile?.id,
   });
@@ -152,7 +151,13 @@ export default function Followers() {
       // Get all users that the profile is following
       const { data, error } = await supabase
         .from("follows")
-        .select("*, profiles!follows_following_id_fkey(*)")
+        .select(`
+          id,
+          follower_id,
+          following_id,
+          created_at,
+          profiles:following_id(*)
+        `)
         .eq("follower_id", profile.id);
 
       if (error) {
@@ -167,14 +172,7 @@ export default function Followers() {
         return [];
       }
 
-      // Transform the data to match our expected format
-      const transformedData = data.map(item => ({
-        ...item,
-        profile: item.profiles
-      }));
-
-      console.log("Transformed following data:", transformedData);
-      return transformedData as unknown as FollowData[];
+      return data as unknown as FollowData[];
     },
     enabled: !!profile?.id,
   });
@@ -187,8 +185,8 @@ export default function Followers() {
       }
       
       const usersToCheck = [
-        ...(followers || []).map(f => f.profile?.id).filter(Boolean),
-        ...(following || []).map(f => f.profile?.id).filter(Boolean)
+        ...(followers || []).map(f => f.profiles?.id).filter(Boolean),
+        ...(following || []).map(f => f.profiles?.id).filter(Boolean)
       ];
       
       if (usersToCheck.length === 0) {
@@ -366,7 +364,7 @@ export default function Followers() {
     return (
       <div className="divide-y divide-gray-200 dark:divide-gray-800">
         {data.map((item) => {
-          if (!item.profile) {
+          if (!item.profiles) {
             console.warn("Item missing profile data:", item);
             return null;
           }
@@ -375,35 +373,35 @@ export default function Followers() {
             <div key={item.id} className="flex items-center justify-between py-4 px-4">
               <div 
                 className="flex items-center space-x-3 cursor-pointer" 
-                onClick={() => navigate(`/perfil/${item.profile.username}`)}
+                onClick={() => navigate(`/perfil/${item.profiles.username}`)}
               >
                 <Avatar className="h-12 w-12">
                   <AvatarImage 
-                    src={item.profile.avatar_url || "/placeholder.svg"} 
-                    alt={item.profile.username || "usuário"} 
+                    src={item.profiles.avatar_url || "/placeholder.svg"} 
+                    alt={item.profiles.username || "usuário"} 
                   />
                   <AvatarFallback>
-                    {(item.profile.full_name || item.profile.username || "?")[0]?.toUpperCase()}
+                    {(item.profiles.full_name || item.profiles.username || "?")[0]?.toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="font-semibold">{item.profile.full_name}</p>
-                  <p className="text-sm text-gray-500">@{item.profile.username}</p>
+                  <p className="font-semibold">{item.profiles.full_name}</p>
+                  <p className="text-sm text-gray-500">@{item.profiles.username}</p>
                 </div>
               </div>
               
-              {currentUserId && currentUserId !== item.profile.id && (
+              {currentUserId && currentUserId !== item.profiles.id && (
                 <Button 
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleFollowAction(item.profile.id);
+                    handleFollowAction(item.profiles.id);
                   }}
                   className={`bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-lg flex items-center gap-2`}
                   disabled={followMutation.isPending || unfollowMutation.isPending}
                   variant="secondary"
                   size="sm"
                 >
-                  {isFollowingMap[item.profile.id] ? (
+                  {isFollowingMap[item.profiles.id] ? (
                     <>
                       <UserCheck size={16} />
                       <span>Seguindo</span>
