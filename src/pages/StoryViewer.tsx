@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { X, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, Trash2, Heart } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
 import { toast } from "sonner";
@@ -27,6 +27,8 @@ const StoryViewer = () => {
   const queryClient = useQueryClient();
   const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [hasLiked, setHasLiked] = useState(false);
+  const [likesCount, setLikesCount] = useState(0);
   const progressInterval = useRef<NodeJS.Timeout | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -75,6 +77,51 @@ const StoryViewer = () => {
     enabled: !!userId,
   });
 
+  // Verificar se o usuário atual curtiu a história atual
+  const checkUserLike = async (storyId: string) => {
+    if (!currentUser || !storyId) return;
+
+    const { data, error } = await supabase
+      .from("story_likes")
+      .select("id")
+      .eq("story_id", storyId)
+      .eq("user_id", currentUser.id)
+      .single();
+
+    if (error && error.code !== "PGRST116") {
+      console.error("Erro ao verificar curtida:", error);
+      return;
+    }
+
+    setHasLiked(!!data);
+  };
+
+  // Contar o número de curtidas para a história atual
+  const fetchLikesCount = async (storyId: string) => {
+    if (!storyId) return;
+
+    const { count, error } = await supabase
+      .from("story_likes")
+      .select("id", { count: "exact", head: true })
+      .eq("story_id", storyId);
+
+    if (error) {
+      console.error("Erro ao contar curtidas:", error);
+      return;
+    }
+
+    setLikesCount(count || 0);
+  };
+
+  // Quando a história atual muda, verificar curtida e contar curtidas
+  useEffect(() => {
+    if (!stories || stories.length === 0 || currentStoryIndex >= stories.length) return;
+    
+    const storyId = stories[currentStoryIndex].id;
+    checkUserLike(storyId);
+    fetchLikesCount(storyId);
+  }, [currentStoryIndex, stories, currentUser]);
+
   // Mutação para marcar uma história como visualizada
   const markAsViewedMutation = useMutation({
     mutationFn: async (storyId: string) => {
@@ -92,6 +139,53 @@ const StoryViewer = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["userStories"] });
     },
+  });
+
+  // Mutação para curtir/descurtir uma história
+  const toggleLikeMutation = useMutation({
+    mutationFn: async (storyId: string) => {
+      if (!currentUser) return;
+
+      if (hasLiked) {
+        // Remover curtida
+        const { error } = await supabase
+          .from("story_likes")
+          .delete()
+          .eq("story_id", storyId)
+          .eq("user_id", currentUser.id);
+
+        if (error) throw error;
+        
+        return { action: 'unlike' };
+      } else {
+        // Adicionar curtida
+        const { error } = await supabase
+          .from("story_likes")
+          .insert({
+            story_id: storyId,
+            user_id: currentUser.id,
+          });
+
+        if (error) throw error;
+        
+        return { action: 'like' };
+      }
+    },
+    onSuccess: (data, storyId) => {
+      // Atualizar o estado local
+      setHasLiked(!hasLiked);
+      setLikesCount(prev => data?.action === 'like' ? prev + 1 : prev - 1);
+      
+      // Mostrar toast de confirmação
+      toast.success(data?.action === 'like' ? "Story curtido!" : "Curtida removida");
+      
+      // Invalidar consultas relevantes
+      queryClient.invalidateQueries({ queryKey: ["storyLikes", storyId] });
+    },
+    onError: (error) => {
+      console.error("Erro ao curtir/descurtir:", error);
+      toast.error("Erro ao processar sua curtida");
+    }
   });
 
   // Mutação para excluir uma história
@@ -205,6 +299,13 @@ const StoryViewer = () => {
     if (confirm("Tem certeza que deseja excluir esta história?")) {
       deleteStoryMutation.mutate(stories[currentStoryIndex].id);
     }
+  };
+
+  // Manipular curtida
+  const handleLikeStory = () => {
+    if (!stories || !currentUser) return;
+    
+    toggleLikeMutation.mutate(stories[currentStoryIndex].id);
   };
 
   // Se estiver carregando ou não houver histórias, mostrar um estado de carregamento
@@ -326,6 +427,25 @@ const StoryViewer = () => {
           <ChevronRight className="h-8 w-8" />
         </Button>
       </div>
+
+      {/* Botão de curtir e contador */}
+      {!isOwner && currentUser && (
+        <div className="absolute bottom-20 left-4 z-10 flex items-center gap-2">
+          <Button 
+            variant={hasLiked ? "default" : "outline"} 
+            size="icon" 
+            className={`${hasLiked ? 'bg-red-500 hover:bg-red-600' : 'bg-black/30 backdrop-blur-sm text-white border-white/30'}`}
+            onClick={handleLikeStory}
+          >
+            <Heart className={`h-5 w-5 ${hasLiked ? 'fill-white' : ''}`} />
+          </Button>
+          {likesCount > 0 && (
+            <span className="text-white font-medium bg-black/30 backdrop-blur-sm px-2 py-1 rounded-full text-sm">
+              {likesCount}
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Botão de excluir para o proprietário */}
       {isOwner && (
