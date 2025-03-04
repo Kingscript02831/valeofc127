@@ -31,6 +31,11 @@ export default function Followers() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isFollowingMap, setIsFollowingMap] = useState<Record<string, boolean>>({});
 
+  // Update activeTab when route param changes
+  useEffect(() => {
+    setActiveTab(tab === "following" ? "following" : "followers");
+  }, [tab]);
+
   useEffect(() => {
     const fetchCurrentUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -442,6 +447,8 @@ export default function Followers() {
 
   const handleTabChange = (value: string) => {
     setActiveTab(value as "followers" | "following");
+    
+    // Update the URL without navigating to a different route
     if (username) {
       navigate(`/seguidores/${username}/${value}`, { replace: true });
     } else {
@@ -554,7 +561,7 @@ export default function Followers() {
       </div>
 
       <div className="pt-16 pb-20">
-        <Tabs defaultValue={activeTab} className="w-full" onValueChange={handleTabChange}>
+        <Tabs value={activeTab} className="w-full" onValueChange={handleTabChange}>
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="followers">
               Seguidores {followersCount !== undefined ? `(${followersCount})` : ''}
