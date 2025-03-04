@@ -13,7 +13,6 @@ import Places from "./pages/Places";
 import Products from "./pages/Products";
 import ProductDetails from "./pages/ProductDetails";
 import ProductForm from "./pages/ProductForm";
-import Notify from "./pages/Notify";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
 import Config from "./pages/config";
@@ -61,7 +60,6 @@ const App: React.FC = () => {
                   <Route path="/products" element={<Products />} />
                   <Route path="/product/:id" element={<ProductDetails />} />
                   <Route path="/products/new" element={<ProductForm />} />
-                  <Route path="/notify" element={<Notify />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/signup" element={<SignUp />} />
                   <Route path="/perfil" element={<Profile />} />
