@@ -5,7 +5,7 @@ import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,6 +16,7 @@ import {
 const BottomNav = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { data: config, isLoading } = useSiteConfig();
   const [session, setSession] = useState<any>(null);
 
@@ -93,7 +94,7 @@ const BottomNav = () => {
     const checkLatestNotification = async () => {
       const { data: notifications, error } = await supabase
         .from("notifications")
-        .select("*, sender:reference_id(id, username)")
+        .select("*, reference_id")
         .eq("user_id", session.user.id)
         .eq("read", false)
         .order("created_at", { ascending: false })
@@ -105,16 +106,29 @@ const BottomNav = () => {
         return;
       }
       
-      // If there's a notification with a follow message and sender username
+      // If there's a notification with a follow message
       if (notifications && notifications.length > 0) {
         const notification = notifications[0];
-        if (
-          notification.type === 'system' && 
-          notification.message?.includes('começou a seguir você') && 
-          notification.sender?.username
-        ) {
+        // Check if it's a follow notification
+        if (notification.type === 'system' && 
+            notification.message?.includes('começou a seguir você') && 
+            notification.reference_id) {
+          
+          // Get the follower's username
+          const { data: userData, error: userError } = await supabase
+            .from('profiles')
+            .select('username')
+            .eq('id', notification.reference_id)
+            .single();
+          
+          if (userError || !userData?.username) {
+            console.error("Error fetching user data:", userError);
+            navigate("/notify");
+            return;
+          }
+          
           // Navigate to follower's profile
-          navigate(`/perfil/${notification.sender.username}`);
+          navigate(`/perfil/${userData.username}`);
           
           // Mark notification as read
           await supabase
