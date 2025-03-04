@@ -36,6 +36,9 @@ export default function Followers() {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         setCurrentUserId(session.user.id);
+        console.log("Current user ID:", session.user.id);
+      } else {
+        console.log("No active session found");
       }
     };
     fetchCurrentUser();
@@ -57,11 +60,19 @@ export default function Followers() {
           .eq("id", session.user.id)
           .single();
 
-        if (error || !data) {
+        if (error) {
+          console.error("Error fetching own profile:", error);
+          navigate("/404");
+          return null;
+        }
+        
+        if (!data) {
+          console.error("No profile data found for current user");
           navigate("/404");
           return null;
         }
 
+        console.log("Current user profile:", data);
         return data as Profile;
       } else {
         const { data, error } = await supabase
@@ -70,11 +81,19 @@ export default function Followers() {
           .eq("username", username)
           .single();
 
-        if (error || !data) {
+        if (error) {
+          console.error("Error fetching profile by username:", error);
+          navigate("/404");
+          return null;
+        }
+        
+        if (!data) {
+          console.error("No profile found for username:", username);
           navigate("/404");
           return null;
         }
 
+        console.log("Profile for username", username, ":", data);
         return data as Profile;
       }
     },
@@ -83,22 +102,39 @@ export default function Followers() {
   const { data: followers, isLoading: isFollowersLoading } = useQuery({
     queryKey: ["followers", profile?.id],
     queryFn: async () => {
-      if (!profile?.id) return [];
-
-      const { data, error } = await supabase
-        .from("follows")
-        .select(`
-          *,
-          profile:profiles!follows_follower_id_fkey(*)
-        `)
-        .eq("following_id", profile.id);
-
-      if (error) {
-        console.error("Erro ao buscar seguidores:", error);
+      if (!profile?.id) {
+        console.log("No profile ID for followers query");
         return [];
       }
 
-      return (data || []) as FollowData[];
+      console.log("Fetching followers for profile ID:", profile.id);
+      
+      // Get all followers of the profile
+      const { data, error } = await supabase
+        .from("follows")
+        .select("*, profiles!follows_follower_id_fkey(*)")
+        .eq("following_id", profile.id);
+
+      if (error) {
+        console.error("Error fetching followers:", error);
+        return [];
+      }
+
+      console.log("Raw followers data:", data);
+      
+      if (!data || data.length === 0) {
+        console.log("No followers found for user", profile.id);
+        return [];
+      }
+
+      // Transform the data to match our expected format
+      const transformedData = data.map(item => ({
+        ...item,
+        profile: item.profiles
+      }));
+
+      console.log("Transformed followers data:", transformedData);
+      return transformedData as unknown as FollowData[];
     },
     enabled: !!profile?.id,
   });
@@ -106,40 +142,69 @@ export default function Followers() {
   const { data: following, isLoading: isFollowingLoading } = useQuery({
     queryKey: ["following", profile?.id],
     queryFn: async () => {
-      if (!profile?.id) return [];
-
-      const { data, error } = await supabase
-        .from("follows")
-        .select(`
-          *,
-          profile:profiles!follows_following_id_fkey(*)
-        `)
-        .eq("follower_id", profile.id);
-
-      if (error) {
-        console.error("Erro ao buscar seguindo:", error);
+      if (!profile?.id) {
+        console.log("No profile ID for following query");
         return [];
       }
 
-      return (data || []) as FollowData[];
+      console.log("Fetching following for profile ID:", profile.id);
+      
+      // Get all users that the profile is following
+      const { data, error } = await supabase
+        .from("follows")
+        .select("*, profiles!follows_following_id_fkey(*)")
+        .eq("follower_id", profile.id);
+
+      if (error) {
+        console.error("Error fetching following:", error);
+        return [];
+      }
+
+      console.log("Raw following data:", data);
+      
+      if (!data || data.length === 0) {
+        console.log("User", profile.id, "is not following anyone");
+        return [];
+      }
+
+      // Transform the data to match our expected format
+      const transformedData = data.map(item => ({
+        ...item,
+        profile: item.profiles
+      }));
+
+      console.log("Transformed following data:", transformedData);
+      return transformedData as unknown as FollowData[];
     },
     enabled: !!profile?.id,
   });
 
   useEffect(() => {
     const checkFollowingStatus = async () => {
-      if (!currentUserId) return;
+      if (!currentUserId) {
+        console.log("No current user ID to check following status");
+        return;
+      }
       
       const usersToCheck = [
-        ...(followers || []).map(f => f.profile.id),
-        ...(following || []).map(f => f.profile.id)
+        ...(followers || []).map(f => f.profile?.id).filter(Boolean),
+        ...(following || []).map(f => f.profile?.id).filter(Boolean)
       ];
       
+      if (usersToCheck.length === 0) {
+        console.log("No users to check following status");
+        return;
+      }
+
       const uniqueUserIds = [...new Set(usersToCheck)];
+      console.log("Checking following status for users:", uniqueUserIds);
       
       const filteredUserIds = uniqueUserIds.filter(id => id !== currentUserId);
       
-      if (filteredUserIds.length === 0) return;
+      if (filteredUserIds.length === 0) {
+        console.log("No users to check after filtering out current user");
+        return;
+      }
 
       const { data, error } = await supabase
         .from('follows')
@@ -148,9 +213,11 @@ export default function Followers() {
         .in('following_id', filteredUserIds);
 
       if (error) {
-        console.error('Erro ao verificar status de seguir:', error);
+        console.error('Error checking follow status:', error);
         return;
       }
+
+      console.log("Follow status results:", data);
 
       const followingMap: Record<string, boolean> = {};
       filteredUserIds.forEach(id => {
@@ -161,6 +228,7 @@ export default function Followers() {
         followingMap[item.following_id] = true;
       });
 
+      console.log("Generated following map:", followingMap);
       setIsFollowingMap(followingMap);
     };
 
@@ -297,53 +365,60 @@ export default function Followers() {
 
     return (
       <div className="divide-y divide-gray-200 dark:divide-gray-800">
-        {data.map((item) => (
-          <div key={item.id} className="flex items-center justify-between py-4 px-4">
-            <div 
-              className="flex items-center space-x-3 cursor-pointer" 
-              onClick={() => navigate(`/perfil/${item.profile.username}`)}
-            >
-              <Avatar className="h-12 w-12">
-                <AvatarImage 
-                  src={item.profile.avatar_url || "/placeholder.svg"} 
-                  alt={item.profile.username || "usuário"} 
-                />
-                <AvatarFallback>
-                  {(item.profile.full_name || item.profile.username || "?")[0]?.toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="font-semibold">{item.profile.full_name}</p>
-                <p className="text-sm text-gray-500">@{item.profile.username}</p>
-              </div>
-            </div>
-            
-            {currentUserId && currentUserId !== item.profile.id && (
-              <Button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleFollowAction(item.profile.id);
-                }}
-                className={`bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-lg flex items-center gap-2`}
-                disabled={followMutation.isPending || unfollowMutation.isPending}
-                variant="secondary"
-                size="sm"
+        {data.map((item) => {
+          if (!item.profile) {
+            console.warn("Item missing profile data:", item);
+            return null;
+          }
+          
+          return (
+            <div key={item.id} className="flex items-center justify-between py-4 px-4">
+              <div 
+                className="flex items-center space-x-3 cursor-pointer" 
+                onClick={() => navigate(`/perfil/${item.profile.username}`)}
               >
-                {isFollowingMap[item.profile.id] ? (
-                  <>
-                    <UserCheck size={16} />
-                    <span>Seguindo</span>
-                  </>
-                ) : (
-                  <>
-                    <UserPlus size={16} />
-                    <span>Seguir</span>
-                  </>
-                )}
-              </Button>
-            )}
-          </div>
-        ))}
+                <Avatar className="h-12 w-12">
+                  <AvatarImage 
+                    src={item.profile.avatar_url || "/placeholder.svg"} 
+                    alt={item.profile.username || "usuário"} 
+                  />
+                  <AvatarFallback>
+                    {(item.profile.full_name || item.profile.username || "?")[0]?.toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="font-semibold">{item.profile.full_name}</p>
+                  <p className="text-sm text-gray-500">@{item.profile.username}</p>
+                </div>
+              </div>
+              
+              {currentUserId && currentUserId !== item.profile.id && (
+                <Button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleFollowAction(item.profile.id);
+                  }}
+                  className={`bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-lg flex items-center gap-2`}
+                  disabled={followMutation.isPending || unfollowMutation.isPending}
+                  variant="secondary"
+                  size="sm"
+                >
+                  {isFollowingMap[item.profile.id] ? (
+                    <>
+                      <UserCheck size={16} />
+                      <span>Seguindo</span>
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus size={16} />
+                      <span>Seguir</span>
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
+          );
+        })}
       </div>
     );
   };
